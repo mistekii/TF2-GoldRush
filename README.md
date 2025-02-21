@@ -1,16 +1,12 @@
-# Source SDK 2013
+# Team Fortress 2: Gold Rush
+New source repository for Team Fortress 2: Gold Rush, rebuilt on the Team Fortress 2 code now included in the Source SDK
 
-Source code for Source SDK 2013.
-
-Contains the game code for Half-Life 2, HL2: DM and TF2.
-
-**Now including Team Fortress 2! ✨**
-
+VERY WIP!!!!! Right now we're starting the process of tearing most of the new TF2 stuff that was added. Might take a while.
 ## Build instructions
 
 Clone the repository using the following command:
 
-`git clone https://github.com/ValveSoftware/source-sdk-2013`
+`git clone https://github.com/conneath/TF2-GoldRush`
 
 ### Windows
 
@@ -49,12 +45,6 @@ You can then, in the root of the cloned directory, you can navigate to `game` an
 ```
 
 *Mods that are distributed on Steam MUST be built against the Steam Runtime, which the above steps will automatically do for you.*
-
-## Distributing your Mod
-
-There is guidance on distributing your mod both on and off Steam available at the following link:
-
-https://partner.steamgames.com/doc/sdk/uploading/distributing_source_engine
 
 ## Additional Resources
 
