@@ -35,7 +35,6 @@
 #include "tf_item_inventory.h"
 #include "quest_log_panel.h"
 #include "econ_quests.h"
-#include "tf_streams.h"
 #include "tf_matchmaking_shared.h"
 #include "tf_lobby_container_frame_comp.h"
 #include "tf_lobby_container_frame_mvm.h"

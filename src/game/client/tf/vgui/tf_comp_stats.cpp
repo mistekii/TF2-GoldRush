@@ -10,7 +10,6 @@
 #include "tf_mapinfo.h"
 #include "tf_comp_stats.h"
 #include "vgui/ISystem.h"
-#include "tf_streams.h"
 #include "tf_item_inventory.h"
 #include "vgui_avatarimage.h"
 #include "tf_badge_panel.h"
