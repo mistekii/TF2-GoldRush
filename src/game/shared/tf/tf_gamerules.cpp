@@ -1380,16 +1380,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 //=============================================================================
 // HPE_BEGIN:
-// [msmith]	Training status and HUD Type.
+// [msmith]	HUD Type.
 //=============================================================================
 	RecvPropInt( RECVINFO( m_nHudType ) ),
-	RecvPropBool( RECVINFO( m_bIsInTraining ) ),
-	RecvPropBool( RECVINFO( m_bAllowTrainingAchievements ) ),
-	RecvPropBool( RECVINFO( m_bIsWaitingForTrainingContinue ) ),
 //=============================================================================
 // HPE_END
 //=============================================================================
-	RecvPropBool( RECVINFO( m_bIsTrainingHUDVisible ) ),
 	RecvPropBool( RECVINFO( m_bIsInItemTestingMode ) ),
 
 	RecvPropEHandle( RECVINFO( m_hBonusLogic ) ),
@@ -1450,16 +1446,12 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 
 //=============================================================================
 // HPE_BEGIN:
-// [msmith]	Training status and hud type.
+// [msmith]	Hud type.
 //=============================================================================
 	SendPropInt( SENDINFO( m_nHudType ), 3, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bIsInTraining ) ),
-	SendPropBool( SENDINFO( m_bAllowTrainingAchievements ) ),
-	SendPropBool( SENDINFO( m_bIsWaitingForTrainingContinue ) ),
 //=============================================================================
 // HPE_END
 //=============================================================================
-	SendPropBool( SENDINFO( m_bIsTrainingHUDVisible ) ),
 	SendPropBool( SENDINFO( m_bIsInItemTestingMode ) ),
 
 	SendPropEHandle( SENDINFO( m_hBonusLogic ) ),
@@ -3141,9 +3133,6 @@ bool CTFGameRules::IsDefaultGameMode( void )
 	if ( IsInTournamentMode() )
 		return false;
 
-	if ( IsInTraining() )
-		return false;
-
 	if ( IsInItemTestingMode() )
 		return false;
 
@@ -3364,13 +3353,9 @@ CTFGameRules::CTFGameRules()
 // [msmith] HUD type
 //=============================================================================
 	m_nHudType.Set( TF_HUDTYPE_UNDEFINED );
-	m_bIsInTraining.Set( false );
-	m_bAllowTrainingAchievements.Set( false );
-	m_bIsWaitingForTrainingContinue.Set( false );
 //=============================================================================
 // HPE_END
 //=============================================================================
-	m_bIsTrainingHUDVisible.Set( false );
 
 	m_bIsInItemTestingMode.Set( false );
 
@@ -4327,17 +4312,6 @@ void CTFGameRules::Activate()
 		tf_gamemode_passtime.SetValue( 1 );
 	}
 
-	// the game is in training mode if this entity is found
-	m_hTrainingModeLogic = dynamic_cast< CTrainingModeLogic * > ( gEntList.FindEntityByClassname( NULL, "tf_logic_training_mode" ) );
-	if ( NULL != m_hTrainingModeLogic )
-	{
-		m_bIsInTraining.Set( true );
-		m_bAllowTrainingAchievements.Set( false );
-		mp_humans_must_join_team.SetValue( "blue" );
-		m_bIsTrainingHUDVisible.Set( true );
-		tf_training_client_message.SetValue( (int)TRAINING_CLIENT_MESSAGE_NONE );
-	}
-
 	m_bIsInItemTestingMode.Set( false );
 
 	CKothLogic *pKoth = dynamic_cast<CKothLogic*> ( gEntList.FindEntityByClassname( NULL, "tf_logic_koth" ) );
@@ -4405,9 +4379,8 @@ void CTFGameRules::Activate()
 		hCPTimer = dynamic_cast< CCPTimerLogic* >( gEntList.FindEntityByClassname( hCPTimer, "tf_logic_cp_timer" ) );
 	}
 
-	// hide from the master server if this game is a training game
-	// or offline practice
-	if ( IsInTraining() || TheTFBots().IsInOfflinePractice() || IsInItemTestingMode() )
+	// hide from the master server if this game is offline practice
+	if ( TheTFBots().IsInOfflinePractice() || IsInItemTestingMode() )
 	{
 		hide_server.SetValue( true );
 	}
@@ -4463,7 +4436,7 @@ void CTFGameRules::Activate()
 	CLogicMannPower *pLogicMannPower = dynamic_cast< CLogicMannPower* > ( gEntList.FindEntityByClassname( NULL, "tf_logic_mannpower" ) );
 	tf_powerup_mode.SetValue( pLogicMannPower ? 1 : 0 );
 
-	if ( !IsInTraining() && IsHolidayActive( kHoliday_Soldier ) )
+	if ( IsHolidayActive( kHoliday_Soldier ) )
 	{
 		CreateSoldierStatue();
 	}
@@ -4559,7 +4532,7 @@ void CTFGameRules::SetHUDType( int nHudType )
 {
 	if ( nHudType != TF_HUDTYPE_ARENA )
 	{
-		if ( nHudType >= TF_HUDTYPE_UNDEFINED && nHudType <= TF_HUDTYPE_TRAINING )
+		if ( nHudType >= TF_HUDTYPE_UNDEFINED && nHudType <= TF_HUDTYPE_ESCORT )
 		{
 			m_nHudType.Set( nHudType );
 		}
@@ -4852,15 +4825,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 		RecalculateControlPointState();
 
 		SetRoundOverlayDetails();
-	}
-
-	//Do any round specific setup for training logic (resetting the score, messages, etc).
-	if ( IsInTraining() )
-	{
-		if ( m_hTrainingModeLogic )
-		{
-			m_hTrainingModeLogic->SetupOnRoundStart();
-		}
 	}
 
 	m_szMostRecentCappers[0] = 0;
@@ -7955,27 +7919,6 @@ bool CTFGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 //-----------------------------------------------------------------------------
 void CTFGameRules::LevelShutdown()
 {
-	if ( IsInTraining() )
-	{
-		mp_humans_must_join_team.SetValue( "any" );
-		training_can_build_sentry.Revert();
-		training_can_build_dispenser.Revert();
-		training_can_build_tele_entrance.Revert();
-		training_can_build_tele_exit.Revert();
-		training_can_destroy_buildings.Revert();
-		training_can_pickup_sentry.Revert();
-		training_can_pickup_dispenser.Revert();
-		training_can_pickup_tele_entrance.Revert();
-		training_can_pickup_tele_exit.Revert();
-		training_can_select_weapon_primary.Revert();
-		training_can_select_weapon_secondary.Revert();
-		training_can_select_weapon_melee.Revert();
-		training_can_select_weapon_building.Revert();
-		training_can_select_weapon_pda.Revert();
-		training_can_select_weapon_item1.Revert();
-		training_can_select_weapon_item2.Revert();
-		tf_training_client_message.Revert();
-	}
 	TheTFBots().LevelShutdown();
 	hide_server.Revert();
 
@@ -8531,44 +8474,6 @@ void CTFGameRules::Think()
 	ManageCompetitiveMode();
 
 #endif // GAME_DLL
-
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	Do training summary screen logic.
-//=============================================================================
-	if ( IsInTraining() == true )
-	{
-		if ( m_flStateTransitionTime > gpGlobals->curtime )
-		{
-			int client_message = tf_training_client_message.GetInt();
-			switch ( client_message )
-			{
-				case TRAINING_CLIENT_MESSAGE_IN_SUMMARY_SCREEN:
-				{
-					//Keep adding time to the restart while we are in the end screen menu so that we never restart the round until
-					//the player presses the replay button (or next button to go to the next map).
-					m_flStateTransitionTime = gpGlobals->curtime + 5.0f;
-				}
-				break;
-				case TRAINING_CLIENT_MESSAGE_NEXT_MAP:
-				{
-					LoadNextTrainingMap();
-					tf_training_client_message.SetValue( (int)TRAINING_CLIENT_MESSAGE_NONE );
-				}
-				break;
-				case TRAINING_CLIENT_MESSAGE_REPLAY:
-				{
-					// Reload the map
-					engine->ChangeLevel( STRING( gpGlobals->mapname ), NULL );
-					tf_training_client_message.SetValue( (int)TRAINING_CLIENT_MESSAGE_NONE );
-				}
-				break;
-			} // switch
-		}
-	}
-//=============================================================================
-// HPE_END
-//=============================================================================
 
 	// This is ugly, but, population manager needs to sometimes think when we're not simulating, but it is an entity.
 	// Really, we need to better split out some kind of "sub-gamerules" class for modes like this.
@@ -9193,36 +9098,6 @@ int CTFGameRules::PlayerHistory_GetTimeSinceLastSeen( CTFPlayer *pTFPlayer )
 	return (int)( Plat_FloatTime() - pInfo->flTime );
 }
 #endif
-
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	TEMP CODE: needs to be replaced with the final solution for our training mission navigation.
-//=============================================================================
-void CTFGameRules::LoadNextTrainingMap()
-{
-	if ( m_hTrainingModeLogic )
-	{
-		g_fGameOver = true;
-		const char* pNextMap = m_hTrainingModeLogic->GetNextMap();
-		if ( pNextMap && FStrEq( pNextMap, "" ) == false )
-		{
-			Msg( "CHANGE LEVEL: %s\n", pNextMap );
-			engine->ChangeLevel( pNextMap, NULL );
-		}
-		else
-		{
-			Msg( "CHANGE LEVEL: %s\n", STRING( gpGlobals->mapname ) );
-			engine->ChangeLevel( STRING( gpGlobals->mapname ), NULL );
-		}
-		return;
-	}
-		
-	Msg( "CHANGE LEVEL: %s\n", STRING( gpGlobals->mapname ) );
-	engine->ChangeLevel( STRING( gpGlobals->mapname ), NULL );
-}
-//=============================================================================
-// HPE_END
-//=============================================================================
 
 //Runs think for all player's conditions
 //Need to do this here instead of the player so players that crash still run their important thinks
@@ -11472,18 +11347,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 	// check for achievements
 	PlayerKilledCheckAchievements( pTFPlayerScorer, pTFPlayerVictim );
 
-	if ( IsInTraining() && GetTrainingModeLogic() )
-	{
-		if ( pVictim->IsFakeClient() == false )
-		{
-			GetTrainingModeLogic()->OnPlayerDied( ToTFPlayer( pVictim ), pKiller );
-		}
-		else
-		{
-			GetTrainingModeLogic()->OnBotDied( ToTFPlayer( pVictim ), pKiller );
-		}
-	}
-
 	// credit for dueling
 	if ( pTFPlayerScorer != NULL && pTFPlayerScorer != pTFPlayerVictim )
 	{
@@ -11912,16 +11775,6 @@ void CTFGameRules::PlayerKilledCheckAchievements( CTFPlayer *pAttacker, CTFPlaye
 //-----------------------------------------------------------------------------
 void CTFGameRules::CalcDominationAndRevenge( CTFPlayer *pAttacker, CBaseEntity *pWeapon, CTFPlayer *pVictim, bool bIsAssist, int *piDeathFlags )
 {
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	If we're in training, we want to disable this domination stuff.
-//=============================================================================
-	if ( IsInTraining() )
-		return;
-//=============================================================================
-// HPE_END
-//=============================================================================
-
 	// don't do domination stuff in powerup mode
 	if ( IsPowerupMode() )
 		return;
@@ -14717,9 +14570,6 @@ void CTFGameRules::ManageServerSideVoteCreation( void )
 	if ( m_bInSetup )
 		return;
 
-	if ( IsInTraining() )
-		return;
-
 	if ( IsInItemTestingMode() )
 		return;
 
@@ -16837,61 +16687,6 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		return false;
 	}
 
-#ifdef GAME_DLL
-	if ( IsInTraining() && pTFPlayer->IsBotOfType( TF_BOT_TYPE ) )
-	{
-		switch( GetGameType() )
-		{
-		case TF_GAMETYPE_CP:
-			{
-				// in training mode, bots cannot initiate a capture
-				float flCapPerc = ObjectiveResource()->GetCPCapPercentage( iPointIndex );
-				if ( flCapPerc <= 0.0f )
-				{
-					return false;
-				}
-				break;
-			}
-
-		case TF_GAMETYPE_ESCORT:
-			{
-				// in training mode, the player must push the cart for the first time
-				// after that, bots can start it moving again
-
-				// assume only one cart in the map
-				CTeamTrainWatcher *watcher = NULL;
-				while( ( watcher = dynamic_cast< CTeamTrainWatcher * >( gEntList.FindEntityByClassname( watcher, "team_train_watcher" ) ) ) != NULL )
-				{
-					if ( !watcher->IsDisabled() )
-					{
-						break;
-					}
-				}
-
-				if ( watcher && !watcher->IsDisabled() )
-				{
-					return !watcher->IsTrainAtStart();
-				}
-				break;
-			}
-		}
-	}
-
-#ifdef TF_CREEP_MODE
-	if ( IsCreepWaveMode() )
-	{
-		CTFBot *bot = ToTFBot( pTFPlayer );
-
-		if ( !bot || !bot->HasAttribute( CTFBot::IS_NPC ) )
-		{
-			// only creeps can capture points
-			return false;
-		}
-	}
-#endif
-
-#endif
-
 	return true;
 }
 
@@ -18500,14 +18295,8 @@ void CTFGameRules::HandleOvertimeBegin()
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldShowTeamGoal( void )
 {
-
-//=============================================================================
-// HPE_BEGIN
-// [msmith] We always show the team goal when in training.
-//=============================================================================	
 	bool showDuringSetup = InSetup();
-
-	if ( IsInTraining() || IsInItemTestingMode() )
+	if ( IsInItemTestingMode() )
 	{
 		showDuringSetup = false;
 	}
@@ -18515,9 +18304,6 @@ bool CTFGameRules::ShouldShowTeamGoal( void )
 	if ( State_Get() == GR_STATE_PREROUND || State_Get() == GR_STATE_RND_RUNNING || showDuringSetup )
 		return true;
 
-//=============================================================================
-// HPE_END
-//=============================================================================
 	return false;
 }
 
@@ -19241,376 +19027,6 @@ void CCompetitiveLogic::OnSpawnRoomDoorsShouldUnlock( void )
 BEGIN_DATADESC( CLogicMannPower )
 END_DATADESC()
 LINK_ENTITY_TO_CLASS( tf_logic_mannpower, CLogicMannPower );
-
-//=============================================================================
-// Training Mode
-CON_COMMAND( training_continue, "Tells training that it should continue." )
-{
-	if ( TFGameRules() == NULL || TFGameRules()->IsInTraining() == false || TFGameRules()->GetTrainingModeLogic() == NULL )
-	{
-		return;
-	}
-	TFGameRules()->GetTrainingModeLogic()->OnPlayerWantsToContinue();
-}
-
-#define SF_TF_DYNAMICPROP_GRENADE_COLLISION			512
-class CTFTrainingDynamicProp : public CDynamicProp
-{
-	DECLARE_CLASS( CTFTrainingDynamicProp, CDynamicProp );
-public:
-};
-LINK_ENTITY_TO_CLASS( training_prop_dynamic, CTFTrainingDynamicProp );
-
-bool PropDynamic_CollidesWithGrenades( CBaseEntity *pBaseEntity )
-{
-	CTFTrainingDynamicProp *pTrainingDynamicProp = dynamic_cast< CTFTrainingDynamicProp* >( pBaseEntity );
-	return ( pTrainingDynamicProp && pTrainingDynamicProp->HasSpawnFlags( SF_TF_DYNAMICPROP_GRENADE_COLLISION) );
-}
-
-BEGIN_DATADESC( CTrainingModeLogic )
-	DEFINE_KEYFIELD( m_nextMapName, FIELD_STRING, "nextMap" ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "ShowTrainingMsg", InputShowTrainingMsg ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "ShowTrainingObjective", InputShowTrainingObjective ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "ForcePlayerSpawnAsClassOutput", InputForcePlayerSpawnAsClassOutput ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "KickBots", InputKickAllBots ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "ShowTrainingHUD", InputShowTrainingHUD ),
-	DEFINE_INPUTFUNC( FIELD_VOID, "HideTrainingHUD", InputHideTrainingHUD ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "EndTraining", InputEndTraining ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "PlaySoundOnPlayer", InputPlaySoundOnPlayer ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "WaitForTimerOrKeypress", InputWaitForTimerOrKeypress ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "SetNextMap", InputSetNextMap ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "ForcePlayerSwapToWeapon", InputForcePlayerSwapToWeapon ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsScout, "OnPlayerSpawnAsScout" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsSniper, "OnPlayerSpawnAsSniper" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsSoldier, "OnPlayerSpawnAsSoldier" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsDemoman, "OnPlayerSpawnAsDemoman" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsMedic, "OnPlayerSpawnAsMedic" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsHeavy, "OnPlayerSpawnAsHeavy" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsPyro, "OnPlayerSpawnAsPyro" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsSpy, "OnPlayerSpawnAsSpy" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSpawnAsEngineer, "OnPlayerSpawnAsEngineer" ),
-	DEFINE_OUTPUT( m_outputOnPlayerDied, "OnPlayerDied" ),
-	DEFINE_OUTPUT( m_outputOnBotDied, "OnBotDied" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSwappedToWeaponSlotPrimary, "OnPlayerSwappedToPrimary" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSwappedToWeaponSlotSecondary, "OnPlayerSwappedToSecondary" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSwappedToWeaponSlotMelee, "OnPlayerSwappedToMelee" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSwappedToWeaponSlotBuilding, "OnPlayerSwappedToBuilding" ),
-	DEFINE_OUTPUT( m_outputOnPlayerSwappedToWeaponSlotPDA, "OnPlayerSwappedToPDA" ),
-	DEFINE_OUTPUT( m_outputOnPlayerBuiltOutsideSuggestedArea, "OnBuildOutsideArea" ),
-	DEFINE_OUTPUT( m_outputOnPlayerDetonateBuilding, "OnPlayerDetonateBuilding" ),
-END_DATADESC()
-
-LINK_ENTITY_TO_CLASS( tf_logic_training_mode, CTrainingModeLogic );
-
-void CTrainingModeLogic::SetupOnRoundStart()
-{
-	m_objText[0] = 0;
-	SetTrainingMsg( "" );
-}
-
-void CTrainingModeLogic::SetTrainingMsg(const char *msg)
-{
-	CBroadcastRecipientFilter allusers;
-	allusers.MakeReliable();
-	UserMessageBegin( allusers, "TrainingMsg" );
-	WRITE_STRING( msg );
-	MessageEnd();
-}
-
-void CTrainingModeLogic::SetTrainingObjective(const char *text)
-{
-	CBroadcastRecipientFilter allusers;
-	allusers.MakeReliable();
-	UserMessageBegin( allusers, "TrainingObjective" );
-	WRITE_STRING( text );
-	MessageEnd();
-}
-
-void CTrainingModeLogic::OnPlayerSpawned( CTFPlayer* pPlayer )
-{
-	if ( pPlayer->GetDesiredPlayerClassIndex() == TF_CLASS_UNDEFINED )
-	{
-		return;
-	}
-	if ( pPlayer->IsFakeClient() )
-	{
-		return;
-	}
-	int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
-	switch ( iClass )
-	{
-	case TF_CLASS_SCOUT:		m_outputOnPlayerSpawnAsScout.FireOutput( this, this ); break;
-	case TF_CLASS_SNIPER:		m_outputOnPlayerSpawnAsSniper.FireOutput( this, this ); break;
-	case TF_CLASS_SOLDIER:		m_outputOnPlayerSpawnAsSoldier.FireOutput( this, this ); break;
-	case TF_CLASS_DEMOMAN:		m_outputOnPlayerSpawnAsDemoman.FireOutput( this, this ); break;
-	case TF_CLASS_MEDIC:		m_outputOnPlayerSpawnAsMedic.FireOutput( this, this ); break;
-	case TF_CLASS_HEAVYWEAPONS:	m_outputOnPlayerSpawnAsHeavy.FireOutput( this, this ); break;
-	case TF_CLASS_PYRO:			m_outputOnPlayerSpawnAsPyro.FireOutput( this, this ); break;
-	case TF_CLASS_SPY:			m_outputOnPlayerSpawnAsSpy.FireOutput( this, this ); break;
-	case TF_CLASS_ENGINEER:		m_outputOnPlayerSpawnAsEngineer.FireOutput( this, this ); break;
-	}
-}
-
-void CTrainingModeLogic::OnPlayerDied( CTFPlayer *pPlayer, CBaseEntity *pKiller )
-{
-	m_outputOnPlayerDied.FireOutput( pKiller, this );
-}
-
-void CTrainingModeLogic::OnBotDied( CTFPlayer *pPlayer, CBaseEntity *pKiller )
-{
-	m_outputOnBotDied.FireOutput( pKiller, this );
-}
-
-void CTrainingModeLogic::OnPlayerSwitchedWeapons( CTFPlayer *pPlayer )
-{
-	CTFWeaponBase *pWeapon = (CTFWeaponBase*)pPlayer->GetActiveWeapon();
-	if ( pWeapon == NULL )
-	{
-		return;
-	}
-	switch ( pWeapon->GetTFWpnData().m_iWeaponType )
-	{
-	case TF_WPN_TYPE_PRIMARY:	m_outputOnPlayerSwappedToWeaponSlotPrimary.FireOutput( this, this ); break;
-	case TF_WPN_TYPE_SECONDARY:	m_outputOnPlayerSwappedToWeaponSlotSecondary.FireOutput( this, this ); break;
-	case TF_WPN_TYPE_MELEE:		m_outputOnPlayerSwappedToWeaponSlotMelee.FireOutput( this, this ); break;
-	case TF_WPN_TYPE_BUILDING:	m_outputOnPlayerSwappedToWeaponSlotBuilding.FireOutput( this, this ); break;
-	case TF_WPN_TYPE_PDA:		m_outputOnPlayerSwappedToWeaponSlotPDA.FireOutput( this, this ); break;
-	}
-}
-
-void CTrainingModeLogic::OnPlayerWantsToContinue()
-{
-	if ( m_waitingForKeypressTimer.Get() != NULL )
-	{
-		m_waitingForKeypressTimer->FireNamedOutput( "OnTimer", variant_t(), this, this );
-		m_waitingForKeypressTimer = NULL;
-		TFGameRules()->SetIsWaitingForTrainingContinue( false );
-	}
-}
-
-void CTrainingModeLogic::OnPlayerBuiltBuilding( CTFPlayer *pPlayer, CBaseObject *pBaseObject )
-{
-	if ( pBaseObject && NotifyObjectBuiltInSuggestedArea( *pBaseObject ) == false )
-	{
-		m_outputOnPlayerBuiltOutsideSuggestedArea.FireOutput( pBaseObject, this );
-	}
-}
-
-void CTrainingModeLogic::OnPlayerUpgradedBuilding( CTFPlayer *pPlayer, CBaseObject *pBaseObject )
-{
-	if ( pBaseObject )
-	{
-		NotifyObjectUpgradedInSuggestedArea( *pBaseObject );
-	}
-}
-
-void CTrainingModeLogic::OnPlayerDetonateBuilding( CTFPlayer *pPlayer, CBaseObject *pBaseObject )
-{
-	m_outputOnPlayerDetonateBuilding.FireOutput( pPlayer, pBaseObject );
-}
-
-void CTrainingModeLogic::UpdateHUDObjective()
-{
-	if ( m_objText[0] != 0 )
-	{
-		SetTrainingObjective( m_objText );
-	}
-	else
-	{
-		SetTrainingObjective("");
-	}
-}
-
-const char* CTrainingModeLogic::GetNextMap()
-{
-	return m_nextMapName.ToCStr();
-}
-
-const char* CTrainingModeLogic::GetTrainingEndText()
-{
-	return m_endTrainingText.ToCStr();
-}
-
-int CTrainingModeLogic::GetDesiredClass() const
-{
-	return training_class.GetInt();
-}
-
-void CTrainingModeLogic::InputForcePlayerSpawnAsClassOutput( inputdata_t &inputdata )
-{
-	// This is a bit weird, but we will call this for every player--bots should be ignored
-	CTFPlayer *pPlayer;
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-		if ( !pPlayer )
-			continue;
-		OnPlayerSpawned( pPlayer );
-	}
-}
-
-void CTrainingModeLogic::InputKickAllBots( inputdata_t &inputdata )
-{
-	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-		if ( pPlayer && pPlayer->IsFakeClient() )
-		{
-			engine->ServerCommand( UTIL_VarArgs( "kickid %d\n", pPlayer->GetUserID() ) );
-		}
-	}
-}
-
-void CTrainingModeLogic::InputShowTrainingMsg( inputdata_t &inputdata )
-{
-	if ( TFGameRules()->IsInTraining() )
-	{
-		SetTrainingMsg( inputdata.value.String() );
-	}
-}
-
-void CTrainingModeLogic::InputShowTrainingObjective( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-  
-	//First try to find the unicode string to send over.
-	wchar_t *strPtr = NULL;
-	strPtr = g_pVGuiLocalize ? g_pVGuiLocalize->Find( inputdata.value.String() ) : NULL;
-
-	if (NULL == strPtr)
-	{
-		V_strcpy_safe(m_objText, inputdata.value.String());
-	}
-	else
-	{
-		g_pVGuiLocalize->ConvertUnicodeToANSI(strPtr, m_objText, kMaxLengthObjectiveText);
-	}
-	
-	UpdateHUDObjective();
-}
-
-void CTrainingModeLogic::InputShowTrainingHUD( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-	TFGameRules()->SetTrainingHUDVisible( true );
-}
-
-void CTrainingModeLogic::InputHideTrainingHUD( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-	TFGameRules()->SetTrainingHUDVisible( false );
-}
-
-void CTrainingModeLogic::InputEndTraining( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-
-	TFGameRules()->SetAllowTrainingAchievements( true );
-
-	m_endTrainingText = inputdata.value.StringID();
-
-	CTFPlayer* pHumanPlayer = ToTFPlayer( UTIL_GetListenServerHost() );
-	    
-	if (NULL == pHumanPlayer) return;
-	
-	int iTeam = pHumanPlayer->GetTeamNumber();
-	
-	bool force_map_reset = true;
-	CTeamplayRoundBasedRules *pGameRules = dynamic_cast<CTeamplayRoundBasedRules *>( GameRules() );
-	pGameRules->SetWinningTeam( iTeam, pGameRules->GetWinReason(), force_map_reset );
-
-	// Show a training win screen so send that event instead.
-	IGameEvent *winEvent = gameeventmanager->CreateEvent( "training_complete" );
-	if ( winEvent )
-	{
-		winEvent->SetString( "map", STRING( gpGlobals->mapname ) );
-		winEvent->SetString( "next_map", GetNextMap() );
-		winEvent->SetString( "text", GetTrainingEndText() );
-		
-		gameeventmanager->FireEvent( winEvent );
-	}
-}
-
-void CTrainingModeLogic::InputPlaySoundOnPlayer( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-	CTFPlayer* pHumanPlayer = ToTFPlayer( UTIL_GetListenServerHost() );
-
-	if (NULL == pHumanPlayer) 
-		return;
-
-	pHumanPlayer->EmitSound( inputdata.value.String() );
-}
-
-void CTrainingModeLogic::InputWaitForTimerOrKeypress( inputdata_t &inputdata )
-{
-	if ( !TFGameRules()->IsInTraining() )
-		return;
-
-	m_waitingForKeypressTimer = gEntList.FindEntityByName( NULL, inputdata.value.String() );
-	TFGameRules()->SetIsWaitingForTrainingContinue( m_waitingForKeypressTimer.Get() != NULL );
-}
-
-void CTrainingModeLogic::InputSetNextMap( inputdata_t &inputdata )
-{
-	m_nextMapName = AllocPooledString( inputdata.value.String() );
-}
-
-void CTrainingModeLogic::InputForcePlayerSwapToWeapon( inputdata_t &inputdata )
-{
-	CTFPlayer* pHumanPlayer = ToTFPlayer( UTIL_GetListenServerHost() );
-
-	if (NULL == pHumanPlayer) 
-		return;
-
-	CBaseCombatWeapon *pWeapon = NULL;
-
-	if ( FStrEq( inputdata.value.String(), "primary" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_PRIMARY );
-	}
-	else if ( FStrEq( inputdata.value.String(), "secondary" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_SECONDARY );
-	}
-	else if ( FStrEq( inputdata.value.String(), "melee" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_MELEE );
-	}
-	else if ( FStrEq( inputdata.value.String(), "grenade" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_GRENADE );
-	}
-	else if ( FStrEq( inputdata.value.String(), "building" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_BUILDING );
-	}
-	else if ( FStrEq( inputdata.value.String(), "pda" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_PDA );
-	}
-	else if ( FStrEq( inputdata.value.String(), "item1" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_ITEM1 );
-	}
-	else if ( FStrEq( inputdata.value.String(), "item2" ) )
-	{
-		pWeapon = pHumanPlayer->Weapon_GetSlot( TF_WPN_TYPE_ITEM2 );
-	}
-
-	if ( pWeapon )
-	{
-		pHumanPlayer->Weapon_Switch( pWeapon );
-	}
-
-}
-
 LINK_ENTITY_TO_CLASS( tf_logic_multiple_escort, CMultipleEscort );
 LINK_ENTITY_TO_CLASS( tf_logic_hybrid_ctf_cp, CHybridMap_CTF_CP );
 LINK_ENTITY_TO_CLASS( tf_logic_medieval, CMedievalLogic );
@@ -20221,65 +19637,6 @@ void CTFGameRules::OnPlayerSpawned( CTFPlayer *pPlayer )
 		pPlayer->GetCoach()->SetObserverTarget( pPlayer );
 		pPlayer->GetCoach()->StartObserverMode( OBS_MODE_CHASE );
 	}
-
-	// notify training
-	if ( m_hTrainingModeLogic )
-	{
-		m_hTrainingModeLogic->OnPlayerSpawned( pPlayer );
-	}
-
-#ifdef GAME_DLL
-	if ( !IsInTraining() )
-	{
-		// Birthday beachball ball spawning.
-		if ( IsBirthday() &&
-			 !m_hasSpawnedToy &&
-			 pPlayer->GetTeamNumber() == TF_TEAM_BLUE &&				// always give ball to first blue player, since they are often trapped during setup
-			 RandomInt( 0, 100 ) < tf_birthday_ball_chance.GetInt() )
-		{
-			Vector vDropSpot;
-			if ( CanFindBallSpawnLocation( pPlayer->WorldSpaceCenter(), &vDropSpot ) )
-			{
-				CPhysicsProp *ball = CreateBeachBall( vDropSpot, pPlayer->GetAbsAngles() );
-				if ( ball )
-				{
-					m_hasSpawnedToy = true;
-
-					// turn on the birthday skin
-					ball->m_nSkin = 1;
-				}
-			}
-		}
-
-		// Soccer ball spawning if wearing soccer cleats.
-		if ( !m_bHasSpawnedSoccerBall[ pPlayer->GetTeamNumber() ] )
-		{
-			enum
-			{
-				kSpawnWith_Nothing = 0,
-				kSpawnWith_SoccerBall = 1,
-			};
-
-			int iSpawnWithPhysicsToy = kSpawnWith_Nothing;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, iSpawnWithPhysicsToy, spawn_with_physics_toy );
-			if ( iSpawnWithPhysicsToy == kSpawnWith_SoccerBall )
-			{
-				Vector vDropSpot;
-				if ( CanFindBallSpawnLocation( pPlayer->WorldSpaceCenter(), &vDropSpot ) )
-				{
-					CPhysicsProp *ball = CreateSoccerBall( vDropSpot, pPlayer->GetAbsAngles() );
-					if ( ball )
-					{
-						m_bHasSpawnedSoccerBall[ pPlayer->GetTeamNumber() ] = true;
-
-						// turn on the birthday skin
-						ball->m_nSkin = pPlayer->GetTeamNumber() == TF_TEAM_BLUE ? 1 : 0;
-					}
-				}
-			}
-		}
-	}
-#endif
 }
 
 

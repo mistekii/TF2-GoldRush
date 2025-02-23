@@ -2062,28 +2062,6 @@ void CObjectSentrygun::Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	// find nearby sentry hint
-	if ( TFGameRules() && TFGameRules()->IsInTraining() )
-	{
-		CTFBotHintSentrygun *sentryHint;
-		for( sentryHint = static_cast< CTFBotHintSentrygun * >( gEntList.FindEntityByClassname( NULL, "bot_hint_sentrygun" ) );
-			sentryHint;
-			sentryHint = static_cast< CTFBotHintSentrygun * >( gEntList.FindEntityByClassname( sentryHint, "bot_hint_sentrygun" ) ) )
-		{
-			if ( sentryHint->IsEnabled() && sentryHint->InSameTeam( this ) )
-			{
-				Vector toMe = GetAbsOrigin() - sentryHint->GetAbsOrigin();
-				float dist2 = toMe.LengthSqr();
-				if ( dist2 < 1.0f )
-				{
-					sentryHint->OnSentryGunDestroyed( this );
-					sentryHint->DecrementUseCount();
-					break;
-				}
-			}
-		}
-	}
-
 	// Engineers destroying their own sentry don't escape the buster.
 	// Destroying disposable sentries doesn't reset the buster.
 	if ( info.GetAttacker() != this && !IsDisposableBuilding() )

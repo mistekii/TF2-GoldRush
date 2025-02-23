@@ -383,8 +383,6 @@ void CTFMatchmakingDashboard::OnCommand( const char *command )
 		return;
 		PopStack( 100, k_eSideRight ); // All y'all
 		PushSlidePanel( GetDashboardPanel().GetTypedPanel< CMatchMakingDashboardSidePanel >( k_ePlayList ) );
-		CHudMainMenuOverride *pMMOverride = (CHudMainMenuOverride*)( gViewPortInterface->FindPanelByName( PANEL_MAINMENUOVERRIDE ) );
-		pMMOverride->CheckTrainingStatus();
 	}
 	else if ( FStrEq( command, "quit" ) )
 	{
@@ -885,32 +883,6 @@ void CTFMatchmakingDashboard::OnPlayMvM_BootCamp()
 	PushSlidePanel( pConfigPanel );
 
 	GTFPartyClient()->SetLocalUIState( k_eTFSyncedMMMenuStep_MvM_Selecting_Missions, k_eTFMatchGroup_MvM_Practice );
-}
-
-void CTFMatchmakingDashboard::OnPlayTraining()
-{
-	ClearAllStacks();
-
-	if ( engine->IsInGame() )
-	{
-		const char *pText = "#TF_Training_Prompt";
-		const char *pTitle = "#TF_Training_Prompt_Title";
-		if ( TFGameRules() && TFGameRules()->IsInTraining() )
-		{
-			pTitle = "#TF_Training_Restart_Title";
-			pText = "#TF_Training_Restart_Text";
-		}
-
-		CTFConfirmTrainingDialog *pConfirm = vgui::SETUP_PANEL( new CTFConfirmTrainingDialog( pText, pTitle, this ) );
-		if ( pConfirm )
-		{
-			pConfirm->Show();
-		}
-	}
-	else
-	{
-		GetClientModeTFNormal()->GameUI()->SendMainMenuCommand( "engine training_showdlg" );
-	}
 }
 
 

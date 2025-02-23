@@ -3232,17 +3232,6 @@ bool CTFPlayer::IsReadyToPlay( void )
 
 	if ( GetTeamNumber() == TEAM_SPECTATOR && m_bArenaSpectator == true )
 		return false;
-		
-	//=============================================================================
-	// HPE_BEGIN:
-	// [msmith]	We don't want to say that the player is ready if they're still
-	//			a training video.
-	//=============================================================================
-	if ( TFGameRules() && TFGameRules()->IsInTraining() && tf_training_client_message.GetInt() == TRAINING_CLIENT_MESSAGE_WATCHING_INTRO_MOVIE )
-		return false;
-	//=============================================================================
-	// HPE_END
-	//=============================================================================
 
 	if ( GetTeamNumber() > LAST_SHARED_TEAM )
 	{
@@ -4921,7 +4910,7 @@ CEconItemView *CTFPlayer::GetLoadoutItem( int iClass, int iSlot, bool bReportWhi
 			return pItem;
 	}
 
-	if ( TFGameRules()->IsInTraining() || TFGameRules()->IsInItemTestingMode() )
+	if ( TFGameRules()->IsInItemTestingMode() )
 	{
 		CTFInventoryManager *pInventoryManager = TFInventoryManager();
 		return pInventoryManager->GetBaseItemForClass( iClass, iSlot );
@@ -8218,11 +8207,6 @@ void CTFPlayer::DetonateObjectOfType( int iType, int iMode, bool bIgnoreSapperSt
 		event->SetInt( "objecttype", iType ); // type of object removed
 		event->SetInt( "index", pObj->entindex() ); // index of the object removed
 		gameeventmanager->FireEvent( event );
-	}
-
-	if ( TFGameRules() && TFGameRules()->GetTrainingModeLogic() && IsFakeClient() == false )
-	{
-		TFGameRules()->GetTrainingModeLogic()->OnPlayerDetonateBuilding( this, pObj );
 	}
 
 	SpeakConceptIfAllowed( MP_CONCEPT_DETONATED_OBJECT, pObj->GetResponseRulesModifier() );
@@ -13646,18 +13630,6 @@ void CTFPlayer::StateEnterWELCOME( void )
 	{
 		m_bSeenRoundInfo = true;
 	}
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	When in training, we want the option to show an intro movie.
-//=============================================================================
-	else if ( TFGameRules()->IsInTraining() && IsFakeClient() == false )
-	{
-		ShowViewPortPanel( PANEL_INTRO, true );
-		m_bSeenRoundInfo = true;
-	}
-//=============================================================================
-// HPE_END
-//=============================================================================
 	else
 	{
 		if ( !IsX360() )
@@ -13701,14 +13673,6 @@ void CTFPlayer::StateThinkWELCOME( void )
 		{
 			ChangeTeam( TF_TEAM_BLUE );
 			SetDesiredPlayerClassIndex( TF_CLASS_SCOUT );
-			ForceRespawn();
-		}
-		else if ( TFGameRules()->IsInTraining() )
-		{
-			int iTeam = TFGameRules()->GetAssignedHumanTeam();
-			int iClass = TFGameRules()->GetTrainingModeLogic() ? TFGameRules()->GetTrainingModeLogic()->GetDesiredClass() : TF_CLASS_SOLDIER;
-			ChangeTeam( iTeam != TEAM_ANY ? iTeam : TF_TEAM_BLUE );
-			SetDesiredPlayerClassIndex( iClass );
 			ForceRespawn();
 		}
 	}
@@ -15007,11 +14971,6 @@ void CTFPlayer::FinishedObject( CBaseObject *pObject )
 	AddObject( pObject );
 
 	CTF_GameStats.Event_PlayerCreatedBuilding( this, pObject );
-
-	if ( TFGameRules() && TFGameRules()->IsInTraining() && TFGameRules()->GetTrainingModeLogic() && IsFakeClient() == false )
-	{
-		TFGameRules()->GetTrainingModeLogic()->OnPlayerBuiltBuilding( this, pObject );
-	}
 
 	/*
 	// Tell our builder weapon
@@ -19238,22 +19197,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 	}
 	criteriaSet.AppendCriteria( "OnRedTeam", bRedTeam ? "1" : "0" );
 
-//=============================================================================
-// HPE_BEGIN:
-// [msmith]	When in training, we kill a lot of guys... a WHOLE LOT.  This was
-//			triggering some response sounds that got very annoying after a while.
-//=============================================================================
-	if ( TFGameRules()->IsInTraining() )
-	{
-		criteriaSet.AppendCriteria( "recentkills", UTIL_VarArgs("%d", 0) );
-	}
-	else
-	{
-		criteriaSet.AppendCriteria( "recentkills", UTIL_VarArgs("%d", m_Shared.GetNumKillsInTime(30.0)) );
-	}
-//=============================================================================
-// HPE_END
-//=============================================================================
+	criteriaSet.AppendCriteria( "recentkills", UTIL_VarArgs("%d", m_Shared.GetNumKillsInTime(30.0)) );
 
 	int iTotalKills = 0;
 	PlayerStats_t *pStats = CTF_GameStats.FindPlayerStats( this );

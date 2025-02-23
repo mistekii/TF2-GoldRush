@@ -58,7 +58,6 @@ CTFHudObjectiveStatus::CTFHudObjectiveStatus( const char *pElementName )
 	, m_pControlPointProgressBar( NULL )
 	, m_pEscortPanel( NULL )
 	, m_pMultipleEscortPanel( NULL )
-	, m_pTrainingPanel( NULL )
 	, m_pRobotDestructionPanel( NULL )
 {
 	Panel *pParent = g_pClientMode->GetViewport();
@@ -69,7 +68,6 @@ CTFHudObjectiveStatus::CTFHudObjectiveStatus( const char *pElementName )
 	m_pControlPointProgressBar = new CControlPointProgressBar( this );
 	m_pEscortPanel = new CTFHudEscort( this, "ObjectiveStatusEscort" );
 	m_pMultipleEscortPanel = new CTFHudMultipleEscort( this, "ObjectiveStatusMultipleEscort" );
-	m_pTrainingPanel = new CTFHudTraining(this, "ObjectiveStatusTraining" );
 	m_pRobotDestructionPanel = NULL;
 	m_pHudPasstime = new CTFHudPasstime( this );
 
@@ -152,35 +150,6 @@ CControlPointProgressBar *CTFHudObjectiveStatus::GetControlPointProgressBar( voi
 	return m_pControlPointProgressBar;
 }
 
-//=============================================================================
-// HPE_BEGIN
-// [msmith] Functions for training stuff.
-//=============================================================================
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFHudObjectiveStatus::SetTrainingText( char *text )
-{
-	if ( NULL == m_pTrainingPanel )
-  		return;
-
-	m_pTrainingPanel->SetTrainingText( text );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFHudObjectiveStatus::SetTrainingObjective( char *text )
-{
-	if ( NULL == m_pTrainingPanel )
-		return;
-
-	m_pTrainingPanel->SetTrainingObjective( text );
-}
-//=============================================================================
-// HPE_END
-//=============================================================================
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -214,42 +183,6 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 					 && ( TFGameRules()->State_Get() != GR_STATE_TEAM_WIN ) 
 					 && ( TFGameRules()->State_Get() != GR_STATE_GAME_OVER ) );
 	}
-
-	//First check to see if we have an override HUD for the training simulation.
-	//If we do, ignore any other game play hud displays.
-	if ( iHudType == TF_HUDTYPE_TRAINING )
-	{
-		m_pTrainingPanel->SetVisible(true);
-		if ( m_pFlagPanel )
-		{
-			m_pFlagPanel->SetVisible( false );
-		}
-		
-		if ( m_pControlPointIconsPanel )
-		{
-			m_pControlPointIconsPanel->SetVisible( false );
-		}
-		
-		if ( m_pEscortPanel )
-		{
-			m_pEscortPanel->SetVisible( false );
-		}
-		
-		if ( m_pMultipleEscortPanel )
-		{
-			m_pMultipleEscortPanel->SetVisible( false );
-		}
-		
-		if ( m_pHudPasstime )
-		{
-			m_pHudPasstime->SetVisible( false );
-			m_pHudPasstime->SetEnabled( false );
-		}
-
-		return;
-	}
-
-	m_pTrainingPanel->SetVisible( TFGameRules()->IsTrainingHUDVisible() );
 
 	if ( m_pFlagPanel && m_pFlagPanel->IsVisible() != bCTFVisible )
 	{

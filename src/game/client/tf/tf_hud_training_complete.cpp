@@ -405,11 +405,6 @@ void CTFTrainingComplete::OnCommand( const char *command )
 	else if ( !Q_strcmp( command, "quit" ) )
 	{
 		engine->ExecuteClientCmd( "disconnect\n" );
-		IViewPortPanel *pMMOverride = ( gViewPortInterface->FindPanelByName( PANEL_MAINMENUOVERRIDE ) );
-		if ( pMMOverride )
-		{
-			((CHudMainMenuOverride*)pMMOverride)->ScheduleTrainingCheck( true );	
-		}
 	}
 	else
 	{

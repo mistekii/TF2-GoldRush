@@ -353,10 +353,6 @@ static void PromptFindCoach()
 	{
 		ShowMessageBox( "#TF_Coach_AlreadyCoaching_Title", "#TF_Coach_AlreadyCoaching_Text", "#GameUI_OK" );
 	}
-	else if ( TFGameRules() && TFGameRules()->IsInTraining() )
-	{
-		ShowMessageBox( "#TF_Coach_Training_Title", "#TF_Coach_Training_Text", "#GameUI_OK" );
-	}
 	else if ( IsServerFull() )
 	{
 		ShowMessageBox( "#TF_Coach_ServerFull_Title", "#TF_Coach_ServerFull_Text", "#GameUI_OK" );
@@ -589,11 +585,6 @@ ConVar tf_coach_request_nevershowagain( "tf_coach_request_nevershowagain", "0", 
 // so is deemed eligible for coaching
 static bool Coaching_ShouldRequestCoach()
 {
-	// cannot request a coach while in training
-	if ( TFGameRules() && TFGameRules()->IsInTraining() )
-	{
-		return false;
-	}
 	// cannot request a coach if server is full
 	if ( IsServerFull() )
 	{
