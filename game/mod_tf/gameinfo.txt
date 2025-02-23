@@ -2,6 +2,7 @@
 {
 	game					"TF2 Gold Rush (DEV)"
 	type 					multiplayer_only
+	icon					"resource/icon"
 	nomodels				1
 	nohimodel 				1
 	nocrosshair				0
