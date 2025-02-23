@@ -240,8 +240,6 @@ private:
 	bool m_bBackgroundUsesCharacterImages;
 	const char* m_pszForcedCharacterImage = NULL;
 
-	CPvPRankPanel*	m_pRankPanel = NULL;
-	CPvPRankPanel*	m_pRankModelPanel = NULL;
 	vgui::Menu*		m_pRankTypeMenu = NULL;
 
 	CPanelAnimationVarAliasType( int, m_iButtonXOffset, "button_x_offset", "0", "proportional_int" );

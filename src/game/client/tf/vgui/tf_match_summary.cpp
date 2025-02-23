@@ -30,7 +30,6 @@
 #include "tf_playermodelpanel.h"
 #include "tf_mapinfo.h"
 #include "c_tf_team.h"
-#include "tf_pvp_rank_panel.h"
 #include "tf_badge_panel.h"
 #include "tf_survey_questions.h"
 #include "tf_ladder_data.h"
@@ -334,18 +333,6 @@ void CTFMatchSummary::SetVisible( bool state )
 		m_iCurrentState = MS_STATE_INITIAL;
 
 		m_flDrawingPanelTime = gpGlobals->curtime + 4.5f;
-
-		CPvPRankPanel* pPvPRankPanel = FindControl< CPvPRankPanel >( "RankPanel" );
-		if ( pPvPRankPanel )
-		{
-			pPvPRankPanel->SetMatchGroup( TFGameRules()->GetCurrentMatchGroup() );
-		}
-
-		pPvPRankPanel = FindControl< CPvPRankPanel >( "RankModelPanel" );
-		if ( pPvPRankPanel )
-		{
-			pPvPRankPanel->SetMatchGroup( TFGameRules()->GetCurrentMatchGroup() );
-		}
 
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "CompetitiveGame_LowerChatWindow", false );
 	}

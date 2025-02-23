@@ -42,8 +42,6 @@
 #include "tf_lobby_container_frame_casual.h"
 #include "tf_badge_panel.h"
 #include "tf_quest_map_panel.h"
-#include "tf_matchmaking_dashboard_explanations.h"
-#include "tf_matchmaking_dashboard_comp_rank_tooltip.h"
 #include "tf_rating_data.h"
 #include "tf_progression.h"
 
@@ -56,8 +54,6 @@
 #include "vgui/ISystem.h"
 #include "mute_player_dialog.h"
 #include "tf_quest_map_utils.h"
-#include "tf_matchmaking_dashboard.h"
-#include "tf_pvp_rank_panel.h"
 
 #include "econ_paintkit.h"
 #include "ienginevgui.h"
@@ -193,9 +189,6 @@ CHudMainMenuOverride::CHudMainMenuOverride( IViewPort *pViewPort ) : BaseClass( 
 	ListenForGameEvent( "gameui_activated" );
 	ListenForGameEvent( "party_updated" );
 	ListenForGameEvent( "server_spawn" );
-
-	m_pRankPanel = new CPvPRankPanel( this, "rankpanel" );
-	m_pRankModelPanel = new CPvPRankPanel( this, "rankmodelpanel" );
 
 	// Create our MOTD scrollable section
 	m_pMOTDPanel = new vgui::EditablePanel( this, "MOTD_Panel" );
@@ -634,9 +627,6 @@ void CHudMainMenuOverride::ApplySchemeSettings( IScheme *scheme )
 	UpdatePromotionalCodes();
 
 	PerformKeyRebindings();
-
-	GetMMDashboard();
-	GetCompRanksTooltip();
 }
 
 //-----------------------------------------------------------------------------
@@ -1747,8 +1737,6 @@ void CHudMainMenuOverride::UpdateRankPanelVisibility()
 {
 	bool bConnectedToGC = GTFGCClientSystem()->BConnectedtoGC();
 
-	m_pRankPanel->SetVisible( bConnectedToGC );
-	m_pRankModelPanel->SetVisible( bConnectedToGC );
 	SetControlVisible( "CycleRankTypeButton", bConnectedToGC );
 	SetControlVisible( "NoGCMessage", !bConnectedToGC, true );
 	SetControlVisible( "NoGCImage", !bConnectedToGC, true );
@@ -2057,14 +2045,6 @@ void CHudMainMenuOverride::UpdateRankPanelType()
 		eMatchGroup = k_eTFMatchGroup_Casual_12v12;
 	}
 
-	m_pRankPanel->SetMatchGroup( eMatchGroup );
-	m_pRankPanel->InvalidateLayout( true, true );
-	m_pRankModelPanel->SetMatchGroup( eMatchGroup );
-	m_pRankModelPanel->InvalidateLayout( true, true );
-
-	m_pRankPanel->OnCommand( "begin_xp_lerp" );
-	m_pRankModelPanel->OnCommand( "begin_xp_lerp" );
-
 	// Show the comp ranks tooltip mouseover panel? (the little '(i)' image)
 	bool bShowCompRankTooltip = false;
 	auto pMatchGroup = GetMatchGroupDescription( eMatchGroup );
@@ -2072,13 +2052,6 @@ void CHudMainMenuOverride::UpdateRankPanelType()
 		 && GTFGCClientSystem()->BConnectedtoGC() )
 	{
 		bShowCompRankTooltip = true;
-	}
-
-	Panel* pRankTooltipPanel = FindChildByName( "RankTooltipPanel" );
-	if( pRankTooltipPanel )
-	{
-		pRankTooltipPanel->SetVisible( bShowCompRankTooltip );
-		pRankTooltipPanel->SetTooltip( GetCompRanksTooltip(), nullptr );
 	}
 }
 

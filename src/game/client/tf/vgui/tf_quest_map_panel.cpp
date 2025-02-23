@@ -24,7 +24,6 @@
 #include "econ/econ_ui.h"
 #include "store/store_panel.h"
 #include "tf_item_inventory.h"
-#include "tf_matchmaking_dashboard.h"
 #include "tf_hud_mainmenuoverride.h"
 #include "c_tf_player.h"
 #include "vguicenterprint.h"
@@ -681,6 +680,7 @@ void CQuestMapPanel::FireGameEvent( IGameEvent *event )
 				int nX, nY;
 				pPanel->GetPos( nX, nY );
 				pPanel->ParentLocalToScreen( nX, nY );
+				/*
 				CreateScrollingIndicator( nX,
 										  nY - YRES( 20 ),
 										  LocalizeNumberWithToken( pszToken, nGain ),
@@ -688,7 +688,7 @@ void CQuestMapPanel::FireGameEvent( IGameEvent *event )
 										  0.f,
 										  0,
 										  -25,
-										  true );
+										  true )*/
 			}
 		};
 
@@ -1128,7 +1128,7 @@ void CQuestMapPanel::UpdateStarsGlobalStatus()
 			if ( !pPanel )
 				return;
 
-			pPanel->SetTooltip( GetDashboardTooltip( k_eSmallFont ), pszLocToken );
+			//pPanel->SetTooltip( GetDashboardTooltip( k_eSmallFont ), pszLocToken );
 		};
 
 		auto pRegionDef = GetProtoScriptObjDefManager()->GetTypedDefinition< CQuestMapRegion >( m_currentRegion );

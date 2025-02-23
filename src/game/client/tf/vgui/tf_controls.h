@@ -451,15 +451,6 @@ private:
 	float m_flOffsetAngle = 0.f;
 };
 
-void CreateScrollingIndicator( int nXPos,
-							   int nYPos,
-							   const wchar* pwszText,
-							   const char* pszSoundName,
-							   float flDelay,
-							   int nXTravel,
-							   int nYTravel, 
-							   bool bPositive );
-
 // Helper to create a string that can blame users for some action.
 // Example: They don't have a Widget.
 //			"User1 doesn't have a Widget"
