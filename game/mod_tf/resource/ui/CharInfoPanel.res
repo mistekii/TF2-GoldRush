@@ -30,7 +30,42 @@
 		"clientinsetx_override"			"0"
 		"sheetinset_bottom"				"40"
 	}
-	
+	"CaratLabel"
+	{
+		"ControlName"		"CExLabel"
+		"fieldName"		"CaratLabel"
+		"font"			"HudFontSmallestBold"
+		"labelText"		">>"
+		"textAlignment"	"west"
+		"xpos"			"85"
+		"ypos"			"12"
+		"zpos"			"10"
+		"wide"			"20"
+		"tall"			"15"
+		"autoResize"	"1"
+		"pinCorner"		"0"
+		"visible"		"1"
+		"enabled"		"1"
+		"fgcolor_override" "200 80 60 255"
+	}
+	"HackTitleLabel"
+	{
+		"ControlName"	"CExLabel"
+		"fieldName"		"HackTitleLabel"
+		"font"			"HudFontSmallestBold"
+		"labelText"		"#CharInfoAndSetup"
+		"textAlignment"	"west"
+		"xpos"			"100"
+		"ypos"			"12"
+		"zpos"			"10"
+		"wide"			"300"
+		"tall"			"15"
+		"autoResize"	"0"
+		"pinCorner"		"0"
+		"visible"		"1"
+		"enabled"			"1"
+		"fgcolor_override"	"117 107 94 255"
+	}
 	"BackgroundHeader"
 	{
 		"ControlName"	"ImagePanel"
@@ -81,9 +116,9 @@
 		"tabxindent"	"80"
 		"tabxdelta"		"10"
 		"tabwidth"		"240"
-		"tabheight"		"20"
+		"tabheight"		"34"
 		"transition_time" "0"
-		"yoffset"	"14"
+		//"yoffset"	"14"
 		
 		"HeaderLine"
 		{
@@ -103,7 +138,7 @@
 		"tabskv"
 		{
 			"textinsetx"		"40"
-			"font"				"HudFontMediumSmallBold"
+			"font"				"HudFontMediumBold"
 			"selectedcolor"		"200 187 161 255"
 			"unselectedcolor"	"130 120 104 255"	
 			"defaultBgColor_override"	"46 43 42 255"
