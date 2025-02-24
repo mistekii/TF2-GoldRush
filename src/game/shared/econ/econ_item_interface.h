@@ -549,17 +549,13 @@ public:
 		{
 			m_bInitMaterialOverride[ iTeam ] = true;
 
-			// always use paintkit first
-			const char *pszMaterialOverride = GetPaintKitMaterialOverride( this );
-			if ( !pszMaterialOverride )
-			{
-				if ( !this->GetItemDefinition() )
-					return NULL;
+			if ( !this->GetItemDefinition() )
+				return NULL;
 
-				pszMaterialOverride = this->GetItemDefinition()->GetMaterialOverride( iTeam );
-				if ( pszMaterialOverride == NULL )
-					return NULL;
-			}
+			const char *pszMaterialOverride = this->GetItemDefinition()->GetMaterialOverride( iTeam );
+
+			if ( pszMaterialOverride == NULL )
+				return NULL;
 
 			m_materialOverrides[ iTeam ].Init( pszMaterialOverride, TEXTURE_GROUP_CLIENT_EFFECTS );
 			return m_materialOverrides[ iTeam ];
