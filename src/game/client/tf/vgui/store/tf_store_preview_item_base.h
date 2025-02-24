@@ -15,7 +15,8 @@
 #include "store/store_preview_item.h"
 #include "store/v1/tf_store_page.h"
 #include "tf_shareddefs.h"
-#include "tf_hud_mainmenuoverride.h"
+
+using namespace vgui;
 
 //-----------------------------------------------------------------------------
 // Purpose: 

@@ -1,6 +1,7 @@
 "GameInfo"
 {
 	game					"TF2 Gold Rush (DEV)"
+	gamelogo				1
 	type 					multiplayer_only
 	icon					"resource/icon"
 	nomodels				1

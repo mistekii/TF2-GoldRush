@@ -15,7 +15,6 @@
 #include "cdll_client_int.h"
 #include "clientmode_tf.h"
 #include "ienginevgui.h"
-#include "tf_hud_mainmenuoverride.h"
 #include "econ_item_system.h"
 #include "vgui_controls/ComboBox.h"
 #include "econ_paintkit.h"

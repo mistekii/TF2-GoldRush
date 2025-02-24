@@ -10,7 +10,6 @@
 #include "abuse_report_ui.h"
 #include "game/client/iviewport.h"
 #include "tf_shareddefs.h"
-#include "tf_hud_mainmenuoverride.h"
 #include "tf_gcmessages.h"
 #include "c_tf_player.h"
 #include "tf_quickplay_shared.h"
@@ -107,9 +106,7 @@ void CTFAbuseReportManager::ActivateSubmitReportUI()
 	Assert( g_AbuseReportDlg.Get() == NULL );
 	Assert( m_pIncidentData != NULL );
 
-	IViewPortPanel *pMMOverride = ( gViewPortInterface->FindPanelByName( PANEL_MAINMENUOVERRIDE ) );
 	engine->ExecuteClientCmd("gameui_activate");
-	vgui::SETUP_PANEL( new CAbuseReportDlg( (CHudMainMenuOverride*)pMMOverride, m_pIncidentData ) );
 	Assert( g_AbuseReportDlg.Get() != NULL );
 	g_AbuseReportDlg->MakeModal();
 }

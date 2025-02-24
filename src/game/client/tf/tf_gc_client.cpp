@@ -14,7 +14,6 @@
 #include "econ_item_inventory.h"
 #include "tf_item_inventory.h"
 #include "tf_hud_mann_vs_machine_status.h"
-#include "tf_hud_mainmenuoverride.h"
 #include "econ/confirm_dialog.h"
 #include "rtime.h"
 #include "ienginevgui.h"

@@ -12,7 +12,6 @@
 #include <vgui_controls/ImagePanel.h>
 #include "gc_clientsystem.h"
 #include "engine/IEngineSound.h"
-#include "quest_log_panel.h"
 #include "econ_controls.h"
 #include "tf_item_inventory.h"
 #include "c_tf_player.h"

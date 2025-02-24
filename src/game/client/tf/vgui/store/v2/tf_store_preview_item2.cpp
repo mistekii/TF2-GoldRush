@@ -19,6 +19,7 @@
 #include "tf_playermodelpanel.h"
 #include "navigationpanel.h"
 #include "tf_mouseforwardingpanel.h"
+#include "vgui/ISurface.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>

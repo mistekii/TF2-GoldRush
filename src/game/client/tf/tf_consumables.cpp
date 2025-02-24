@@ -33,7 +33,6 @@
 #include "econ_notifications.h"
 #include "vgui/ISurface.h"
 #include "vgui/character_info_panel.h"
-#include "tf_hud_mainmenuoverride.h"
 #include "econ_ui.h"
 #include "backpack_panel.h"
 #include "store/v1/tf_store_page.h"
@@ -823,7 +822,7 @@ public:
 
 	virtual void SOCreated( const CSteamID & steamIDOwner, const GCSDK::CSharedObject *pObject, GCSDK::ESOCacheEvent eEvent ) OVERRIDE
 	{
-		if ( eEvent != eSOCacheEvent_Incremental)
+		if ( eEvent != GCSDK::eSOCacheEvent_Incremental)
 			return;
 
 		if ( pObject->GetTypeID() != CEconItem::k_nTypeID )
@@ -1490,11 +1489,6 @@ public:
 		if ( msg.BReadStr( &url ) )
 		{
 			steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage( url.Get() );
-			IViewPortPanel *pMMOverride = ( gViewPortInterface->FindPanelByName( PANEL_MAINMENUOVERRIDE ) );
-			if ( pMMOverride )
-			{
-				((CHudMainMenuOverride*)pMMOverride)->UpdatePromotionalCodes();
-			}
 		}
 
 		return true;

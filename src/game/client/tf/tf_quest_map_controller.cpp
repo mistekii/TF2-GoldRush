@@ -11,7 +11,6 @@
 #include "gcsdk/msgprotobuf.h"
 #include "gc_clientsystem.h"
 #include "econ_quests.h"
-#include "tf_hud_mainmenuoverride.h"
 #include "econ_gcmessages.pb.h"
 
 using namespace GCSDK;
