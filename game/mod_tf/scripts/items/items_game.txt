@@ -9356,9 +9356,10 @@
 			"image_inventory"	"backpack/weapons/c_models/c_scattergun"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"0"
 			"inspect_panel_dist" "35"
-			"model_player"	"models/weapons/c_models/c_scattergun.mdl"
+			"model_player"	"models/weapons/v_models/v_scattergun_scout.mdl"
+			"model_world"	"models/weapons/w_models/w_scattergun.mdl"
 			"used_by_classes"
 			{
 				"scout"	"1"
