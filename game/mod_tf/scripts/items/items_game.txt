@@ -5351,10 +5351,13 @@
 			}
 			"static_attrs"
 			{
-				"attack_minicrits_and_consumes_burning"	"1"
-				"damage penalty"						"0.67"
-				"single wep holster time increased"		"1.35"
-				"crit mod disabled"						"0"
+				//"attack_minicrits_and_consumes_burning"	"1"
+				//"damage penalty"						"0.67"
+				//"single wep holster time increased"		"1.35"
+				//"crit mod disabled"						"0"
+				"crit vs burning players"				"1"
+				"dmg penalty vs nonburning"				"0.5"
+				"no crit vs nonburning"					"1"
 			}
 			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
 			"drop_sound"		"ui/item_metal_weapon_drop.wav"
@@ -6969,8 +6972,9 @@
 			"image_inventory"	"backpack/weapons/c_models/c_flamethrower/c_flamethrower"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_flamethrower/c_flamethrower.mdl"
-			"attach_to_hands"	"1"
+			"model_player"	"models/weapons/v_models/v_flamethrower_pyro.mdl"
+			"model_world"	"models/weapons/w_models/w_flamethrower.mdl"
+			"attach_to_hands"	"0"
 			"static_attrs"
 			{
 				"weapon_stattrak_module_scale"			"1"
@@ -11241,16 +11245,16 @@
 			"first_sale_date"	"2010/09/29"
 			"prefab"	"weapon_flamethrower"
 			"baseitem" "1"
-			"visuals"
-			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_flamethrower/c_flamethrower_pilotlight.mdl"
-					}
-				}
-			}
+			//"visuals"
+			//{
+			//	"attached_models"
+			//	{
+			//		"0"
+			//		{
+			//			"model"	"models/weapons/c_models/c_flamethrower/c_flamethrower_pilotlight.mdl"
+			//		}
+			//	}
+			//}
 		}
 		"22"
 		{
