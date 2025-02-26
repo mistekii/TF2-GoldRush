@@ -244,8 +244,6 @@ int GetClassIndexFromString( const char *pClassName, int nLastClassIndex = TF_LA
 extern int iRemapIndexToClass[TF_CLASS_MENU_BUTTONS];
 int GetRemappedMenuIndexForClass( int iClass );
 
-extern const char *g_pszBreadModels[];
-
 //-----------------------------------------------------------------------------
 // For entity_capture_flags to use when placed in the world
 // NOTE: Inserting to most or all of the enums in this file will BREAK DEMOS -

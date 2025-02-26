@@ -164,7 +164,6 @@ private:
 	DECLARE_DATADESC();
 
 	void UpdateMaxHealth( int nHealth, bool bForce = false );
-	void SpawnBread( const CTFPlayer* pTeleportingPlayer );
 
 	CUtlStringList m_teleportWhereName;
 };
