@@ -86,7 +86,14 @@ void TF_EjectBrassCallback( const CEffectData &data )
 	pTemp->m_vecTempEntAngVelocity[1] = random->RandomFloat(-255,255);
 	pTemp->m_vecTempEntAngVelocity[2] = random->RandomFloat(-255,255);
 
-	pTemp->hitSound = TE_PISTOL_SHELL;
+	if ( !Q_strcmp( pszBrassModel, "models/weapons/shells/shell_shotgun.mdl" ) )
+	{
+		pTemp->hitSound = BOUNCE_SHOTSHELL;
+	}
+	else
+	{
+		pTemp->hitSound = BOUNCE_SHELL;
+	}
 
 	pTemp->SetGravity( 0.4 );
 
