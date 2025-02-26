@@ -14,7 +14,7 @@
 #define TE_RIFLE_SHELL 1024
 #define TE_PISTOL_SHELL 2048
 
-ConVar tf_shells_lifetime( "tf_shells_lifetime", "20.0", FCVAR_ARCHIVE, "How long ejected shells should last. 0 to disable shells." );
+ConVar tf_shells_lifetime( "tf_shells_lifetime", "15.0", FCVAR_ARCHIVE, "How long ejected shells should last. 0 to disable shells." );
 
 extern CTFWeaponInfo *GetTFWeaponInfo( int iWeapon );
 
