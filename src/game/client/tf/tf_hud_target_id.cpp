@@ -61,15 +61,6 @@ void SpectatorTargetLocationCallback( IConVar *var, const char *oldString, float
 }
 ConVar tf_spectator_target_location( "tf_spectator_target_location", "0", FCVAR_ARCHIVE, "Determines the location of the spectator targetID panel.", true, 0, true, 3, SpectatorTargetLocationCallback );
 
-void DisableFloatingHealthCallback( IConVar *var, const char *oldString, float oldFloat )
-{
-	CMainTargetID *pTargetID = (CMainTargetID *)GET_HUDELEMENT( CMainTargetID );
-	if ( pTargetID )
-	{
-		pTargetID->InvalidateLayout();
-	}
-}
-ConVar tf_hud_target_id_disable_floating_health( "tf_hud_target_id_disable_floating_health", "1", FCVAR_ARCHIVE, "Set to disable floating health bar", DisableFloatingHealthCallback );
 ConVar tf_hud_target_id_alpha( "tf_hud_target_id_alpha", "100", FCVAR_ARCHIVE, "Alpha value of target id background, default 100" );
 ConVar tf_hud_target_id_offset( "tf_hud_target_id_offset", "0", FCVAR_ARCHIVE, "RES file Y offset for target id" );
 ConVar tf_hud_target_id_show_avatars( "tf_hud_target_id_show_avatars", "2", FCVAR_ARCHIVE, "Display Steam avatars on TargetID when using floating health icons.  1 = everyone, 2 = friends only." );
@@ -78,9 +69,6 @@ ConVar tf_hud_target_id_show_avatars( "tf_hud_target_id_show_avatars", "2", FCVA
 bool ShouldHealthBarBeVisible( CBaseEntity *pTarget, CTFPlayer *pLocalPlayer )
 {
 	if ( !pTarget || !pLocalPlayer )
-		return false;
-
-	if ( tf_hud_target_id_disable_floating_health.GetBool() )
 		return false;
 
 	if ( pTarget->IsHealthBarVisible() )
@@ -140,7 +128,6 @@ CTargetID::CTargetID( const char *pElementName ) :
 	m_pTargetKillStreakIcon = NULL;
 	m_bLayoutOnUpdate = false;
 
-	m_pFloatingHealthIcon = NULL;
 	m_iLastScannedEntIndex = 0;
 	m_pAvatarImage = NULL;
 
@@ -151,18 +138,6 @@ CTargetID::CTargetID( const char *pElementName ) :
 
 	ListenForGameEvent( "show_class_layout" );
 	RegisterForRenderGroup( "arena_target_id" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTargetID::LevelShutdown( void )
-{
-	if ( m_pFloatingHealthIcon )
-	{
-		m_pFloatingHealthIcon->MarkForDeletion();
-		m_pFloatingHealthIcon = NULL;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -202,19 +177,6 @@ void CTargetID::FireGameEvent( IGameEvent * event )
 }
 
 //-----------------------------------------------------------------------------
-bool CTargetID::DrawHealthIcon() 
-{
-	C_BaseEntity *pEnt = cl_entitylist->GetEnt( GetTargetIndex() );
-	if ( pEnt && pEnt->IsBaseObject() )
-		return true;
-
-	if ( tf_hud_target_id_disable_floating_health.GetBool() )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Find out which player to pull an avatar image from.  pTFPlayer is the player under the crosshair.
 //-----------------------------------------------------------------------------
 C_TFPlayer *CTargetID::GetTargetForSteamAvatar( C_TFPlayer *pTFPlayer )
@@ -227,10 +189,6 @@ C_TFPlayer *CTargetID::GetTargetForSteamAvatar( C_TFPlayer *pTFPlayer )
 
 	C_TFPlayer *pTFLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pTFLocalPlayer )
-		return NULL;
-
-	// Health icon inside the panel (too busy - figure this out later)
-	if ( DrawHealthIcon() )
 		return NULL;
 
 	// Save room when healing or being healed
@@ -313,17 +271,6 @@ void CTargetID::ApplySettings( KeyValues *inResourceData )
 int CTargetID::GetRenderGroupPriority( void )
 {
 	return m_iRenderPriority;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTargetID::UpdateFloatingHealthIconVisibility( bool bVisible )
-{
-	if ( m_pFloatingHealthIcon && ( m_pFloatingHealthIcon->IsVisible() != bVisible ) )
-	{
-		m_pFloatingHealthIcon->SetVisible( bVisible );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -456,41 +403,13 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 			}
 
 
-			if ( bShow || bHealthBarVisible )
-			{
-				// See if we're re-targeting our previous
-				if ( m_pFloatingHealthIcon )
-				{
-					if ( m_pFloatingHealthIcon->GetEntity() && m_pFloatingHealthIcon->GetEntity() == pEnt )
-					{
-						UpdateFloatingHealthIconVisibility( true );
-					}
-					else
-					{
-						// New target - clear previous
-						m_pFloatingHealthIcon->MarkForDeletion();
-						m_pFloatingHealthIcon = NULL;
-					}
-				}
-
-				//Recreate the floating health icon if there isn't one, we're not a spectator, and 
-				// we're not a spy or this was a robot from Robot Destruction-Mode
-				if ( !m_pFloatingHealthIcon && !bSpectator && ( !bSpy || bHealthBarVisible ) && !DrawHealthIcon() )
-				{
-					m_pFloatingHealthIcon = CFloatingHealthIcon::AddFloatingHealthIcon( pEnt );
-				}
-			}
-			else if ( pEnt->IsBaseObject() && ( bInSameTeam || bSpy ) )
+			if ( pEnt->IsBaseObject() && ( bInSameTeam || bSpy ) )
 			{
 				bReturn = true;
 			}
 			else if ( pEnt->IsVisibleToTargetID() )
 			{
 				bReturn = true;
-			}
-			else
-			{
-				UpdateFloatingHealthIconVisibility( false );
 			}
 		}
 	}
@@ -505,26 +424,22 @@ bool CTargetID::ShouldDraw( void )
 {
 	if ( !CHudElement::ShouldDraw() )
 	{
-		UpdateFloatingHealthIconVisibility( false );
 		return false;
 	}
 
 	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
 	{
-		UpdateFloatingHealthIconVisibility( false );
 		return false;
 	}
 
 	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( !pLocalTFPlayer )
 	{
-		UpdateFloatingHealthIconVisibility( false );
 		return false;
 	}
 
 	if ( pLocalTFPlayer->IsTaunting() )
 	{
-		UpdateFloatingHealthIconVisibility( false );
 		return false;
 	}
 
@@ -546,10 +461,6 @@ bool CTargetID::ShouldDraw( void )
 				m_iTargetEntIndex = m_iLastEntIndex;
 			}
 		}
-
-		// If we're showing a floating health icon, and no longer have a target,
-		// hide it and see if it's the same entity next time
-		UpdateFloatingHealthIconVisibility( false );
 	}
 	else
 	{
@@ -557,12 +468,6 @@ bool CTargetID::ShouldDraw( void )
 
 		if ( m_iTargetEntIndex != m_iLastScannedEntIndex )
 		{
-			// If we switched to another, valid target for a floating health icon, recreate it on the next pass
-			if ( m_pFloatingHealthIcon )
-			{
-				m_pFloatingHealthIcon->MarkForDeletion();
-				m_pFloatingHealthIcon = NULL;
-			}
 			m_iLastScannedEntIndex = m_iTargetEntIndex;
 		}
 	}
@@ -598,101 +503,25 @@ bool CTargetID::ShouldDraw( void )
 //-----------------------------------------------------------------------------
 void CTargetID::PerformLayout( void )
 {
-	int iXIndent = XRES(5);
-	int iXPostdent = XRES(10);
-	int iWidth = iXIndent + iXPostdent;
-	if ( DrawHealthIcon() )
-	{
-		iWidth += m_pTargetHealth->GetWide();
-	}
-	if ( m_pAvatarImage && m_pAvatarImage->IsVisible() )
-	{
-		iWidth += m_pAvatarImage->GetWide() + XRES( 2 );
-	}
+	int iXIndent = YRES( 5 );
+	int iXPostdent = YRES( 10 );
+	int iWidth = m_pTargetHealth->GetWide() + iXIndent + iXPostdent;
 
 	int iTextW, iTextH;
 	int iDataW, iDataH;
-
-	if ( m_pTargetNameLabel && m_pTargetDataLabel )
-	{
-		m_pTargetNameLabel->GetContentSize( iTextW, iTextH );
-		m_pTargetDataLabel->GetContentSize( iDataW, iDataH );
-		iWidth += MAX(iTextW,iDataW);
-
-		if ( m_pBGPanel )
-		{
-			m_pBGPanel->SetSize( iWidth, GetTall() );
-		}
-
-		int x1 = 0, y1 = 0;
-		int x2 = 0, y2 = 0;
-		int x3 = 0, y3 = 0;
-		m_pTargetNameLabel->GetPos( x1, y1 );
-		m_pTargetDataLabel->GetPos( x2, y2 );
-		if ( m_pTargetKillStreakIcon )
-		{
-			m_pTargetKillStreakIcon->GetPos( x3, y3 );
-		}
-		
-		int iWideExtra = 0;
-		if ( DrawHealthIcon() )
-		{
-			iWideExtra += m_pTargetHealth->GetWide();
-		}
-		if ( m_pAvatarImage && m_pAvatarImage->IsVisible() )
-		{
-			iWideExtra += m_pAvatarImage->GetWide() + XRES( 4 );
-		}
-
-		int nBuffer = ( m_pAvatarImage && m_pAvatarImage->IsVisible() ) ? 6 : 8;
-		m_pTargetNameLabel->SetPos( XRES( nBuffer ) + iWideExtra, y1 );
-		m_pTargetDataLabel->SetPos( XRES( nBuffer ) + iWideExtra, y2 );
-
-		if ( m_pTargetKillStreakIcon )
-		{
-			int nKSBuffer = ( cl_hud_minmode.GetBool() ) ? 6 : 9;
-			m_pTargetKillStreakIcon->SetPos( XRES( nKSBuffer ) + iWideExtra, y3 );
-		}
-	}
-
-	// Put the moveable icon to the right hand of our panel
-	if ( m_pMoveableSubPanel && m_pMoveableSubPanel->IsVisible() )
-	{
-		if ( m_pMoveableKeyLabel && m_pMoveableIcon && m_pMoveableSymbolIcon && m_pMoveableIconBG )
-		{
-			m_pMoveableKeyLabel->SizeToContents();
-
-			int iIndent = XRES(4);
-			int iMoveWide = MAX( XRES(16) + m_pMoveableKeyLabel->GetWide() + iIndent, (m_pMoveableIcon->GetWide()) + iIndent + XRES(8) );
-			m_pMoveableKeyLabel->SetWide( iMoveWide );
-			m_pMoveableSubPanel->SetSize( iMoveWide, GetTall() );
-			m_pMoveableSubPanel->SetPos( iWidth - iIndent, 0 );
-
-			int x,y;
-			m_pMoveableKeyLabel->GetPos( x, y );
-			m_pMoveableSymbolIcon->SetPos( (iMoveWide - m_pMoveableSymbolIcon->GetWide()) * 0.5, y - m_pMoveableSymbolIcon->GetTall() );
-			m_pMoveableSymbolIcon->GetPos( x, y );
-			m_pMoveableIcon->SetPos( (iMoveWide - m_pMoveableIcon->GetWide()) * 0.5, y - m_pMoveableIcon->GetTall() );
-			m_pMoveableIconBG->SetSize( m_pMoveableSubPanel->GetWide(), m_pMoveableSubPanel->GetTall() );
-		}
-	}
-
-	if ( m_pMoveableSubPanel && m_pMoveableSubPanel->IsVisible() )
-	{
-		// Now add our extra width to the total size
-		iWidth += m_pMoveableSubPanel->GetWide();
-	}
+	m_pTargetNameLabel->GetContentSize( iTextW, iTextH );
+	m_pTargetDataLabel->GetContentSize( iDataW, iDataH );
+	iWidth += max( iTextW, iDataW );
 
 	SetSize( iWidth, GetTall() );
 
-	int nOffset = m_bArenaPanelVisible ? YRES (120) : 0; // HACK: move the targetID up a bit so it won't overlap the panel
-	if( UseVR() )
+	int iX, iY;
+	GetPos( iX, iY );
+	SetPos( (ScreenWidth() - iWidth) * 0.5, iY );
+
+	if ( m_pBGPanel )
 	{
-		SetPos( ScreenWidth() - iWidth - m_iXOffset,  m_nOriginalY - nOffset + YRES( tf_hud_target_id_offset.GetInt() ) );
-	}
-	else
-	{
-		SetPos( (ScreenWidth() - iWidth) * 0.5,  m_nOriginalY - nOffset + YRES( tf_hud_target_id_offset.GetInt() ) );
+		m_pBGPanel->SetSize( iWidth, GetTall() );
 	}
 };
 
@@ -1006,7 +835,7 @@ void CTargetID::UpdateID( void )
 		}
 
 		m_pTargetHealth->SetHealth( flHealth, flMaxHealth, iMaxBuffedHealth );
-		m_pTargetHealth->SetVisible( DrawHealthIcon() );
+		m_pTargetHealth->SetVisible( true );
 		if ( m_pMoveableSubPanel )
 		{
 			bool bShowActionKey = pszActionCommand != NULL;
@@ -1377,188 +1206,4 @@ void CSpectatorTargetID::PerformLayout( void )
 			}
 		}
 	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CFloatingHealthIcon::CFloatingHealthIcon( vgui::Panel *parent, const char *name ) : EditablePanel( parent, name )
-{
-	m_flPrevHealth = -1.f;
-	m_nPrevLevel = 0;
-
-	SetVisible( false );
-	SetBounds( 0, 0, 128, 128 );
-
-	vgui::ivgui()->AddTickSignal( GetVPanel(), 50 );
-	OnTick();
-
-	m_pTargetHealth = new CTFSpectatorGUIHealth( this, "SpectatorGUIHealth" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CFloatingHealthIcon::Reset( void )
-{
-	m_pTargetHealth->Reset();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFloatingHealthIcon::SetEntity( C_BaseEntity *pEntity )
-{
-	m_hEntity = pEntity;
-
-	if ( !m_pTargetHealth )
-		return;
-
-	m_pTargetHealth->SetAllowAnimations( false );
-	m_pTargetHealth->HideHealthBonusImage();
-
-	bool bBuilding = false;
-
-	if ( m_hEntity->IsPlayer() )
-	{
-		C_TFPlayer *pPlayer = ToTFPlayer( m_hEntity );
-		bBuilding = ( pPlayer && pPlayer->IsMiniBoss() ) ? true : false;
-	}
-	m_pTargetHealth->SetBuilding( bBuilding );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CFloatingHealthIcon* CFloatingHealthIcon::AddFloatingHealthIcon( C_BaseEntity *pEntity )
-{
-	CFloatingHealthIcon *pHealthIcon = new CFloatingHealthIcon( g_pClientMode->GetViewport(), "HealthIcon" );
-	vgui::SETUP_PANEL( pHealthIcon );
-	pHealthIcon->SetEntity( pEntity );
-
-	return pHealthIcon;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFloatingHealthIcon::ApplySchemeSettings( vgui::IScheme *pScheme )
-{
-	BaseClass::ApplySchemeSettings( pScheme );
-
-	LoadControlSettings( "resource/UI/HealthIconPanel.res" );
-	SetVisible( false );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CFloatingHealthIcon::OnTick( void )
-{
-	if ( !m_pTargetHealth )
-		return;
-
-	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-	if ( !ShouldHealthBarBeVisible( m_hEntity, pLocalTFPlayer ) )
-	{
-		SetVisible( false );
-		return;
-	}
-
-	C_TFPlayer *pTargetPlayer = ToTFPlayer( m_hEntity );
-	if ( pTargetPlayer && pTargetPlayer->m_Shared.IsStealthed() )
-	{
-		SetVisible( false );
-		return;
-	}
-
-	// Defaults for all entities
-	float flHealth = m_hEntity->GetHealth();
-	float flMaxHealth = m_hEntity->GetMaxHealth();
-	float iMaxBuffedHealth = m_hEntity->GetMaxHealth();
-
-	if ( pTargetPlayer && pTargetPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTargetPlayer->IsEnemyPlayer() )
-	{
-		flHealth = (float)pTargetPlayer->m_Shared.GetDisguiseHealth();
-		flMaxHealth = (float)pTargetPlayer->m_Shared.GetDisguiseMaxHealth();
-		iMaxBuffedHealth = pTargetPlayer->m_Shared.GetDisguiseMaxBuffedHealth();
-	}
-		
-	if ( flHealth != m_flPrevHealth )
- 	{
-		m_pTargetHealth->SetHealth( flHealth, flMaxHealth, iMaxBuffedHealth );
-		m_flPrevHealth = flHealth;
-	}
-
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-ConVar tf_healthicon_height_offset( "tf_healthicon_height_offset", "10", FCVAR_ARCHIVE, "Offset of the health icon away from the top of the target." );
-void CFloatingHealthIcon::Paint( void )
-{
-	if ( !CalculatePosition() )
-		return;
-
-	BaseClass::Paint();
-}
-
-//-----------------------------------------------------------------------------
-bool CFloatingHealthIcon::CalculatePosition( )
-{
-	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalTFPlayer )
-		return false;
-
-	if ( !m_hEntity || m_hEntity->IsDormant() )
-	{
-		return false;
-	}
-
-	Vector vecTarget = m_hEntity->GetAbsOrigin();
-
-	// Reposition based on our target's position
-	Vector vecDistance = vecTarget - pLocalTFPlayer->GetAbsOrigin();
-	vecTarget.z += VEC_HULL_MAX_SCALED( m_hEntity->GetBaseAnimating() ).z + tf_healthicon_height_offset.GetInt() + m_hEntity->GetHealthBarHeightOffset();
-
-	int iX, iY;
-	GetVectorInHudSpace( vecTarget, iX, iY );				// TODO: GetVectorInHudSpace or GetVectorInScreenSpace?
-	SetPos( iX - ( GetWide() / 2 ), iY - GetTall() );
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-void CFloatingHealthIcon::SetVisible( bool state )
-{
-	if ( state )
-	{
-		CalculatePosition();
-	}
-
-	BaseClass::SetVisible( state );
-}
-
-
-//-----------------------------------------------------------------------------
-bool CFloatingHealthIcon::IsVisible( void )
-{
-	if ( !m_pTargetHealth )
-		return false;
-
-	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalTFPlayer )
-		return false;
-
-	//if ( pLocalTFPlayer->GetObserverMode() == OBS_MODE_FREEZECAM )
-	if ( pLocalTFPlayer->GetObserverMode() > OBS_MODE_NONE )
-		return false;
-
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return false;
-
-	return BaseClass::IsVisible();
 }

@@ -18,7 +18,6 @@
 #include "c_tf_player.h"
 #include "IconPanel.h"
 
-class CFloatingHealthIcon;
 class CAvatarImagePanel;
 
 #define PLAYER_HINT_DISTANCE	150
@@ -35,7 +34,6 @@ class CTargetID : public CHudElement, public vgui::EditablePanel
 public:
 	CTargetID( const char *pElementName );
 	
-	virtual void	LevelShutdown( void );
 	void			Reset( void );
 	void			VidInit( void );
 	virtual bool	ShouldDraw( void );
@@ -54,12 +52,10 @@ public:
 
 	virtual void	FireGameEvent( IGameEvent * event );
 
-	virtual	bool	DrawHealthIcon();
 	virtual	C_TFPlayer *GetTargetForSteamAvatar( C_TFPlayer *pTFPlayer );
 private:
 
 	bool IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, float &flNewTargetRetainFOV );
-	void UpdateFloatingHealthIconVisibility( bool bVisible );
 
 protected:
 	vgui::HFont		m_hFont;
@@ -88,7 +84,6 @@ protected:
 
 	bool			m_bArenaPanelVisible;
 
-	CFloatingHealthIcon		*m_pFloatingHealthIcon;
 	int						m_iLastScannedEntIndex;
 
 	CPanelAnimationVarAliasType( int, m_iXOffset, "x_offset", "20", "proportional_int" );
@@ -140,38 +135,6 @@ private:
 	wchar_t		m_wszPrepend[ MAX_PREPEND_STRING ];
 
 	bool m_bWasHidingLowerElements;
-};
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CFloatingHealthIcon : public vgui::EditablePanel
-{
-	DECLARE_CLASS_SIMPLE( CFloatingHealthIcon, vgui::EditablePanel );
-public:
-	CFloatingHealthIcon( vgui::Panel *parent, const char *name );
-
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme );
-	virtual void OnTick( void );
-	virtual void Paint( void );
-	virtual bool IsVisible( void );
-
-	virtual void SetVisible( bool state );
-
-	void		Reset( void );
-	void		SetEntity( C_BaseEntity *pEntity );
-	C_BaseEntity *GetEntity( void ) { return m_hEntity; }
-
-	static CFloatingHealthIcon* AddFloatingHealthIcon( C_BaseEntity *pEntity );
-
-	bool		CalculatePosition();
-
-private:
-	CTFSpectatorGUIHealth	*m_pTargetHealth;
-	CHandle< C_BaseEntity >	m_hEntity;
-	float					m_flPrevHealth;
-	int						m_nPrevLevel;
 };
 
 #endif // TF_HUD_TARGET_ID_H
