@@ -302,11 +302,6 @@ CTFBaseRocket *CTFBaseRocket::Create( CBaseEntity *pLauncher, const char *pszCla
 	if ( pTFOwner )
 	{
 		pRocket->SetTruceValidForEnt( pTFOwner->IsTruceValidForEnt() );
-
-		if ( pTFOwner->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			flLaunchSpeed = 3000.f;
-		}
 	}
 
 	Vector vecVelocity = vecForward * flLaunchSpeed;

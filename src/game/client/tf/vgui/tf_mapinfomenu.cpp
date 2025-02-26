@@ -484,14 +484,7 @@ void CTFMapInfoMenu::LoadMapPage()
 			const char *pszDescription = NULL;
 			char mapInfoKey[ 64 ];
 
-			if ( TFGameRules() && TFGameRules()->IsPowerupMode() && ( FStrEq( m_szMapName, "ctf_foundry" ) || FStrEq( m_szMapName, "ctf_gorge" ) ) )
-			{
-				Q_snprintf( mapInfoKey, sizeof( mapInfoKey ), "#%s_beta", m_szMapName );
-			}
-			else
-			{
-				Q_snprintf( mapInfoKey, sizeof( mapInfoKey ), "#%s", m_szMapName );
-			}
+			Q_snprintf( mapInfoKey, sizeof( mapInfoKey ), "#%s", m_szMapName );
 		
 			Q_strlower( mapInfoKey );
 

@@ -1035,12 +1035,6 @@ void CTFFlameThrower::FireAirBlast( int iAmmoPerShot )
 		fAirblastPrimaryRefireTimeScale = 1.0f;
 	}
 
-	// Haste Powerup Rune adds multiplier to fire delay time
-	if ( pOwner->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-	{
-		fAirblastRefireTimeScale *= 0.5f;
-	}
-
 	m_flNextSecondaryAttack = gpGlobals->curtime + (0.75f * fAirblastRefireTimeScale);	
 	m_flNextPrimaryAttack = gpGlobals->curtime + (1.0f * fAirblastRefireTimeScale * fAirblastPrimaryRefireTimeScale);
 	m_flResetBurstEffect = gpGlobals->curtime + 0.05f;

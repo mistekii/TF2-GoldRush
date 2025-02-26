@@ -1336,12 +1336,6 @@ void CTFGameStats::Event_PlayerKilledOther( CBasePlayer *pAttacker, CBaseEntity 
 		}
 	}
 
-	// Players get points for killing a Rune carrier
-	if ( pPlayerVictim && pPlayerVictim->m_Shared.IsCarryingRune() )
-	{
-		IncrementStat( pPlayerAttacker, TFSTAT_KILLS_RUNECARRIER, 1 );
-	}
-
 }
 
 void CTFGameStats::Event_KillDetail( CTFPlayer* pKiller, CTFPlayer* pVictim, CTFPlayer* pAssister, IGameEvent* event /*player_death*/, const CTakeDamageInfo &info )
@@ -3331,7 +3325,7 @@ void CTFGameStats::SW_PasstimeRoundEnded()
 	// Flush data gathered so far...
 	GetSteamWorksSGameStatsUploader().FlushStats();
 
-	KeyValues *pKVData = new KeyValues( "TF2ServerPasstimeRoundEndedv2" );
+	KeyValues* pKVData = new KeyValues( "TF2ServerPasstimeRoundEndedv2" );
 	pKVData->SetString( "MapID", m_currentMap.m_Header.m_szMapName );							// Reference table
 	pKVData->SetInt( "RoundIndex", m_iRoundsPlayed );
 
@@ -3417,8 +3411,8 @@ void CTFGameStats::SW_PasstimeRoundEnded()
 		auto pKVCopy = pKVData->MakeCopy();
 		auto iNow = CRTime::RTime32TimeCur();
 		char filename[128];
-		V_sprintf_safe(filename, "passtime_stats_%u.txt", iNow);
-		
+		V_sprintf_safe( filename, "passtime_stats_%u.txt", iNow );
+
 		// add keys to simulate what the stats server usually adds to the database automatically
 		pKVData->SetInt( "SessionID", 0 );
 		pKVData->SetInt( "TimeReported", iNow );
@@ -3428,149 +3422,5 @@ void CTFGameStats::SW_PasstimeRoundEnded()
 	}
 
 	GetSteamWorksSGameStatsUploader().AddStatsForUpload( pKVData );
-
+}
 #endif
-}
-
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PowerUpModeDeath( CTFPlayer *pKiller, CTFPlayer *pVictim )
-{
-#if !defined(NO_STEAM)
-
-	//START_TABLE( k_ESchemaCatalogOGS, TF2PowerUpModeKillsv2, TABLE_PROP_NORMAL )
-	//	INT_FIELD( llSessionID, SessionID, uint64 )				// Reporting server
-	//	INT_FIELD( nAccountID, AccountID, int32 )				// Player
-	//	INT_FIELD( nID, ID, int32 )								// ID
-	//	INT_FIELD( bIsTrustedServer, IsTrustedServer, bool )
-	//	INT_FIELD( nKillerClass, KillerClass, int16 )
-	//	INT_FIELD( nKillerRune, KillerRune, int16 )
-	//	INT_FIELD( nKillerKillstreak, KillerKillstreak, int16 )
-	
-	//	INT_FIELD( nKillerPrimary, KillerPrimary, int32 )
-	//	INT_FIELD( nKillerSecondary, KillerSecondary, int32 )
-	//	INT_FIELD( nKillerMelee, KillerMelee, int32 )
-
-	//	INT_FIELD( nVictimClass, VictimClass, int16 )
-	//	INT_FIELD( nVictimRune, VictimRune, int16 )
-	//	INT_FIELD( nVictimKillstreak, VictimKillstreak, int16 )
-	//	INT_FIELD( RTime32UpdateTime, TimeSubmitted, RTime32 )
-	//	PRIMARY_KEYS_CLUSTERED( 80, nAccountID, RTime32UpdateTime, llSessionID )
-	//	WIPE_TABLE_BETWEEN_TESTS( k_EWipePolicyWipeForAllTests )
-	//	PARTITION_INTERVAL( k_EPartitionIntervalDaily )
-	//	OWNING_APPLICATION( 440 )
-	//	END_TABLE
-
-	if ( !TFGameRules() || !TFGameRules()->IsPowerupMode() )
-		return;
-
-	if ( !pKiller || !pVictim )
-		return;
-
-	if ( pKiller->IsBot() || pVictim->IsBot() )
-		return;
-
-	CSteamID killerID;
-	pKiller->GetSteamID( &killerID );
-
-	if ( !killerID.IsValid() || !killerID.BIndividualAccount() )
-		return;
-
-
-	KeyValues* pKVData = new KeyValues( "TF2PowerUpModeKillsv2" );
-
-	pKVData->SetInt( "AccountID", (int)killerID.GetAccountID() );
-	pKVData->SetInt( "ID", (int)m_iEvents++ );
-	pKVData->SetInt( "KillerClass", pKiller->GetPlayerClass()->GetClassIndex() );
-	pKVData->SetInt( "KillerRune", GetConditionFromRuneType( pKiller->m_Shared.GetCarryingRuneType() ) );
-	pKVData->SetInt( "KillerKillstreak",  pKiller->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_KillsAll ) );
-	
-	CEconItemView *pItem = pKiller->GetLoadoutItem( pKiller->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_PRIMARY );
-	item_definition_index_t iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "KillerPrimary", iItemDef );
-
-	pItem = pKiller->GetLoadoutItem( pKiller->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_SECONDARY );
-	iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "KillerSecondary", iItemDef );
-	
-	pItem = pKiller->GetLoadoutItem( pKiller->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_MELEE );
-	iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "KillerMelee", iItemDef );
-	
-	pKVData->SetInt( "VictimClass", pVictim->GetPlayerClass()->GetClassIndex() );
-	pKVData->SetInt( "VictimRune", GetConditionFromRuneType( pVictim->m_Shared.GetCarryingRuneType() ) );
-	pKVData->SetInt( "VictimKillstreak",  pVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_KillsAll ) );
-	
-	//pKVData->SetInt( "TimeSubmitted", GetSteamWorksSGameStatsUploader().GetTimeSinceEpoch() );
-
-	GetSteamWorksSGameStatsUploader().AddStatsForUpload( pKVData );
-
-#endif // !NO_STEAM
-}
-
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PowerUpRuneDuration( CTFPlayer *pPlayer, int iDuration, int nRune )
-{
-#if !defined(NO_STEAM)
-
-//-----------------------------------------------------------------------------
-// OGS: TF2 PowerUp Mode - Power Up duration
-//-----------------------------------------------------------------------------
-
-	//START_TABLE( k_ESchemaCatalogOGS, TF2PowerUpModeRuneDuration, TABLE_PROP_NORMAL )
-	//	INT_FIELD( llSessionID, SessionID, uint64 )				// Reporting server
-	//	INT_FIELD( nAccountID, AccountID, uint32 )				// Player
-	//	INT_FIELD( nID, ID, int32 )								// ID
-	//	INT_FIELD( bIsTrustedServer, IsTrustedServer, bool )
-	//	INT_FIELD( nPlayerClass, PlayerClass, int16 )
-	//	INT_FIELD( nPlayerRune, PlayerRune, int16 )
-	//	INT_FIELD( nPlayerKillstreak, PlayerKillstreak, int16 )
-	//	INT_FIELD( nRuneDuration, RuneDuration, int32 )
-	//	INT_FIELD( nPlayerPrimary, PlayerPrimary, int32 )
-	//	INT_FIELD( nPlayerSecondary, PlayerSecondary, int32 )
-	//	INT_FIELD( nPlayerMelee, PlayerMelee, int32 )
-	//	INT_FIELD( RTime32UpdateTime, TimeSubmitted, RTime32 )
-	//	PRIMARY_KEYS_CLUSTERED( 80, nAccountID, nID, RTime32UpdateTime, llSessionID )
-	//	WIPE_TABLE_BETWEEN_TESTS( k_EWipePolicyWipeForAllTests )
-	//	PARTITION_INTERVAL( k_EPartitionIntervalDaily )
-	//	OWNING_APPLICATION( 440 )
-	//	END_TABLE
-
-	if ( !TFGameRules() || !TFGameRules()->IsPowerupMode() )
-		return;
-
-	if ( !pPlayer || pPlayer->IsBot() )
-		return;
-
-	CSteamID playerID;
-	pPlayer->GetSteamID( &playerID );
-
-	if ( !playerID.IsValid() || !playerID.BIndividualAccount() )
-		return;
-
-
-	KeyValues* pKVData = new KeyValues( "TF2PowerUpModeRuneDuration" );
-
-	pKVData->SetInt( "AccountID", (int)playerID.GetAccountID() );
-	pKVData->SetInt( "ID", (int)m_iEvents++ );
-	pKVData->SetInt( "PlayerClass", pPlayer->GetPlayerClass()->GetClassIndex() );
-	pKVData->SetInt( "PlayerRune", nRune );
-	pKVData->SetInt( "PlayerKillstreak", pPlayer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_KillsAll ) );
-	pKVData->SetInt( "RuneDuration", iDuration );
-
-	CEconItemView *pItem = pPlayer->GetLoadoutItem( pPlayer->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_PRIMARY );
-	item_definition_index_t iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "PlayerPrimary", iItemDef );
-
-	pItem = pPlayer->GetLoadoutItem( pPlayer->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_SECONDARY );
-	iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "PlayerSecondary", iItemDef );
-
-	pItem = pPlayer->GetLoadoutItem( pPlayer->GetPlayerClass()->GetClassIndex(), LOADOUT_POSITION_MELEE );
-	iItemDef = pItem ? pItem->GetItemDefIndex() : 0;
-	pKVData->SetInt( "PlayerMelee", iItemDef );
-
-	//pKVData->SetInt( "TimeSubmitted", GetSteamWorksSGameStatsUploader().GetTimeSinceEpoch() );
-
-	GetSteamWorksSGameStatsUploader().AddStatsForUpload( pKVData );
-#endif // !NO_STEAM
-}

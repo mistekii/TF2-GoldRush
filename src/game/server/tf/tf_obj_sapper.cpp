@@ -501,17 +501,6 @@ void CObjectSapper::SapperThink( void )
 
 			m_flSapperDamageAccumulator -= iDamage;
 
-			// sapper building damage added to health of Vampire Powerup carrier
-			if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-			{
-				CTFPlayer *pTFOwner = ToTFPlayer( GetOwner() ); 
-			
-				if ( pTFOwner && pTFOwner->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE )
-				{
-					pTFOwner->TakeHealth( flDamageToGive, DMG_GENERIC );
-				}
-			}
-
 			int iCustomDamage = 0;
 			if ( GetReversesBuildingConstructionSpeed() != 0.0f )
 			{

@@ -160,23 +160,6 @@ private:
 	const char*			m_pszResFile;
 };
 
-class CHudItemEffectMeter_Rune : public CHudItemEffectMeter
-{
-public:
-
-	CHudItemEffectMeter_Rune( const char *pszElementName, C_TFPlayer *pPlayer );
-
-	// Effect Meter Logic
-	virtual bool		IsEnabled( void );
-	virtual float		GetProgress( void );
-	virtual bool		ShouldDraw( void );
-
-	virtual const char*	GetLabelText( void ) { return "Powerup"; }
-	virtual const char *GetResFile( void )		{ return "resource/UI/HudPowerupEffectMeter.res"; }
-
-	virtual bool		ShouldFlash( void );
-};
-
 
 class CHudItemEffectMeter_ItemAttribute : public CHudItemEffectMeter
 {

@@ -381,10 +381,6 @@ void CTFAmmoPack::PackTouch( CBaseEntity *pOther )
 		float flCurrentCharge = pPlayer->m_Shared.GetDemomanChargeMeter();
 		if ( flCurrentCharge < 100.0f )
 		{
-			if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-			{
-				m_flAmmoRatio *= 0.2;
-			}
 			pPlayer->m_Shared.SetDemomanChargeMeter( flCurrentCharge + m_flAmmoRatio * 100.0f );
 			iAmmoTaken++;
 		}

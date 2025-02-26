@@ -612,22 +612,6 @@ void CTFSniperRifle::ApplyScopeSpeedModifications( float &flBaseRef )
 	CTFPlayer *pPlayer = ToTFPlayer( GetOwnerEntity() );
 	if ( pPlayer )
 	{
-		if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE || pPlayer->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			if ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-			{
-				flBaseRef *= 0.75f;
-			}
-			else
-			{
-				flBaseRef *= 0.5f;
-			}
-		}
-		else if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KING || pPlayer->m_Shared.InCond( TF_COND_KING_BUFFED ) )
-		{
-			flBaseRef *= 0.75f;
-		}
-		
 		int iMaster = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, iMaster, ability_master_sniper );
 		if ( iMaster )
@@ -673,22 +657,6 @@ void CTFSniperRifle::ApplyChargeSpeedModifications( float &flBaseRef )
 		else
 		{
 			m_bWasAimedAtEnemy = false;
-		}
-
-		if ( pPlayer && ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_PRECISION || pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE ) )
-		{
-			if ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-			{
-				flBaseRef *= 2.0f;
-			}
-			else
-			{
-				flBaseRef *= 3.0f;
-			}
-		}
-		else if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KING || pPlayer->m_Shared.InCond( TF_COND_KING_BUFFED ) )
-		{
-			flBaseRef *= 1.5f;
 		}
 
 
@@ -874,24 +842,6 @@ float CTFSniperRifle::GetProjectileDamage( void )
 	float flDamageMod = 1.f;
 	CALL_ATTRIB_HOOK_FLOAT( flDamageMod, mult_dmg );
 	flDamage *= flDamageMod;
-
-	
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( GetOwnerEntity() ); 
-
-		if ( pPlayer && pPlayer->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			if ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-			{
-				flDamage *= 1.5f;
-			}
-			else
-			{
-				flDamage *= 2.f;
-			}
-		}
-	}
 
 	if ( IsFullyCharged() )
 	{

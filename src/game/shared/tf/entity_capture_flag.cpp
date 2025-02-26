@@ -398,8 +398,6 @@ void CCaptureFlag::Precache( void )
 	PrecacheScriptSound( TF_RD_TEAM_CAPTURED );
 	PrecacheScriptSound( TF_RD_TEAM_RETURNED );
 
-	PrecacheScriptSound( TF_RUNE_INTEL_CAPTURED );
-
 	PrecacheParticleSystem( GetPaperEffect() );
 
 	char szFileName[ MAX_PATH ];
@@ -539,11 +537,6 @@ bool CCaptureFlag::ShouldHideGlowEffect( void )
 	if ( !IsGlowEnabled() )
 	{
 		return true;
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		return false;
 	}
 	
 	if ( m_nType == TF_FLAGTYPE_ROBOT_DESTRUCTION && tf_rd_flag_ui_mode.GetInt() )
@@ -753,13 +746,6 @@ int CCaptureFlag::GetReturnTimeShotClockMode(int nStartReturnTime)
     {
         if (m_bUseShotClockMode)
         {
-			// When the game is in a standoff (both flags are stolen and poisonous), return when next dropped
-			// This makes it easier to resolve the standoff and continue the game
-			if ( TFGameRules() && TFGameRules()->IsPowerupMode() && TFGameRules()->PowerupModeFlagStandoffActive() )
-			{
-				return 0;
-	        }
-
 			float flCreditTime = (gpGlobals->curtime - m_flLastPickupTime) * tf_flag_return_time_credit_factor.GetFloat()
                                + m_flLastResetDuration;
             int nPossibleCreditTime = RoundFloatToInt(flCreditTime);
@@ -1396,12 +1382,6 @@ void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 			CTFPlayerDestructionLogic::GetPlayerDestructionLogic()->PlayPropPickupSound( pPlayer );
 		}
 	}
-	
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() && ( m_nType != TF_FLAGTYPE_PLAYER_DESTRUCTION ) && ( m_flTimeToSetPoisonous == 0.f ) )
-	{
-		// replace 90.f with a convar?
-		m_flTimeToSetPoisonous = gpGlobals->curtime + 90.f;
-	}
 
     // If the flag was at home, set the initial reset time to the max allowable time, otherwise it's to whatever it was
     // right now so we can persist that until later.
@@ -1535,15 +1515,7 @@ void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 				else
 				{
 					CTeamRecipientFilter filter( iTeam, true );
-
-					if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-					{
-						PlaySound( filter, TF_RUNE_INTEL_CAPTURED );
-					}
-					else
-					{	
-						PlaySound( filter, TF_CTF_TEAM_CAPTURED );
-					}
+					PlaySound( filter, TF_CTF_TEAM_CAPTURED );
 
 					TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_ENEMY_FLAG_CAPTURED );
 				}
@@ -2402,11 +2374,6 @@ void CCaptureFlag::Think( void )
 				}
 			}
 		}
-	}
-
-	if ( IsStolen() && TFGameRules() && TFGameRules()->IsPowerupMode() && IsPoisonous() && !pPlayer->m_Shared.InCond( TF_COND_MARKEDFORDEATH ) )
-	{
-		pPlayer->m_Shared.AddCond( TF_COND_MARKEDFORDEATH );
 	}
 	
 	SetNextThink( gpGlobals->curtime + TF_FLAG_THINK_TIME );

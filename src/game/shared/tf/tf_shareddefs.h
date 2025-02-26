@@ -2625,65 +2625,6 @@ struct PlayerHistoryInfo_t
 	int nTeam;			// Last team they were on
 };
 
-// When adding new RuneTypes_t, make sure to add new condition codes to 
-// ETFCond and also update GetConditionFromRuneType and GetRuneTypeFromCondition.
-enum RuneTypes_t
-{
-	RUNE_NONE = -1,
-	RUNE_STRENGTH,
-	RUNE_HASTE,
-	RUNE_REGEN,
-	RUNE_RESIST,
-	RUNE_VAMPIRE,
-	RUNE_REFLECT,
-	RUNE_PRECISION,
-	RUNE_AGILITY,
-	RUNE_KNOCKOUT,
-	RUNE_KING,
-	RUNE_PLAGUE,
-	RUNE_SUPERNOVA,
-
-	// ADD NEW RUNE TYPE HERE, DO NOT RE-ORDER
-
-	RUNE_TYPES_MAX
-};
-
-inline ETFCond GetConditionFromRuneType( RuneTypes_t rt )
-{
-	switch ( rt )
-	{ 
-	case RUNE_NONE:			return TF_COND_INVALID;
-	case RUNE_STRENGTH:		return TF_COND_RUNE_STRENGTH;
-	case RUNE_HASTE:		return TF_COND_RUNE_HASTE;
-	case RUNE_REGEN:		return TF_COND_RUNE_REGEN;
-	case RUNE_RESIST:		return TF_COND_RUNE_RESIST;
-	case RUNE_VAMPIRE:		return TF_COND_RUNE_VAMPIRE;
-	case RUNE_REFLECT:		return TF_COND_RUNE_REFLECT;
-	case RUNE_PRECISION:	return TF_COND_RUNE_PRECISION;
-	case RUNE_AGILITY:		return TF_COND_RUNE_AGILITY;
-	case RUNE_KNOCKOUT:		return TF_COND_RUNE_KNOCKOUT;
-	case RUNE_KING:			return TF_COND_RUNE_KING;
-	case RUNE_PLAGUE:		return TF_COND_RUNE_PLAGUE;
-	case RUNE_SUPERNOVA:	return TF_COND_RUNE_SUPERNOVA;
-	default:
-		AssertMsg( 0, "Unexpected rune_type rt (%d) in GetConditionFromRuneType", rt );	
-	}
-
-	return TF_COND_INVALID;
-}
-
-enum TemporaryRuneTypes_t
-{
-	RUNETYPE_TEMP_NONE = 0,
-
-	RUNETYPE_TEMP_CRIT,
-	RUNETYPE_TEMP_UBER,
-
-	RUNETYPE_TEMP_MAX,
-};
-
-const char *GetPowerupIconName( RuneTypes_t type, int iTeam );
-
 #define TOURNAMENT_NOCANCEL_TIME 10
 
 #define TF_WEAPON_PICKUP_RANGE 150

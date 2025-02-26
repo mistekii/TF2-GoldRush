@@ -115,8 +115,6 @@
 	#include "tf_logic_halloween_2014.h"
 	#include "tf_obj_sentrygun.h"
 	#include "entity_halloween_pickup.h"
-	#include "entity_rune.h"
-	#include "func_powerupvolume.h"
 	#include "workshop/maps_workshop.h"
 	#include "tf_passtime_logic.h"
 	#include "cdll_int.h"
@@ -1107,33 +1105,6 @@ ConVar tf_competitive_required_late_join_confirm_timeout( "tf_competitive_requir
 ConVar tf_gamemode_community ( "tf_gamemode_community", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
 #ifdef GAME_DLL
-void cc_powerup_mode( IConVar *pConVar, const char *pOldString, float flOldValue )
-{
-	ConVarRef var( pConVar );
-	if ( var.IsValid() )
-	{
-		if ( !TFGameRules() )
-			return;
-
-		if ( var.GetBool() )
-		{
-			if ( TFGameRules()->IsMannVsMachineMode() )
-				return;
-		}
-
-		TFGameRules()->SetPowerupMode( var.GetBool() );
-		TFGameRules()->State_Transition( GR_STATE_PREROUND );
-		tf_flag_caps_per_round.SetValue( var.GetBool() ? 7 : 3 );	// Hack
-	}
-}
-
-ConVar tf_powerup_mode( "tf_powerup_mode", "0", FCVAR_NOTIFY, "Enable/disable powerup mode. Not compatible with Mann Vs Machine mode", cc_powerup_mode );
-ConVar tf_powerup_mode_imbalance_delta( "tf_powerup_mode_imbalance_delta", "24", FCVAR_CHEAT, "Powerup kill score lead one team must have before imbalance measures are initiated" );
-ConVar tf_powerup_mode_imbalance_consecutive_min_players( "tf_powerup_mode_imbalance_consecutive_min_players", "10", FCVAR_CHEAT, "Minimum number of players on the server before consecutive imbalance measures trigger team balancing" );
-ConVar tf_powerup_mode_imbalance_consecutive_time( "tf_powerup_mode_imbalance_consecutive_time", "1200", FCVAR_CHEAT, "Teams are balanced if consecutive imbalance measures for the same team are triggered in less time (seconds)" );
-ConVar tf_powerup_mode_dominant_multiplier( "tf_powerup_mode_dominant_multiplier", "3", FCVAR_CHEAT, "The multiple by which a player must exceed the median kills by in order to be considered dominant" );
-ConVar tf_powerup_mode_killcount_timer_length( "tf_powerup_mode_killcount_timer_length", "300", FCVAR_CHEAT, "How long to wait between kill count tests that determine if a player is dominating" ); //should be a multiple of 60 because we use this to calculate an integer
-
 ConVar tf_skillrating_update_interval( "tf_skillrating_update_interval", "180", FCVAR_ARCHIVE, "How often to update the GC and OGS." );
 
 extern ConVar mp_teams_unbalance_limit;
@@ -1419,7 +1390,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropBool( RECVINFO( m_bCompetitiveMode ), 0, RecvProxy_CompetitiveMode ),
 	RecvPropInt( RECVINFO( m_nMatchGroupType ) ),
 	RecvPropBool( RECVINFO( m_bMatchEnded ) ),
-	RecvPropBool( RECVINFO( m_bPowerupMode ) ),
 	RecvPropString( RECVINFO( m_pszCustomUpgradesFile ) ),
 	RecvPropBool( RECVINFO( m_bTruceActive ) ),
 	RecvPropBool( RECVINFO( m_bShowMatchSummary ), 0, RecvProxy_MatchSummary ),
@@ -1483,7 +1453,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropBool( SENDINFO( m_bHelltowerPlayersInHell ) ),
 	SendPropBool( SENDINFO( m_bIsUsingSpells ) ),
 	SendPropBool( SENDINFO( m_bCompetitiveMode ) ),
-	SendPropBool( SENDINFO( m_bPowerupMode ) ),
 	SendPropInt( SENDINFO( m_nMatchGroupType ) ),
 	SendPropBool( SENDINFO( m_bMatchEnded ) ),
 	SendPropString( SENDINFO( m_pszCustomUpgradesFile ) ),
@@ -2511,7 +2480,7 @@ bool CTFGameRules::ReportMatchResultsToGC( CMsgGC_Match_Result_Status nCode )
 		// trains were at the end of each round
 		flBlueScoreRatio = RemapValClamped( pTFTeamBlue->GetTotalPLRTrackPercentTraveled(), 0.f, pTFTeamBlue->GetTotalPLRTrackPercentTraveled() + pTFTeamRed->GetTotalPLRTrackPercentTraveled(), 0.f, 1.f );
 	}
-	else if ( !m_bPlayingKoth && !m_bPowerupMode && ( tf_gamemode_cp.GetInt() || tf_gamemode_sd.GetInt() || tf_gamemode_payload.GetInt() ) )
+	else if ( !m_bPlayingKoth && ( tf_gamemode_cp.GetInt() || tf_gamemode_sd.GetInt() || tf_gamemode_payload.GetInt() ) )
 	{
 		// Rounds Won
 		// CP -	Points can flow back and forever, so we can't count total caps. And the
@@ -2523,7 +2492,7 @@ bool CTFGameRules::ReportMatchResultsToGC( CMsgGC_Match_Result_Status nCode )
 		//		a chance to score points.
 		flBlueScoreRatio = RemapValClamped( pTFTeamBlue->GetScore(), 0.f, pTFTeamBlue->GetScore() + pTFTeamRed->GetScore() , 0.f, 1.f );
 	}
-	else if ( tf_gamemode_ctf.GetInt() || m_bPowerupMode || tf_gamemode_passtime.GetInt() )
+	else if ( tf_gamemode_ctf.GetInt() || tf_gamemode_passtime.GetInt() )
 	{
 		// Flag captures
 		// Mannpower is a variant of CTF and Passtime effectively is CTF. In all of these modes
@@ -2727,27 +2696,6 @@ bool CTFGameRules::IsAttackDefenseMode( void )
 
 	tf_attack_defend_map.SetValue( bRetVal );
 	return bRetVal;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetPowerupMode( bool bValue )
-{
-	// Powerup mode uses grapple and changes some gamerule variables.
-
-	if ( bValue )
-	{
-		tf_grapplinghook_enable.SetValue( 1 );
-		tf_flag_return_time_credit_factor.SetValue( 0 );
-	}
-	else
-	{
-		tf_grapplinghook_enable.SetValue( 0 );
-		tf_flag_return_time_credit_factor.SetValue( 1 );
-	}
-
-	m_bPowerupMode = bValue;
 }
 
 #ifdef GAME_DLL
@@ -3296,12 +3244,6 @@ CTFGameRules::CTFGameRules()
 	m_doomsdaySetupTimer.Invalidate();
 	StopDoomsdayTicketsTimer();
 
-	m_nPowerupKillsRedTeam = 0;
-	m_nPowerupKillsBlueTeam = 0;
-	m_flTimeToRunImbalanceMeasures = 120.f;
-	m_flTimeToStopImbalanceMeasures = 0.f;
-	m_bPowerupImbalanceMeasuresRunning = false;
-
 	m_hRequiredObserverTarget = NULL;
 	m_bStopWatchWinner.Set( false );
 
@@ -3336,7 +3278,6 @@ CTFGameRules::CTFGameRules()
 	m_bPlayingHybrid_CTF_CP.Set( false );
 	m_bPlayingSpecialDeliveryMode.Set( false );
 	m_bPlayingRobotDestructionMode.Set( false );
-	m_bPowerupMode.Set( false );
 
 	m_bHelltowerPlayersInHell.Set( false );
 	m_bIsUsingSpells.Set( false );
@@ -4192,7 +4133,6 @@ void CTFGameRules::Activate()
 	m_bPlayingHybrid_CTF_CP.Set( false );
 	m_bPlayingSpecialDeliveryMode.Set( false );
 	m_bPlayingRobotDestructionMode.Set( false );
-	m_bPowerupMode.Set( false );
 
 	m_redPayloadToPush = NULL;
 	m_bluePayloadToPush = NULL;
@@ -4389,15 +4329,6 @@ void CTFGameRules::Activate()
 	m_bServerVoteOnReset = false;
 	m_flVoteCheckThrottle = 0;
 
-
-	if ( tf_powerup_mode.GetBool()  )
-	{
-		if ( !IsPowerupMode() )
-		{
-			SetPowerupMode( true );
-		}
-	}
-
 // 	if ( !IsInTournamentMode() )
 // 	{
 // 		CExtraMapEntity::SpawnExtraModel();
@@ -4432,9 +4363,6 @@ void CTFGameRules::Activate()
 	{
 		pMatchDesc->InitGameRulesSettings();
 	}
-
-	CLogicMannPower *pLogicMannPower = dynamic_cast< CLogicMannPower* > ( gEntList.FindEntityByClassname( NULL, "tf_logic_mannpower" ) );
-	tf_powerup_mode.SetValue( pLogicMannPower ? 1 : 0 );
 
 	if ( IsHolidayActive( kHoliday_Soldier ) )
 	{
@@ -4717,38 +4645,6 @@ IMPLEMENT_AUTO_LIST( ITFTeleportLocationAutoList );
 
 LINK_ENTITY_TO_CLASS( tf_teleport_location, CTFTeleportLocation );
 
-void SpawnRunes( void )
-{
-	// Spawn power-up runes when the round starts. Choice of spawn location and Powerup Type is random
-	CUtlVector< CTFInfoPowerupSpawn* > vecSpawnPoints; 
-	for ( int i = 0; i < IInfoPowerupSpawnAutoList::AutoList().Count(); i++ )
-	{
-		CTFInfoPowerupSpawn *pSpawnPoint = static_cast< CTFInfoPowerupSpawn* >( IInfoPowerupSpawnAutoList::AutoList()[i] );
-		if ( !pSpawnPoint->IsDisabled() && !pSpawnPoint->HasRune() ) 
-		{
-			vecSpawnPoints.AddToTail( pSpawnPoint );
-		}
-	}
-
-	Assert( vecSpawnPoints.Count() > 0 ); // We need at least one valid info_powerup_spawn
-
-	// Warn if there aren't enough valid info_powerup_spawns to spawn all powerups
-	if ( vecSpawnPoints.Count() < RUNE_TYPES_MAX )
-	{
-		Warning( "Warning: Not enough valid info_powerup_spawn locations found. You need a minimum of %i valid locations to spawn all Powerups.\n", RUNE_TYPES_MAX );
-	}
-
-	// try to spawn each rune type
-	for ( int nRuneTypes = 0; nRuneTypes < RUNE_TYPES_MAX && vecSpawnPoints.Count() > 0; nRuneTypes++ )
-	{
-		int index = RandomInt( 0, vecSpawnPoints.Count() - 1 );
-		CTFInfoPowerupSpawn *pSpawnPoint = vecSpawnPoints[index];
-		CTFRune *pNewRune = CTFRune::CreateRune( pSpawnPoint->GetAbsOrigin(), (RuneTypes_t) nRuneTypes, TEAM_ANY, false, false );
-		pSpawnPoint->SetRune( pNewRune );
-		vecSpawnPoints.Remove( index );
-	}
-}
-
 
 void CTFGameRules::RespawnPlayers( bool bForceRespawn, bool bTeam, int iTeam )
 {
@@ -4885,14 +4781,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 	
 	// reset hell state
 	SetPlayersInHell( false );
-
-	if ( IsPowerupMode() )
-	{
-		// Reset imbalance detection scores
-		m_nPowerupKillsBlueTeam = 0;		
-		m_nPowerupKillsRedTeam = 0;
-		SpawnRunes();
-	}
 
 	m_hHolidayLogic = dynamic_cast<CTFHolidayEntity*> ( gEntList.FindEntityByClassname( NULL, "tf_logic_holiday" ) );
 	if ( m_hHolidayLogic.IsValid() )
@@ -5388,11 +5276,6 @@ void CTFGameRules::SetupOnRoundRunning( void )
 	{
 		m_hGamerulesProxy->StateEnterRoundRunning();
 	}
-
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		PowerupModeInitKillCountTimer();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -5659,15 +5542,6 @@ void CTFRadiusDamageInfo::CalculateFalloff( void )
 		if ( flFalloffMod != 1.f )
 		{
 			flFalloff += flFalloffMod;
-		}
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( dmgInfo->GetAttacker() );
-		if ( pOwner && pOwner->m_Shared.GetCarryingRuneType() == RUNE_PRECISION && !pOwner->m_bIsInMannpowerDominantCondition )
-		{
-			flFalloff = 1.0;
 		}
 	}
 }
@@ -5992,19 +5866,16 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			}
 		}
 	}
-	// no airborne crit bonus in Mannpower
-	if ( !IsPowerupMode() )
+
+	int iCritWhileAirborne = 0;
+	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iCritWhileAirborne, crit_while_airborne );
+	if ( iCritWhileAirborne && pTFAttacker )
 	{
-		int iCritWhileAirborne = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iCritWhileAirborne, crit_while_airborne );
-		if ( iCritWhileAirborne && pTFAttacker )
+		if ( pTFAttacker->InAirDueToExplosion() )
 		{
-			if ( pTFAttacker->InAirDueToExplosion() )
-			{
-				bitsDamage |= DMG_CRITICAL;
-				info.AddDamageType( DMG_CRITICAL );
-				info.SetCritType( CTakeDamageInfo::CRIT_FULL );
-			}
+			bitsDamage |= DMG_CRITICAL;
+			info.AddDamageType( DMG_CRITICAL );
+			info.SetCritType( CTakeDamageInfo::CRIT_FULL );
 		}
 	}
 	
@@ -6186,18 +6057,14 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 
 					// Some weapons mini-crit airborne targets. Airborne targets are any target that has been knocked 
 					// into the air by an explosive force from an enemy.
-					// no airborne crits or mini crits in Mannpower since the whole idea is to fly around. It's too easy to score crits against grappling players, and we don't want to penalize airborne targets
-					if ( !IsPowerupMode() )
+					int iMiniCritAirborne = 0;
+					CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iMiniCritAirborne, mini_crit_airborne );
+					if ( iMiniCritAirborne == 1 &&	pVictim &&	( pVictim->InAirDueToExplosion() ) )
 					{
-						int iMiniCritAirborne = 0;
-						CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iMiniCritAirborne, mini_crit_airborne );
-						if ( iMiniCritAirborne == 1 &&	pVictim &&	( pVictim->InAirDueToExplosion() ) )
-						{
-							bAllSeeCrit = true;
-							info.SetCritType( CTakeDamageInfo::CRIT_MINI );
-							eBonusEffect = kBonusEffect_MiniCrit;
-							break;
-						}
+						bAllSeeCrit = true;
+						info.SetCritType( CTakeDamageInfo::CRIT_MINI );
+						eBonusEffect = kBonusEffect_MiniCrit;
+						break;
 					}
 
 					//// Some weapons minicrit *any* target in the air, regardless of how they got there.
@@ -6228,12 +6095,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 					bIgnoreLongRangeDmgEffects = true;
 			}
 
-			// Some Powerups remove distance damage falloff
-			if ( pTFAttacker && ( pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_STRENGTH || pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_PRECISION ) )
-			{
-				bIgnoreLongRangeDmgEffects = true;
-			}
-
 			if ( pTFAttacker && pVictim )
 			{
 				// MiniCrit a victims back at close range
@@ -6260,10 +6121,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 
 	if ( info.GetCritType() == CTakeDamageInfo::CRIT_MINI )
 	{
-		if ( IsPowerupMode() && ( info.GetDamageType() & DMG_MELEE ) )
-		{
-			flDamage /= 1.3;
-		}
 		int iPromoteMiniCritToCrit = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iPromoteMiniCritToCrit, minicrits_become_crits );
 		if ( iPromoteMiniCritToCrit == 1 )
@@ -6515,7 +6372,7 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 		}
 		//Msg("Range: %.2f - %.2f\n", flMin, flMax );
 		float flRandomRangeVal;
-		if ( tf_damage_disablespread.GetBool() || ( pTFAttacker && pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_PRECISION ) )
+		if ( tf_damage_disablespread.GetBool() )
 		{
 			flRandomRangeVal = flMin + flRandomDamageSpread;
 		}
@@ -7206,44 +7063,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 		// Stomp flRealDamage with resist adjusted values
 		flRealDamage = flDamageBase + flDamageBonus;
 
-		// Some Powerups apply a damage multiplier. Backstabs are immune to resist protection
-		if ( ( pVictim && info.GetDamageCustom() != TF_DMG_CUSTOM_BACKSTAB ) )
-		{
-			// Plague bleed damage is immune from resist calculation
-			if ( ( !pVictim->m_Shared.InCond( TF_COND_PLAGUE ) && info.GetDamageCustom() != TF_DMG_CUSTOM_BLEEDING ) )
-			{
-				if ( pVictim->m_Shared.GetCarryingRuneType() == RUNE_RESIST )
-				{
-					flRealDamage *= ( pVictim->m_bIsInMannpowerDominantCondition ? 0.65f : 0.5f );
-					outParams.bPlayDamageReductionSound = true;
-					IGameEvent* event = gameeventmanager->CreateEvent( "damage_resisted" );
-					if ( event )
-					{
-						event->SetInt( "entindex", pVictim->entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-				}
-				else if ( ( pVictim->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE ) && !pVictim->m_bIsInMannpowerDominantCondition )
-				{
-					flRealDamage *= 0.75f;
-					outParams.bPlayDamageReductionSound = true;
-				}
-				//Plague powerup carrier is resistant to infected enemies
-				else if ( pTFAttacker && ( pVictim->m_Shared.GetCarryingRuneType() == RUNE_PLAGUE ) && pTFAttacker->m_Shared.InCond( TF_COND_PLAGUE ) )
-				{
-					outParams.bPlayDamageReductionSound = true;
-					if ( pVictim->m_bIsInMannpowerDominantCondition ) //dominant plague carrying players get less resistance to infected attackers
-					{
-						flRealDamage *= 0.80f;
-					}
-					else
-					{
-						flRealDamage *= 0.5f;
-					}
-				}
-			}
-		}
-
 		// End Resists
 
 		// Increased damage taken from all sources
@@ -7402,48 +7221,8 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			}
 		}
 
-		// Precision Powerup removes self damage
-		if ( pTFAttacker == pVictim && pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			flRealDamage = 0.f;
-		}
-
 		if ( pTFAttacker && ( pTFAttacker != pVictim ) )
 		{
-			// Vampire Powerup collects health based on damage received on victim. Does not apply to self damage. Do it here to factor in victim resistance calculations
-			if ( pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE )
-			{
-				if ( flRealDamage > 0 )
-				{
-					if ( pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_MINIGUN || pTFAttacker->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_FLAMETHROWER )
-					{
-						pTFAttacker->TakeHealth( ( flRealDamage * 0.6f ), DMG_GENERIC );
-					}
-					else if ( info.GetDamageType() & DMG_MELEE && pVictim->m_Shared.GetCarryingRuneType() != RUNE_RESIST ) //resist doesn't give the melee bonus
-					{
-						pTFAttacker->TakeHealth( ( flRealDamage * 1.25f ), DMG_GENERIC );
-					}
-					else if ( info.GetDamageType() & DMG_BLAST )
-					{
-						int iMaxHealthOverboost = 120;
-						if ( ( pTFAttacker->GetHealth() - pTFAttacker->GetMaxHealth() ) < iMaxHealthOverboost )
-						{
-							int iMaxHealthToAdd = ( iMaxHealthOverboost + pTFAttacker->GetMaxHealth() ) - pTFAttacker->GetHealth();
-							if ( flRealDamage < iMaxHealthToAdd )
-							{
-								pTFAttacker->TakeHealth( flRealDamage, DMG_IGNORE_MAXHEALTH );
-							}
-							else
-								pTFAttacker->TakeHealth( iMaxHealthToAdd, DMG_IGNORE_MAXHEALTH );
-						}
-					}
-					else
-					{
-						pTFAttacker->TakeHealth( flRealDamage, DMG_GENERIC );
-					}
-				}
-			}
-
 			int iHypeOnDamage = 0;
 			CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iHypeOnDamage, hype_on_damage );
 			if ( iHypeOnDamage )
@@ -8336,19 +8115,6 @@ void CTFGameRules::Think()
 	{
 		m_flNextFlagAlarm = 0.0f;
 		m_flNextFlagAlert = gpGlobals->curtime + 5.0f;
-	}
-
-	if ( m_bPowerupImbalanceMeasuresRunning )
-	{
-		if ( m_flTimeToStopImbalanceMeasures < gpGlobals->curtime )
-		{
-			PowerupTeamImbalance( TEAM_UNASSIGNED ); // passing TEAM_UNASSIGNED will fire the ImbalanceMeasuresOver output
-			m_bPowerupImbalanceMeasuresRunning = false;
-		}
-	}
-	if ( gpGlobals->curtime > m_flNextPowerupModeKillCountTimer )
-	{
-		PowerupModeKillCountCompare();
 	}
 
 	PeriodicHalloweenUpdate();
@@ -11357,39 +11123,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 		DuelMiniGame_NotifyAssist( pTFPlayerAssister, pTFPlayerVictim );
 	}
 
-	// Count kills from powerup carriers to detect imbalances
-	if ( IFuncPowerupVolumeAutoList::AutoList().Count() != 0 ) // If there are no func_powerupvolumes in the map, there's no point in checking for imbalances
-	{
-		if ( pTFPlayerScorer && pTFPlayerScorer != pTFPlayerVictim && pTFPlayerScorer->m_Shared.IsCarryingRune() && !pTFPlayerScorer->m_Shared.InCond( TF_COND_RUNE_IMBALANCE ) )
-		{
-			if ( !m_bPowerupImbalanceMeasuresRunning && !PowerupModeFlagStandoffActive() ) // Only count if imbalance measures aren't running and there is no flag standoff 
-			{
-				if ( pTFPlayerScorer->GetTeamNumber() == TF_TEAM_BLUE )
-				{
-					m_nPowerupKillsBlueTeam++;		// Blue team score increases if a powered up blue player makes a kill
-				}
-				else if ( pTFPlayerScorer->GetTeamNumber() == TF_TEAM_RED )
-				{
-					m_nPowerupKillsRedTeam++;
-				}
-
-				int nBlueAdvantage = m_nPowerupKillsBlueTeam - m_nPowerupKillsRedTeam;		// How far ahead is this team?
-//				Msg( "\nnBlueAdvantage = %d\n", nBlueAdvantage );
-				int nRedAdvantage = m_nPowerupKillsRedTeam - m_nPowerupKillsBlueTeam;
-//				Msg( "nRedAdvantage = %d\n\n", nRedAdvantage );
-
-				if ( nRedAdvantage >= tf_powerup_mode_imbalance_delta.GetInt() )
-				{
-					PowerupTeamImbalance( TF_TEAM_BLUE );		// Fire the output to map logic
-				}
-				else if ( nBlueAdvantage >= tf_powerup_mode_imbalance_delta.GetInt() )
-				{
-					PowerupTeamImbalance( TF_TEAM_RED );
-				}
-			}
-		}
-	}
-
 	// credit for kill-eating weapons and anything else that might care
 	if ( pTFPlayerScorer && pTFPlayerVictim && pTFPlayerScorer != pTFPlayerVictim )
 	{
@@ -11775,10 +11508,6 @@ void CTFGameRules::PlayerKilledCheckAchievements( CTFPlayer *pAttacker, CTFPlaye
 //-----------------------------------------------------------------------------
 void CTFGameRules::CalcDominationAndRevenge( CTFPlayer *pAttacker, CBaseEntity *pWeapon, CTFPlayer *pVictim, bool bIsAssist, int *piDeathFlags )
 {
-	// don't do domination stuff in powerup mode
-	if ( IsPowerupMode() )
-		return;
-
 	// no dominations/revenge in competitive mode
 	if ( IsMatchTypeCompetitive() )
 		return;
@@ -13180,11 +12909,6 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 
 	// grappling hook don't take fall damage
 	if ( pTFPlayer->GetGrapplingHookTarget() )
-	{
-		return 0;
-	}
-
-	if ( pTFPlayer->m_Shared.GetCarryingRuneType() == RUNE_AGILITY || ( IsPowerupMode() && pTFPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT ) )
 	{
 		return 0;
 	}
@@ -15537,7 +15261,7 @@ bool CTFGameRules::ShouldWaitToStartRecording( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::CanFlagBeCaptured( CBaseEntity *pOther )
 {
-	if ( pOther && ( tf_flag_return_on_touch.GetBool() || IsPowerupMode() ) )
+	if ( pOther && tf_flag_return_on_touch.GetBool() )
 	{
 		for ( int i = 0; i < ICaptureFlagAutoList::AutoList().Count(); ++i )
 		{
@@ -15547,31 +15271,6 @@ bool CTFGameRules::CanFlagBeCaptured( CBaseEntity *pOther )
 		}
 	}
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: return true if the game is in a state where both flags are stolen and poisonous
-//-----------------------------------------------------------------------------
-bool CTFGameRules::PowerupModeFlagStandoffActive( void )
-{
-	if ( IsPowerupMode() )
-	{
-		int nQualifyingFlags = 0; // All flags need to be stolen and poisonous (poisonous time delay gives the flag carriers a chance to get out of the enemy base)
-		int nEnabledFlags = 0; // Some flags might be in the autolist but be out of play. We don't want them included in the count
-		for ( int i = 0; i < ICaptureFlagAutoList::AutoList().Count(); ++i )
-		{
-			CCaptureFlag *pFlag = static_cast<CCaptureFlag*>( ICaptureFlagAutoList::AutoList()[i] );
-			if ( !pFlag->IsDisabled() )
-				nEnabledFlags++;
-			if ( pFlag->IsPoisonous() && pFlag->IsStolen() )
-				nQualifyingFlags++;
-		}
-		if ( nQualifyingFlags == nEnabledFlags )
-		{
-			return true;
-		}
-	}
-	return false;
 }
 
 void CTFGameRules::TeleportPlayersToTargetEntities( int iTeam, const char *pszEntTargetName, CUtlVector< CTFPlayer * > *pTeleportedPlayers )
@@ -16100,151 +15799,6 @@ bool CTFGameRules::BIsManagedMatchEndImminent( void )
 }
 
 //-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupTeamImbalance_PlayerChangeTeam( CTFPlayer *pTFPlayer, int nTeam )
-{
-	CMatchInfo *pMatch = GTFGCClientSystem()->GetLiveMatch();
-	if ( pMatch )
-	{
-		CSteamID steamID;
-		pTFPlayer->GetSteamID( &steamID );
-		GTFGCClientSystem()->ChangeMatchPlayerTeam( steamID, TFGameRules()->GetGCTeamForGameTeam( nTeam ) );
-	}
-
-	pTFPlayer->ChangeTeam( nTeam, false, false, true );
-	pTFPlayer->ForceRespawn();
-	pTFPlayer->SetLastAutobalanceTime( gpGlobals->curtime );
-
-	IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_teambalanced_player" );
-	if ( event )
-	{
-		event->SetInt( "player", pTFPlayer->entindex() );
-		event->SetInt( "team", nTeam );
-		gameeventmanager->FireEvent( event );
-	}
-
-	// tell people that we've switched this player
-	UTIL_ClientPrintAll( HUD_PRINTTALK, "#game_player_was_team_balanced", pTFPlayer->GetPlayerName() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Swaps the highest scorer on the dominating team with the lowest scorer on the other team
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupTeamImbalance_SwapPlayers( int nLosingTeam )
-{
-	CTFPlayerResource *pResource = dynamic_cast< CTFPlayerResource * >( g_pPlayerResource );
-	if ( !pResource )
-		return;
-
-	int nDominatingTeam = ( nLosingTeam == TF_TEAM_BLUE ) ? TF_TEAM_RED : TF_TEAM_BLUE;
-	CTFTeam *pLosingTeam = TFTeamMgr()->GetTeam( nLosingTeam );
-	CTFTeam *pDominatingTeam = TFTeamMgr()->GetTeam( nDominatingTeam );
-	if ( !pLosingTeam || !pDominatingTeam )
-		return;
-
-	int nTopScore = -1;
-	CTFPlayer *pDominatingTarget = nullptr;
-	for ( int i = 0; i < pDominatingTeam->GetNumPlayers(); ++i )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( pDominatingTeam->GetPlayer( i ) );
-		if ( pPlayer )
-		{
-			int nScore = pPlayer->m_nMannpowerKills;
-			if ( nScore > nTopScore )
-			{
-				pDominatingTarget = pPlayer;
-				nTopScore = nScore;
-			}
-		}
-	}
-
-	int nBottomScore = 99999;
-	CTFPlayer *pLosingTarget = nullptr;
-	for ( int i = 0; i < pLosingTeam->GetNumPlayers(); ++i )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( pLosingTeam->GetPlayer( i ) );
-		if ( pPlayer )
-		{
-			int nScore = pResource->GetTotalScore( pPlayer->entindex() );
-			if ( nScore < nBottomScore )
-			{
-				pLosingTarget = pPlayer;
-				nBottomScore = nScore;
-			}
-		}
-	}
-
-	if ( pDominatingTarget && pLosingTarget )
-	{
-		PowerupTeamImbalance_PlayerChangeTeam( pDominatingTarget, nLosingTeam );
-		PowerupTeamImbalance_PlayerChangeTeam( pLosingTarget, nDominatingTeam );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupTeamImbalance( int nTeam )
-{
-	if ( m_hGamerulesProxy )
-	{
-		m_hGamerulesProxy->PowerupTeamImbalance( nTeam );
-
-		if ( nTeam == TEAM_UNASSIGNED )
-		{
-			m_bPowerupImbalanceMeasuresRunning = false;
-			m_flLastPowerUpImbalanceTime = gpGlobals->curtime; // store the last time an imbalance period ended
-			m_flPowerUpImbalanceVictimTeamTime = gpGlobals->curtime; // we don't reset this if a team player swap isn't done
-		}
-		else
-		{
-			m_bPowerupImbalanceMeasuresRunning = true;
-			m_flTimeToStopImbalanceMeasures = gpGlobals->curtime + m_flTimeToRunImbalanceMeasures;
-			
-			BroadcastSound( nTeam, "Announcer.Powerup.Volume.Starting" );
- 			CTeamRecipientFilter filter( nTeam, true );
-			UTIL_ClientPrintFilter( filter, HUD_PRINTCENTER, "#TF_Powerupvolume_Available" );
-
-			CUtlVector< CTFPlayer* > playerVector;
-			CollectPlayers( &playerVector, TF_TEAM_RED );
-			CollectPlayers( &playerVector, TF_TEAM_BLUE, false, APPEND_PLAYERS );
-			if ( playerVector.Count() >= tf_powerup_mode_imbalance_consecutive_min_players.GetInt() )
-			{
-				// if this is the second consecutive imbalance period for this team within the tf_powerup_mode_imbalance_consecutive_time
-				// time period, let's try to switch the top player on the winning team to the losing team
-				if ( m_nLastPowerUpImbalanceTeam == nTeam )
-				{
-					if ( gpGlobals->curtime - m_flLastPowerUpImbalanceTime < tf_powerup_mode_imbalance_consecutive_time.GetFloat() )
-					{
-						PowerupTeamImbalance_SwapPlayers( nTeam );
-						m_nPowerUpImbalanceVictimTeam = TEAM_UNASSIGNED; // no victim team now because team player swap happened
-						m_flPowerUpImbalanceVictimTeamTime = -1.f;
-					}
-				}
-				else
-				{
-					m_nLastPowerUpImbalanceTeam = nTeam;
-					m_nPowerUpImbalanceVictimTeam = nTeam;
-				}
-			}
-			else
-			{
-				// reset everything (prevents initiating another team swap if three imbalance events are triggered in a row )
-				m_nLastPowerUpImbalanceTeam = TEAM_UNASSIGNED;
-				m_flLastPowerUpImbalanceTime = -1.f;
-				// a team has been victimized enough to receive the imbalance powerup, but no player swap happened so they might still be weaker. 
-				// We skip dominant tests on individual players on the victim team
-				m_nPowerUpImbalanceVictimTeam = nTeam; 
-			}
-		}
-		
-		m_nPowerupKillsBlueTeam = 0;		// Reset both scores
-		m_nPowerupKillsRedTeam = 0;
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Restrict team human players can join
 //-----------------------------------------------------------------------------
 int CTFGameRules::GetAssignedHumanTeam( void )
@@ -16746,11 +16300,10 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 	}
 
 	bool bMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-	bool bPowerupMode = TFGameRules() && TFGameRules()->IsPowerupMode();
 
 	int iScore =	( pRoundStats->m_iStat[TFSTAT_KILLS] * TF_SCORE_KILL ) + 
 					( pRoundStats->m_iStat[TFSTAT_KILLS_RUNECARRIER] * TF_SCORE_KILL_RUNECARRIER ) + // Kill someone who is carrying a rune
-					( pRoundStats->m_iStat[TFSTAT_CAPTURES] * ( ( bPowerupMode ) ? TF_SCORE_CAPTURE_POWERUPMODE : TF_SCORE_CAPTURE ) ) +
+					( pRoundStats->m_iStat[TFSTAT_CAPTURES] * ( TF_SCORE_CAPTURE ) ) +
 					( pRoundStats->m_iStat[TFSTAT_FLAGRETURNS] * TF_SCORE_FLAG_RETURN ) +
 					( pRoundStats->m_iStat[TFSTAT_DEFENSES] * TF_SCORE_DEFEND ) + 
 					( pRoundStats->m_iStat[TFSTAT_BUILDINGSDESTROYED] * TF_SCORE_DESTROY_BUILDING ) + 
@@ -19024,9 +18577,6 @@ void CCompetitiveLogic::OnSpawnRoomDoorsShouldUnlock( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-BEGIN_DATADESC( CLogicMannPower )
-END_DATADESC()
-LINK_ENTITY_TO_CLASS( tf_logic_mannpower, CLogicMannPower );
 LINK_ENTITY_TO_CLASS( tf_logic_multiple_escort, CMultipleEscort );
 LINK_ENTITY_TO_CLASS( tf_logic_hybrid_ctf_cp, CHybridMap_CTF_CP );
 LINK_ENTITY_TO_CLASS( tf_logic_medieval, CMedievalLogic );
@@ -21422,240 +20972,6 @@ void CTFGameRules::CreateSoldierStatue()
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Initiate timer and reset player data (since we only care about data from the following interval)
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupModeInitKillCountTimer()
-{
-	for ( int i = 0; i < MAX_PLAYERS; ++i )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-		if ( !pTFPlayer || !pTFPlayer->IsConnected() )
-			continue;
-
-		pTFPlayer->m_nMannpowerKills = 0;
-		pTFPlayer->m_nMannpowerDeaths = 0;
-		pTFPlayer->m_bMannpowerHereForFullInterval = true;
-	}
-
-	m_flNextPowerupModeKillCountTimer = gpGlobals->curtime + tf_powerup_mode_killcount_timer_length.GetFloat();
-
-	// clean up our vector of dominant players that might have quit
-	FOR_EACH_VEC_BACK( m_PowerupModeDominantDisconnect, nIndex )
-	{
-		if ( m_PowerupModeDominantDisconnect[nIndex].m_flRemoveDominantConditionTime <= gpGlobals->curtime )
-		{
-			m_PowerupModeDominantDisconnect.Remove( nIndex );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFGameRules::CheckPowerupModeDominantDisconnect( CSteamID steamID )
-{
-	float flRemoveDominantConditionTime = -1.f;
-
-	FOR_EACH_VEC( m_PowerupModeDominantDisconnect, nIndex )
-	{
-		if ( m_PowerupModeDominantDisconnect[nIndex].m_steamID == steamID )
-		{
-			if ( m_PowerupModeDominantDisconnect[nIndex].m_flRemoveDominantConditionTime > gpGlobals->curtime )
-			{
-				flRemoveDominantConditionTime = m_PowerupModeDominantDisconnect[nIndex].m_flRemoveDominantConditionTime;
-			}
-			m_PowerupModeDominantDisconnect.Remove( nIndex );
-			break;
-		}
-	}
-
-	return flRemoveDominantConditionTime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupModeDominantDisconnect( CSteamID steamID, float flRemoveDominantConditionTime )
-{
-	int nIndex = -1;
-
-	// make sure they're not already in the list. they shouldn't be but let's be sure.
-	FOR_EACH_VEC( m_PowerupModeDominantDisconnect, i )
-	{
-		if ( m_PowerupModeDominantDisconnect[i].m_steamID == steamID )
-		{
-			nIndex = i;
-			break;
-		}
-	}
-
-	if ( nIndex == -1 )
-	{
-		nIndex = m_PowerupModeDominantDisconnect.AddToTail();
-	}
-
-	m_PowerupModeDominantDisconnect[nIndex].m_steamID = steamID;
-	m_PowerupModeDominantDisconnect[nIndex].m_flRemoveDominantConditionTime = flRemoveDominantConditionTime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: analyze player kill count data to determine if any players are dominant
-//-----------------------------------------------------------------------------
-void CTFGameRules::PowerupModeKillCountCompare()
-{
-	int nTotalParticipants = 0; //we want a minimum number of participants to have confidence in the median number
-	int nNumberOfDominantPlayers = 0; //used for stat gathering
-	CUtlVector<int> vecKillCounts;
-
-	for ( int i = 0; i < MAX_PLAYERS; ++i )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-		if ( !pTFPlayer || !pTFPlayer->IsConnected() ||
-			!pTFPlayer->m_bMannpowerHereForFullInterval ||
-			( pTFPlayer->m_nMannpowerKills <= 2 && pTFPlayer->m_nMannpowerDeaths <= 2 ) ) // player is in the game but not meaningfully participating. Kills and deaths are too few
-			continue;
-		
-		int nKills = pTFPlayer->m_nMannpowerKills;
-		if ( nKills < 1 ) //we don't want to store zeros in the array since we calculate the median later and don't want a chance for it to be zero since we use it to multiply off of. 1 is close enough to zero for this purpose
-		{
-			nKills = 1;
-		}
-		vecKillCounts.AddToTail( nKills );
-		nTotalParticipants++;
-	}
-
-	// we want a minimum number of participants to have confidence in the median
- 	if ( nTotalParticipants >= 6 )
-	{
-		int nMinimumKillsPerTimerInterval = 14; 
-		int nMedianKillCount = 1;
-		bool bDominantPlayerOnRedTeam = false;
-		bool bDominantPlayerOnBlueTeam = false;
-		int nImbalanceVictimTeam = TEAM_UNASSIGNED; // this team has had an imbalance event with no team swap, so might still be struggling
-		
-		// An imbalance powerup recently triggered for this team so we don't test players on that team for dominance
-		if ( m_nPowerUpImbalanceVictimTeam && ( gpGlobals->curtime - m_flPowerUpImbalanceVictimTeamTime < 600 ) )
-		{
-			nImbalanceVictimTeam = m_nPowerUpImbalanceVictimTeam;
-		}
-
-		//Calculate Median of vecKillCounts	
-		vecKillCounts.Sort();
-		if ( nTotalParticipants % 2 != 0 ) // we have an odd number of participants, select the middle value
-		{
-			nMedianKillCount = vecKillCounts[( nTotalParticipants - 1 ) / 2];
-		}
-		else //we have an even number of participants, so find the average of the two middle values
-		{
-			nMedianKillCount = ( vecKillCounts[( nTotalParticipants / 2 ) - 1] + vecKillCounts[nTotalParticipants / 2] ) / 2;
-		}
-
-		//test each player for dominance. 
-		for ( int i = 0; i < MAX_PLAYERS; ++i )
-		{
-			CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( !pTFPlayer || 
-				!pTFPlayer->IsConnected() || 
-				pTFPlayer->GetTeamNumber() == nImbalanceVictimTeam ||
-				!pTFPlayer->m_bMannpowerHereForFullInterval || 
-				pTFPlayer->m_nMannpowerKills < nMinimumKillsPerTimerInterval )
-				continue;
-			
-			//player's kill count exceeds the median by the required amount
-			else if ( pTFPlayer->m_nMannpowerKills >= nMedianKillCount * tf_powerup_mode_dominant_multiplier.GetFloat() )
-			{
-//				float flMedianMultiple = 0.f;
-				pTFPlayer->EmitSound( "Mannpower.PlayerIsDominant" );
-				pTFPlayer->StartPowerupModeDominant( pTFPlayer->m_bIsInMannpowerDominantCondition );
-				nNumberOfDominantPlayers++;
-				switch ( pTFPlayer->GetTeamNumber() )
-				{
-				case TF_TEAM_BLUE:
-					bDominantPlayerOnBlueTeam = true;
-					break;
-				case TF_TEAM_RED:
-					bDominantPlayerOnRedTeam = true;
-					break;
-				}
-//				flMedianMultiple = pTFPlayer->m_nMannpowerKills / (float)nMedianKillCount;
-
-				// Write to DB
-// 				CSQLAccess sqlAccessMPDP;
-// 				CSteamID steamID;
-// 				CSchMannpowerDominantPlayer schMannpowerDominantPlayer;
-// 				
-// 				sqlAccessMSKC.BBeginTransaction( "YieldingInsertMannpowerDominantPlayer" );
-// 
-// 				schMannpowerDominantPlayer.m_unClientAccountID = pTFPlayer->GetSteamID( &steamID );
-// 				schMannpowerDominantPlayer.m_unServerAccountID = tf_server_identity_account_id.GetInt(); 
-// 				schMannpowerDominantPlayer.m_RTime32CurTime = gpGlobals->curtime; 
-// 				schMannpowerDominantPlayer.m_flMedianMultiple = flMedianMultiple;
-// 
-// 				sqlAccessMSKC.BYieldingInsertRecord( &schMannpowerDominantPlayer );
-// 
-// 				if ( !sqlAccess.BCommitTransaction() )
-// 				{
-// 					Result.m_fmtError.sprintf( "YieldingInsertMannpowerDominantPlayer: Failed to commit transaction to SQL\n" );
-// 				}
-			}
-			else
-				continue;
-		}
-
-		// Write to DB 
-// 		CSQLAccess sqlAccessMSKC;
-// 		CSchMannpowerServerKillCount schMannpowerServerKillCount;
-// 
-// 		sqlAccessMSKC.BBeginTransaction( "YieldingInsertMannpowerServerKillCount" );
-// 
-// 		schMannpowerServerKillCount.m_unServerAccountID = tf_server_identity_account_id.GetInt();
-// 		schMannpowerServerKillCount.m_RTime32CurTime = gpGlobals->curtime; 
-// 		schMannpowerServerKillCount.m_nMedianKillCount = nMedianKillCount;
-// 		schMannpowerServerKillCount.m_nTotalParticipants = nTotalParticipants;
-// 		schMannpowerServerKillCount.m_nNumberOfDominantPlayers = nNumberOfDominantPlayers;
-// 
-// 		sqlAccessMSKC.BYieldingInsertRecord( &schMannpowerServerKillCount );
-// 
-// 		if ( !sqlAccess.BCommitTransaction() )
-// 		{
-// 			Result.m_fmtError.sprintf( "YieldingInsertMannpowerServerKillCount: Failed to commit transaction to SQL\n" );
-// 		}
-
-		if ( bDominantPlayerOnBlueTeam ) //tell the red team an enemy has been identified as dominant
-		{
-			for ( int i = 0; i < MAX_PLAYERS; ++i )
-			{
-				CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-				if ( pTFPlayer && !pTFPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) && pTFPlayer->GetTeamNumber() == TF_TEAM_RED )
-				{
-					ClientPrint( pTFPlayer, HUD_PRINTCENTER, "#TF_Powerup_Dominant_Other_Team" );
-					ClientPrint( pTFPlayer, HUD_PRINTTALK, "#TF_Powerup_Dominant_Other_Team" );
-				}
-			}
-
-			BroadcastSound( TF_TEAM_RED, "Mannpower.DominantPlayerOtherTeam" );
-		}
-		else if ( bDominantPlayerOnRedTeam ) //tell the blue team an enemy has been identified as dominant
-		{
-			for ( int i = 0; i < MAX_PLAYERS; ++i )
-			{
-				CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-				if ( pTFPlayer && !pTFPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) && pTFPlayer->GetTeamNumber() == TF_TEAM_BLUE )
-				{
-					ClientPrint( pTFPlayer, HUD_PRINTCENTER, "#TF_Powerup_Dominant_Other_Team" );
-					ClientPrint( pTFPlayer, HUD_PRINTTALK, "#TF_Powerup_Dominant_Other_Team" );
-				}
-			}
-
-			BroadcastSound( TF_TEAM_BLUE, "Mannpower.DominantPlayerOtherTeam" );
-		}
-	}
-
-	PowerupModeInitKillCountTimer();
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFGameRules::BroadcastSound( int iTeam, const char *sound, int iAdditionalSoundFlags /* = 0 */, CBasePlayer *pPlayer /* = NULL */ )
@@ -21700,7 +21016,6 @@ bool	ScriptGameModeUsesCurrency()								{ return TFGameRules()->GameModeUsesCur
 bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
 bool	ScriptIsPasstimeMode()										{ return TFGameRules()->IsPasstimeMode(); }
 bool	ScriptIsMannVsMachineRespecEnabled()						{ return TFGameRules()->IsMannVsMachineRespecEnabled(); }
-bool	ScriptIsPowerupMode()										{ return TFGameRules()->IsPowerupMode(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
 bool	ScriptIsMatchTypeCompetitive()								{ return TFGameRules()->IsMatchTypeCompetitive(); }
@@ -21757,7 +21072,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsPasstimeMode,							"No ball games." );
 	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineRespecEnabled,				"Are players allowed to refund their upgrades?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsPowerupMode,							"Playing powerup mode? Not compatible with MvM" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );

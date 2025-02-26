@@ -408,41 +408,6 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 					m_pAvatar->SetPlayer( (C_BasePlayer*)pKiller );
 				}
 
-				// If our killer is using a powerup, show the details of that powerup
-				if ( pTFPlayerKiller && pTFPlayerKiller->m_Shared.IsCarryingRune() )
-				{
-					static CSchemaItemDefHandle rgPowerupItems [] =  { CSchemaItemDefHandle( "Powerup Strength" )
-																	 , CSchemaItemDefHandle( "Powerup Haste" )
-																	 , CSchemaItemDefHandle( "Powerup Regen" )
-																	 , CSchemaItemDefHandle( "Powerup Resist" )
-																	 , CSchemaItemDefHandle( "Powerup Vampire" )
-																	 , CSchemaItemDefHandle( "Powerup Reflect" )
-																	 , CSchemaItemDefHandle( "Powerup Precision" )
-																	 , CSchemaItemDefHandle( "Powerup Agility" )
-																	 , CSchemaItemDefHandle( "Powerup Knockout" )
-																	 , CSchemaItemDefHandle( "Powerup King" ) 
-																	 , CSchemaItemDefHandle( "Powerup Plague" ) 
-																	 , CSchemaItemDefHandle( "Powerup Supernova" ) };
-
-					COMPILE_TIME_ASSERT( ARRAYSIZE( rgPowerupItems ) == RUNE_TYPES_MAX );
-
-					// Get the item 
-					const CSchemaItemDefHandle& itemDef = rgPowerupItems[pTFPlayerKiller->m_Shared.GetCarryingRuneType()];
-
-					// Create a fake, temp item to show the powerup
-					CEconItemView item;
-					item.SetItemDefIndex( itemDef->GetDefinitionIndex() );
-					item.SetItemQuality( AE_UNIQUE );	// Unique by default
-					item.SetItemLevel( 0 ); // Hide this?
-					item.SetInitialized( true );
-					item.SetItemOriginOverride( kEconItemOrigin_Invalid );
-
-					m_pItemPanel->SetDialogVariable( "killername", g_PR->GetPlayerName( m_iKillerIndex ) );
-					m_pItemPanel->SetItem( &item );
-					m_pItemPanel->SetVisible( true );
-				}
-				else
-				{
 					// If our killer is using an item, display its stats.
 					CTFWeaponBase *pWeapon = pTFPlayerKiller ? pTFPlayerKiller->GetActiveTFWeapon() : NULL;
 					bool bShowItem = false;
@@ -481,7 +446,6 @@ void CTFFreezePanel::FireGameEvent( IGameEvent * event )
 							m_pItemPanel->SetVisible( true );
 						}
 					}
-				}
 				if ( m_pItemPanel && m_pItemPanel->IsVisible() )
 				{
 					int x, y;

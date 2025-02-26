@@ -470,9 +470,6 @@ float CTFGrenadeLauncher::GetProjectileSpeed( void )
 {
 	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
 
-	if ( pOwner && pOwner->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		return 3000.f;
-
 	float flLaunchSpeed = TF_GRENADE_LAUNCER_MIN_VEL;
 	CALL_ATTRIB_HOOK_FLOAT( flLaunchSpeed, mult_projectile_speed );
 	return flLaunchSpeed;

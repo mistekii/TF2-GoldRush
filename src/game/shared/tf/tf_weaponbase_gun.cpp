@@ -850,18 +850,6 @@ float CTFWeaponBaseGun::GetWeaponSpread( void )
 	
 	if ( pPlayer )
 	{
-		if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			if ( GetWeaponID() == TF_WEAPON_MINIGUN )
-			{
-				fSpread *= 0.4f;
-			}
-			else
-			{
-				fSpread *= 0.1f;
-			}
-		}
-
 		// Some weapons change fire delay based on player's health
 		float flReducedHealthBonus = 1.0f;
 		CALL_ATTRIB_HOOK_FLOAT( flReducedHealthBonus, panic_attack_negative );

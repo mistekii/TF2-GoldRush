@@ -834,24 +834,6 @@ void CTFWeaponBaseMelee::DoMeleeDamage( CBaseEntity* ent, trace_t& trace, float 
 
 	float flDamage = GetMeleeDamage( ent, &iDmgType, &iCustomDamage ) * flDamageMod;
 
-	// Base melee damage increased because we disallow random crits in this mode. Without random crits, melee is underpowered
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		if ( !IsCurrentAttackACrit() ) // Don't multiply base damage if attack is a crit
-		{
-			if ( pPlayer && pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
-			{
-				flDamage *= ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) ? 1.4f : 1.9f );
-			}
-			// Strength powerup multiplies damage later and we only want double regular damage
-			// Shields are a source of increased melee damage (charge crit) so they don't need a base boost
-			else if ( pPlayer && pPlayer->m_Shared.GetCarryingRuneType() != RUNE_STRENGTH && !pPlayer->m_Shared.IsShieldEquipped() )
-			{
-				flDamage *= 1.3f;
-			}
-		}
-	}
-
 	if ( IsCurrentAttackACrit() )
 	{
 		// TODO: Not removing the old critical path yet, but the new custom damage is marking criticals as well for melee now.
@@ -923,35 +905,6 @@ void CTFWeaponBaseMelee::DoMeleeDamage( CBaseEntity* ent, trace_t& trace, float 
 					}
 				}
 			}
-		}
-	}
-	if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
-	{
-		CTFPlayer *pVictimPlayer = ToTFPlayer( ent );
-
-		if ( pVictimPlayer && !pVictimPlayer->InSameTeam( pPlayer ) )
-		{
-			CPASAttenuationFilter filter( pPlayer );
-			Vector origin = pPlayer->GetAbsOrigin();
-			Vector vecDir = pVictimPlayer->GetAbsOrigin() - origin;
-			VectorNormalize( vecDir );
-				
-			if ( !pVictimPlayer->m_Shared.InCond( TF_COND_INVULNERABLE_USER_BUFF ) &&
-				!pVictimPlayer->m_Shared.InCond( TF_COND_INVULNERABLE ) )
-			{
-				if ( pVictimPlayer->m_Shared.IsCarryingRune() ) 
-				{
-					pVictimPlayer->DropRune();
-					ClientPrint( pVictimPlayer, HUD_PRINTCENTER, "#TF_Powerup_Knocked_Out" );
-				}
-				else if ( pVictimPlayer->HasTheFlag() )	
-				{
-					pVictimPlayer->DropFlag();
-					ClientPrint( pVictimPlayer, HUD_PRINTCENTER, "#TF_CTF_PlayerDrop" );
-				}
-			}
-			EmitSound( filter, entindex(), "Powerup.Knockout_Melee_Hit" );
-			pVictimPlayer->ApplyGenericPushbackImpulse( vecDir * 400.0f, pPlayer );
 		}
 	}
 

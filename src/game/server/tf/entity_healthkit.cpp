@@ -88,9 +88,7 @@ bool CHealthKit::MyTouch( CBasePlayer *pPlayer )
 		}
 		else
 		{
-			float flRuneHealthBonus = ( pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_KNOCKOUT ) ? pTFPlayer->GetRuneHealthBonus() : 0;
-			
-			float flHealth = ceil( ( pPlayer->GetMaxHealth() - flRuneHealthBonus ) * PackRatios[GetPowerupSize()] );
+			float flHealth = ceil( pPlayer->GetMaxHealth() * PackRatios[GetPowerupSize()] );
 
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pPlayer, flHealth, mult_health_frompacks );
 
@@ -112,7 +110,7 @@ bool CHealthKit::MyTouch( CBasePlayer *pPlayer )
 				}
 			}
 
-			if ( pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_PLAGUE )
+			if ( pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) )
 			{
 				float flDisguiseHealth = pTFPlayer->m_Shared.GetDisguiseHealth();
 				float flDisguiseMaxHealth = pTFPlayer->m_Shared.GetDisguiseMaxHealth();

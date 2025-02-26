@@ -266,7 +266,6 @@ public:
 	void			UpdateOverhealEffect( void );
 	void			UpdatedMarkedForDeathEffect( bool bFroceStop = false );
 	void			CreateOverhealEffect( int iTeam );
-	void			UpdateRuneIcon( bool bForceStop = false );
 
 	bool			CanShowClassMenu( void );
 	bool			CanShowTeamMenu( void );
@@ -523,9 +522,6 @@ protected:
 
 private:
 
-	bool ShouldShowPowerupGlowEffect();
-	void GetPowerupGlowEffectColor( float *r, float *g, float *b );
-
 	void HandleTaunting( void );
 	void TauntCamInterpolation( void );
 
@@ -646,7 +642,6 @@ public:
 	CNetworkHandle( C_TFPlayer, m_hStudent );
 
 	CGlowObject		*m_pStudentGlowEffect;
-	CGlowObject		*m_pPowerupGlowEffect;
 
 	int				m_iOldPlayerClass;	// Used to detect player class changes
 	bool			m_bIsDisplayingNemesisIcon;
@@ -654,8 +649,6 @@ public:
 	bool			m_bIsDisplayingIconForIT;
 	bool			m_bIsDisplayingTranqMark;
 	bool			m_bShouldShowBirthdayEffect;
-
-	RuneTypes_t		m_eDisplayingRuneIcon;
 
 	float			m_flMvMLastDamageTime;
 	int				m_iSpawnCounter;
@@ -749,9 +742,6 @@ public:
 
 	HPARTICLEFFECT m_pMegaHealEffect;
 	HPARTICLEFFECT m_pRadiusHealEffect;
-	HPARTICLEFFECT m_pKingRuneRadiusEffect;
-	HPARTICLEFFECT m_pKingBuffRadiusEffect;
-	HPARTICLEFFECT m_pRunePlagueEffect;
 	C_LocalTempEntity*	m_pTempShield;
 	float				m_flLastResistTime;
 
@@ -766,8 +756,6 @@ public:
 	float m_flNextSheenStartTime;
 	
 	HPARTICLEFFECT m_pMVMBotRadiowave;
-
-	HPARTICLEFFECT m_pRuneChargeReadyEffect;
 
 	enum EKartParticles
 	{

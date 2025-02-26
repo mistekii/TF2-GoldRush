@@ -3827,15 +3827,9 @@ C_TFPlayer::C_TFPlayer() :
 	m_pStunnedEffect = NULL;
 	m_pPhaseStandingEffect = NULL;
 	m_pRadiusHealEffect = NULL;
-	m_pKingRuneRadiusEffect = NULL;
-	m_pKingBuffRadiusEffect = NULL;
-	m_pRunePlagueEffect = NULL;
 	m_pMegaHealEffect = NULL;
-	m_pTempShield = NULL;
 
 	m_pMVMBotRadiowave = NULL;
-
-	m_pRuneChargeReadyEffect = NULL;
 
 	m_aGibs.Purge();
 	m_aNormalGibs.PurgeAndDeleteElements();
@@ -3878,7 +3872,6 @@ C_TFPlayer::C_TFPlayer() :
 
 	m_bIsCoaching = false;
 	m_pStudentGlowEffect = NULL;
-	m_pPowerupGlowEffect = NULL;
 
 	m_nBotSkill = -1;
 	m_nOldBotSkill = -1;
@@ -3920,7 +3913,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_hRevivePrompt = NULL;
 
 	m_bIsDisplayingTranqMark = false;
-	m_eDisplayingRuneIcon = RUNE_NONE;
 
 	m_pKart = NULL;
 	m_iOldKartHealth = 0;
@@ -4247,7 +4239,6 @@ void C_TFPlayer::SetDormant( bool bDormant )
 			ShowIconForIT( false );
 		}
 		UpdatedMarkedForDeathEffect( true );
-		UpdateRuneIcon( true );
 
 		if ( m_bShouldShowBirthdayEffect )
 		{
@@ -4406,50 +4397,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 	if ( bNeedsStudentGlow != bHasStudentGlow )
 	{
 		UpdateGlowEffect();
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		if ( m_Shared.InCond( TF_COND_KING_BUFFED ) )
-		{
-			const char *m_szRadiusEffect;
-			int nTeamNumber = GetTeamNumber();
-			if ( IsPlayerClass( TF_CLASS_SPY ) && m_Shared.InCond( TF_COND_DISGUISED ) )
-			{
-				if ( !IsLocalPlayer() && GetTeamNumber() == GetLocalPlayerTeam() ) // Always display own team colors even when disguised, unless it's you (same rules as uber skin)
-				{
-					nTeamNumber = GetLocalPlayerTeam();
-				}
-				else
-				{
-					nTeamNumber = m_Shared.GetDisguiseTeam();
-				}
-			}
-
-			if ( nTeamNumber == TF_TEAM_RED )
-			{
-				m_szRadiusEffect = "powerup_king_red";
-			}
-			else
-			{
-				m_szRadiusEffect = "powerup_king_blue";
-			}
-			if ( !m_pKingBuffRadiusEffect )
-			{
-				m_pKingBuffRadiusEffect = ParticleProp()->Create( m_szRadiusEffect, PATTACH_ABSORIGIN_FOLLOW );
-			}
-		}
-		else if ( m_pKingBuffRadiusEffect )
-		{
-			m_Shared.EndKingBuffRadiusEffect();
-		}
-
-		bool bNeedsPowerupGlow = ShouldShowPowerupGlowEffect();
-		bool bHasPowerupGlow = m_pPowerupGlowEffect != NULL;
-		if ( bNeedsPowerupGlow != bHasPowerupGlow )
-		{
-			UpdateGlowEffect();
-		}
 	}
 
 	// Detect class changes
@@ -5115,51 +5062,6 @@ void C_TFPlayer::UpdatedMarkedForDeathEffect( bool bForceStop )
 	if ( bShow )
 	{
 		AddOverheadEffect( "mark_for_death" );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Show an icon above the player's head to let other players know which Powerup Rune they are carrying 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::UpdateRuneIcon( bool bForceStop /*= false */ )
-{
-	// Don't show the particle over the local player's head.  They have the icon that shows
-	// up over their health in the HUD which serves this purpose.
-	if ( IsLocalPlayer() )
-	 	return;
-
-	const RuneTypes_t carryingRuneType = m_Shared.GetCarryingRuneType();
-	const bool bAllowedToShow = ( m_Shared.IsCarryingRune() && !m_Shared.IsStealthed() );
-	int iTeam = IsEnemyPlayer() && m_Shared.InCond( TF_COND_DISGUISED ) ? m_Shared.GetDisguiseTeam() : GetTeamNumber();
-
-	if ( !bAllowedToShow || bForceStop || ( carryingRuneType != m_eDisplayingRuneIcon ) )
-	{
-		// remove all particle for both team just in case
-		for ( int i=0; i<RUNE_TYPES_MAX; ++i )
-		{
-			RuneTypes_t type = RuneTypes_t(i);
-			RemoveOverheadEffect( GetPowerupIconName( type, TF_TEAM_RED ), true );
-			RemoveOverheadEffect( GetPowerupIconName( type, TF_TEAM_BLUE ), true );
-		}
-		m_eDisplayingRuneIcon = RUNE_NONE;
-	}
-
-	if ( bAllowedToShow && ( carryingRuneType != m_eDisplayingRuneIcon ) )
-	{
-		const char* pszEffect = NULL;
-		if ( carryingRuneType > RUNE_NONE && carryingRuneType < RUNE_TYPES_MAX )
-		{
-			pszEffect = GetPowerupIconName( carryingRuneType, iTeam );
-		}
-		else
-		{
-		}
-
-		if ( AddOverheadEffect( pszEffect ) )
-		{
-			m_eDisplayingRuneIcon = carryingRuneType;
-		}
 	}
 }
 
@@ -6003,19 +5905,6 @@ void C_TFPlayer::ClientThink()
 			cl_predict->SetValue( bWantPredict );
 		}
 	}
-
-	// update rune charge particle
-	if ( m_Shared.IsRuneCharged() && !m_pRuneChargeReadyEffect && !m_Shared.IsStealthed() )
-	{
-		m_pRuneChargeReadyEffect = ParticleProp()->Create( "powerup_supernova_ready", PATTACH_ABSORIGIN_FOLLOW );
-	}
-	else if ( m_pRuneChargeReadyEffect && ( m_Shared.IsStealthed() || !m_Shared.IsRuneCharged() ) )
-	{
-		ParticleProp()->StopEmission( m_pRuneChargeReadyEffect );
-		m_pRuneChargeReadyEffect = NULL;
-	}
-
-	UpdateRuneIcon();
 
 	UpdatedMarkedForDeathEffect();
 
@@ -8829,7 +8718,7 @@ bool C_TFPlayer::CanShowTeamMenu( void )
 	if ( IsHLTV() )
 		return false;
 
-	if ( TFGameRules() && ( TFGameRules()->IsCompetitiveMode() || TFGameRules()->IsPowerupMode() ) )
+	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
 	
 		return false;
 
@@ -9912,14 +9801,6 @@ void C_TFPlayer::UpdateSpyStateChange( void )
 	UpdateRecentlyTeleportedEffect();
 	UpdatedMarkedForDeathEffect();
 
-	// Update our resist shield color
-	if ( m_pTempShield && m_Shared.GetCarryingRuneType() == RUNE_RESIST )
-	{
-		m_pTempShield->m_nSkin = ( m_Shared.GetDisplayedTeam() == TF_TEAM_RED ) ? 0 : 1;
-	}
-
-	UpdateRuneIcon( true );
-
 	// Remove Speed lines if Stealthed
 	if ( m_Shared.IsStealthed() )
 	{
@@ -10791,13 +10672,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		if ( pVictim->m_Shared.InCond( TF_COND_DISGUISED ) && !bShowDisguisedCrit )
 			return;
 
-		// Victim is carrying Resist Powerup, which is immune to crit damage
-		if ( pVictim && pVictim->m_Shared.GetCarryingRuneType() == RUNE_RESIST &&
-			 ( eBonusEffect == kBonusEffect_Crit || eBonusEffect == kBonusEffect_MiniCrit ) )
-		{
-			return;
-		}
-
 		// Support old system.  If "allseecrit" is set that means we want this to show for our whole team.
 		EBonusEffectFilter_t eParticleFilter = g_BonusEffects[ eBonusEffect ].m_eParticleFilter;
 		EBonusEffectFilter_t eSoundFilter = g_BonusEffects[ eBonusEffect ].m_eSoundFilter;
@@ -11255,15 +11129,6 @@ void C_TFPlayer::UpdateGlowEffect( void )
 
 		m_pStudentGlowEffect = new CGlowObject( this, Vector( r, g, b ), 1.0, true );
 	}
-
-	// create a power up effect if needed
-	if ( ShouldShowPowerupGlowEffect() )
-	{
-		float r, g, b;
-		GetPowerupGlowEffectColor( &r, &g, &b );
-
-		m_pPowerupGlowEffect = new CGlowObject( this, Vector( r, g, b ), 1.0, true );
-	}
 }
 
 void C_TFPlayer::DestroyGlowEffect( void )
@@ -11274,12 +11139,6 @@ void C_TFPlayer::DestroyGlowEffect( void )
 	{
 		delete m_pStudentGlowEffect;
 		m_pStudentGlowEffect = NULL;
-	}
-
-	if ( m_pPowerupGlowEffect )
-	{
-		delete m_pPowerupGlowEffect;
-		m_pPowerupGlowEffect = NULL;
 	}
 }
 
@@ -11295,14 +11154,6 @@ void C_TFPlayer::UpdateGlowColor( void )
 		GetGlowEffectColor( &r, &g, &b );
 
 		pGlowObject->SetColor( Vector( r, g, b ) );
-	}
-
-	if ( m_pPowerupGlowEffect )
-	{
-		float r, g, b;
-		GetPowerupGlowEffectColor( &r, &g, &b );
-
-		m_pPowerupGlowEffect->SetColor( Vector( r, g, b ) );
 	}
 }
 
@@ -11369,56 +11220,6 @@ void C_TFPlayer::GetGlowEffectColor( float *r, float *g, float *b )
 
 	TFGameRules()->GetTeamGlowColor( nTeam, *r, *g, *b );
 }
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool C_TFPlayer::ShouldShowPowerupGlowEffect()
-{
-	// should local player see enemy glow with powerup related
-	C_TFPlayer *pLocalPlayer = GetLocalTFPlayer();
-	if ( pLocalPlayer->IsAlive() && this != pLocalPlayer && GetTeamNumber() != pLocalPlayer->GetTeamNumber() )
-	{
-		// give advantage to local player who doesn't have rune to fight against enemy with rune by glowing their health
-		if ( m_Shared.IsCarryingRune() && !pLocalPlayer->m_Shared.IsCarryingRune() )
-		{
-			// only show glow when the enemy is lower than 30% HP
-			float flHealth = ( float )GetHealth() / ( float )GetMaxHealth();
-			return flHealth <= 0.3 && pLocalPlayer->IsLineOfSightClear( this, IGNORE_ACTORS );
-		}
-		// local player with supernova can see enemy glow within supernova range
-		else if ( pLocalPlayer->m_Shared.GetCarryingRuneType() == RUNE_SUPERNOVA && pLocalPlayer->m_Shared.IsRuneCharged() && !m_Shared.IsStealthed() )
-		{
-			const float flEffectRadiusSqr = Sqr( 1500.f );
-			Vector toPlayer = WorldSpaceCenter() - pLocalPlayer->WorldSpaceCenter();
-			return toPlayer.LengthSqr() <= flEffectRadiusSqr && pLocalPlayer->IsLineOfSightClear( this, IGNORE_ACTORS );
-		}
-	}
-
-	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::GetPowerupGlowEffectColor( float *r, float *g, float *b )
-{
-	C_TFPlayer *pLocalPlayer = GetLocalTFPlayer();
-	// no need to add extra logics here. we already know that other players are glowing from SUPERNOVA
-	if ( pLocalPlayer->m_Shared.GetCarryingRuneType() == RUNE_SUPERNOVA )
-	{
-		*r = 255;
-		*g = 255;
-		*b = 0;
-	}
-	else
-	{
-		GetGlowEffectColor( r, g, b );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

@@ -364,7 +364,6 @@ public:
 	virtual void	RecalculateControlPointState( void );
 
 	void			TeamPlayerCountChanged( CTFTeam *pTeam );
-	void			PowerupTeamImbalance( int nTeam );
 	int				GetAssignedHumanTeam( void );
 	virtual void	HandleSwitchTeams( void );
 	virtual void	HandleScrambleTeams( void );
@@ -467,7 +466,6 @@ public:
 	void			SetGravityMultiplier( float flValue ){ m_flGravityMultiplier.Set( flValue ); }
 
 	bool			CanFlagBeCaptured( CBaseEntity *pOther );
-	bool			PowerupModeFlagStandoffActive( void );
 
 	void			TeleportPlayersToTargetEntities( int iTeam, const char *pszEntTargetName, CUtlVector< CTFPlayer * > *pTeleportedPlayers );
 
@@ -598,8 +596,6 @@ bool IsCreepWaveMode( void ) const;
 
 	bool IsMannVsMachineRespecEnabled( void ) { return IsMannVsMachineMode() && tf_mvm_respec_enabled.GetBool(); }
 	bool CanPlayerUseRespec( CTFPlayer *pTFPlayer );
-	bool IsPowerupMode( void ) { return m_bPowerupMode; }
-	void SetPowerupMode( bool bValue );
 
 #ifdef GAME_DLL
 	// Managed competitive matches should go through the End/StopCompetitiveMatch path
@@ -1004,9 +1000,6 @@ private:
 
 	void StopWatchShouldBeTimedWin_Calculate( void );
 	
-	void PowerupTeamImbalance_PlayerChangeTeam( CTFPlayer *pTFPlayer, int nTeam );
-	void PowerupTeamImbalance_SwapPlayers( int nLosingTeam );
-	
 #endif // GAME_DLL
 
 	bool GetRopesHolidayLightsAllowed( void ) { return m_bRopesHolidayLightsAllowed; }
@@ -1133,7 +1126,6 @@ private:
 	CNetworkHandle( CBonusRoundLogic, m_hBonusLogic );
 
 	CNetworkVar( bool, m_bPlayingKoth );
-	CNetworkVar( bool, m_bPowerupMode );
 	CNetworkVar( bool, m_bPlayingRobotDestructionMode );
 	CNetworkVar( bool, m_bPlayingMedieval );
 	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
@@ -1374,9 +1366,6 @@ public:
 	bool BAttemptMapVoteRollingMatch();
 	bool BIsManagedMatchEndImminent( void );
 
-	float CheckPowerupModeDominantDisconnect( CSteamID steamID );
-	void PowerupModeDominantDisconnect( CSteamID steamID, float flRemoveDominantConditionTime );
-
 	void ForceEnableUpgrades( int nState ) { m_nForceUpgrades = nState; }
 	void ForceEscortPushLogic( int nState ) { m_nForceEscortPushLogic = nState; }
 
@@ -1390,30 +1379,6 @@ private:
 		QAngle m_qAngles;
 	};
 	CUtlMap< string_t, CUtlVector< TeleportLocation_t >* > m_mapTeleportLocations;
-
-	// Keep track of kills made with powerups
-	int		m_nPowerupKillsRedTeam;
-	int		m_nPowerupKillsBlueTeam;
-	float	m_flTimeToRunImbalanceMeasures;
-	float	m_flTimeToStopImbalanceMeasures;
-	bool	m_bPowerupImbalanceMeasuresRunning;
-	int		m_nLastPowerUpImbalanceTeam = TEAM_UNASSIGNED;
-	float	m_flLastPowerUpImbalanceTime = -1.f;
-	int		m_nPowerUpImbalanceVictimTeam = TEAM_UNASSIGNED;
-	float	m_flPowerUpImbalanceVictimTeamTime = -1.f;
-
-	// Every so often we analyze player kills to determine if any players are dominant
-	float	m_flNextPowerupModeKillCountTimer = -1.f;
-
-	void	PowerupModeInitKillCountTimer( void );
-	void	PowerupModeKillCountCompare( void );
-
-	struct PowerupModeDominantDisconnect_t
-	{
-		CSteamID m_steamID;
-		float m_flRemoveDominantConditionTime = -1.f;
-	};
-	CUtlVector< PowerupModeDominantDisconnect_t > m_PowerupModeDominantDisconnect;
 
 	bool	m_bMapCycleNeedsUpdate;
 
@@ -1549,16 +1514,6 @@ public:
 
 	COutputEvent	m_OnSpawnRoomDoorsShouldLock;
 	COutputEvent	m_OnSpawnRoomDoorsShouldUnlock;
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-class CLogicMannPower : public CPointEntity
-{
-	DECLARE_CLASS( CLogicMannPower, CPointEntity );
-public:
-	DECLARE_DATADESC();
 };
 
 class CMultipleEscort : public CPointEntity

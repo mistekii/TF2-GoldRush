@@ -623,8 +623,6 @@ private:
 	void AddStreakMsg( CTFPlayerShared::ETFStreak eStreakType, int iKillerID, int iKillerStreak, int iStreakIncrement, int iVictimID, int iDeathNoticeMsg );
 	void AddStreakEndedMsg( CTFPlayerShared::ETFStreak eStreakType, int iKillerID, int iVictimID, int iVictimStreak, int iDeathNoticeMsg );
 
-	CHudTexture*	GetMannPowerIcon( RuneTypes_t tRuneType, bool bRedTeam );
-
 	CHudTexture		*m_iconDomination;
 	CHudTexture		*m_iconKillStreak;
 	CHudTexture		*m_iconDuckStreak;
@@ -1181,17 +1179,6 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 		C_TFPlayer* pVictim = ToTFPlayer( UTIL_PlayerByIndex( iVictimID ) );
 		C_TFPlayer* pAssister = ToTFPlayer( UTIL_PlayerByIndex( iAssisterID ) );
 
-		// Mannpower runes
-		if ( pKiller && pKiller->m_Shared.IsCarryingRune() )
-		{
-			msg.iconPreKillerName = GetMannPowerIcon( pKiller->m_Shared.GetCarryingRuneType(), pKiller->GetTeamNumber() == TF_TEAM_RED );
-		}
-
-		if ( pVictim && pVictim->m_Shared.IsCarryingRune() )
-		{
-			msg.iconPostVictimName = GetMannPowerIcon( pVictim->m_Shared.GetCarryingRuneType(), pVictim->GetTeamNumber() == TF_TEAM_RED );
-		}
-
 		if ( iKillStreakWep > 0 )
 		{
 			// append kill streak count to this notification
@@ -1661,26 +1648,4 @@ int CTFHudDeathNotice::UseExistingNotice( IGameEvent *event )
 	}
 
 	return BaseClass::UseExistingNotice( event );
-}
-//-----------------------------------------------------------------------------
-CHudTexture* CTFHudDeathNotice::GetMannPowerIcon( RuneTypes_t tRuneType, bool bIsRedTeam )
-{
-	// Red team is normal file and blue is dNeg file
-	switch ( tRuneType )
-	{
-	case RUNE_STRENGTH:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_strength" ) : gHUD.GetIcon( "dneg_mannpower_strength" );
-	case RUNE_HASTE:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_haste" ) : gHUD.GetIcon( "dneg_mannpower_haste" );
-	case RUNE_REGEN:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_regen" ) : gHUD.GetIcon( "dneg_mannpower_regen" );
-	case RUNE_RESIST:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_resist" ) : gHUD.GetIcon( "dneg_mannpower_resist" );
-	case RUNE_VAMPIRE:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_vamp" ) : gHUD.GetIcon( "dneg_mannpower_vamp" );
-	case RUNE_REFLECT:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_reflect" ) : gHUD.GetIcon( "dneg_mannpower_reflect" );
-	case RUNE_PRECISION:				return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_precision" ) : gHUD.GetIcon( "dneg_mannpower_precision" );
-	case RUNE_AGILITY:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_agility" ) : gHUD.GetIcon( "dneg_mannpower_agility" );
-	case RUNE_KNOCKOUT:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_fist" ) : gHUD.GetIcon( "dneg_mannpower_fist" );
-	case RUNE_KING:						return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_king" ) : gHUD.GetIcon( "dneg_mannpower_king" ); 
-	case RUNE_PLAGUE:					return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_plague" ) : gHUD.GetIcon( "dneg_mannpower_plague" );
-	case RUNE_SUPERNOVA:				return bIsRedTeam ? gHUD.GetIcon( "d_mannpower_supernova" ) : gHUD.GetIcon( "dneg_mannpower_supernova" );
-	default:							return NULL;
-	}
-	return NULL;
 }

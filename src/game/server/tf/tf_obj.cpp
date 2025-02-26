@@ -1428,11 +1428,6 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	m_flTotalConstructionTime = m_flConstructionTimeLeft = GetTotalTime();
 	m_flConstructionStartTime = gpGlobals->curtime;
 
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() && m_bCarryDeploy )
-	{
-		m_flTotalConstructionTime = 1.0f;
-	}
-
 	if ( pBuilder && pBuilder->IsPlayer() )
 	{
 		CTFPlayer *pTFBuilder = ToTFPlayer( pBuilder );
@@ -1929,33 +1924,6 @@ int CBaseObject::OnTakeDamage( const CTakeDamageInfo &info )
 		if ( pAttacker )
 		{
 			pWeapon->ApplyOnHitAttributes( NULL, pAttacker, info );
-		}
-	}
-
-	if ( TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pAttacker = ToTFPlayer( info.GetAttacker() );
-		if ( pAttacker )
-		{
-			if ( pAttacker->m_Shared.GetCarryingRuneType() == RUNE_STRENGTH || pAttacker->m_Shared.InCond( TF_COND_RUNE_IMBALANCE ) )
-			{
-				flDamage *= 2.f;
-			}
-
-			if ( pAttacker->m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
-			{
-				flDamage *= 4.f;
-			}
-
-			if ( pAttacker->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE )
-			{
-				int iModHealthOnHit = flDamage;
-
-				if ( iModHealthOnHit > 0 )
-				{
-					pAttacker->TakeHealth( iModHealthOnHit, DMG_GENERIC );
-				}
-			}
 		}
 	}
 
@@ -3012,12 +2980,6 @@ void CBaseObject::StartUpgrading( void )
 	// Increase level
 	m_iUpgradeLevel++;
 
-	//In Powerup mode, carried level 3 sentries skip the second level when deploying in order to get it done quicker
-	if ( m_bCarryDeploy && TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		m_iUpgradeLevel = GetHighestUpgradeLevel();
-	}
-
 	if ( GetHighestUpgradeLevel() < m_iUpgradeLevel )
 	{
 		m_iHighestUpgradeLevel = m_iUpgradeLevel;
@@ -3754,13 +3716,13 @@ float CBaseObject::GetReversesBuildingConstructionSpeed( void )
 }
 
 //-----------------------------------------------------------------------------
-// 
+// GRTODO: remove later
 //-----------------------------------------------------------------------------
 int	CBaseObject::GetUpgradeAmountPerHit( void )
 {
 	int nAmount = tf_obj_upgrade_per_hit.GetInt();
-
-	if ( TFGameRules()->InSetup() || TFGameRules()->IsPowerupMode() )
+	
+	if ( TFGameRules()->InSetup() )
 	{
 		nAmount *= 2;
 	}

@@ -368,14 +368,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		hNewMeter->SetVisible( false );
 	}
 
-	hNewMeter = new CHudItemEffectMeter_Rune( pszElementName, pPlayer );
-	if ( hNewMeter )
-	{
-		gHUD.AddHudElement( hNewMeter );
-		outMeters.AddToHead( hNewMeter );
-		hNewMeter->SetVisible( false );
-	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -1475,43 +1467,6 @@ bool CHudItemEffectMeter_Weapon<CTFThrowable>::IsEnabled( void )
 		return pWep->ShowHudElement();
 	}
 	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CHudItemEffectMeter_Rune::CHudItemEffectMeter_Rune( const char *pszElementName, C_TFPlayer* pPlayer ) : CHudItemEffectMeter( pszElementName, pPlayer )
-{
-
-}
-
-//-----------------------------------------------------------------------------
-bool CHudItemEffectMeter_Rune::IsEnabled( void )
-{
-	return m_pPlayer && m_pPlayer->m_Shared.CanRuneCharge();
-}
-
-//-----------------------------------------------------------------------------
-float CHudItemEffectMeter_Rune::GetProgress( void )
-{
-	if ( m_pPlayer )
-		return m_pPlayer->m_Shared.GetRuneCharge() / 100.0f;
-	return 0;
-}
-
-//-----------------------------------------------------------------------------
-bool CHudItemEffectMeter_Rune::ShouldFlash( void )
-{
-	if ( m_pPlayer )
-		return m_pPlayer->m_Shared.IsRuneCharged();
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool CHudItemEffectMeter_Rune::ShouldDraw( void )
-{
-	return m_pPlayer && m_pPlayer->m_Shared.CanRuneCharge();
 }
 
 //-----------------------------------------------------------------------------

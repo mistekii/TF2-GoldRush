@@ -395,11 +395,6 @@ bool CTFGameMovement::GrapplingHookMove()
 		}
 	}
 
-	// If we're grappling along with an ally, use their rune to avoid falling behind or passing them
-	if ( pPlayerToCheck->m_Shared.GetCarryingRuneType() == RUNE_AGILITY && !bHasTheFlag )
-	{
-		mv->m_flMaxSpeed = 950.f;
-	}
 	// Heavies get a grapple speed reduction across the board, even if they have Agility
 	if ( pPlayerToCheck->GetPlayerClass()->GetClassIndex() == TF_CLASS_HEAVYWEAPONS && !bHasTheFlag )
 	{
@@ -409,15 +404,6 @@ bool CTFGameMovement::GrapplingHookMove()
 	else if ( bHasTheFlag || bIsTeamLeader )
 	{
 		if ( pPlayerToCheck->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT )
-		{
-			if ( pPlayerToCheck->m_Shared.GetCarryingRuneType() == RUNE_NONE || pPlayerToCheck->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-			{
-				mv->m_flMaxSpeed *= 0.80f;
-			}
-			else
-				mv->m_flMaxSpeed *= 0.65f;
-		}
-		else if ( pPlayerToCheck->m_Shared.GetCarryingRuneType() == RUNE_NONE || pPlayerToCheck->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
 		{
 			mv->m_flMaxSpeed *= 0.65f;
 		}
@@ -1015,11 +1001,6 @@ void CTFGameMovement::AirDash( void )
 		m_pTFPlayer->TeamFortress_SetSpeed();
 	}
 
-	if ( m_pTFPlayer->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-	{
-		flJumpMod *= 1.8f;
-	}
-
   	float flDashZ = 268.3281572999747f * flJumpMod;
 
 	// Get the wish direction.
@@ -1177,12 +1158,6 @@ bool CTFGameMovement::CheckJumpButton()
 		float flStartZ = mv->m_vecVelocity[2];
 		mv->m_vecVelocity[2] += tf_grapplinghook_jump_up_speed.GetFloat();
 
-		// Powered up flag carriers get a jump height penalty except Agility
-		if ( m_pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_AGILITY && m_pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_NONE && m_pTFPlayer->HasTheFlag() )
-		{
-			mv->m_vecVelocity[2] *= 0.80f;
-		}
-
 		if ( mv->m_vecVelocity[2] > GetAirSpeedCap() )
 			mv->m_vecVelocity[2] = GetAirSpeedCap();
 
@@ -1312,10 +1287,6 @@ bool CTFGameMovement::CheckJumpButton()
 	
 #endif // STAGING_ONLY
 */
-	if ( m_pTFPlayer->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-	{
-		flJumpMod *= 1.8f;
-	}
 	
 	float flMul = ( 289.0f * flJumpMod ) * flGroundFactor;
 
@@ -2039,18 +2010,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 {
 	if ( m_pTFPlayer->GetGrapplingHookTarget() )
 	{
-		if ( m_pTFPlayer->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-		{
-			switch ( m_pTFPlayer->GetPlayerClass()->GetClassIndex() )
-			{
-			case TF_CLASS_SOLDIER:
-			case TF_CLASS_HEAVYWEAPONS:
-				return 850.f;
-			default:
-				return 950.f;
-			}
-		}
-
 		return tf_grapplinghook_move_speed.GetFloat();
 	}
 	else if ( m_pTFPlayer->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )

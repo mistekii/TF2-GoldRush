@@ -115,10 +115,6 @@ public:
 	// Passtime
 	void SW_PasstimeRoundEnded();
 
-	// PowerUp Mode
-	void Event_PowerUpModeDeath( CTFPlayer *pKiller, CTFPlayer *pVictim );
-	void Event_PowerUpRuneDuration( CTFPlayer *pKiller, int iDuration, int nRune );
-
 	// Utilities.
 	TF_Gamestats_LevelStats_t	*GetCurrentMap( void )			{ return m_reportedStats.m_pCurrentGame; }
 	TF_Gamestats_RoundStats_t*	GetRoundStatsForTeam( int iTeamNumber );

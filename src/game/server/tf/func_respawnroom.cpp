@@ -13,7 +13,6 @@
 #include "entity_tfstart.h"
 #include "modelentities.h"
 #include "tf_obj_sentrygun.h"
-#include "entity_rune.h"
 #include "tf_item.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -142,9 +141,6 @@ void CFuncRespawnRoom::RespawnRoomTouch(CBaseEntity *pOther)
 					pSentry->DetonateObject();
 				}
 			}
-			// Drop your powerup rune when entering a respawn room. 
-			// False parameter ensures rune isn't unintentionally 'thrown' into the respawn room
-			pPlayer->DropRune( false );
 		}
 	}
 }

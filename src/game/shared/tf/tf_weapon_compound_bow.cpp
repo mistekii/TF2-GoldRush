@@ -519,10 +519,6 @@ void CTFCompoundBow::ApplyRefireSpeedModifications( float &flBaseRef )
 		{
 			flBaseRef *= RemapValClamped( iMaster, 1, 2, 0.6f, 0.3f );
 		}
-		else if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-		{
-			flBaseRef *= 0.4f;
-		}
 	}
 }
 

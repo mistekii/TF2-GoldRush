@@ -424,7 +424,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropArray3( RECVINFO_ARRAY( m_nStreaks ), RecvPropInt( RECVINFO( m_nStreaks[0] ) ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_Low ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_High ) ),
-	RecvPropFloat( RECVINFO( m_flRuneCharge ) ),
 	RecvPropBool( RECVINFO( m_bHasPasstimeBall ) ),
 	RecvPropBool( RECVINFO( m_bIsTargetedForPasstimePass ) ),
 	RecvPropEHandle( RECVINFO( m_hPasstimePassTarget ) ),
@@ -597,7 +596,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropArray3( SENDINFO_ARRAY3( m_nStreaks ), SendPropInt( SENDINFO_ARRAY( m_nStreaks ) ) ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_Low ), -1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_High ), -1, SPROP_UNSIGNED ),
-	SendPropFloat( SENDINFO( m_flRuneCharge ), 8, 0, 0.f, 100.f ),
 	SendPropBool( SENDINFO( m_bHasPasstimeBall ) ),
 	SendPropBool( SENDINFO( m_bIsTargetedForPasstimePass ) ),
 	SendPropEHandle( SENDINFO( m_hPasstimePassTarget ) ),
@@ -625,26 +623,6 @@ CTFWearableDemoShield* GetEquippedDemoShield( CTFPlayer * pPlayer )
 		if ( pWearableShield )
 		{
 			return pWearableShield;
-		}
-	}
-
-	return NULL;
-}
-
-CTFPlayer *GetRuneCarrier( RuneTypes_t type, int iTeam = TEAM_ANY )
-{
-	for( int iPlayerIndex = 1 ; iPlayerIndex <= MAX_PLAYERS; iPlayerIndex++ )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerIndex ) );
-		if ( !pPlayer )
-			continue;
-
-		if ( iTeam != TEAM_ANY && pPlayer->GetTeamNumber() != iTeam )
-			continue;
-
-		if ( pPlayer->m_Shared.GetCarryingRuneType() == type )
-		{
-			return pPlayer;
 		}
 	}
 
@@ -883,7 +861,6 @@ CTFPlayerShared::CTFPlayerShared()
 
 	m_iStunIndex = -1;
 	m_flLastNoMovementTime = -1.f;
-	m_flRuneCharge = 0.f;
 	
 	// generic meters
 	for( int i=0; i < m_flItemChargeMeter.Count(); ++i )
@@ -1800,24 +1777,12 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddHalloweenKartCage();
 		break;
 
-	case TF_COND_RUNE_RESIST:
-		OnAddRuneResist();
-		break;
-
 	case TF_COND_GRAPPLINGHOOK_LATCHED:
 		OnAddGrapplingHookLatched();
 		break;
 
 	case TF_COND_PASSTIME_INTERCEPTION:
 		OnAddPasstimeInterception();
-		break;
-
-	case TF_COND_RUNE_PLAGUE:
-		OnAddRunePlague();
-		break;
-
-	case TF_COND_PLAGUE:
-		OnAddPlague();
 		break;
 
 	case TF_COND_PURGATORY:
@@ -2128,10 +2093,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveHalloweenKartCage();
 		break;
 
-	case TF_COND_RUNE_RESIST:
-		OnRemoveRuneResist();
-		break;
-
 	case TF_COND_GRAPPLINGHOOK_LATCHED:
 		OnRemoveGrapplingHookLatched();
 		break;
@@ -2140,28 +2101,8 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemovePasstimeInterception();
 		break;
 
-	case TF_COND_RUNE_PLAGUE:
-		OnRemoveRunePlague();
-		break;
-
-	case TF_COND_PLAGUE:
-		OnRemovePlague();
-		break;
-
 	case TF_COND_PURGATORY:
 		OnRemoveInPurgatory();
-		break;
-
-	case TF_COND_RUNE_KING:
-		OnRemoveRuneKing();
-		break;
-
-	case TF_COND_KING_BUFFED:
-		OnRemoveKingBuff();
-		break;
-
-	case TF_COND_RUNE_SUPERNOVA:
-		OnRemoveRuneSupernova();
 		break;
 
 	case TF_COND_COMPETITIVE_WINNER:
@@ -2337,19 +2278,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 				{
 					RemoveCond( (ETFCond)i );
 				}
-			}
-			else
-			{
-#if !defined( DEBUG )
-				// Prevent hacked usercommand exploits
-				if ( m_pOuter->GetTimeSinceLastUserCommand() > 5.f || m_pOuter->GetTimeSinceLastThink() > 5.f )
-				{
-					if ( GetCarryingRuneType() != RUNE_NONE )
-					{
-						m_pOuter->DropRune();
-					}
-				}
-#endif
 			}
 		}
 	}
@@ -2655,11 +2583,11 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		}
 	}
 
-	if ( !InCond( TF_COND_HEALTH_OVERHEALED ) && m_pOuter->GetHealth() > ( m_pOuter->GetMaxHealth() - m_pOuter->GetRuneHealthBonus() ) )
+	if ( !InCond( TF_COND_HEALTH_OVERHEALED ) && m_pOuter->GetHealth() > m_pOuter->GetMaxHealth() )
 	{
 		AddCond( TF_COND_HEALTH_OVERHEALED, PERMANENT_CONDITION );
 	}
-	else if ( InCond( TF_COND_HEALTH_OVERHEALED ) && m_pOuter->GetHealth() <= ( m_pOuter->GetMaxHealth() - m_pOuter->GetRuneHealthBonus() ) )
+	else if ( InCond( TF_COND_HEALTH_OVERHEALED ) && m_pOuter->GetHealth() <= m_pOuter->GetMaxHealth() )
 	{
 		RemoveCond( TF_COND_HEALTH_OVERHEALED );
 	}
@@ -2676,12 +2604,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			float flBoostMaxAmount = flOverheal - m_pOuter->GetMaxHealth();
 			float flDrain = flBoostMaxAmount / (tf_boost_drain_time.GetFloat() * flDrainMult);
 			m_flHealFraction += (gpGlobals->frametime * flDrain);
-
-			// Vampires have generous overheal on damage, so we decay it quickly
-			if ( GetCarryingRuneType() == RUNE_VAMPIRE ) 
-			{
-				m_flHealFraction *= 3.0;
-			}
 
 			int nHealthToDrain = (int)m_flHealFraction;
 			if ( nHealthToDrain > 0 )
@@ -2904,20 +2826,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 	
 				CTakeDamageInfo info( m_hBurnAttacker, m_hBurnAttacker, m_hBurnWeapon, flBurnDamage, DMG_BURN | DMG_PREVENT_PHYSICS_FORCE, nKillType );
 				m_pOuter->TakeDamage( info );
-
-				// Give health to attacker if they are carrying the Vampire Powerup.
-				if ( TFGameRules() && TFGameRules()->IsPowerupMode() )  
-				{
-					CTFPlayer *pTFAttacker = ToTFPlayer( GetConditionProvider( TF_COND_BURNING ) );
-
-					if ( pTFAttacker && pTFAttacker != m_pOuter )
-					{
-						if ( pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE )
-						{
-							pTFAttacker->TakeHealth( flBurnDamage, DMG_IGNORE_MAXHEALTH );
-						}
-					}
-				}
 			}
 
 			m_flFlameBurnTime = gpGlobals->curtime + TF_BURNING_FREQUENCY;
@@ -3044,10 +2952,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		// In MvM, Spies reveal other spies in a radius around them
 		RadiusSpyScan();
 	}
-	if ( GetCarryingRuneType() == RUNE_PLAGUE )
-	{
-		RadiusHealthkitCollectionCheck();
-	}
 
 #endif // GAME_DLL
 }
@@ -3093,7 +2997,6 @@ void CTFPlayerShared::ConditionThink( void )
 
 	// See if we should be pulsing our radius heal
 	PulseMedicRadiusHeal();
-	PulseKingRuneBuff();
 
 	m_ConditionList.Think();
 
@@ -4976,37 +4879,6 @@ void CTFPlayerShared::OnRemoveMedEffectSmallFireResist( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRuneResist( void )
-{
-#ifdef CLIENT_DLL
-	// Do use the condition bit here, it's passed along and is expected to be a cond.
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_RUNE_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRuneResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRuneKing( void )
-{
-#ifdef CLIENT_DLL
-	EndKingBuffRadiusEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddGrapplingHookLatched( void )
 {
 	m_pOuter->DoAnimationEvent( PLAYERANIMEVENT_CUSTOM_GESTURE, ACT_GRAPPLE_PULL_START );
@@ -5711,101 +5583,6 @@ void CTFPlayerShared::OnRemovePasstimeInterception( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRunePlague( void )
-{
-#ifdef CLIENT_DLL
-	
-	m_pOuter->m_pRunePlagueEffect = m_pOuter->ParticleProp()->Create( "powerup_plague_carrier", PATTACH_ABSORIGIN_FOLLOW );
-
-	// show resist effect on enemy player that has plague rune if local player is in plague cond
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( pLocalPlayer && pLocalPlayer != m_pOuter && pLocalPlayer->m_Shared.InCond( TF_COND_PLAGUE ) && m_pOuter->IsEnemyPlayer() )
-	{
-		AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_RUNE_PLAGUE );
-	}
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRunePlague( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pRunePlagueEffect )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pRunePlagueEffect );
-		m_pOuter->m_pRunePlagueEffect = NULL;
-	}
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddPlague( void )
-{
-#ifdef CLIENT_DLL
-	m_pOuter->EmitSound( "Powerup.PickUpPlagueInfected" );
-
-#endif
-	CTFPlayer *pProvider = ToTFPlayer( m_ConditionData[TF_COND_PLAGUE].m_pProvider );
-
-	//plague damage is a percentage of player health so everyone has the same life expectancy
-	float flPlagueDmg = 0.05f * m_pOuter->GetMaxHealth();
-
-	if ( pProvider )
-	{
-		MakeBleed( pProvider, NULL, 0.f, flPlagueDmg, true );
-		CSingleUserRecipientFilter localFilter( pProvider );
-		pProvider->EmitSound( localFilter, pProvider->entindex(), "Powerup.PickUpPlagueInfected" );
-	}
-
-	m_pOuter->EmitSound( "Powerup.PickUpPlagueInfectedLoop" );
-	ClientPrint( m_pOuter, HUD_PRINTCENTER, "#TF_Powerup_Contract_Plague" );
-
-#ifdef CLIENT_DLL
-	// show resist effect on enemy player that has plague rune if local player is in plague cond
-	if ( m_pOuter->IsLocalPlayer() && pProvider && pProvider->IsEnemyPlayer() )
-	{
-		AddResistShield( &pProvider->m_pTempShield, pProvider, TF_COND_RUNE_PLAGUE );
-	}
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemovePlague( void )
-{
-	m_pOuter->StopSound( "Powerup.PickUpPlagueInfectedLoop" );
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		IMaterial *pMaterial = view->GetScreenOverlayMaterial();
-
-		if ( pMaterial && FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_BLEED ) )
-		{
-			view->SetScreenOverlayMaterial( NULL );
-		}
-
-		// remove shield from the current plague rune carrier
-		int iEnemyTeam = m_pOuter->GetTeamNumber() == TF_TEAM_RED ? TF_TEAM_BLUE : TF_TEAM_RED;
-		CTFPlayer *pCurrentRuneCarrier = GetRuneCarrier( RUNE_PLAGUE, iEnemyTeam );
-		if ( pCurrentRuneCarrier )
-		{
-			RemoveResistShield( &pCurrentRuneCarrier->m_pTempShield, pCurrentRuneCarrier );	
-		}
-	}
-#endif
-
-//	RemoveCond( TF_COND_BLEEDING );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddInPurgatory( void )
 {
 #ifdef GAME_DLL
@@ -5973,15 +5750,6 @@ void CTFPlayerShared::UpdateChargeMeter( void )
 		// Recharge the meter while we are not charging.
 		float flChargeRegenMod = tf_demoman_charge_regen_rate.GetFloat();
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pOuter, flChargeRegenMod, charge_recharge_rate );
-		if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-		{
-			if ( GetCarryingRuneType() != RUNE_NONE )
-			{
-				flChargeRegenMod *= 0.2f;
-			}
-			else
-				flChargeRegenMod *= 0.4f;
-		}
 		
 		flChargeRegenMod = Max( flChargeRegenMod, 1.f );
 		m_flChargeMeter += gpGlobals->frametime * flChargeRegenMod;
@@ -6250,25 +6018,6 @@ void CTFPlayerShared::EndRadiusHealEffect( void )
 		m_pOuter->m_pRadiusHealEffect = NULL;
 	}
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::EndKingBuffRadiusEffect( void )
-{
-	// For buffed player
-	if ( m_pOuter->m_pKingBuffRadiusEffect )
-	{
-		m_pOuter->m_pKingBuffRadiusEffect->StopEmission();
-		m_pOuter->m_pKingBuffRadiusEffect = NULL;
-	}
-	// For carrier of King Rune
-	if ( m_pOuter->m_pKingRuneRadiusEffect )
-	{
-		m_pOuter->m_pKingRuneRadiusEffect->StopEmission();
-		m_pOuter->m_pKingRuneRadiusEffect = NULL;
-	}
-}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -6389,38 +6138,6 @@ void CTFPlayerShared::OnRemoveMegaHeal( void )
 		}
 	}
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddKingBuff( void )
-{
-#ifdef CLIENT_DLL
-	if ( IsStealthed() )
-	{
-		EndKingBuffRadiusEffect();
-		return;
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveKingBuff( void )
-{
-#ifdef CLIENT_DLL
-	EndKingBuffRadiusEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRuneSupernova( void )
-{
-	SetRuneCharge( 0.f );
 }
 
 //-----------------------------------------------------------------------------
@@ -6895,11 +6612,6 @@ void CTFPlayerShared::OnAddStealthed( void )
 	}
 	m_pOuter->RemoveAllDecals();
 	UpdateCritBoostEffect();
-
-	if ( m_pOuter->m_pTempShield && GetCarryingRuneType() == RUNE_RESIST )
-	{
-		RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-	}
 #endif
 
 	bool bSetInvisChangeTime = true;
@@ -7003,11 +6715,6 @@ void CTFPlayerShared::OnRemoveStealthed( void )
 		{
 			view->SetScreenOverlayMaterial( NULL );
 		}
-	}
-
-	if ( !m_pOuter->m_pTempShield && GetCarryingRuneType() == RUNE_RESIST )
-	{
-		AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_RUNE_RESIST );
 	}
 #else
 	if ( m_flCloakStartTime > 0 )
@@ -7726,15 +7433,6 @@ bool CTFPlayerShared::IsEnteringOrExitingFullyInvisible( void )
 	return ( ( GetPercentInvisiblePrevious() != 1.f && GetPercentInvisible() == 1.f ) || 
 			 ( GetPercentInvisiblePrevious() == 1.f && GetPercentInvisible() != 1.f ) );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFPlayerShared::CanRuneCharge() const
-{
-	return InCond( TF_COND_RUNE_SUPERNOVA );
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -9085,47 +8783,6 @@ void CTFPlayerShared::RadiusCurrencyCollectionCheck( void )
 
 	m_flRadiusCurrencyCollectionTime = bScout ? gpGlobals->curtime + 0.15f : gpGlobals->curtime + 0.25f;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Collect objects in a radius around the player
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::RadiusHealthkitCollectionCheck( void )
-{
-	if ( GetCarryingRuneType() != RUNE_PLAGUE )
-		return;
-
-	if ( !m_pOuter->IsAlive() )
-		return;
-
-	if ( m_flRadiusCurrencyCollectionTime > gpGlobals->curtime )
-		return;
-
-	const int nRadiusSqr = 600 * 600;
-	const Vector& vecPos = m_pOuter->WorldSpaceCenter();
-
-//	NDebugOverlay::Sphere( vecPos, 600, 0, 255, 0, false, 2.f );
-
-	for ( int i = 0; i < IHealthKitAutoList::AutoList().Count(); ++i )
-	{
-		CHealthKit *pHealthKit = static_cast<CHealthKit*>( IHealthKitAutoList::AutoList()[i] );
-		if ( !pHealthKit )
-			continue;
-
-		if ( ( vecPos - pHealthKit->GetAbsOrigin() ).LengthSqr() > nRadiusSqr )
-			continue;
-
-		if ( !pHealthKit->ValidTouch( m_pOuter ) )
-			continue;
-
-		if ( pHealthKit->IsEffectActive( EF_NODRAW ) )
-			continue;
-
-		pHealthKit->ItemTouch( m_pOuter );
-	}
-
-	m_flRadiusCurrencyCollectionTime = gpGlobals->curtime + 0.15f;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Scan for and reveal spies in a radius around the player
 //-----------------------------------------------------------------------------
@@ -10927,27 +10584,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		}
 	}
 
-	
-	if ( m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-	{
-		maxfbspeed *= 1.3f;
-	}
-	if ( m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-	{
-		// light classes get more benefit due to movement speed cap of 520 
-		switch ( GetPlayerClass()->GetClassIndex() )
-		{
-		case TF_CLASS_DEMOMAN:
-		case TF_CLASS_SOLDIER:
-		case TF_CLASS_HEAVYWEAPONS:
-			maxfbspeed *= 1.4f;
-			break;
-		default:
-			maxfbspeed *= 1.5f;
-			break;
-		}
-	}
-
 	return maxfbspeed;
 }
 
@@ -11271,70 +10907,6 @@ bool CTFPlayerShared::ShouldSuppressPrediction( void )
 {
 	// c_tf_player will decide to do this, bits in gamerules will allow it. Sorry.
 	return InCond( TF_COND_HALLOWEEN_KART ) && !InCond( TF_COND_HALLOWEEN_GHOST_MODE );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Set what type of rune we are carrying--or that we are not carrying any.
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::SetCarryingRuneType( RuneTypes_t rt )
-{
-#ifdef GAME_DLL
-	// Stat Tracking
-	if ( rt != RUNE_NONE )
-	{
-		// if getting a rune, start timer
-		m_flRuneAcquireTime = gpGlobals->curtime;
-	}
-	else if ( IsCarryingRune() )
-	{
-		// if setting to none (death or drop) and I have a power up, report and set timer to -1
-		float duration = gpGlobals->curtime - m_flRuneAcquireTime;
-		m_flRuneAcquireTime = -1;
-
-		CTF_GameStats.Event_PowerUpRuneDuration( m_pOuter, (int)duration, GetCarryingRuneType()	);
-	}
-
-	// clear rune charge
-	SetRuneCharge( 0.f );
-#endif
-
-	// Not 100% sure AddCond does what I want to do if we already have that cond, so
-	// let's assert so we can debug it if it ever comes up.
-	Assert( rt != GetCarryingRuneType() );
-
-	// We are only ever allowed to carry one rune type at a time, this logic ensures that.
-	for ( int i = 0; i < RUNE_TYPES_MAX; ++i )
-	{
-		if ( i == rt )
-		{
-			AddCond( GetConditionFromRuneType( (RuneTypes_t) i ) );
-		}
-		else
-		{
-			RemoveCond( GetConditionFromRuneType( (RuneTypes_t) i ) );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Return the currently carried rune type, or RUNE_NONE if we are not carrying one.
-//-----------------------------------------------------------------------------
-RuneTypes_t CTFPlayerShared::GetCarryingRuneType( void ) const
-{
-	RuneTypes_t retVal = RUNE_NONE;
-	for ( int i = 0; i < RUNE_TYPES_MAX; ++i )
-	{
-		if ( InCond( GetConditionFromRuneType( (RuneTypes_t) i ) ) )
-		{
-			// You are only allowed to have one rune type, if this hits we somehow erroneously 
-			// have two condition bits set for different types of runes. 
-			Assert( retVal == RUNE_NONE );
-			retVal = (RuneTypes_t)i;
-			break;
-		}
-	}
-
-	return retVal;
 }
 
 //-----------------------------------------------------------------------------
@@ -12125,19 +11697,6 @@ bool CTFPlayer::DoClassSpecialSkill( void )
 
 	bool bDoSkill = false;
 
-	// powerup charge activation has higher priority than any class special skill
-	if ( m_Shared.IsRuneCharged() && GetActiveTFWeapon() && GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK )
-	{
-#ifdef GAME_DLL
-		CTFGrapplingHook *pHook = static_cast<CTFGrapplingHook*>( GetActiveTFWeapon() );
-		if ( pHook )
-		{
-			pHook->ActivateRune();
-		}
-#endif // GAME_DLL
-		return true;
-	}
-
 	switch( GetPlayerClass()->GetClassIndex() )
 	{
 	case TF_CLASS_SPY:
@@ -12265,14 +11824,6 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 	// There's ammo in the clip... no switching away!
 	if ( GetActiveTFWeapon() && GetActiveTFWeapon()->AutoFiresFullClip() && GetActiveTFWeapon()->Clip1() > 0 )
 		return false;
-
- 	// Knockout powerup restricts user to melee only, so cannot equip other items such as building pickups
-	if ( m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
-//		ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Pickup_Deny" );
-		{
-		ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_No_Building_Pickup" );
-			return false;
-		}
 
 
 	// Check it's within range
@@ -12776,12 +12327,6 @@ int	CTFPlayer::GetMaxAmmo( int iAmmoIndex, int iClassIndex /*= -1*/ )
 	{
 		// All classes by default can carry a max of 1 "Grenade3" which is being used as ACTIONSLOT Throwables
 		iMax = 1;
-	}
-
-	// Haste Powerup Rune adds multiplier to Max Ammo
-	if ( m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-	{
-		iMax *= 2.0f;
 	}
 
 	return iMax;
@@ -14154,83 +13699,6 @@ void CTFPlayerShared::PulseMedicRadiusHeal( void )
 	}
 #endif	// CLIENT_DLL
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: Emits an area-of-effect buff around the King Rune carrier
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::PulseKingRuneBuff( void )
-{
-	// Make sure we have the King Powerup and are not invisible
-	if ( !m_pOuter->IsAlive() || IsStealthed() || GetCarryingRuneType() != RUNE_KING )
-	{
-		return;
-	}
-
-#ifdef GAME_DLL
-	if ( gpGlobals->curtime >= m_flKingRuneBuffCheckTime )
-	{
-		m_bKingRuneBuffActive = false;
-		
-		// Plague blocks king team buff
- 		if ( !InCond( TF_COND_PLAGUE ) )
- 		{
-			for ( int iPlayerIndex = 1; iPlayerIndex <= MAX_PLAYERS; ++iPlayerIndex )
-			{
-				CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerIndex ) );
-				if ( !pTFPlayer || !pTFPlayer->IsAlive() )
-					continue;
-
-				// Ignore players outside of the buff radius
-				Vector vDist = pTFPlayer->GetAbsOrigin() - m_pOuter->GetAbsOrigin();
-				if ( vDist.LengthSqr() >= 768 * 768 )
-					continue;
-
-				// If King is the only player, there's no effect
-				if ( pTFPlayer == m_pOuter )
-					continue;
-
-				// Spies who are invisible or disguised as the King's enemy team are ignored
-				if ( pTFPlayer->m_Shared.IsStealthed() || ( pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTFPlayer->m_Shared.GetDisguiseTeam() != m_pOuter->GetTeamNumber() ) )
-					continue;
-
-				// Enemies - ignore unless they are disguised as the King's team
-				if ( !pTFPlayer->InSameTeam( m_pOuter ) && !pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) )
-					continue;
-
-				pTFPlayer->m_Shared.AddCond( TF_COND_KING_BUFFED, 1.f );
-				m_bKingRuneBuffActive = true;
-			}
- 		}
-
-		m_flKingRuneBuffCheckTime = gpGlobals->curtime + 0.5f;
-	}
-#endif	// GAME_DLL
-
-#ifdef CLIENT_DLL
-	// King Rune carrier gets an effect to show that he's buffing someone
-	if ( m_bKingRuneBuffActive && !InCond( TF_COND_PLAGUE ) )
-	{
-		if ( !m_pOuter->m_pKingRuneRadiusEffect )
-		{
-			const char *pszRadiusEffect;
-			if ( m_pOuter->GetTeamNumber() == TF_TEAM_RED )
-			{
-				pszRadiusEffect = "powerup_king_red";
-			}
-			else
-			{
-				pszRadiusEffect = "powerup_king_blue";
-			}
-			m_pOuter->m_pKingRuneRadiusEffect = m_pOuter->ParticleProp()->Create( pszRadiusEffect, PATTACH_ABSORIGIN_FOLLOW, NULL, Vector( 0, 0, 0 ) );
-		}
-	}
-	else 
-	{
-		EndKingBuffRadiusEffect();
-	}
-#endif	// CLIENT_DLL
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

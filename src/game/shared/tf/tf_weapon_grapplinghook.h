@@ -65,10 +65,6 @@ public:
 	// poseparam override
 	virtual poseparamtable_t *GetPlayerPoseParamList( int &iPoseParamCount ) OVERRIDE;
 
-#ifdef GAME_DLL
-	void			ActivateRune();
-#endif // GAME_DLL
-
 private:
 #ifdef GAME_DLL
 	void			RemoveHookProjectile( bool bForce = false );

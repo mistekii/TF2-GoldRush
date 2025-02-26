@@ -100,10 +100,6 @@ bool CAmmoPack::MyTouch( CBasePlayer *pPlayer )
 			float flCurrentCharge = pTFPlayer->m_Shared.GetDemomanChargeMeter();
 			if ( flCurrentCharge < 100.0f )
 			{
-				if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-				{
-					flPackRatio *= 0.2;
-				}
 				pTFPlayer->m_Shared.SetDemomanChargeMeter( flCurrentCharge + flPackRatio * 100.0f );
 				bSuccess = true;
 			}

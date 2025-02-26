@@ -1178,23 +1178,6 @@ float CTFGrenadePipebombProjectile::GetLiveTime( void )
 
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetLauncher(), flLiveTime, sticky_arm_time );
 
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetThrower() );
-
-		if ( pOwner )
-		{
-			if ( pOwner->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-			{
-				flLiveTime *= 0.5f;
-			}
-			else if ( pOwner->m_Shared.GetCarryingRuneType() == RUNE_KING || pOwner->m_Shared.InCond( TF_COND_KING_BUFFED ) )
-			{
-				flLiveTime *= 0.75f;
-			}
-		}
-	}
-
 	return flLiveTime;
 }
 

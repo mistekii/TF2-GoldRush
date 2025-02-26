@@ -515,33 +515,6 @@ float CWeaponMedigun::GetHealRate( void )
 		flHealRate *= flPerc;
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-		CTFPlayer *pTFHealingTarget = ToTFPlayer( m_hHealingTarget );
-
-		//medics or heal targets with powerups are too powerful. We reduce heal and charge gain rate to offset the advantage powerups give them
-		//because of the nature of the Haste and Agility powerups, we don't add a heal or charge rate penalty if the Medic is carrying either of them 
-		if ( pOwner && pTFHealingTarget )
-		{
-			bool bMedicIsPoweredUp = pOwner->m_Shared.GetCarryingRuneType() != RUNE_NONE && pOwner->m_Shared.GetCarryingRuneType() != RUNE_HASTE && pOwner->m_Shared.GetCarryingRuneType() != RUNE_AGILITY;
-			if ( bMedicIsPoweredUp && pTFHealingTarget->m_Shared.GetCarryingRuneType() == RUNE_NONE ) //medic is powered up but target isn't
-			{
-				flHealRate *= 0.75f;
-			}
-			else if ( ( !bMedicIsPoweredUp && pTFHealingTarget->m_Shared.GetCarryingRuneType() != RUNE_NONE ) ) //target is powered up but medic isn't
-			{
-				flHealRate *= 0.50f;
-			}
-			else if ( bMedicIsPoweredUp && pTFHealingTarget->m_Shared.GetCarryingRuneType() != RUNE_NONE ) //both players are powered up
-			{
-				flHealRate *= 0.25f;
-			}
-			else
-				return flHealRate;
-		}
-	}
-
 	return flHealRate;
 }
 
@@ -1282,25 +1255,6 @@ bool CWeaponMedigun::FindAndHealTargets( void )
 
 				// The resist medigun has a uber charge rate
 				flChargeAmount *= flChargeModifier;
-
-				if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-				{
-					bool bMedicIsPoweredUp = pOwner->m_Shared.GetCarryingRuneType() != RUNE_NONE && pOwner->m_Shared.GetCarryingRuneType() != RUNE_HASTE && pOwner->m_Shared.GetCarryingRuneType() != RUNE_AGILITY;
-					if ( bMedicIsPoweredUp && pTFPlayer->m_Shared.GetCarryingRuneType() == RUNE_NONE ) //medic is powered up but target isn't
-					{
-						flChargeAmount *= 0.75f;
-					}
-					else if ( !bMedicIsPoweredUp && pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_NONE ) //target is powered up but medic isn't
-					{
-						flChargeAmount *= 0.50f;
-					}
-					else if ( bMedicIsPoweredUp && pTFPlayer->m_Shared.GetCarryingRuneType() != RUNE_NONE ) //both players are powered up
-					{
-						flChargeAmount *= 0.25f;
-					}
-					else
-						flChargeAmount *= 1.0f;
-				}
 
 				if ( pNewTarget->GetHealth() >= pNewTarget->GetMaxHealth() && ( TFGameRules() && !(TFGameRules()->InSetup() && TFGameRules()->GetActiveRoundTimer() ) ) )
 				{
@@ -2675,12 +2629,6 @@ float CWeaponMedigun::GetOverHealBonus( CTFPlayer *pTFTarget )
 	if ( pOwner )
 	{
 		flOverhealBonus = Max( flOverhealBonus, flOverhealBonus + ( m_flOverHealExpert / 4 ) );
-	}
-
-	//Powered up heal targets don't get overheal
-	if ( pTFTarget && pTFTarget->m_Shared.GetCarryingRuneType() != RUNE_NONE )
-	{
-		flOverhealBonus = 1.0f;
 	}
 	
 	return flOverhealBonus;

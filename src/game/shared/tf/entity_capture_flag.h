@@ -133,13 +133,6 @@ class CTFBot;
 
 //=============================================================================
 //
-// Powerup mode defines.
-//
-
-#define TF_RUNE_INTEL_CAPTURED		"CaptureFlag.TeamCapturedExcited"
-
-//=============================================================================
-//
 //	Robot Destruction defines
 //
 

@@ -347,10 +347,6 @@ void CCaptureZone::Capture( CBaseEntity *pOther )
 				}
 			}
 		}
-		else if ( !TFGameRules()->CanFlagBeCaptured( pOther ) && TFGameRules()->IsPowerupMode() )
-		{ 
-			ClientPrint( pPlayer, HUD_PRINTCENTER, "#TF_CTF_Cannot_Capture" );
-		}
 	}
 }
 

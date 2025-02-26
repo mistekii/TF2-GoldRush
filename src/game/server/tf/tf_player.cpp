@@ -100,7 +100,6 @@
 #include "collisionutils.h"
 #include "tf_taunt_prop.h"
 #include "eventlist.h"
-#include "entity_rune.h"
 #include "entity_halloween_pickup.h"
 #include "tf_gc_server.h"
 #include "tf_logic_halloween_2014.h"
@@ -557,7 +556,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( GetNextChangeTeamTime, "Get next change team time." )
 	DEFINE_SCRIPTFUNC( SetNextChangeTeamTime, "Set next change team time." )
 	DEFINE_SCRIPTFUNC( DropFlag, "Force player to drop the flag." )
-	DEFINE_SCRIPTFUNC( DropRune, "Force player to drop the rune." )
 	DEFINE_SCRIPTFUNC( ForceChangeTeam, "Force player to change their team." )
 	DEFINE_SCRIPTFUNC( IsMiniBoss, "Is this player an MvM mini-boss?" )
 	DEFINE_SCRIPTFUNC( SetIsMiniBoss, "Make this player an MvM mini-boss." )
@@ -605,7 +603,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptSetCondDuration, "SetCondDuration", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetDisguiseTarget, "GetDisguiseTarget", "" )
 
-	DEFINE_SCRIPTFUNC_NAMED( ScriptIsCarryingRune, "IsCarryingRune", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsCritBoosted, "IsCritBoosted", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsInvulnerable, "IsInvulnerable", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsStealthed, "IsStealthed", "" )
@@ -979,10 +976,6 @@ CTFPlayer::CTFPlayer()
 	m_bInitTaunt = false;
 
 	m_bSpeakingConceptAsDisguisedSpy = false;
-
-	m_nMannpowerKills = 0;
-	m_nMannpowerDeaths = 0;
-	m_bMannpowerHereForFullInterval = false;
 
 	m_iPreviousteam = TEAM_UNASSIGNED;
 	m_bArenaSpectator = false;
@@ -1622,9 +1615,8 @@ void CTFPlayer::TFPlayerThink()
 		// teleport home when taunt finishes
 		if ( !IsTaunting() )
 		{
-			// drop the intel and any powerup we are carrying
+			// drop the intel we are carrying
 			DropFlag();
-			DropRune();
 
 			EmitSound( "Building_Teleporter.Send" );
 			m_bIsTeleportingUsingEurekaEffect = false;
@@ -1685,53 +1677,6 @@ void CTFPlayer::TFPlayerThink()
 		if ( nDisguiseAsDispenserOnCrouch != 0 )
 		{
 			m_Shared.AddCond( TF_COND_DISGUISED_AS_DISPENSER, 0.5f );
-		}
-	}
-
-	// rune charge over time
-	if ( m_Shared.CanRuneCharge() && !m_Shared.IsRuneCharged() )
-	{
-		float dt = gpGlobals->curtime - m_flLastRuneChargeUpdate;
-		float flAdd = dt * 100.f / tf_powerup_max_charge_time.GetFloat();
-		m_Shared.SetRuneCharge( m_Shared.GetRuneCharge() + flAdd );
-
-		if (m_Shared.GetCarryingRuneType() == RUNE_SUPERNOVA && m_Shared.IsRuneCharged() )
-		{
-			ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Supernova_Deploy" );
-		}
-	}
-	m_flLastRuneChargeUpdate = gpGlobals->curtime;
-
-	// Mannpower dominant clean up and checks
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		if ( m_bIsInMannpowerDominantCondition )
-		{
-			// Clear Mannpower dominant condition when the time is up
-			if ( ( gpGlobals->curtime >= m_flRemoveDominantConditionTime ) )
-			{
-				EndPowerupModeDominant();
-			}
-			// other events can clear the marked for death condition while we're still in the dominant state so we need to add it back
-			else if ( m_Shared.GetCarryingRuneType() != RUNE_NONE && !m_Shared.InCond( TF_COND_MARKEDFORDEATH ) )
-			{
-				m_Shared.AddCond( TF_COND_MARKEDFORDEATH_SILENT, 5.0f );
-			}
-		}
-	}
-
-	// You can't touch a hooked target, so transmit plague when you get as close as you can
-	if ( GetGrapplingHookTarget() && GetGrapplingHookTarget()->IsPlayer() && m_Shared.GetCarryingRuneType() == RUNE_PLAGUE )
-	{
-		CTFPlayer *pHookedPlayer = ToTFPlayer( GetGrapplingHookTarget() );
-
-		float flDistSqrToTarget = GetAbsOrigin().DistToSqr( pHookedPlayer->GetAbsOrigin() );
-		if ( flDistSqrToTarget < 8100 && !pHookedPlayer->m_Shared.InCond( TF_COND_PLAGUE ) &&
-			!m_Shared.IsAlly( pHookedPlayer ) &&
-			!pHookedPlayer->m_Shared.IsInvulnerable() && 
-			pHookedPlayer->m_Shared.GetCarryingRuneType() != RUNE_RESIST )
-		{
-			pHookedPlayer->m_Shared.AddCond( TF_COND_PLAGUE, PERMANENT_CONDITION, this );
 		}
 	}
 
@@ -1946,128 +1891,6 @@ void CTFPlayer::RegenThink( void )
 		if ( iMetal )
 		{
 			GiveAmmo( iMetal, TF_AMMO_METAL, true );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns a portion of health every think.
-//-----------------------------------------------------------------------------
-void CTFPlayer::RuneRegenThink( void )
-{
-	if ( !IsAlive() )
-		return;
-
-	// Queue the next think
-	SetContextThink( &CTFPlayer::RuneRegenThink, gpGlobals->curtime + TF_REGEN_TIME_RUNE, "RuneRegenThink" );
-
-	// if we're going in to this too often, quit out.
-	if ( m_flLastRuneHealthRegenAt + TF_REGEN_TIME_RUNE > gpGlobals->curtime )
-		return;
-
-	int nRuneType = m_Shared.GetCarryingRuneType();
-	if ( nRuneType == RUNE_NONE && !HasTheFlag() )
-		return;
-
-	// Regenerate health 
-	float flAmount = 0.f;
-	switch ( GetPlayerClass()->GetClassIndex() )
-	{
-	case TF_CLASS_SCOUT:
-	case TF_CLASS_SPY:
-		flAmount = 16;
-		break;
-	case TF_CLASS_SNIPER:
-	case TF_CLASS_ENGINEER:
-		flAmount = 14;
-		break;
-	case TF_CLASS_MEDIC:
-	case TF_CLASS_DEMOMAN:
-	case TF_CLASS_PYRO:
-		flAmount = 12;
-		break;
-	case TF_CLASS_SOLDIER:
-		flAmount = 10;
-		break;
-	case TF_CLASS_HEAVYWEAPONS:
-		flAmount = 8;
-		break;
-	}
-	if ( nRuneType == RUNE_REGEN )
-	{
-		if ( m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-		{
-			flAmount *= 0.7f;
-		}
-	
-		m_flAccumulatedRuneHealthRegen += flAmount;
-	}
-	// King and buffed team mates get some health regeneration unless they have the plague
-	else if ( ( nRuneType == RUNE_KING || m_Shared.InCond( TF_COND_KING_BUFFED ) ) && !m_Shared.InCond( TF_COND_PLAGUE ) )
-	{
-		flAmount *= 0.3;
-		m_flAccumulatedRuneHealthRegen += flAmount;
-	}
-	// non powered up flag carriers get a small health regeneration
-	else if ( HasTheFlag() && nRuneType == RUNE_NONE )
-	{
-		flAmount *= 0.1;
-		m_flAccumulatedRuneHealthRegen += flAmount;
-	}
-
-	int nHealAmount = 0;
-	if ( m_flAccumulatedRuneHealthRegen >= 1.0 )
-	{
-		nHealAmount = floor( m_flAccumulatedRuneHealthRegen );
-		if ( GetHealth() < GetMaxHealth() )
-		{
-			TakeHealth( nHealAmount, DMG_GENERIC );
-			int nHealedAmount = TakeHealth( nHealAmount, DMG_GENERIC );
-			if ( nHealedAmount > 0 )
-			{
-				IGameEvent *event = gameeventmanager->CreateEvent( "player_healed" );
-				if ( event )
-				{
-					event->SetInt("priority", 1);	// HLTV event priority
-					event->SetInt("patient", GetUserID());
-					event->SetInt( "healer", GetUserID() );
-					event->SetInt( "amount", nHealedAmount );
-					gameeventmanager->FireEvent( event );
-				}
-			}
-		}
-	}
-	else if ( m_flAccumulatedRuneHealthRegen < -1.0 )
-	{
-		nHealAmount = ceil( m_flAccumulatedRuneHealthRegen );
-		TakeDamage( CTakeDamageInfo( this, this, NULL, vec3_origin, WorldSpaceCenter(), nHealAmount * -1, DMG_GENERIC ) );
-	}
-
-	if ( GetHealth() < GetMaxHealth() && nHealAmount != 0 )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-		if ( event )
-		{
-			event->SetInt( "amount", nHealAmount );
-			event->SetInt( "entindex", entindex() );
-			event->SetInt( "weapon_def_index", INVALID_ITEM_DEF_INDEX );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
-	m_flAccumulatedRuneHealthRegen -= nHealAmount;
-	m_flLastRuneHealthRegenAt = gpGlobals->curtime;
-
-	// Regenerate ammo and metal
-	if ( m_flNextRuneAmmoRegenAt < gpGlobals->curtime )
-	{
-		m_flNextRuneAmmoRegenAt = gpGlobals->curtime + 5;
-
-		if ( nRuneType == RUNE_REGEN )
-		{
-			RegenAmmoInternal( TF_AMMO_PRIMARY, 0.5f );
-			RegenAmmoInternal( TF_AMMO_SECONDARY, 0.5f );
-			GiveAmmo( 200, TF_AMMO_METAL, true );
 		}
 	}
 }
@@ -3380,10 +3203,6 @@ void CTFPlayer::ApplyAbsVelocityImpulse( const Vector &vecImpulse )
 //-----------------------------------------------------------------------------
 void CTFPlayer::ApplyGenericPushbackImpulse( const Vector &vecImpulse, CTFPlayer *pAttacker )
 {
-	// Knockout powerup carriers are immune to airblast
-	if ( m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT || m_Shared.IsImmuneToPushback() )
-		return;
-
 	if ( pAttacker && TFGameRules() && TFGameRules()->IsTruceActive() && pAttacker->IsTruceValidForEnt() )
 	{
 		if ( ( pAttacker->GetTeamNumber() == TF_TEAM_RED ) || ( pAttacker->GetTeamNumber() == TF_TEAM_BLUE ) )
@@ -3837,50 +3656,6 @@ void CTFPlayer::Spawn()
 	m_bAlreadyUsedExtendFreezeThisDeath = false;
 
 	SetRespawnOverride( -1.f, NULL_STRING );
-
-	// Remove all powerups and add temporary invuln on spawn
-	if ( TFGameRules()  && TFGameRules()->IsPowerupMode() )
-	{
-		m_Shared.AddCond( TF_COND_INVULNERABLE_USER_BUFF, 8.f );
-
-		if ( !m_bIsInMannpowerDominantCondition )
-		{
-			if ( ( GetTeamNumber() == TF_TEAM_BLUE ) || ( GetTeamNumber() == TF_TEAM_RED ) )
-			{
-				CSteamID steamIDForPlayer;
-				if ( GetSteamID( &steamIDForPlayer ) )
-				{
-					float flRemoveDominantConditionTime = TFGameRules()->CheckPowerupModeDominantDisconnect( steamIDForPlayer );
-					if ( flRemoveDominantConditionTime > 0 )
-					{
-						ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Dominant_Continue" );
-						ClientPrint( this, HUD_PRINTTALK, "#TF_Powerup_Dominant_Continue" );
-
-						m_Shared.AddCond( TF_COND_POWERUPMODE_DOMINANT, PERMANENT_CONDITION );
-
-						m_flRemoveDominantConditionTime = flRemoveDominantConditionTime;
-						m_bIsInMannpowerDominantCondition = true;
-
-						int nEnemyTeam = ( GetTeamNumber() == TF_TEAM_RED ) ? TF_TEAM_BLUE : TF_TEAM_RED;
-						for ( int i = 0; i < MAX_PLAYERS; ++i )
-						{
-							CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-							if ( pTFPlayer && ( pTFPlayer->GetTeamNumber() == nEnemyTeam ) )
-							{
-								ClientPrint( pTFPlayer, HUD_PRINTCENTER, "#TF_Powerup_Dominant_Other_Team" );
-								ClientPrint( pTFPlayer, HUD_PRINTTALK, "#TF_Powerup_Dominant_Other_Team" );
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			m_Shared.AddCond( TF_COND_POWERUPMODE_DOMINANT );
-			ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Dominant_StillIn" );
-		}
-	}
 
 	if ( TFGameRules() )
 	{
@@ -6246,7 +6021,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 			ClientPrint( this, HUD_PRINTCENTER, "#TF_Ladder_NoTeamChange" );
 			return;
 		}
-		else if ( TFGameRules()->ArePlayersInHell() || TFGameRules()->IsPowerupMode() )
+		else if ( TFGameRules()->ArePlayersInHell() )
 		{
 			ClientPrint( this, HUD_PRINTCENTER, "#TF_CantChangeTeamNow" );
 			return;
@@ -8552,31 +8327,6 @@ void CTFPlayer::DropFlag( bool bSilent /* = false */ )
 		}
 	}
 }
-//-----------------------------------------------------------------------------
-// Purpose: Players can drop Powerup Runes
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropRune( bool bApplyForce /* = true */, int nTeam /* = TEAM_ANY */ )
-{
-	if ( m_Shared.IsCarryingRune() )
-	{
-		Vector forward;
-		EyeVectors( &forward );
-
-		RuneTypes_t nRuneType = m_Shared.GetCarryingRuneType();
-		// We expect that we are actually are carrying here, so assert that we are.
-		Assert( nRuneType >= 0 && nRuneType < RUNE_TYPES_MAX );
-
-		m_Shared.SetCarryingRuneType( RUNE_NONE );
-
-		bool bShouldRemoveMeleeOnly = !( IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && m_Shared.InCond( TF_COND_ENERGY_BUFF ) );
-		if ( bShouldRemoveMeleeOnly )
-		{
-			m_Shared.RemoveCond( TF_COND_CANNOT_SWITCH_FROM_MELEE );	// Knockout powerup sets this to on
-		}
-		TeamFortress_SetSpeed();									// Need to call this or speed bonus isn't removed immediately
-		CTFRune::CreateRune( GetAbsOrigin(), nRuneType, nTeam, true, bApplyForce, forward ); // Manually dropped powerups are always neutral
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -8709,17 +8459,9 @@ void HandleRageGain( CTFPlayer *pPlayer, unsigned int iRequiredBuffFlags, float 
 		unsigned int iBuffId = pBuffItem ? pBuffItem->GetBuffType() : 0;
 		if ( iBuffId < ARRAYSIZE( g_RageBuffTypes ) )
 		{
-			// In Mannpower, the passive 20hp benefit of the Battalion's Backup makes it superior to the Buff Banner, so we reduce the rage build for it to compensate
-			if ( TFGameRules() && TFGameRules()->IsPowerupMode() && iBuffId == 2 )
+			if ( g_RageBuffTypes[iBuffId].m_iBuffFlags & iRequiredBuffFlags )
 			{
-				pPlayer->m_Shared.ModifyRage( g_RageBuffTypes[iBuffId].m_fRageScale * ( ( flDamage / 2.5 ) / fInverseRageGainScale ) );
-			}
-			else
-			{
-				if ( g_RageBuffTypes[iBuffId].m_iBuffFlags & iRequiredBuffFlags )
-				{
-					pPlayer->m_Shared.ModifyRage( g_RageBuffTypes[iBuffId].m_fRageScale * ( flDamage / fInverseRageGainScale ) );
-				}
+				pPlayer->m_Shared.ModifyRage( g_RageBuffTypes[iBuffId].m_fRageScale * ( flDamage / fInverseRageGainScale ) );
 			}
 		}
 	}
@@ -8731,14 +8473,7 @@ void HandleRageGain( CTFPlayer *pPlayer, unsigned int iRequiredBuffFlags, float 
 		{
 			if ( g_RageBuffTypes[iBuffId].m_iBuffFlags & iRequiredBuffFlags )
 			{
-				if ( TFGameRules() && TFGameRules()->IsPowerupMode() && pPlayer->m_Shared.GetCarryingRuneType() != RUNE_NONE )
-				{
-					pPlayer->m_Shared.ModifyRage(g_RageBuffTypes[iBuffId].m_fRageScale * ( ( flDamage / 10 ) / fInverseRageGainScale) );
-				}
-				else
-				{
-					pPlayer->m_Shared.ModifyRage( g_RageBuffTypes[iBuffId].m_fRageScale * ( flDamage / fInverseRageGainScale ) );
-				}
+				pPlayer->m_Shared.ModifyRage( g_RageBuffTypes[iBuffId].m_fRageScale * ( flDamage / fInverseRageGainScale ) );
 			}
 		}
 	}
@@ -8831,20 +8566,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	CTFPlayer *pTFAttacker = ToTFPlayer( pAttacker );
 
 	bool bDebug = tf_debug_damage.GetBool();
-
-	// If attacker has Strength Powerup Rune, apply damage multiplier, but not if you're a building or a crit
-	bool bCrit = ( info.GetDamageType() & DMG_CRITICAL ) > 0;
-	if ( !bIsObject && pTFAttacker && pTFAttacker->m_Shared.GetCarryingRuneType() == RUNE_STRENGTH && !bCrit )
-	{
-		if ( pTFAttacker->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) ) 
-		{
-			info.ScaleDamage( 1.4f );
-		}
-		else
-		{
-			info.ScaleDamage( 2.f );
-		}
-	}
 
 	// Make sure the player can take damage from the attacking entity
 	if ( !g_pGameRules->FPlayerCanTakeDamage( this, pAttacker, info ) )
@@ -9225,92 +8946,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( !TFGameRules()->ApplyOnDamageModifyRules( info, this, bAllowDamage ) )
 	{
 		return 0;
-	}
-
-	// If player has Reflect Powerup, reflect damage to attacker. 
-	// We do this here, after damage modify rules to ensure distance falloff calculations have already been made before we pass that damage back to the attacker
-	if ( pTFAttacker && m_Shared.GetCarryingRuneType() == RUNE_REFLECT && pTFAttacker != this && !pTFAttacker->m_Shared.IsInvulnerable() && pTFAttacker->IsAlive() )
-	{
-		CTakeDamageInfo dmg = info;
-		CTFProjectile_SentryRocket *sentryRocket = dynamic_cast<CTFProjectile_SentryRocket *>( info.GetInflictor() );
-
-		if ( gpGlobals->curtime > m_flNextReflectZap ) // don't spam the effect for fast weapons like flamethrower and minigun
-		{
-			m_flNextReflectZap = gpGlobals->curtime + 0.5f;
-
-			CPVSFilter filter( WorldSpaceCenter() );
-			Vector vEnd = pTFAttacker->WorldSpaceCenter();
-			Vector vStart = WorldSpaceCenter();
-
-			if ( bIsObject || sentryRocket )
-			{
-				CBaseEntity *pInflictor = info.GetInflictor();
-				vEnd = pInflictor->WorldSpaceCenter();
-			}
-			else
-			{
-				// Push the attacker away from the Reflect powerup holder
-				Vector toPlayer = vEnd - vStart;
-				toPlayer.z = 0.0f;
-				toPlayer.NormalizeInPlace();
-				toPlayer.z = 1.0f;
-				float flDamage = dmg.GetDamage();
-				if ( dmg.GetDamageCustom() != TF_DMG_CUSTOM_BURNING )
-				{
-					float flPushForce = RemapValClamped( flDamage, 0.1f, 150.f, 300.f, 500.f );		// Scale the push force according to damage
-					Vector vPush = flPushForce * toPlayer;
-					pTFAttacker->ApplyAbsVelocityImpulse( vPush );
-				}
-
-				// Play a sound and reduce the volume if damage is low
-				CSoundParameters params;
-				if ( CBaseEntity::GetParametersForSound( "Powerup.Reflect.Reflect", params, NULL ) )
-				{
-					CPASAttenuationFilter soundFilter( pTFAttacker->GetAbsOrigin(), params.soundlevel );
-					EmitSound_t ep( params );
-
-					if ( flDamage < 10.f )
-					{
-						ep.m_flVolume *= 0.75f;
-					}
-
-					pTFAttacker->EmitSound( soundFilter, entindex(), ep );
-					pTFAttacker->PainSound( dmg );
-				}
-			}
-
-			te_tf_particle_effects_control_point_t controlPoint = { PATTACH_ABSORIGIN, vEnd };
-			TE_TFParticleEffectComplex( filter, 0.f, "dxhr_arm_muzzleflash", vStart, QAngle( 0.f, 0.f, 0.f ), NULL, &controlPoint, pTFAttacker, PATTACH_CUSTOMORIGIN );
-		}
-
-		dmg.SetDamageCustom( TF_DMG_CUSTOM_RUNE_REFLECT );
-		dmg.SetDamageType( DMG_SHOCK );
-		dmg.SetAttacker( this );
-
-		if ( bIsObject )
-		{
-			CBaseEntity *pInflictor = info.GetInflictor();
-			dmg.SetDamage( info.GetDamage() );
-			pInflictor->TakeDamage( dmg );
-		}
-		// Sentry rockets are not included in bIsobject so we deal with them separately
-		else
-		{
-			if ( sentryRocket )
-			{
-				dmg.SetDamage( info.GetDamage() );
-				info.GetInflictor()->GetOwnerEntity()->TakeDamage( dmg );
-			}
-			else
-			{
-				// Take damage unless you have Resist or Vampire (they are immune to reflect damage)
-				if ( pTFAttacker->m_Shared.GetCarryingRuneType() != RUNE_RESIST && pTFAttacker->m_Shared.GetCarryingRuneType() != RUNE_VAMPIRE )
-				{
-					dmg.SetDamage( info.GetDamage() * ( m_bIsInMannpowerDominantCondition ? 0.5f : 0.8f ) );
-					pTFAttacker->TakeDamage( dmg );
-				}
-			}
-		}
 	}
 
 	//Don't take damage while I'm phasing.
@@ -10058,11 +9693,6 @@ void CTFPlayer::AddConnectedPlayers( CUtlVector<CTFPlayer*> &vecPlayers, CTFPlay
 //-----------------------------------------------------------------------------
 bool CTFPlayer::CheckBlockBackstab( CTFPlayer *pTFAttacker )
 {
-	// Resistance blocks backstabs before any items are checked
-	if ( m_Shared.GetCarryingRuneType() == RUNE_RESIST )
-	{
-		return true;
-	}
 
 	// Check all items for the attribute that blocks a backstab.
 	// Destroy the first item that intercepts the backstab.
@@ -10287,16 +9917,11 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir 
 			// Reset duck in air on self grenade impulse.
 			m_Shared.SetAirDucked( 0 );
 		}
-		// Precision removes self damage so we don't want push force from damage
-		if ( m_Shared.GetCarryingRuneType() == RUNE_PRECISION )
-		{
-			vecForce.Zero();
-		}
 	}
 	else
 	{
 		// Don't let bot get pushed while they're in spawn area
-		if ( m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) || m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
+		if ( m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
 		{
 			return;
 		}
@@ -10652,12 +10277,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( flBleedingTime > 0 && pTFAttacker )
 	{
 		m_Shared.MakeBleed( pTFAttacker, dynamic_cast< CTFWeaponBase * >( info.GetWeapon() ), flBleedingTime );
-	}
-
-	// Don't recieve reflected damage if you are carrying Reflect (prevents a loop in a game with two Reflect players)
-	if ( ( info.GetDamageType() & TF_DMG_CUSTOM_RUNE_REFLECT ) && m_Shared.GetCarryingRuneType() == RUNE_REFLECT )
-	{
-		return 0;
 	}
 
 	CTFWeaponBase *pTFWeapon = dynamic_cast< CTFWeaponBase * >( info.GetWeapon() );
@@ -11251,10 +10870,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 
 				float flRefill = 0.0f;
 				CALL_ATTRIB_HOOK_FLOAT( flRefill, kill_refills_meter );
-				if ( m_Shared.GetCarryingRuneType() != RUNE_NONE ) // Powerups restricts charge 
-				{
-					flRefill *= 0.2;
-				}
 
 				if ( flRefill > 0 && ((info.GetDamageType() & DMG_MELEE) || ( info.GetDamageCustom() == TF_DMG_CUSTOM_CHARGE_IMPACT ) ) )
 				{
@@ -11516,11 +11131,9 @@ void CTFPlayer::OnKilledOther_Effects( CBaseEntity *pVictim, const CTakeDamageIn
 
 	if ( iRestoreHealthToPercentageOnKill > 0 )
 	{
-		// This attribute should ignore runes
-		int iRestoreMax = GetMaxHealth() - GetRuneHealthBonus();
 		// We add one here to deal with a bizarre problem that comes up leaving you one health short sometimes
 		// due to bizarre floating point rounding or something equally silly.
-		int iTargetHealth = ( int )( ( ( float )iRestoreHealthToPercentageOnKill / 100.0f ) * ( float )iRestoreMax ) + 1;
+		int iTargetHealth = ( int )( ( ( float )iRestoreHealthToPercentageOnKill / 100.0f ) * ( float )GetMaxHealth() ) + 1;
 
 		int iBaseMaxHealth = GetMaxHealth() * 1.5,
 			iNewHealth = Min( GetHealth() + iTargetHealth, iBaseMaxHealth ),
@@ -12545,42 +12158,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		// Attackers who fire 100% critical shots from the imbalance event don't get their (or their medic's) kills but we do count deaths as that's mostly a measure of participation
-		CTFPlayer *pPowerupAttacker = ToTFPlayer( info_modified.GetAttacker() );
-		// Report Kill
-		CTF_GameStats.Event_PowerUpModeDeath( pPowerupAttacker, this );
-		if ( pPowerupAttacker && ( pPowerupAttacker != this ) && !pPowerupAttacker->m_Shared.InCond( TF_COND_RUNE_IMBALANCE ) )
-		{
-			pPowerupAttacker->m_nMannpowerKills++;
-
-			// Any medics who were healing the attacker also count this as a kill
-			int nNumHealers = pPowerupAttacker->m_Shared.GetNumHealers();
-		
-			if ( nNumHealers > 0 )
-			{
-				for ( int i = 0; i < nNumHealers; i++ )
-				{
-					CTFPlayer *pMedic = ToTFPlayer( pPowerupAttacker->m_Shared.GetHealerByIndex( i ) );
-					if ( pMedic )
-					{
-						pMedic->m_nMannpowerKills++;
-					}
-				}
-			}
-		}
-
-		m_nMannpowerDeaths++;
-	}
-
-	// Drop your powerup rune when you die 
-	if ( m_Shared.IsCarryingRune() )
-	{
-		int iTeam = GetEnemyTeam( GetTeamNumber() ); // Dead players drop opposing team colored powerups
-		CTFRune::CreateRune( GetAbsOrigin(), m_Shared.GetCarryingRuneType(), iTeam, true, false );
-	}
-
 	// in PD, player death adds points to the flag drop
 	if ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()
 		&& CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetType() == CTFPlayerDestructionLogic::TYPE_PLAYER_DESTRUCTION )
@@ -13362,28 +12939,6 @@ void CTFPlayer::TeamFortress_ClientDisconnected( void )
 		SetIsCoaching( false );
 		GetStudent()->SetCoach( NULL );
 	}
-
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode()  )
-	{
-		// Drop your powerup when you disconnect 
-		if ( m_Shared.IsCarryingRune() )
-		{
-			CTFRune::CreateRune( GetAbsOrigin(), m_Shared.GetCarryingRuneType(), TEAM_ANY, true, false );
-		}
-		// Clean up Mannpower data
-		m_nMannpowerKills = 0;
-		m_nMannpowerDeaths = 0;
-		m_bMannpowerHereForFullInterval = false;
-
-		if ( m_bIsInMannpowerDominantCondition )
-		{
-			CSteamID steamIDForPlayer;
-			if ( GetSteamID( &steamIDForPlayer ) )
-			{
-				TFGameRules()->PowerupModeDominantDisconnect( steamIDForPlayer, m_flRemoveDominantConditionTime );
-			}
-		}
-	}
 }
 
 //=========================================================================
@@ -13673,11 +13228,6 @@ void CTFPlayer::StateEnterACTIVE()
 	m_flLastAction = gpGlobals->curtime;
 	m_flLastHealthRegenAt = gpGlobals->curtime;
 	SetContextThink( &CTFPlayer::RegenThink, gpGlobals->curtime + TF_REGEN_TIME, "RegenThink" );
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		SetContextThink( &CTFPlayer::RuneRegenThink, gpGlobals->curtime + TF_REGEN_TIME_RUNE, "RuneRegenThink" );
-	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -14249,9 +13799,6 @@ int CTFPlayer::GetMaxHealthForBuffing()
 		}
 	}
 
-	// Some Powerup Runes increase your Max Health
-	iMax += GetRuneHealthBonus();
-
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) )
 	{
 		return iMax * tf_halloween_giant_health_scale.GetFloat();
@@ -14411,120 +13958,6 @@ int CTFPlayer::GetMaxHealthForBuffing()
 	//
 
 	return iMax;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int CTFPlayer::GetRuneHealthBonus() const
-{
-	int nRuneType = m_Shared.GetCarryingRuneType();
-
-	if ( nRuneType == RUNE_NONE )
-	{
-		return 0;
-	}
-	
-	if ( nRuneType == RUNE_KNOCKOUT )
-	{
-		if ( IsPlayerClass( TF_CLASS_DEMOMAN ) )
-		{
-			// Swords have various extra melee benefits, so we reduce Max Health bonus
-			if ( Weapon_GetSlot( TF_WPN_TYPE_MELEE ) )
-			{
-				int iDecapitateType = 0;
-				CALL_ATTRIB_HOOK_INT( iDecapitateType, decapitate_type );
-
-				if ( iDecapitateType )
-				{
-					return 20;
-				}
-			}
-			// Shields have passive resistance so we reduce Max Health bonus
-			if ( m_Shared.IsShieldEquipped() )
-			{
-				return 30;
-			}
-			return 150;
-		}
-		else if ( IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) || IsPlayerClass( TF_CLASS_PYRO ) )
-		{
-			return 125;
-		}
-		else if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			return 150;
-		}
-		else
-		{
-			return 175;
-		}
-	}
-	else if ( nRuneType == RUNE_REFLECT )
-	{
-		if ( m_bIsInMannpowerDominantCondition )
-		{
-			return ( 320 - m_PlayerClass.GetMaxHealth() );
-		}
-		return ( 400 - m_PlayerClass.GetMaxHealth() );
-	}
-	else if ( nRuneType == RUNE_KING )
-	{
-		if ( m_bIsInMannpowerDominantCondition )
-		{
-			return 20;
-		}
-		return 100;
-	}
-	else if ( nRuneType == RUNE_VAMPIRE )
-	{
-		return 80;
-	}
-
-	return 0;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::StartPowerupModeDominant( bool bIsAlreadyDominant )
-{
-	if ( bIsAlreadyDominant )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Dominant_Continue" );
-		ClientPrint( this, HUD_PRINTTALK, "#TF_Powerup_Dominant_Continue" );
-	}
-	else
-	{
-		if ( m_Shared.GetCarryingRuneType() != RUNE_NONE )
-		{
-			m_Shared.AddCond( TF_COND_MARKEDFORDEATH, 5.0f );
-		}
-		m_Shared.AddCond( TF_COND_POWERUPMODE_DOMINANT, PERMANENT_CONDITION );
-		ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_Dominant" );
-		ClientPrint( this, HUD_PRINTTALK, "#TF_Powerup_Dominant" );
-	}
-	// condition is set to last two kill count compare cycles plus a few seconds so they don't potentially ping pong out then back in
-	m_flRemoveDominantConditionTime = gpGlobals->curtime + ( ( tf_powerup_mode_killcount_timer_length.GetFloat() * 2 ) + 5.0f ); 
-	m_bIsInMannpowerDominantCondition = true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::EndPowerupModeDominant( void )
-{
-	m_Shared.RemoveCond( TF_COND_POWERUPMODE_DOMINANT );
-	m_Shared.RemoveCond( TF_COND_MARKEDFORDEATH );
-	ClientPrint( this, HUD_PRINTCENTER, "#TF_Powerup_OutOfDominant" );
-	ClientPrint( this, HUD_PRINTTALK, "#TF_Powerup_OutOfDominant" );
-	EmitSound( "Mannpower.PlayerIsNoLongerDominant" );
-	if ( m_bIsInMannpowerDominantCondition )
-	{
-		m_bIsInMannpowerDominantCondition = false;
-		m_flRemoveDominantConditionTime = 0;
-	}
-
 }
 
 //-----------------------------------------------------------------------------
@@ -15671,9 +15104,6 @@ void CTFPlayer::FeignDeath( const CTakeDamageInfo& info, bool bDeathnotice )
 		DropFlag();
 	}
 
-	// Dead Ringer death removes Powerup Rune for authenticity
-	DropRune();
-
 	// Only drop disguised ragdoll & weapon if we're disguised as a teammate.
 	bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED ) && (m_Shared.GetDisguiseTeam() == GetTeamNumber());
 
@@ -16033,12 +15463,6 @@ void CC_DropItem( void )
 	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
 	if ( !pPlayer )
 		return;
-
-	if ( pPlayer->m_Shared.IsCarryingRune() )
-	{
-		pPlayer->DropRune();
-		return;
-	}
 	
 	if ( pPlayer->HasTheFlag() )
 	{
@@ -16844,40 +16268,6 @@ void CTFPlayer::Touch( CBaseEntity *pOther )
 					if ( vecForceDirection.LengthSqr() > 100.0f )
 					{
 						m_flHalloweenKartPushEventTime = gpGlobals->curtime + tf_halloween_kart_impact_rate.GetFloat();
-					}
-				}
-			}
-			if ( ( m_Shared.GetPercentInvisible() < 0.10f ) &&
-				m_Shared.GetCarryingRuneType() == RUNE_PLAGUE && 
-				!m_Shared.IsAlly( pVictim ) && 
-				!pVictim->m_Shared.IsInvulnerable() && 
-				!pVictim->m_Shared.InCond( TF_COND_PLAGUE ) && 
-				pVictim->m_Shared.GetCarryingRuneType() != RUNE_RESIST )
-			{
-				pVictim->m_Shared.AddCond( TF_COND_PLAGUE, PERMANENT_CONDITION, this );
-
-				//Plague transmission event infects nearby eligible players on the same team. Only works for powerup carrier to host, not host to host.
-				const Vector& vecPos = pVictim->WorldSpaceCenter();
-				for ( int i = 0; i < pVictim->GetTeam()->GetNumPlayers(); i++ )
-				{
-					CTFPlayer *pTeamMate = ToTFPlayer( pVictim->GetTeam()->GetPlayer( i ) );
-
-					if ( pTeamMate && pTeamMate != pVictim && pTeamMate->IsAlive() && !pTeamMate->m_Shared.IsInvulnerable() && !pTeamMate->m_Shared.InCond( TF_COND_PLAGUE ) && pTeamMate->m_Shared.GetCarryingRuneType() != RUNE_RESIST )
-					{
-						// Only nearby teammates. Check for this before the more expensive visibility trace
-						if ( ( vecPos - pTeamMate->WorldSpaceCenter() ).LengthSqr() < ( 350 * 350 ) )
-						{
-							// Doesn't go through walls
-							if ( pVictim->FVisible( pTeamMate, MASK_SOLID ) )
-							{
-								pTeamMate->m_Shared.AddCond( TF_COND_PLAGUE, PERMANENT_CONDITION, this );
-								CPVSFilter filter( WorldSpaceCenter() );
-								Vector vStart = pVictim->EyePosition();
-								Vector vEnd = pTeamMate->GetAbsOrigin() + Vector( 0, 0, 56 );
-								te_tf_particle_effects_control_point_t controlPoint = { PATTACH_ABSORIGIN, vEnd };
-								TE_TFParticleEffectComplex( filter, 0.f, "plague_transmission", vStart, QAngle( 0.f, 0.f, 0.f ), NULL, &controlPoint, pTeamMate, PATTACH_CUSTOMORIGIN );
-							}
-						}
 					}
 				}
 			}

@@ -108,11 +108,6 @@ public:
 		const char *pszExecFile = bUseStopWatch ? "server_casual_stopwatch_win_conditions.cfg" : 
 								  ( ( bMultiStagePLR || bCTF ) ? "server_casual_max_rounds_win_conditions.cfg" : "server_casual_rounds_win_conditions.cfg" );
 
-		if ( TFGameRules()->IsPowerupMode() )
-		{
-			pszExecFile = "server_casual_max_rounds_win_conditions_mannpower.cfg";
-		}
-
 		if ( TFGameRules()->IsCommunityGameMode() )
 		{
 			pszExecFile = "server_custom.cfg";

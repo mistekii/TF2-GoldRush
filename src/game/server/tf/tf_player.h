@@ -216,7 +216,6 @@ public:
 	virtual bool		BumpWeapon( CBaseCombatWeapon *pWeapon );
 	bool				DropCurrentWeapon( void );
 	void				DropFlag( bool bSilent = false );
-	void				DropRune( bool bApplyForce = true, int nTeam = TEAM_ANY );
 	void				TFWeaponRemove( int iWeaponID );
 	bool				TFWeaponDrop( CTFWeaponBase *pWeapon, bool bThrowForward );
 
@@ -270,7 +269,6 @@ public:
 	int					GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 	virtual int			GetMaxHealth()  const OVERRIDE;
 	int					GetMaxHealthForBuffing();
-	int					GetRuneHealthBonus() const;
 
 	//-----------------------------------------------------------------------------------------------------
 	// Return true if we are a "mini boss" in Mann Vs Machine mode
@@ -746,7 +744,6 @@ public:
 	void				ScriptSetCondDuration( int nCond, float flNewDuration );
 	HSCRIPT				ScriptGetDisguiseTarget();
 
-	bool				ScriptIsCarryingRune()						{ return m_Shared.IsCarryingRune(); }
 	bool				ScriptIsCritBoosted( void ) const			{ return m_Shared.IsCritBoosted(); }
 	bool				ScriptIsInvulnerable( void ) const			{ return m_Shared.IsInvulnerable(); }
 	bool				ScriptIsStealthed( void ) const				{ return m_Shared.IsStealthed(); }
@@ -1074,7 +1071,6 @@ protected:
 
 	// Regeneration due to being a Medic, or derived from items
 	void				RegenThink();
-	void				RuneRegenThink();
 	void				RegenAmmoInternal( int iAmmo, float flRegen );
 	void				ResetPlayerClass( void );
 
@@ -1497,7 +1493,6 @@ private:
 
 	float m_flNextScorePointForPD;
 
-	float m_flLastRuneChargeUpdate;
 	float m_flLastDamageResistSoundTime;
 
 	void UpdateCustomAttributes();
@@ -1530,15 +1525,6 @@ public:
 	virtual bool IsTruceValidForEnt( void ) const OVERRIDE;
 
 	virtual bool BHaveChatSuspensionInCurrentMatch() OVERRIDE;
-
-	void StartPowerupModeDominant( bool bIsAlreadyDominant );
-	void EndPowerupModeDominant( void );
-
-	float m_flRemoveDominantConditionTime = -1.f;
-	bool m_bIsInMannpowerDominantCondition = false;
-	int m_nMannpowerKills = 0;
-	int m_nMannpowerDeaths = 0;
-	bool m_bMannpowerHereForFullInterval = false;
 
 	virtual bool BCanCallVote() OVERRIDE;
 	bool m_bFirstSpawnAndCanCallVote = false;

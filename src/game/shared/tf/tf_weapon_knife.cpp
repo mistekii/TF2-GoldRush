@@ -208,17 +208,10 @@ void CTFKnife::PrimaryAttack( void )
 					// store the victim to compare when we do the damage
 					m_hBackstabVictim.Set( pTarget );
 					iBackstabVictimHealth = Max( m_hBackstabVictim->GetHealth(), 75 );
-					nBackStabVictimRuneType = m_hBackstabVictim->m_Shared.GetCarryingRuneType();
 				}
 			}
 		} 
 	}
-#ifdef GAME_DLL
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() && m_hBackstabVictim )
-	{
-		iBackstabVictimHealth = Max( ( m_hBackstabVictim->GetHealth() - m_hBackstabVictim->GetRuneHealthBonus() ), 75 );
-	}
-#endif
 
 #ifndef CLIENT_DLL
 	pPlayer->RemoveInvisibility();
@@ -271,14 +264,9 @@ void CTFKnife::PrimaryAttack( void )
 	{
 		// Our health cap is 3x our default maximum health cap. This is so high to make up for
 		// the fact that our default is lowered by equipping the weapon.
-		int iBaseMaxHealth = ( pPlayer->GetMaxHealth() - pPlayer->GetRuneHealthBonus() ) * 3,
+		int iBaseMaxHealth = ( pPlayer->GetMaxHealth() ) * 3,
 			iNewHealth	   = MIN( pPlayer->GetHealth() + iBackstabVictimHealth, iBaseMaxHealth ),
 			iDeltaHealth   = iNewHealth - pPlayer->GetHealth();
-
-		if ( TFGameRules() && TFGameRules()->IsPowerupMode() && ( nBackStabVictimRuneType == RUNE_REFLECT ) )
-		{
-			iDeltaHealth = 0;
-		}
 
 		if ( iDeltaHealth > 0 )
 		{
@@ -406,23 +394,6 @@ bool CTFKnife::CanPerformBackstabAgainstTarget( CTFPlayer *pTarget )
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( pTarget, iNoBackstab, cannot_be_backstabbed );
 	if ( iNoBackstab )
 		return false;
-
-	// Can't backstab if attached to someone with grapple or if the victim is flying fast by grapple
-	if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
-		float flTargetVel = pTarget->GetAbsVelocity().Length();
- 		bool bTargetOffGround = ( pTarget->GetGroundEntity() == NULL );
-		if ( pPlayer )
-		{
-			if ( pPlayer->m_Shared.InCond( TF_COND_GRAPPLED_BY_PLAYER ) || pPlayer->m_Shared.InCond( TF_COND_GRAPPLED_TO_PLAYER ) )
-				return false;
-		}
-		if ( bTargetOffGround && pTarget->GetGrapplingHookTarget() && ( flTargetVel > 400 ) )
-		{
-			return false;
-		}
-	}
 	
 	// Behind and facing target's back?
 	if ( IsBehindAndFacingTarget( pTarget ) )

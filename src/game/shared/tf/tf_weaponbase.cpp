@@ -584,25 +584,11 @@ int	CTFWeaponBase::GetMaxClip1( void ) const
 					nProjectiles += Min( pPlayer->m_Shared.GetDecapitations(), iClipSizeOnKills );		// max extra projectiles
 				}
 
-				if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-				{
-					flClip *= 2;
-				}
-				if ( !pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) && ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_PRECISION || pPlayer->m_Shared.GetCarryingRuneType() == RUNE_VAMPIRE ) )
-				{
-					flClip *= 1.5f;
-				}
-
 				return ( flClip + nProjectiles );
 			}
 			else
 			{
 				CALL_ATTRIB_HOOK_INT( flClip, mult_clipsize_upgrade );
-
-				if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-				{
-					flClip *= 2;
-				}
 			}
 		}
 	}
@@ -1239,13 +1225,9 @@ bool CTFWeaponBase::Deploy( void )
 		// don't apply mult_switch_from_wep_deploy_time attribute if the last weapon hasn't been deployed for more than 0.67 second to match to weapon script switch time
 		// unless the player latched to a hook target, then allow switching right away
 		CTFWeaponBase *pLastWeapon = dynamic_cast< CTFWeaponBase* >( pPlayer->GetLastWeapon() );
-		bool bPowerupModeKnife = TFGameRules() && TFGameRules()->IsPowerupMode() && ( GetWeaponID() == TF_WEAPON_KNIFE );
 		if ( pPlayer->GetGrapplingHookTarget() != NULL || ( pLastWeapon && gpGlobals->curtime - pLastWeapon->m_flLastDeployTime > flWeaponSwitchTime ) )
 		{
-			if ( !bPowerupModeKnife )
-			{
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pLastWeapon, flDeployTimeMultiplier, mult_switch_from_wep_deploy_time );
-			}
+			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pLastWeapon, flDeployTimeMultiplier, mult_switch_from_wep_deploy_time );
 		}
 		
 		if ( pPlayer->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
@@ -1260,12 +1242,6 @@ bool CTFWeaponBase::Deploy( void )
 		{
 			// swords deploy and holster 75% slower
 			flDeployTimeMultiplier *= 1.75f;
-		}
-
-
-		if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_AGILITY && !bPowerupModeKnife )
-		{
-			flDeployTimeMultiplier /= 5.0f;
 		}
 
 		int numHealers = pPlayer->m_Shared.GetNumHealers();
@@ -1312,18 +1288,6 @@ bool CTFWeaponBase::Deploy( void )
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::ForceWeaponSwitch() const
 {
-	// allow knockout rune to force switch to melee
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( pOwner && pOwner->m_Shared.GetCarryingRuneType() == RUNE_KNOCKOUT )
-	{
-		int iClass = pOwner->GetPlayerClass()->GetClassIndex();
-		const CEconItemView *pItem = GetAttributeContainer()->GetItem();
-		if ( pItem && pItem->GetStaticData()->GetLoadoutSlot( iClass ) == LOADOUT_POSITION_MELEE )
-		{
-			return true;
-		}
-	}
-
 	// should force switch to this item
 	int iForceWeaponSwitch = 0;
 	CALL_ATTRIB_HOOK_INT( iForceWeaponSwitch, force_weapon_switch );
@@ -1835,28 +1799,6 @@ float CTFWeaponBase::ApplyFireDelay( float flDelay ) const
 
 	flDelayMult -= flComboBoost;
 
-	// Haste Powerup Rune adds multiplier to fire delay time. Flare guns get double boost
-	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
-	if ( pPlayer && pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-	{
-		if ( pPlayer->IsPlayerClass( TF_CLASS_PYRO ) && GetWeaponID() == TF_WEAPON_FLAREGUN )
-		{
-			flDelayMult *= 0.25f;
-		}
-		else if ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-		{
-			flDelayMult *= 0.75f;
-		}
-		else
-		{
-			flDelayMult *= 0.50f;
-		}
-	}
-	else if ( pPlayer && ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KING || pPlayer->m_Shared.InCond( TF_COND_KING_BUFFED ) ) )
-	{
-		flDelayMult *= 0.75f;
-	}
-
 	return flDelay * flDelayMult;
 }
 
@@ -2221,23 +2163,6 @@ void CTFWeaponBase::SetReloadTimer( float flReloadTime )
 	//		flReloadTime *= 0.6f;
 	//	}
 	//}
-
-	// Haste Powerup Rune adds multiplier to reload time.
-	if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_HASTE )
-	{
-		if ( pPlayer->m_Shared.InCond( TF_COND_POWERUPMODE_DOMINANT ) )
-		{
-			flReloadTime *= 0.50f;
-		}
-		else
-		{
-			flReloadTime *= 0.20f;
-		}
-	}
-	else if ( pPlayer->m_Shared.GetCarryingRuneType() == RUNE_KING || pPlayer->m_Shared.InCond( TF_COND_KING_BUFFED ) )
-	{
-		flReloadTime *= 0.75f;
-	}
 
 	flReloadTime *= GetReloadSpeedScale();
 
@@ -5004,10 +4929,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 	CALL_ATTRIB_HOOK_FLOAT( flChargeRefill, charge_meter_on_hit );
 	if ( flChargeRefill > 0 )
 	{
-		if ( pAttacker->m_Shared.GetCarryingRuneType() != RUNE_NONE )
-		{
-			flChargeRefill *= 0.2f;
-		}
 		pAttacker->m_Shared.SetDemomanChargeMeter( pAttacker->m_Shared.GetDemomanChargeMeter() + flChargeRefill * 100.0f );
 	}
 
@@ -5116,15 +5037,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 			CWeaponMedigun *pMedigun = (CWeaponMedigun *)pAttacker->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN );
 			if ( pMedigun )
 			{
-				if ( TFGameRules() && TFGameRules()->IsPowerupMode() )
-				{
-					if ( pAttacker->m_Shared.GetCarryingRuneType() != RUNE_NONE )
-					{
-						flUberChargeBonus *= 0.2;
-					}
-					else 
-						flUberChargeBonus *= 0.4;
-				}
 				pMedigun->AddCharge( flUberChargeBonus );
 			}
 		}
@@ -5136,14 +5048,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 		int iRageOnHit = 0;
 		CALL_ATTRIB_HOOK_INT( iRageOnHit, rage_on_hit );
 		pAttacker->m_Shared.ModifyRage( iRageOnHit );
-	}
-
-	// rune charge on hit
-	if ( pAttacker->m_Shared.CanRuneCharge() )
-	{
-		const float flMaxRuneCharge = 400.f;
-		float flAdd = (float)info.GetDamage() * ( 100.f /  flMaxRuneCharge );
-		pAttacker->m_Shared.SetRuneCharge( pAttacker->m_Shared.GetRuneCharge() + flAdd );
 	}
 
 	// Increase Boost on hit
@@ -5716,9 +5620,6 @@ bool CTFWeaponBase::AreRandomCritsEnabled( void )
 {
 	if ( TFGameRules() )
 	{
-		if ( TFGameRules()->IsPowerupMode() )
-			return false;
-
 		const IMatchGroupDescription *pMatchDesc = GetMatchGroupDescription( TFGameRules()->GetCurrentMatchGroup() );
 		if ( pMatchDesc )
 			return pMatchDesc->BUsesRandomCrits();

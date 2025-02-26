@@ -16,7 +16,6 @@
 // Server specific.
 #else
 #include "tf_player.h"
-#include "entity_rune.h"
 #include "effect_dispatch_data.h"
 #include "tf_fx.h"
 #include "func_respawnroom.h"
@@ -419,20 +418,6 @@ void CTFGrapplingHook::GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecOff
 //-----------------------------------------------------------------------------
 float CTFGrapplingHook::GetProjectileSpeed()
 {
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	
-	if ( pOwner && pOwner->m_Shared.GetCarryingRuneType() == RUNE_AGILITY )
-	{
-		switch ( pOwner->GetPlayerClass()->GetClassIndex() )
-		{
-		case TF_CLASS_SOLDIER:
-		case TF_CLASS_HEAVYWEAPONS:
-			return 2600.f;
-		default:
-			return 3000.f;
-		}
-	}
-
 	return tf_grapplinghook_projectile_speed.GetFloat();
 }
 
@@ -534,117 +519,6 @@ void CTFGrapplingHook::PlayWeaponShootSound( void )
 
 
 #ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGrapplingHook::ActivateRune()
-{
-	CTFPlayer *pOwner = GetTFPlayerOwner();
-	if ( pOwner && pOwner->m_Shared.IsRuneCharged() )
-	{
-		RuneTypes_t type = pOwner->m_Shared.GetCarryingRuneType();
-		if ( type == RUNE_SUPERNOVA )
-		{
-			// don't allow stealthed player to activate the power
-			if ( pOwner->m_Shared.IsStealthed() )
-				return;
-
-			int nEnemyTeam = GetEnemyTeam( pOwner->GetTeamNumber() );
-
-			// apply super nova effect to all enemies
-			bool bHitAnyTarget = false;
-			CUtlVector< CTFPlayer* > vecPlayers;
-			CUtlVector< CTFPlayer* > vecVictims;
-			CollectPlayers( &vecPlayers, nEnemyTeam, COLLECT_ONLY_LIVING_PLAYERS );
-			const float flEffectRadiusSqr = Sqr( 1500.f );
-			const float flMinPushForce = 200.f;
-			const float flMaxPushForce = 500.f;
-			const float flMinStunDuration = 2.f;
-			const float flMaxStunDuration = 4.f;
-			for ( int i = 0; i < vecPlayers.Count(); ++i )
-			{
-				CTFPlayer *pOther = vecPlayers[i];
-				Vector toPlayer = pOther->WorldSpaceCenter() - pOwner->WorldSpaceCenter();
-				float flDistSqr = toPlayer.LengthSqr();
-
-				// Collect valid enemies
-				if ( flDistSqr <= flEffectRadiusSqr && pOwner->IsLineOfSightClear( pOther, CBaseCombatCharacter::IGNORE_ACTORS ) && !PointInRespawnRoom( pOther, pOther->WorldSpaceCenter() ) )
-				{
-					vecVictims.AddToTail( pOther );
-				}
-			}
-
-			// if there is more than one victim, the stun duration increases
-			float flStunDuration = MIN( flMinStunDuration + ( ( vecVictims.Count() - 1 ) * 0.5 ), flMaxStunDuration );
-
-			for ( int i = 0; i < vecVictims.Count(); ++i )
-			{
-				// force enemy to drop rune, stun, and push them
-				CTFPlayer *pOther = vecVictims[i];
-				const char *pszEffect = pOwner->GetTeamNumber() == TF_TEAM_RED ? "powerup_supernova_strike_red" : "powerup_supernova_strike_blue";
-
-				CPVSFilter filter( WorldSpaceCenter() );
-				Vector vStart = pOwner->WorldSpaceCenter();
-				Vector vEnd = pOther->GetAbsOrigin() + Vector( 0, 0, 56 );
-				te_tf_particle_effects_control_point_t controlPoint = { PATTACH_ABSORIGIN, vEnd };
-				TE_TFParticleEffectComplex( filter, 0.f, pszEffect, vStart, QAngle( 0.f, 0.f, 0.f ), NULL, &controlPoint, pOther, PATTACH_CUSTOMORIGIN );
-
-					
-				pOther->DropRune( false, pOwner->GetTeamNumber() );
-				pOther->DropFlag();
-
-				pOther->m_Shared.StunPlayer( flStunDuration, 1.f, TF_STUN_MOVEMENT | TF_STUN_CONTROLS, pOwner );
-	
-				// send the player flying
-				// make sure we push players up and away
-				Vector toPlayer = pOther->WorldSpaceCenter() - pOwner->WorldSpaceCenter();
-				toPlayer.z = 0.0f;
-				toPlayer.NormalizeInPlace();
-				toPlayer.z = 1.0f;
-
-				// scale push force based on distance from the supernova origin
-				float flDistSqr = toPlayer.LengthSqr();
-				float flPushForce = RemapValClamped( flDistSqr, 0.f, flEffectRadiusSqr, flMaxPushForce, flMinPushForce );
-				Vector vPush = flPushForce * toPlayer;
-				pOther->ApplyAbsVelocityImpulse( vPush );
-
-				bHitAnyTarget = true;
-			}
-
-			// don't deploy with no target
-			if ( bHitAnyTarget )
-			{
-				// play effect
-				const char *pszEffect = pOwner->GetTeamNumber() == TF_TEAM_RED ? "powerup_supernova_explode_red" : "powerup_supernova_explode_blue";
-				CEffectData	data;
-				data.m_nHitBox = GetParticleSystemIndex( pszEffect );
-				data.m_vOrigin = pOwner->GetAbsOrigin();
-				data.m_vAngles = vec3_angle;
-
-				CPASFilter filter( data.m_vOrigin );
-				filter.SetIgnorePredictionCull( true );
-
-				te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-				pOwner->EmitSound( "Powerup.PickUpSupernovaActivate" );
-
-				// remove the power and reposition instantly
-				pOwner->m_Shared.SetCarryingRuneType( RUNE_NONE );
-				CTFRune::RepositionRune( type, TEAM_ANY );
-			}
-			else
-			{
-				if ( gpGlobals->curtime > m_flNextSupernovaDenyWarning )
-				{
-					m_flNextSupernovaDenyWarning = gpGlobals->curtime + 0.5f;
-
-					CSingleUserRecipientFilter singleFilter( pOwner );
-					EmitSound( singleFilter, pOwner->entindex(), "Player.UseDeny" );
-					ClientPrint( pOwner, HUD_PRINTCENTER, "#TF_Powerup_Supernova_Deny" );
-				}
-			}
-		}
-	}
-}
 
 
 //-----------------------------------------------------------------------------

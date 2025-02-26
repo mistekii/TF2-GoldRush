@@ -711,15 +711,6 @@ void CTFHudFlagObjectives::OnTick()
 				}
 			}
 		}
-
-		if ( pPlayer->HasTheFlag() && TFGameRules()->IsPowerupMode() )
-		{
-			CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag *>( pPlayer->GetItem() );
-			if ( pFlag )
-			{
-				pPoisonFlag = pFlag;
-			}
-		}
 	}
 
 	if ( m_pSpecCarriedImage )

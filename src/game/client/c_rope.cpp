@@ -646,7 +646,7 @@ bool CRopeManager::IsHolidayLightMode( void )
 	{
 		// We don't want to draw the lights for the grapple.
 		// They get left behind for a while and look bad.
-		if ( TFGameRules()->IsPowerupMode() || !TFGameRules()->GetRopesHolidayLightsAllowed() )
+		if ( !TFGameRules()->GetRopesHolidayLightsAllowed() )
 		{
 			return false;
 		}

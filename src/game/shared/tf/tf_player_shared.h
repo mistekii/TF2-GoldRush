@@ -329,11 +329,6 @@ public:
 
 	bool	ShouldSuppressPrediction( void );
 
-	void SetCarryingRuneType( RuneTypes_t rt );
-	RuneTypes_t GetCarryingRuneType( void ) const;
-	bool IsCarryingRune( void ) const { return GetCarryingRuneType() != RUNE_NONE; }
-	float		m_flRuneAcquireTime;
-
 #ifdef CLIENT_DLL
 	// This class only receives calls for these from C_TFPlayer, not
 	// natively from the networking system
@@ -348,7 +343,6 @@ public:
 
 	bool	ShouldShowRecentlyTeleported( void );
 	void	EndRadiusHealEffect( void );
-	void	EndKingBuffRadiusEffect( void );
 #endif
 
 	bool	IsCritBoosted( void ) const;
@@ -461,11 +455,6 @@ public:
 	bool	IsFullyInvisible( void ) { return ( GetPercentInvisible() == 1.f ); }
 
 	bool	IsEnteringOrExitingFullyInvisible( void );
-
-	bool	CanRuneCharge() const;
-	float	GetRuneCharge() const { return m_flRuneCharge; }
-	void	SetRuneCharge( float flVal ) { m_flRuneCharge = Clamp( flVal, 0.f, 100.f ); }
-	bool	IsRuneCharged() const { return m_flRuneCharge == 100.f; }
 
 	bool	IsRocketPackReady( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ) >= 50.f; }
 	float	GetRocketPackCharge( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ); }
@@ -599,8 +588,6 @@ public:
 	void	StartBuildingObjectOfType( int iType, int iObjectMode=0 );
 
 	void	InterruptCharge( void );
-
-	void	PulseKingRuneBuff();
 
 public:
 	// Scoring
@@ -803,12 +790,8 @@ private:
 	void OnAddMeleeOnly( void );
 	void OnAddSwimmingCurse( void );
 	void OnAddHalloweenKartCage( void );
-	void OnAddRuneResist( void );
 	void OnAddGrapplingHookLatched( void );
 	void OnAddPasstimeInterception( void );
-	void OnAddRunePlague( void );
-	void OnAddPlague( void );
-	void OnAddKingBuff( void );
 	void OnAddInPurgatory( void );
 	void OnAddCompetitiveWinner( void );
 	void OnAddCompetitiveLoser( void );
@@ -880,14 +863,8 @@ private:
 	void OnRemoveMeleeOnly( void );
 	void OnRemoveSwimmingCurse( void );
 	void OnRemoveHalloweenKartCage( void );
-	void OnRemoveRuneResist( void );
 	void OnRemoveGrapplingHookLatched( void );
 	void OnRemovePasstimeInterception( void );
-	void OnRemoveRunePlague( void );
-	void OnRemovePlague( void );
-	void OnRemoveRuneKing( void );
-	void OnRemoveKingBuff( void );
-	void OnRemoveRuneSupernova( void );
 	void OnRemoveInPurgatory( void );
 	void OnRemoveCompetitiveWinner( void );
 	void OnRemoveCompetitiveLoser( void );
@@ -918,7 +895,6 @@ private:
 	void  SetCritBoosted( bool bState );
 
 	void RadiusCurrencyCollectionCheck( void );
-	void RadiusHealthkitCollectionCheck( void );
 	void RadiusSpyScan( void );
 
 	// Attr for Conditions
@@ -1111,8 +1087,6 @@ private:
 
 	CNetworkVar( float, m_flStealthNoAttackExpire );
 	CNetworkVar( float, m_flStealthNextChangeTime );
-
-	CNetworkVar( float, m_flRuneCharge );
 
 	// generic charge percentage for weapon to use
 	
