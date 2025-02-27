@@ -51,16 +51,6 @@ enum
 	SPECTATOR_TARGET_ID_BOTTOM_RIGHT,
 };
 
-void SpectatorTargetLocationCallback( IConVar *var, const char *oldString, float oldFloat )
-{
-	CSpectatorTargetID *pSpecTargetID = (CSpectatorTargetID *)GET_HUDELEMENT( CSpectatorTargetID );
-	if ( pSpecTargetID )
-	{
-		pSpecTargetID->InvalidateLayout();
-	}
-}
-ConVar tf_spectator_target_location( "tf_spectator_target_location", "0", FCVAR_ARCHIVE, "Determines the location of the spectator targetID panel.", true, 0, true, 3, SpectatorTargetLocationCallback );
-
 ConVar tf_hud_target_id_alpha( "tf_hud_target_id_alpha", "100", FCVAR_ARCHIVE, "Alpha value of target id background, default 100" );
 ConVar tf_hud_target_id_offset( "tf_hud_target_id_offset", "0", FCVAR_ARCHIVE, "RES file Y offset for target id" );
 ConVar tf_hud_target_id_show_avatars( "tf_hud_target_id_show_avatars", "2", FCVAR_ARCHIVE, "Display Steam avatars on TargetID when using floating health icons.  1 = everyone, 2 = friends only." );
@@ -1104,106 +1094,5 @@ void CSpectatorTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
 	if ( m_pBGPanel_Spec_Blue )
 	{
 		m_pBGPanel_Spec_Blue->SetVisible( true );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CSpectatorTargetID::PerformLayout( void )
-{
-	int iXIndent = XRES(5);
-	int iXPostdent = XRES(10);
-	int iWidth = m_pTargetHealth->GetWide() + iXIndent + iXPostdent;
-
-	int iTextW, iTextH;
-	int iDataW, iDataH;
-
-	if ( m_pTargetNameLabel && m_pTargetDataLabel )
-	{
-		m_pTargetNameLabel->GetContentSize( iTextW, iTextH );
-		m_pTargetDataLabel->GetContentSize( iDataW, iDataH );
-		iWidth += MAX(iTextW,iDataW);
-
-		SetSize( iWidth, GetTall() );
-
-		int nOffset = m_bArenaPanelVisible ? YRES (120) : 0; // HACK: move the targetID up a bit so it won't overlap the panel
-
-		int x1 = 0, y1 = 0;
-		int x2 = 0, y2 = 0;
-		int x3 = 0, y3 = 0;
-		m_pTargetNameLabel->GetPos( x1, y1 );
-		m_pTargetDataLabel->GetPos( x2, y2 );
-		if ( m_pTargetKillStreakIcon )
-		{
-			m_pTargetKillStreakIcon->GetPos( x3, y3 );
-		}
-
-		// Shift Labels
-		{
-			int nBuffer = ( m_pAvatarImage && m_pAvatarImage->IsVisible() ) ? 6 : 8;
-			m_pTargetNameLabel->SetPos( XRES( nBuffer ) + m_pTargetHealth->GetWide(), y1 );
-			m_pTargetDataLabel->SetPos( XRES( nBuffer ) + m_pTargetHealth->GetWide(), y2 );
-
-			if ( m_pTargetKillStreakIcon )
-			{
-				m_pTargetKillStreakIcon->SetPos( XRES( 10 ) + m_pTargetHealth->GetWide(), y3 );
-			}
-		}
-
-		if ( tf_spectator_target_location.GetInt() == SPECTATOR_TARGET_ID_NORMAL )
-		{
-			SetPos( (ScreenWidth() - iWidth) * 0.5,  m_nOriginalY - nOffset );
-		}
-		else
-		{
-			int iBottomBarHeight = 0;
-			if ( g_pSpectatorGUI && g_pSpectatorGUI->IsVisible() )
-			{
-				iBottomBarHeight = g_pSpectatorGUI->GetBottomBarHeight();
-			}
-
-			int iYPos =	ScreenHeight() - GetTall() - iBottomBarHeight - m_iYOffset;
-
-			if ( tf_spectator_target_location.GetInt() == SPECTATOR_TARGET_ID_BOTTOM_LEFT )
-			{
-				SetPos( m_iXOffset, iYPos );
-			}
-			else if ( tf_spectator_target_location.GetInt() == SPECTATOR_TARGET_ID_BOTTOM_CENTER )
-			{
-				SetPos( (ScreenWidth() - iWidth) * 0.5, iYPos );
-			}
-			else if ( tf_spectator_target_location.GetInt() == SPECTATOR_TARGET_ID_BOTTOM_RIGHT )
-			{
-				SetPos( ScreenWidth() - iWidth - m_iXOffset, iYPos );
-			}
-		}
-
-		if ( m_pBGPanel_Spec_Blue )
-		{
-			m_pBGPanel_Spec_Blue->SetSize( iWidth, GetTall() );
-		}
-
-		if ( m_pBGPanel_Spec_Red )
-		{
-			m_pBGPanel_Spec_Red->SetSize( iWidth, GetTall() );
-		}
-
-		if ( m_pBGPanel_Spec_Blue && m_pBGPanel_Spec_Red )
-		{
-			if ( m_iTargetEntIndex )
-			{
-				C_BaseEntity *pEnt = cl_entitylist->GetEnt( m_iTargetEntIndex );
-				if ( pEnt )
-				{
-					bool bRed = ( pEnt->GetTeamNumber() == TF_TEAM_RED );
-					m_pBGPanel_Spec_Blue->SetVisible( !bRed );
-					m_pBGPanel_Spec_Red->SetVisible( bRed );			
-
-					m_pBGPanel_Spec_Blue->SetAlpha( tf_hud_target_id_alpha.GetInt() );
-					m_pBGPanel_Spec_Red->SetAlpha( tf_hud_target_id_alpha.GetInt() );
-				}
-			}
-		}
 	}
 }

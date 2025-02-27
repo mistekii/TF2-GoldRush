@@ -108,7 +108,6 @@ public:
 	virtual bool ShouldDraw( void );
 	virtual int	CalculateTargetIndex( C_TFPlayer *pLocalTFPlayer );
 	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
-	virtual void PerformLayout( void );
 
 	virtual	bool	DrawHealthIcon()	{ return true; }
 private:
