@@ -15,6 +15,7 @@
 #include "tf_imagepanel.h"
 #include "tf_hud_flagstatus.h"
 #include "tf_hud_escort.h"
+#include "tf_time_panel.h"
 #include "hud_controlpointicons.h"
 #include "GameEventListener.h"
 
@@ -48,7 +49,8 @@ private:
 	float					m_flNextThink;
 
 	CTFHudFlagObjectives	*m_pFlagPanel;
-	
+	CTFHudTimeStatus* m_pTimePanel;
+
 	CHudControlPointIcons	*m_pControlPointIconsPanel;
 	CControlPointProgressBar *m_pControlPointProgressBar;
 	CTFHudEscort			*m_pEscortPanel;
