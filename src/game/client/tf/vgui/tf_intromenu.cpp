@@ -216,7 +216,7 @@ bool CTFIntroMenu::LoadCaptions( void )
 
 	if ( m_pCaptionLabel )
 	{
-		const char *szVideoFileName = TFGameRules()->GetVideoFileForMap();
+		const char *szVideoFileName = TFGameRules()->GetVideoFileForMap( false );
 		KeyValues *kvCaptions = NULL;
 		char strFullpath[MAX_PATH];
 		if ( szVideoFileName != NULL )
