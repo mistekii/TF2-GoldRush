@@ -36,11 +36,6 @@
 
 using namespace vgui;
 
-ConVar cl_hud_playerclass_use_playermodel( "cl_hud_playerclass_use_playermodel", "1", FCVAR_ARCHIVE, "Use player model in player class HUD." );
-
-
-ConVar cl_hud_playerclass_playermodel_showed_confirm_dialog( "cl_hud_playerclass_playermodel_showed_confirm_dialog", "0", FCVAR_ARCHIVE | FCVAR_HIDDEN );
-
 extern ConVar tf_max_health_boost;
 
 
@@ -92,8 +87,6 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_pClassImageBG = NULL;
 	m_pSpyImage = NULL;
 	m_pSpyOutlineImage = NULL;
-	m_pPlayerModelPanel = NULL;
-	m_pPlayerModelPanelBG = NULL;
 	m_pCarryingWeaponPanel = NULL;
 	m_pCarryingLabel = NULL;
 	m_pCarryingOwnerLabel = NULL;
@@ -107,11 +100,7 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_flNextThink = 0.0f;
 	m_nKillStreak = 0;
 
-	m_bUsePlayerModel = cl_hud_playerclass_use_playermodel.GetBool();
-
 	ListenForGameEvent( "localplayer_changedisguise" );
-	ListenForGameEvent( "post_inventory_application" );
-	ListenForGameEvent( "localplayer_pickup_weapon" );
 
 	for ( int i = 0; i < TF_CLASS_COUNT_ALL; i++ )
 	{
@@ -163,9 +152,6 @@ void CTFHudPlayerClass::ApplySchemeSettings( IScheme *pScheme )
 	m_pClassImageBG = FindControl<CTFImagePanel>( "PlayerStatusClassImageBG", false );
 	m_pSpyImage = FindControl<CTFImagePanel>( "PlayerStatusSpyImage", false );
 	m_pSpyOutlineImage = FindControl<CTFImagePanel>( "PlayerStatusSpyOutlineImage", false );
-
-	m_pPlayerModelPanel = FindControl<CTFPlayerModelPanel>( "classmodelpanel", false );
-	m_pPlayerModelPanelBG = FindControl<CTFImagePanel>( "classmodelpanelBG", false );
 
 	m_pCarryingWeaponPanel = FindControl< EditablePanel >( "CarryingWeapon", false );
 	if ( m_pCarryingWeaponPanel )
@@ -226,17 +212,10 @@ void CTFHudPlayerClass::OnThink()
 		bLoadoutPositionChange = true;
 	}
 
-	bool bPlayerClassModeChange = false;
-	if ( m_bUsePlayerModel != cl_hud_playerclass_use_playermodel.GetBool() )
-	{
-		m_bUsePlayerModel = cl_hud_playerclass_use_playermodel.GetBool();
-		bPlayerClassModeChange = true;
-	}
-
 
 	bool bForceEyeUpdate = false;
 	// set our class image
-	if (	m_nClass != pPlayer->GetPlayerClass()->GetClassIndex() || bTeamChange || bCloakChange || bLoadoutPositionChange || bPlayerClassModeChange ||
+	if (	m_nClass != pPlayer->GetPlayerClass()->GetClassIndex() || bTeamChange || bCloakChange || bLoadoutPositionChange ||
 			(
 				m_nClass == TF_CLASS_SPY &&
 				(
@@ -266,20 +245,8 @@ void CTFHudPlayerClass::OnThink()
 			m_hDisguiseWeapon = NULL;
 		}
 
-		if ( m_bUsePlayerModel && m_pPlayerModelPanel && m_pPlayerModelPanelBG )
+		if ( m_pClassImage && m_pSpyImage )
 		{
-			m_pPlayerModelPanel->SetVisible( true );
-			m_pPlayerModelPanelBG->SetVisible( true );
-
-			UpdateModelPanel();
-		}
-		else if ( m_pClassImage && m_pSpyImage )
-		{
-			if ( m_pPlayerModelPanel )
-				m_pPlayerModelPanel->SetVisible( false );
-			if ( m_pPlayerModelPanelBG )
-				m_pPlayerModelPanelBG->SetVisible( false );
-
 			m_pClassImage->SetVisible( true );
 			m_pClassImageBG->SetVisible( true );
 
@@ -387,130 +354,6 @@ void CTFHudPlayerClass::OnThink()
 
 		m_pCarryingWeaponPanel->SetVisible( bShowCarryingWeaponPanel );
 	}
-
-	if ( m_bUsePlayerModel && m_pPlayerModelPanel )
-	{
-		bool bPlaySparks = false;
-		int iKillStreak = pPlayer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-		if ( iKillStreak != m_nKillStreak && iKillStreak > 0 )
-		{
-			bPlaySparks = true;
-		}
-		m_nKillStreak = iKillStreak;
-		m_pPlayerModelPanel->SetEyeGlowEffect( pPlayer->GetEyeGlowEffect(), pPlayer->GetEyeGlowColor( false ), pPlayer->GetEyeGlowColor( true ), bForceEyeUpdate, bPlaySparks );
-	}
-}
-
-static void HudPlayerClassUsePlayerModelDialogCallback( bool bConfirmed, void *pContext )
-{
-	cl_hud_playerclass_use_playermodel.SetValue( bConfirmed );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFHudPlayerClass::UpdateModelPanel()
-{
-	if ( !m_bUsePlayerModel )
-	{
-		return;
-	}
-
-	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pPlayer || !pPlayer->IsAlive() )
-	{
-		return;
-	}
-
-	if ( !cl_hud_playerclass_playermodel_showed_confirm_dialog.GetBool() )
-	{
-		// only show this message one time
-		ShowConfirmDialog(	"#GameUI_HudPlayerClassUsePlayerModelDialogTitle",
-			"#GameUI_HudPlayerClassUsePlayerModelDialogMessage",
-			"#GameUI_HudPlayerClassUsePlayerModelDialogConfirm", 
-			"#GameUI_HudPlayerClassUsePlayerModelDialogCancel",
-			&HudPlayerClassUsePlayerModelDialogCallback );
-		cl_hud_playerclass_playermodel_showed_confirm_dialog.SetValue( true );
-	}
-
-	// hide old UI
-	if ( m_pSpyImage )
-		m_pSpyImage->SetVisible( false );
-	if ( m_pClassImage )
-		m_pClassImage->SetVisible( false );
-	if ( m_pClassImageBG )
-		m_pClassImageBG->SetVisible( false );
-
-	if ( m_pPlayerModelPanel && m_pPlayerModelPanel->IsVisible() )
-	{
-		int nClass;
-		int nTeam;
-		int nItemSlot = m_nLoadoutPosition;
-		CEconItemView *pWeapon = NULL;
-
-		bool bDisguised = pPlayer->m_Shared.InCond( TF_COND_DISGUISED );
-		if ( bDisguised )
-		{
-			nClass = pPlayer->m_Shared.GetDisguiseClass();
-			nTeam = pPlayer->m_Shared.GetDisguiseTeam();
-
-			if ( pPlayer->m_Shared.GetDisguiseWeapon() )
-			{
-				CAttributeContainer *pCont = pPlayer->m_Shared.GetDisguiseWeapon()->GetAttributeContainer();
-				pWeapon = pCont ? pCont->GetItem() : NULL;
-				if ( pWeapon )
-				{
-					nItemSlot = pWeapon->GetStaticData()->GetLoadoutSlot( nClass );
-				}
-			}
-		}
-		else
-		{
-			nClass = pPlayer->GetPlayerClass()->GetClassIndex();
-			nTeam = pPlayer->GetTeamNumber();
-
-			CTFWeaponBase *pEnt = dynamic_cast< CTFWeaponBase* >( pPlayer->GetEntityForLoadoutSlot( nItemSlot ) );
-			if ( pEnt )
-			{
-				pWeapon = pEnt->GetAttributeContainer()->GetItem();
-			}
-		}
-
-		m_pPlayerModelPanel->ClearCarriedItems();
-		m_pPlayerModelPanel->SetToPlayerClass( nClass );
-		m_pPlayerModelPanel->SetTeam( nTeam );
-
-		if ( pWeapon )
-		{
-			m_pPlayerModelPanel->AddCarriedItem( pWeapon );
-		}
-
-		for ( int wbl = pPlayer->GetNumWearables()-1; wbl >= 0; wbl-- )
-		{
-			C_TFWearable *pItem = dynamic_cast<C_TFWearable*>( pPlayer->GetWearable( wbl ) );
-			if ( !pItem )
-				continue;
-
-			if ( pItem->IsViewModelWearable() )
-				continue;
-
-			if ( pItem->IsDisguiseWearable() && !bDisguised )
-				continue;
-
-			if ( !pItem->IsDisguiseWearable() && bDisguised )
-				continue;
-
-			CAttributeContainer *pCont		   = pItem->GetAttributeContainer();
-			CEconItemView		*pEconItemView = pCont ? pCont->GetItem() : NULL;
-
-			if ( pEconItemView && pEconItemView->IsValid() )
-			{
-				m_pPlayerModelPanel->AddCarriedItem( pEconItemView );
-			}
-		}
-
-		m_pPlayerModelPanel->HoldItemInSlot( nItemSlot );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -542,22 +385,6 @@ void CTFHudPlayerClass::FireGameEvent( IGameEvent * event )
 
 			g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( bFadeIn ? "HudSpyDisguiseFadeIn" : "HudSpyDisguiseFadeOut" );
 		}
-
-		UpdateModelPanel();
-	}
-	else if ( FStrEq( "post_inventory_application", pszEventName ) )
-	{
-		// Force a refresh. if this is for the local player
-		int iUserID = event->GetInt( "userid" );
-		C_TFPlayer* pPlayer = ToTFPlayer( C_TFPlayer::GetLocalPlayer() );
-		if ( pPlayer && pPlayer->GetUserID() == iUserID )
-		{
-			UpdateModelPanel();
-		}
-	}
-	else if ( FStrEq( "localplayer_pickup_weapon", pszEventName ) )
-	{
-		UpdateModelPanel();
 	}
 }
 

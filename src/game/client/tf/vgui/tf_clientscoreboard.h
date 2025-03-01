@@ -89,8 +89,6 @@ private:
 
 	vgui::SectionedListPanel *GetSelectedPlayerList( void );
 
-	void UpdatePlayerModel();
-
 	vgui::SectionedListPanel	*m_pPlayerListBlue;
 	vgui::SectionedListPanel	*m_pPlayerListRed;
 	CExLabel					*m_pLabelPlayerName;
@@ -156,9 +154,6 @@ private:
 	CPanelAnimationVarAliasType( int, m_iKillstreakWidth, "killstreak_width", "20", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iKillstreakImageWidth, "killstreak_image_width", "20", "proportional_int" );
 
-	CTFPlayerModelPanel			*m_pPlayerModelPanel;
-	int							m_nPlayerModelPanelIndex;
-
 	bool						m_bRedScrollBarVisible;
 	bool						m_bBlueScrollBarVisible;
 	int							m_nExtraSpace;
@@ -177,7 +172,6 @@ private:
 	CUtlVector< CTFBadgePanel* > m_pRedBadgePanels;
 
 	CHandle< C_TFPlayer >		m_hSelectedPlayer;
-	bool						m_bUsePlayerModel;
 };
 
 const wchar_t *GetPointsString( int iPoints );

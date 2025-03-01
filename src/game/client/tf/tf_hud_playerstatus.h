@@ -60,7 +60,6 @@ protected:
 	virtual void OnThink();
 
 private:
-	void UpdateModelPanel();
 
 	float				m_flNextThink;
 
@@ -68,8 +67,6 @@ private:
 	CTFImagePanel		*m_pClassImageBG;
 	CTFImagePanel		*m_pSpyImage; // used when spies are disguised
 	CTFImagePanel		*m_pSpyOutlineImage;
-	CTFPlayerModelPanel	*m_pPlayerModelPanel;
-	CTFImagePanel		*m_pPlayerModelPanelBG;
 	EditablePanel		*m_pCarryingWeaponPanel;
 	CExLabel			*m_pCarryingLabel;
 	vgui::Label			*m_pCarryingOwnerLabel;
@@ -83,9 +80,6 @@ private:
 	int					m_nCloakLevel;
 	int					m_nLoadoutPosition;
 	int					m_nKillStreak;
-
-	
-	bool				m_bUsePlayerModel;
 };
 
 //-----------------------------------------------------------------------------

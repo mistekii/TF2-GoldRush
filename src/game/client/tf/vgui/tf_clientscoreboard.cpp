@@ -27,7 +27,6 @@
 
 #include "tf_controls.h"
 #include "tf_shareddefs.h"
-#include "tf_playermodelpanel.h"
 #include "tf_clientscoreboard.h"
 #include "c_playerresource.h"
 #include "c_tf_playerresource.h"
@@ -83,7 +82,6 @@ extern bool IsInCommentaryMode( void );
 extern bool DuelMiniGame_GetStats( C_TFPlayer **ppPlayer, uint32 &unMyScore, uint32 &unOpponentScore );
 extern void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );
 
-extern ConVar cl_hud_playerclass_use_playermodel;
 extern ConVar mp_tournament;
 
 //......................................................
@@ -171,7 +169,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_pLabelPlayerName = new CExLabel( this, "PlayerNameLabel", "" );
 	m_pImagePanelHorizLine = new ImagePanel( this, "HorizontalLine" );
 	m_pClassImage = new CTFClassImage( this, "ClassImage" );
-	m_pPlayerModelPanel = new CTFPlayerModelPanel( this, "classmodelpanel" );
 	m_pLocalPlayerStatsPanel = new vgui::EditablePanel( this, "LocalPlayerStatsPanel" );
 	m_pLocalPlayerDuelStatsPanel = new vgui::EditablePanel( this, "LocalPlayerDuelStatsPanel" );
 	m_duelPanelLocalPlayer.m_pPanel = new vgui::EditablePanel( m_pLocalPlayerDuelStatsPanel, "LocalPlayerData" );
@@ -214,12 +211,10 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	SetDialogVariable( "server", "" );
 	SetVisible( false );
 
-	m_nPlayerModelPanelIndex = -1;
 	m_bRedScrollBarVisible = false;
 	m_bBlueScrollBarVisible = false;
 	m_nExtraSpace = 0;
 	m_hSelectedPlayer = NULL;
-	m_bUsePlayerModel = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -235,67 +230,6 @@ CTFClientScoreBoardDialog::~CTFClientScoreBoardDialog()
 void CTFClientScoreBoardDialog::PerformLayout()
 {
 	BaseClass::PerformLayout();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFClientScoreBoardDialog::UpdatePlayerModel()
-{
-	if ( !m_pPlayerModelPanel->IsVisible() )
-		return;
-
-	if ( m_nPlayerModelPanelIndex == -1 )
-	{
-		m_nPlayerModelPanelIndex = GetLocalPlayerIndex();
-	}
-
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( m_nPlayerModelPanelIndex ) );
-	if ( !pPlayer )
-		return;
-
-	int nClass = pPlayer->GetPlayerClass()->GetClassIndex();
-	int nTeam = pPlayer->GetTeamNumber();
-	int nItemSlot = ( pPlayer->IsAlive() && pPlayer->GetActiveTFWeapon() ) ? pPlayer->GetActiveTFWeapon()->GetAttributeContainer()->GetItem()->GetStaticData()->GetLoadoutSlot( nClass ) : LOADOUT_POSITION_PRIMARY;
-	CEconItemView *pWeapon = NULL;
-
-	CTFWeaponBase *pEnt = dynamic_cast<CTFWeaponBase*>( pPlayer->GetEntityForLoadoutSlot( nItemSlot ) );
-	if ( pEnt )
-	{
-		pWeapon = pEnt->GetAttributeContainer()->GetItem();
-	}
-
-	m_pPlayerModelPanel->ClearCarriedItems();
-	m_pPlayerModelPanel->SetToPlayerClass( nClass );
-	m_pPlayerModelPanel->SetTeam( nTeam );
-
-	if ( pWeapon )
-	{
-		m_pPlayerModelPanel->AddCarriedItem( pWeapon );
-	}
-
-	for ( int wbl = pPlayer->GetNumWearables() - 1; wbl >= 0; wbl-- )
-	{
-		C_TFWearable *pItem = dynamic_cast<C_TFWearable*>( pPlayer->GetWearable( wbl ) );
-		if ( !pItem )
-			continue;
-
-		if ( pItem->IsViewModelWearable() )
-			continue;
-
-		if ( pItem->IsDisguiseWearable() )
-			continue;
-
-		CAttributeContainer *pCont = pItem->GetAttributeContainer();
-		CEconItemView		*pEconItemView = pCont ? pCont->GetItem() : NULL;
-
-		if ( pEconItemView && pEconItemView->IsValid() )
-		{
-			m_pPlayerModelPanel->AddCarriedItem( pEconItemView );
-		}
-	}
-
-	m_pPlayerModelPanel->HoldItemInSlot( nItemSlot );
 }
 
 //-----------------------------------------------------------------------------
@@ -452,9 +386,7 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 
 		UpdateServerTimeLeft();
 
-		m_nPlayerModelPanelIndex = -1;
 		m_hSelectedPlayer = NULL;
-		UpdatePlayerModel();
 	}
 	else
 	{
@@ -1970,53 +1902,25 @@ void CTFClientScoreBoardDialog::UpdatePlayerDetails()
 	m_pLabelPlayerName->SetFgColor( clr );
 	m_pImagePanelHorizLine->SetFillColor( clr );
 
-	// update our image if our selected player or mode of display has changed
-	if ( ( m_hSelectedPlayer != pSelectedPlayer ) || ( m_bUsePlayerModel != cl_hud_playerclass_use_playermodel.GetBool() ) )
+	// update our image if our selected player has changed
+	if ( m_hSelectedPlayer != pSelectedPlayer ) 
 	{
 		m_hSelectedPlayer = pSelectedPlayer;
-		m_bUsePlayerModel = cl_hud_playerclass_use_playermodel.GetBool();
 
 		int iClass = pSelectedPlayer->m_Shared.GetDesiredPlayerClassIndex();
 		int iTeam = pSelectedPlayer->GetTeamNumber();
 		if ( ( pLocalPlayer->InSameTeam( pSelectedPlayer ) || pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) && 
 			 iTeam >= FIRST_GAME_TEAM && iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_LAST_NORMAL_CLASS )
 		{
-			if ( cl_hud_playerclass_use_playermodel.GetBool() )
-			{
-				if ( !m_pPlayerModelPanel->IsVisible() )
-				{
-					m_pPlayerModelPanel->SetVisible( true );
-				}
-
-				if ( m_pClassImage->IsVisible() )
-				{
-					m_pClassImage->SetVisible( false );
-				}
-
-				m_nPlayerModelPanelIndex = pSelectedPlayer->entindex();
-				UpdatePlayerModel();
-			}
-			else
-			{
-				if ( m_pPlayerModelPanel->IsVisible() )
-				{
-					m_pPlayerModelPanel->SetVisible( false );
-				}
-
 				if ( !m_pClassImage->IsVisible() )
 				{
 					m_pClassImage->SetVisible( true );
 				}
 
 				m_pClassImage->SetClass( iTeam, iClass, 0 );
-			}
 		}
 		else
 		{
-			if ( m_pPlayerModelPanel->IsVisible() )
-			{
-				m_pPlayerModelPanel->SetVisible( false );
-			}
 			if ( m_pClassImage->IsVisible() )
 			{
 				m_pClassImage->SetVisible( false );
