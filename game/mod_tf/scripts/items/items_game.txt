@@ -5891,9 +5891,10 @@
 			"image_inventory"	"backpack/weapons/w_models/w_bottle"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"  
-			"inspect_panel_dist" 				"30"					
-			"model_player"	"models/weapons/c_models/c_bottle/c_bottle.mdl"
-			"attach_to_hands" "1"
+			"inspect_panel_dist" 				"30"	
+			"model_world"	"models/weapons/w_models/w_bottle.mdl"				
+			"model_player"	"models/weapons/v_models/v_bottle_demoman.mdl"
+			"attach_to_hands" "0"
 			"used_by_classes"
 			{
 				"demoman"	"1"
@@ -7348,6 +7349,7 @@
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
 			"model_player"	"models/weapons/c_models/c_grenadelauncher/c_grenadelauncher.mdl"
+			"model_world"	"models/weapons/w_models/w_grenadelauncher.mdl"
 			"attach_to_hands"	"1"
 			"inspect_panel_dist" "55"
 			"used_by_classes"
@@ -8515,8 +8517,9 @@
 			"image_inventory"	"backpack/weapons/w_models/w_minigun"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_minigun/c_minigun.mdl"
-			"attach_to_hands" "1"
+			"model_player"	"models/weapons/v_models/v_minigun_heavy.mdl"
+			"model_world"	"models/weapons/w_models/w_minigun.mdl"
+			"attach_to_hands" "0"
 			"inspect_panel_dist" "88"
 			"used_by_classes"
 			{
@@ -8625,11 +8628,11 @@
 			"inspect_panel_dist" "31"
 			"image_inventory"	"backpack/weapons/c_models/c_pistol"
 			"model_player"	"models/weapons/c_models/c_pistol/c_pistol.mdl"
-			"used_by_classes"
-			{
-				"engineer"	"1"
-				"scout" "1"
-			}
+			//"used_by_classes"
+			//{
+			//	"engineer"	"1"
+			//	"scout" "1"
+			//}
 			"static_attrs"
 			{
 				"weapon_stattrak_module_scale"			"0.723"
@@ -9723,12 +9726,13 @@
 			"baseitem" "0"
 			"min_ilevel"	"1"
 			"max_ilevel"	"1"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"0"
 			"inspect_panel_dist" "40"
 			"image_inventory"	"backpack/weapons/w_models/w_shotgun"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_shotgun/c_shotgun.mdl"
+			//"model_player"	"models/weapons/c_models/c_shotgun/c_shotgun.mdl"
+			"model_world"	"models/weapons/w_models/w_shotgun.mdl"
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
 			"particle_suffix"		"shotgun"
@@ -9926,8 +9930,9 @@
 			"image_inventory"	"backpack/weapons/w_models/w_sniperrifle"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"attach_to_hands" "1"
-			"model_player"	"models/weapons/c_models/c_sniperrifle/c_sniperrifle.mdl"
+			"attach_to_hands" "0"
+			"model_player"	"models/weapons/v_models/v_sniperrifle_sniper.mdl"
+			"model_world"	"models/weapons/w_models/w_sniperrifle.mdl"
 			"used_by_classes"
 			{
 				"sniper"	"1"
@@ -10074,9 +10079,10 @@
 			"image_inventory"	"backpack/weapons/w_models/w_stickybomb_launcher"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_stickybomb_launcher/c_stickybomb_launcher.mdl"
+			"model_player"	"models/weapons/v_models/v_stickybomb_launcher_demo.mdl"
+			"model_world"	"models/weapons/w_models/w_stickybomb_launcher.mdl"
 			"inspect_panel_dist" "50"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"0"
 			"used_by_classes"
 			{
 				"demoman"	"1"
@@ -11112,6 +11118,7 @@
 			{
 				"engineer"	"1"
 			}
+			"model_player"	"models/weapons/v_models/v_shotgun_engineer.mdl"
 			"baseitem" "1"
 		}
 		"10"
@@ -11125,6 +11132,7 @@
 			{
 				"soldier"	"1"
 			}
+			"model_player"	"models/weapons/v_models/v_shotgun_soldier.mdl"
 			"baseitem" "1"
 		}
 		"11"
@@ -11138,6 +11146,7 @@
 			{
 				"heavy"	"1"
 			}
+			"model_player"	"models/weapons/v_models/v_shotgun_heavy.mdl"
 			"baseitem" "1"
 		}
 		"12"
@@ -11151,6 +11160,7 @@
 			{
 				"pyro"	"1"
 			}
+			"model_player"	"models/weapons/v_models/v_shotgun_pyro.mdl"
 			"baseitem" "1"
 		}
 		"13"
@@ -11282,11 +11292,12 @@
 			"baseitem" "1"
 			"min_ilevel"	"1"
 			"max_ilevel"	"1"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"0"
 			"image_inventory"	"backpack/weapons/c_models/c_pistol"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_pistol/c_pistol.mdl"
+			"model_world"	"models/weapons/w_models/w_pistol.mdl"
+			"model_player"	"models/weapons/v_models/v_pistol_engineer.mdl"
 			"used_by_classes"
 			{
 				"engineer"	"1"
@@ -11320,11 +11331,12 @@
 			"baseitem" "1"
 			"min_ilevel"	"1"
 			"max_ilevel"	"1"
-			"attach_to_hands"	"1"
+			"attach_to_hands"	"0"
 			"image_inventory"	"backpack/weapons/c_models/c_pistol"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_pistol/c_pistol.mdl"
+			"model_world"	"models/weapons/w_models/w_pistol.mdl"
+			"model_player"	"models/weapons/v_models/v_pistol_scout.mdl"
 			"used_by_classes"
 			{
 				"scout"	"1"
@@ -11485,7 +11497,9 @@
 			"image_inventory"	"backpack/weapons/w_models/w_cigarette_case"
 			"image_inventory_size_w"		"128"
 			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/w_models/w_cigarette_case.mdl"
+			"attach_to_hands"	"0"
+			"model_world"	"models/weapons/w_models/w_cigarette_case.mdl"
+			"model_player"	"models/weapons/v_models/v_pda_spy.mdl"
 			"used_by_classes"
 			{
 				"spy"	"1"
@@ -14691,6 +14705,225 @@
 			}
 			"mouse_pressed_sound"	"ui/item_robot_arm_pickup.wav"
 			"drop_sound"		"ui/item_robot_arm_drop.wav"
+		}
+		"153"
+		{
+			"name"	"The Homewrecker"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_fireaxe"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_deal_critical_damage"	"1"
+				"can_destroy_sappers"		"1"
+			}
+			"item_logname"	"sledgehammer"
+			"item_iconname"	"sledgehammer"
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_SledgeHammer"
+			"item_name"	"#TF_Unique_SledgeHammer"
+			"item_slot"	"melee"
+			"image_inventory"	"backpack/workshop/weapons/c_models/c_sledgehammer/c_sledgehammer"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"model_player"	"models/workshop/weapons/c_models/c_sledgehammer/c_sledgehammer.mdl"
+			"attach_to_hands"	"1"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"5"
+			"max_ilevel"	"5"
+			"used_by_classes"
+			{
+				"pyro"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 0 -9"				
+			}
+			"attributes"
+			{
+				"dmg bonus vs buildings"
+				{
+					"attribute_class"	"mult_dmg_vs_buildings"
+					"value"	"2.0"
+				}
+				"dmg penalty vs players"
+				{
+					"attribute_class"	"mult_dmg_vs_players"
+					"value"	"0.75"
+				}
+				"damage applies to sappers"
+				{
+					"attribute_class"	"set_dmg_apply_to_sapper"
+					"value"	"1"
+				}
+			}
+			"visuals"
+			{
+				"sound_melee_hit"	"Weapon_Machete.HitFlesh"
+			}
+			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
+			"drop_sound"		"ui/item_heavy_gun_drop.wav"
+		}
+		"154"
+		{
+			"name"	"The Pain Train"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_shovel"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"			"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+				"can_deal_critical_damage"	"1"
+			}
+			"item_logname"	"paintrain"
+			"item_iconname"	"paintrain"
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_MakeshiftClub"
+			"item_name"	"#TF_Unique_Makeshiftclub"
+			"item_slot"	"melee"
+			"image_inventory"	"backpack/workshop/weapons/c_models/c_paintrain/c_paintrain"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 				"55"			
+			"model_player"	"models/workshop/weapons/c_models/c_paintrain/c_paintrain.mdl"
+			"attach_to_hands"	"1"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"5"
+			"max_ilevel"	"5"
+			"used_by_classes"
+			{
+				"demoman"	"1"
+				"soldier"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"					"10 -3 -11"
+			}
+			"attributes"
+			{
+				"increase player capture value"
+				{
+					"attribute_class"	"add_player_capturevalue"
+					"value"	"1"
+				}
+				"dmg taken from bullets increased"
+				{
+					"attribute_class"	"mult_dmgtaken_from_bullets"
+					"value"	"1.1"
+				}
+			}
+			"visuals"
+			{
+				"sound_melee_miss"	"Weapon_PickAxe.Swing"
+				"sound_melee_hit"	"Weapon_PickAxe.HitFlesh"
+				"sound_burst"		"Weapon_PickAxe.SwingCrit"
+				"sound_melee_hit_world"	"Weapon_Shovel.HitWorld"
+
+				"animation_replacement"
+				{
+					"ACT_MELEE_VM_INSPECT_START"	"ACT_MELEE_ALT1_VM_INSPECT_START"
+					"ACT_MELEE_VM_INSPECT_IDLE"		"ACT_MELEE_ALT1_VM_INSPECT_IDLE"
+					"ACT_MELEE_VM_INSPECT_END"		"ACT_MELEE_ALT1_VM_INSPECT_END"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_wood_pole_pickup.wav"
+			"drop_sound"		"ui/item_wood_pole_drop.wav"
+		}
+		"155"
+		{
+			"name"	"The Southern Hospitality"
+			"first_sale_date"	"2010/09/29"
+			"item_class"	"tf_weapon_wrench"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"capabilities"
+			{
+				"nameable"		"1"
+			}
+			"tags"
+			{
+				"can_deal_damage"				"1"
+				"can_deal_posthumous_damage"	"1"
+				"can_destroy_sappers"			"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_Wrench"
+			"item_name"	"#TF_Unique_Combat_Wrench"
+			"item_slot"	"melee"
+			"item_quality"	"unique"
+			"min_ilevel"	"20"
+			"max_ilevel"	"20"
+			"propername"	"1"
+			"item_logname"	"southern_hospitality"
+			"item_iconname"	"southern_comfort_kill"
+			"image_inventory"	"backpack/workshop/weapons/c_models/c_spikewrench/c_spikewrench"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 			"45"
+			"model_player"	"models/workshop/weapons/c_models/c_spikewrench/c_spikewrench.mdl"
+			"attach_to_hands" "1"
+			"used_by_classes"
+			{
+				"engineer"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"10 -2 -9"				
+			}
+			"attributes"
+			{
+				"crit mod disabled"
+				{
+					"attribute_class"	"mult_crit_chance"
+					"value"	"0"
+				}
+				"bleeding duration"
+				{
+					"attribute_class"	"bleeding_duration"
+					"value" "5"
+				}
+				"dmg taken from fire increased"
+				{
+					"attribute_class"	"mult_dmgtaken_from_fire"
+					"value"			"1.20"
+				}
+				"kill eater score type"
+				{
+					"attribute_class"	"kill_eater_score_type"
+					"value" 	"0"									
+				}
+				"kill eater score type 2"
+				{
+					"attribute_class"	"kill_eater_score_type_2"
+					"value" 	"3"									
+				}
+			}
+			"visuals"
+			{
+				"animation_replacement"
+				{
+					"ACT_VM_IDLE"	"ACT_ITEM3_VM_IDLE"
+					"ACT_VM_DRAW"	"ACT_ITEM3_VM_DRAW"
+					"ACT_VM_HITCENTER"	"ACT_ITEM3_VM_HITCENTER"
+					"ACT_VM_SWINGHARD"	"ACT_ITEM3_VM_SWINGHARD"
+				}
+			}
+			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
+			"drop_sound"		"ui/item_metal_weapon_drop.wav"
 		}
 	}
 	"attributes"
