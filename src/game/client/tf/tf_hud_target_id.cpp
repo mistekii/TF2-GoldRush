@@ -1075,24 +1075,3 @@ int	CSpectatorTargetID::CalculateTargetIndex( C_TFPlayer *pLocalTFPlayer )
 
 	return iIndex;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CSpectatorTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
-{
-	BaseClass::ApplySchemeSettings( scheme );
-
-	if ( m_pBGPanel )
-	{
-		m_pBGPanel->SetVisible( false );
-	}
-
-	m_pBGPanel_Spec_Blue = FindChildByName("TargetIDBG_Spec_Blue");
-	m_pBGPanel_Spec_Red = FindChildByName("TargetIDBG_Spec_Red");
-
-	if ( m_pBGPanel_Spec_Blue )
-	{
-		m_pBGPanel_Spec_Blue->SetVisible( true );
-	}
-}
