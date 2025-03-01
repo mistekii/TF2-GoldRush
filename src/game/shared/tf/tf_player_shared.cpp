@@ -7017,6 +7017,13 @@ void CTFPlayerShared::OnRemoveStunned( void )
 	m_PlayerStuns.RemoveAll();
 #endif
 
+	// conn: Unhide our weapon.
+	CTFWeaponBase* pWpn = m_pOuter->GetActiveTFWeapon();
+	if ( pWpn )
+	{
+		pWpn->SetWeaponVisible( true );
+	}
+
 	m_pOuter->TeamFortress_SetSpeed();
 }
 
