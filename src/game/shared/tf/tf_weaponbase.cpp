@@ -641,7 +641,7 @@ const char *CTFWeaponBase::GetViewModel( int iViewModel ) const
 		{
 			// Should always be valid, because players without classes shouldn't be carrying items
 			pszViewModel = pPlayer->GetPlayerClass()->GetHandModelName( iHandModelIndex );
-			Assert( pszHandModel );
+			Assert( pszViewModel );
 		}
 		else
 		{
