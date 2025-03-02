@@ -8442,7 +8442,7 @@
 			"image_inventory_size_h"		"82"
 			"attach_to_hands"	"0"
 			"model_world"	"models/weapons/w_models/w_medigun.mdl"
-			"model_player"	"models/weapons/c_models/v_medigun_medic.mdl"
+			"model_player"	"models/weapons/v_models/v_medigun_medic.mdl"
 			"used_by_classes"
 			{
 				"medic"	"1"
