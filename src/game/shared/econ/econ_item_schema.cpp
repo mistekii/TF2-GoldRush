@@ -36,8 +36,6 @@
 // Only used for startup testing.
 #include "econ_item_tools.h"
 
-#include "econ_quests.h"
-
 #if defined(CLIENT_DLL) || defined(GAME_DLL)
 	#include "econ_item_system.h"
 	#include "econ_item.h"
@@ -3800,7 +3798,6 @@ CEconItemSchema::CEconItemSchema( )
 ,	m_mapQualities( DefLessFunc(int) )
 ,	m_mapAttributes( DefLessFunc(int) )
 ,	m_mapRecipes( DefLessFunc(int) )
-,	m_mapQuestObjectives( DefLessFunc(int) )
 ,	m_mapItemsSorted( DefLessFunc(int) )
 ,	m_mapToolsItems( DefLessFunc(int) )
 ,	m_mapPaintKitTools( DefLessFunc(uint32) )
@@ -3828,11 +3825,6 @@ CEconItemSchema::CEconItemSchema( )
 #endif
 {
 	Reset();
-}
-
-CQuestObjectiveDefinition *CEconItemSchema::CreateQuestDefinition()
-{
-	return new CQuestObjectiveDefinition; 
 }
 
 //-----------------------------------------------------------------------------
@@ -5274,7 +5266,6 @@ bool CEconItemSchema::BInitItems( KeyValues *pKVItems, CUtlVector<CUtlString> *p
 	m_mapPaintKitTools.Purge();
 	m_mapBaseItems.Purge();
 	m_vecBundles.Purge();
-	m_mapQuestObjectives.PurgeAndDeleteElements();
 
 #if defined(CLIENT_DLL) || defined(GAME_DLL)
 	if ( m_pDefaultItemDefinition )

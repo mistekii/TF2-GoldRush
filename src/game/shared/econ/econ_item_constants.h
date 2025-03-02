@@ -434,7 +434,6 @@ typedef uint32	attrib_value_t;
 typedef uint32	operation_definition_index_t;
 typedef uint8	war_definition_index_t;
 typedef uint8	war_side_t;
-typedef uint32	ObjectiveConditionDefIndex_t;
 
 // Misc typedefs for clarity.
 typedef uint32	equip_region_mask_t;
@@ -450,8 +449,6 @@ const war_side_t INVALID_WAR_SIDE						= ((war_side_t)-1);
 const war_definition_index_t PYRO_VS_HEAVY_WAR_DEF_INDEX= ((war_definition_index_t)0);
 const war_side_t PYRO_VS_HEAVY_WAR_SIDE_HEAVY = ((war_side_t)0);
 const war_side_t PYRO_VS_HEAVY_WAR_SIDE_PYRO = ((war_side_t)1);
-
-const ObjectiveConditionDefIndex_t INVALID_QUEST_OBJECTIVE_CONDITIONS_INDEX = ObjectiveConditionDefIndex_t(-1);
 
 typedef CUtlMap< uint32, const class CQuestDefinition* > QuestDefMap_t;
 

@@ -19,13 +19,6 @@
 
 #include "util_shared.h"
 
-class CQuestMapDefinition;
-class CQuestMapNodeDefinition;
-class CQuest;
-class CQuestThemeDefinition;
-class CQuestObjectiveConditionsDefinition;
-class CQuestDefinition;
-
 const int k_iMvmMissionIndex_Any = -1;
 const int k_iMvmMissionIndex_NotInSchema = -2;
 
@@ -681,8 +674,6 @@ public:
 		return (CTFCraftingRecipeDefinition *)GetRecipeDefinition( iRecipeIndex );
 	}
 
-	const CQuestObjectiveConditionsDefinition* GetQuestObjectiveConditionByDefIndex( ObjectiveConditionDefIndex_t nDefIndex ) const;
-
 	const CWarDefinition *GetWarDefinitionByIndex( war_definition_index_t nDefIndex ) const;
 	const CWarDefinition *GetWarDefinitionByName( const char* pszDefName ) const;
 	const WarDefinitionMap_t& GetWarDefinitions() const { return m_mapWars; }
@@ -771,8 +762,6 @@ private:
 	bool BInitGameModes( KeyValues *pKVMaps, CUtlVector<CUtlString> *pVecErrors );
 	bool BInitMaps( KeyValues *pKVMaps, CUtlVector<CUtlString> *pVecErrors );
 	bool BInitMMCategories( KeyValues *pKVCategories, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitQuestObjectiveConditions( KeyValues *pKVConditionsBlock, CUtlVector<CUtlString> *pVecErrors );
-	bool BObjectiveConditionsPostInit( CUtlVector<CUtlString> *pVecErrors );
 	bool BInitWarDefs( KeyValues *pKVWarDefs, CUtlVector<CUtlString> *pVecErrors );
 
 	bool BPostInitMaps( CUtlVector<CUtlString> *pVecErrors );
@@ -788,7 +777,6 @@ private:
 	CUtlVector<MvMMap_t> m_vecMvMMaps;
 	CUtlVector<MvMMission_t> m_vecMvMMissions;
 	CUtlVector<MvMTour_t> m_vecMvMTours;
-	CUtlMap< ObjectiveConditionDefIndex_t, CQuestObjectiveConditionsDefinition* > m_mapQuestObjectiveConditions;
 
 	CUtlVector<MapDef_t*> m_vecMasterListOfMaps;
 	GameCategoryMap_t m_mapGameCategories;

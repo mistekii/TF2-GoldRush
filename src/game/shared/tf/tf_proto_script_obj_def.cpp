@@ -9,7 +9,6 @@
 
 #include "tier1/util_misc.h"
 #include "tf_proto_script_obj_def.h"
-#include "tf_quest_map_node.h"
 #include <google/protobuf/text_format.h>
 #include "filesystem.h"
 #include "tier2/p4helpers.h"
@@ -32,19 +31,12 @@ const char* g_pszProtoDefFile = "scripts/protodefs/proto_defs.vpd";
 const char* g_pszProtoLocFileName = "resource/tf_proto_obj_defs_english.txt";
 
 #ifdef CLIENT_DLL
-ProtoDefTypeDesc_t g_ProtoDefTypeDescs[] = { { "Quest Map Node",		false, NULL },
-											 { "Quest Map",				false, NULL },
-											 { "Quest Theme",			false, NULL },
-											 { "Quest Map Region",		false, NULL },
-											 { "Quest",					false, NULL },
-											 { "Quest Objective",		false, NULL },
+ProtoDefTypeDesc_t g_ProtoDefTypeDescs[] = { 
 											 { "Paintkit Variable",		false, NULL },
 											 { "Paintkit Operation",	false, NULL },
 											 { "Paintkit Item Def",		false, NULL },
 											 { "Paintkit Def",			false, NULL },
-											 { "Header",				false, NULL },
-											 { "Quest Map Store Item",	false, NULL },
-											 { "Quest Map Star Type",	false, NULL } };
+											 { "Header",				false, NULL }};
 
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_ProtoDefTypeDescs ) == ProtoDefTypes_ARRAYSIZE );
 #endif
