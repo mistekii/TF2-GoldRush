@@ -12,6 +12,9 @@
 
 #include "c_baseentity.h"
 #include "c_physicsprop.h"
+#ifdef TF_CLIENT_DLL
+#undef GLOWS_ENABLE // TF2GR: disable glows on objectives
+#endif
 #ifdef GLOWS_ENABLE
 #include "glow_outline_effect.h"
 #endif // GLOWS_ENABLE

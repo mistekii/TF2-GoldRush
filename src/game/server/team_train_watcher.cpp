@@ -20,6 +20,7 @@
 
 #ifdef TF_DLL
 #include "tf_shareddefs.h"
+#undef GLOWS_ENABLE // TF2GR: disable glows on objectives
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!

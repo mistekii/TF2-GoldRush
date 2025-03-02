@@ -15,6 +15,9 @@
 #include "shareddefs.h"
 #include "envspark.h"
 #include "GameEventListener.h"
+#ifdef TF_DLL
+#undef GLOWS_ENABLE // TF2GR: disable glows on objectives
+#endif
 
 class CFuncTrackTrain;
 class CPathTrack;
