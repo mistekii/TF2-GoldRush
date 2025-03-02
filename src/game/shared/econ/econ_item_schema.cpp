@@ -7023,7 +7023,8 @@ bool CEconItemSchema::BPostSchemaInit( CUtlVector<CUtlString> *pVecErrors )
 			bAllSuccess = false;
 		}
 	}
-
+	/* TF2GR: Disable item collections for now. Prevents a crash if theres no item sets defined
+	* Eventually, we'll use the TF2C econ system (when it gets made public) which is much better for what we're trying to achieve
 	for ( int idx = m_dictItemCollections.First(); m_dictItemCollections.IsValidIndex( idx ); idx = m_dictItemCollections.Next( idx ) )
 	{
 		if ( !m_dictItemCollections[idx]->BPostSchemaInit( pVecErrors ) )
@@ -7031,7 +7032,7 @@ bool CEconItemSchema::BPostSchemaInit( CUtlVector<CUtlString> *pVecErrors )
 			bAllSuccess = false;
 		}
 	}
-
+	*/
 	// make sure all lootlist are valid
 	for ( int idx = m_dictLootLists.First(); m_dictLootLists.IsValidIndex( idx ); idx = m_dictLootLists.Next( idx ) )
 	{
