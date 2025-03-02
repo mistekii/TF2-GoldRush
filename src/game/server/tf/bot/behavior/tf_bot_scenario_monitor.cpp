@@ -287,6 +287,10 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 		DevMsg( "%3.2f: %s: Gametype is CP, but I can't find a point to capture or defend!\n", gpGlobals->curtime, me->GetDebugIdentifier() );
 		return new CTFBotCapturePoint;
 	}
+	else if ( TFGameRules()->IsInArenaMode() )
+	{
+		return new CTFBotCapturePoint;
+	}
 	else
 	{
 		// scenario not implemented yet - just fight

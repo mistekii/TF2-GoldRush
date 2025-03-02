@@ -58,7 +58,7 @@ ActionResult< CTFBot >	CTFBotSeekAndDestroy::Update( CTFBot *me, float interval 
 		return Done( "Behavior duration elapsed" );
 	}
 
-		if ( me->IsCapturingPoint() )
+		if ( !TFGameRules()->IsInArenaMode() && me->IsCapturingPoint() )
 		{
 			return Done( "Keep capturing point I happened to stumble upon" );
 		}
@@ -73,7 +73,7 @@ ActionResult< CTFBot >	CTFBotSeekAndDestroy::Update( CTFBot *me, float interval 
 			}
 		}
 		
-		if ( !TFGameRules()->RoundHasBeenWon() && me->GetTimeLeftToCapture() < tf_bot_offense_must_push_time.GetFloat() )
+		if ( TFGameRules()->GetGameType() == TF_GAMETYPE_CP && !TFGameRules()->RoundHasBeenWon() && me->GetTimeLeftToCapture() < tf_bot_offense_must_push_time.GetFloat() )
 		{
 			return Done( "Time to push for the objective" );
 		}

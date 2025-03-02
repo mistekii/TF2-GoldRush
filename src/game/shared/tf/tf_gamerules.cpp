@@ -17101,8 +17101,8 @@ void CTFGameRules::CollectCapturePoints( CBasePlayer *player, CUtlVector< CTeamC
 	CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
 	if ( pMaster )
 	{
-		// special case hack for KotH mode to use control points that are locked at the start of the round
-		if ( IsInKothMode() && pMaster->GetNumPoints() == 1 )
+		// Engineer bots should head to the point as soon as possible in KOTH or Arena, no matter if it's locked
+		if ( (IsInKothMode() || IsInArenaMode() && ToTFPlayer( player ) && ToTFPlayer( player )->GetPlayerClass()->GetClassIndex() == TF_CLASS_ENGINEER) && pMaster->GetNumPoints() == 1 )
 		{
 			captureVector->AddToTail( pMaster->GetControlPoint( 0 ) );
 			return;

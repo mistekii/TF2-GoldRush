@@ -67,12 +67,13 @@ ActionResult< CTFBot >	CTFBotCapturePoint::Update( CTFBot *me, float interval )
 		me->EquipBestWeaponForThreat( threat );
 	}
 
-	bool isPushingToCapture = ( me->IsPointBeingCaptured( point ) && !me->IsInCombat() ) ||			// a friend is capturing
-							   me->IsCapturingPoint() ||												// we're capturing
-							   // me->m_Shared.InCond( TF_COND_INVULNERABLE ) ||						// we're ubered
-							   TFGameRules()->InOvertime() ||											// the game is in overtime
-							   me->GetTimeLeftToCapture() < tf_bot_offense_must_push_time.GetFloat() ||	// nearly out of tim
-							   me->IsNearPoint( point );
+	float flTimeLeftToCapture = (me->GetTimeLeftToCapture() > 0.f) ? me->GetTimeLeftToCapture() : FLT_MAX;
+	bool isPushingToCapture = (!TFGameRules()->IsInArenaMode() &&
+		(me->IsPointBeingCaptured( point ) && !me->IsInCombat() ||
+			me->IsCapturingPoint() ||
+			TFGameRules()->InOvertime() ||
+			flTimeLeftToCapture < tf_bot_offense_must_push_time.GetFloat() ||
+			me->IsNearPoint( point )));
 
 
 	// if we see an enemy at a good combat range, stop and engage them unless we're running out of time
