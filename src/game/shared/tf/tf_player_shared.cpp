@@ -168,7 +168,7 @@ ConVar tf_tournament_hide_domination_icons( "tf_tournament_hide_domination_icons
 ConVar tf_damage_disablespread( "tf_damage_disablespread", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Toggles the random damage spread applied to all player damage." );
 
 ConVar tf_scout_energydrink_regen_rate( "tf_scout_energydrink_regen_rate", "3.3", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "energy drink regen per second, up to 100 max" );
-ConVar tf_scout_energydrink_consume_rate( "tf_scout_energydrink_consume_rate", "12.5", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "energy drink to use per second while boosted, from 100 max" );
+ConVar tf_scout_energydrink_consume_rate( "tf_scout_energydrink_consume_rate", "16.6", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "energy drink to use per second while boosted, from 100 max" );
 ConVar tf_scout_energydrink_activation( "tf_scout_energydrink_activation", "0.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "how long it takes for the energy buff to become active" );
 
 ConVar tf_demoman_charge_regen_rate( "tf_demoman_charge_regen_rate", "8.3", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "" );
@@ -3394,6 +3394,7 @@ void CTFPlayerShared::OnRemovePhase( void )
 		WRITE_SHORT( clamp( m_iPhaseDamage, 0, 10000 ) );
 	MessageEnd();
 
+	/*
 	if ( m_iPhaseDamage )
 	{
 		// Apply slow based on how much damage we took while active
@@ -3401,6 +3402,7 @@ void CTFPlayerShared::OnRemovePhase( void )
 		float flSlowAmount = RemapValClamped( m_iPhaseDamage, 10.f, 200.f, 0.25f, 0.5f );
 		StunPlayer( flSlowDuration, flSlowAmount, TF_STUN_MOVEMENT | TF_STUN_SOUND, m_pOuter );
 	}
+	*/
 
 	m_iPhaseDamage = 0;
 
