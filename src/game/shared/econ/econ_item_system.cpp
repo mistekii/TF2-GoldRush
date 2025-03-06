@@ -534,7 +534,7 @@ public:
 		const bool bUseGCCopy = false;
 #endif
 
-		if ( bUseGCCopy == false && k_EUniversePublic != GetUniverse() )
+		if ( bUseGCCopy == false )
 		{
 			Msg( "Loading item schema from local file.\n" );
 			KeyValuesAD pItemsGameKV( "ItemsGameFile" );
