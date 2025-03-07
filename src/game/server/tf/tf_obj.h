@@ -273,7 +273,6 @@ public:
 	void			DoReverseBuild( void );
 	float			GetReversesBuildingConstructionSpeed( void );
 	virtual int		GetMaxUpgradeLevel( void ) { return OBJ_MAX_UPGRADE_LEVEL; }
-	int				GetUpgradeAmountPerHit( void );
 
 	// Carrying
 	virtual void	MakeCarriedObject( CTFPlayer *pCarrier );

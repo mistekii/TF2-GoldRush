@@ -2822,7 +2822,7 @@ bool CBaseObject::CheckUpgradeOnHit( CTFPlayer *pPlayer )
 	if ( CanBeUpgraded( pPlayer ) )
 	{
 		int iPlayerMetal = pPlayer->GetAmmoCount( TF_AMMO_METAL );
-		int nMaxToAdd = GetUpgradeAmountPerHit();
+		int nMaxToAdd = tf_obj_upgrade_per_hit.GetInt();
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, nMaxToAdd, upgrade_rate_mod );
 		int iAmountToAdd = Min( nMaxToAdd, iPlayerMetal );
 
@@ -3713,21 +3713,6 @@ float CBaseObject::GetReversesBuildingConstructionSpeed( void )
 		return 0.0f;
 
 	return pSapper->GetReversesBuildingConstructionSpeed();
-}
-
-//-----------------------------------------------------------------------------
-// GRTODO: remove later
-//-----------------------------------------------------------------------------
-int	CBaseObject::GetUpgradeAmountPerHit( void )
-{
-	int nAmount = tf_obj_upgrade_per_hit.GetInt();
-	
-	if ( TFGameRules()->InSetup() )
-	{
-		nAmount *= 2;
-	}
-
-	return nAmount;
 }
 
 //-----------------------------------------------------------------------------
