@@ -131,9 +131,6 @@ private:
 
 	vgui::ImagePanel		*m_pSpecCarriedImage;
 
-	vgui::ImagePanel		*m_pPoisonImage;
-	CExLabel				*m_pPoisonTimeLabel;
-
 	bool					m_bPlayingHybrid_CTF_CP;
 	bool					m_bPlayingSpecialDeliveryMode;
 

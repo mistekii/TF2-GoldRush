@@ -142,8 +142,6 @@ BEGIN_NETWORK_TABLE( CCaptureFlag, DT_CaptureFlag )
 	SendPropInt( SENDINFO( m_nUseTrailEffect ), 3, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nPointValue ) ),
 	SendPropFloat( SENDINFO( m_flAutoCapTime ) ),
-	SendPropBool( SENDINFO( m_bGlowEnabled ) ),
-	SendPropFloat( SENDINFO( m_flTimeToSetPoisonous ) ),
 
 #else
 	RecvPropInt( RECVINFO( m_bDisabled ), 0, RecvProxy_IsDisabled ),
@@ -161,8 +159,6 @@ BEGIN_NETWORK_TABLE( CCaptureFlag, DT_CaptureFlag )
 	RecvPropInt( RECVINFO( m_nUseTrailEffect ) ),
 	RecvPropInt( RECVINFO( m_nPointValue ) ),
 	RecvPropFloat( RECVINFO( m_flAutoCapTime ) ),
-	RecvPropBool( RECVINFO( m_bGlowEnabled ) ),
-	RecvPropFloat( RECVINFO( m_flTimeToSetPoisonous ) ),
 
 #endif
 END_NETWORK_TABLE()
@@ -197,7 +193,6 @@ BEGIN_DATADESC( CCaptureFlag )
 	DEFINE_INPUTFUNC( FIELD_VOID, "ForceResetAndDisableSilent", InputForceResetAndDisableSilent ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetReturnTime", InputSetReturnTime ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "ShowTimer", InputShowTimer ),
-	DEFINE_INPUTFUNC( FIELD_INTEGER, "ForceGlowDisabled", InputForceGlowDisabled ),
 
 	// Outputs.
 	DEFINE_OUTPUT( m_outputOnReturn, "OnReturn" ),
@@ -230,9 +225,7 @@ CCaptureFlag::CCaptureFlag()
 #ifdef CLIENT_DLL
 	m_pGlowTrailEffect = NULL;
 	m_pPaperTrailEffect = NULL;
-	m_pGlowEffect = NULL;
 	m_hOldOwner = NULL;
-	m_bOldGlowEnabled = true;
 #else
 	m_hReturnIcon = NULL;
 	m_nReturnTime = 60;
@@ -245,7 +238,6 @@ CCaptureFlag::CCaptureFlag()
 	m_iszPaperEffect = NULL_STRING;
 	m_iszTrailEffect = NULL_STRING;
 	m_nPointValue = 0;
-	m_flTimeToSetPoisonous = 0.f;
 
 	// Team specific sound throttling for Special Delivery
 	for ( int i = 0; i < ARRAYSIZE( m_flNextTeamSoundTime ); i++ )
@@ -259,7 +251,6 @@ CCaptureFlag::CCaptureFlag()
 	m_bReturnBetweenWaves = true;
 	m_bVisibleWhenDisabled = false;
 	m_bUseShotClockMode = false;
-	m_bGlowEnabled = true;
 		
 	UseClientSideAnimation();
 
@@ -275,13 +266,6 @@ CCaptureFlag::CCaptureFlag()
 //-----------------------------------------------------------------------------
 CCaptureFlag::~CCaptureFlag()
 {
-#ifndef GAME_DLL
-	if ( m_pGlowEffect )
-	{
-		delete m_pGlowEffect;
-		m_pGlowEffect = NULL;
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -438,38 +422,8 @@ bool CCaptureFlag::IsVisibleToTargetID() const
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CCaptureFlag::OnPreDataChanged( DataUpdateType_t updateType )
-{
-	m_nOldTeamNumber = GetTeamNumber();
-	m_bOldGlowEnabled = m_bGlowEnabled;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CCaptureFlag::OnDataChanged( DataUpdateType_t updateType )
 {
-	bool bUpdateGlow = false;
-
-	if ( m_nOldTeamNumber != GetTeamNumber() )
-	{
-		bUpdateGlow = true;
-	}
-	else if ( m_hOldOwner.Get() != GetOwnerEntity() )
-	{
-		bUpdateGlow = true;
-		m_hOldOwner = GetOwnerEntity();
-	}
-	else if ( m_bOldGlowEnabled != m_bGlowEnabled )
-	{
-		bUpdateGlow = true;
-	}
-
-	if ( bUpdateGlow )
-	{
-		UpdateGlowEffect();
-	}
-
 	CreateSiren();
 }
 
@@ -500,89 +454,6 @@ void CCaptureFlag::DestroySiren( void )
 		ParticleProp()->StopEmission( m_hSirenEffect );
 		m_hSirenEffect = NULL;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CCaptureFlag::UpdateGlowEffect( void )
-{
-	if ( !m_pGlowEffect )
-	{
-		m_pGlowEffect = new CGlowObject( this, Vector( 0.76f, 0.76f, 0.76f ), 1.0, true );
-	}
-
-	if ( m_pGlowEffect )
-	{
-		if ( ShouldHideGlowEffect() )
-		{
-			m_pGlowEffect->SetEntity( NULL );
-		}
-		else
-		{
-			m_pGlowEffect->SetEntity( this );
-
-			float r, g, b;
-			TeamplayRoundBasedRules()->GetTeamGlowColor( GetTeamNumber(), r, g, b );
-			m_pGlowEffect->SetColor( Vector( r, g, b ) );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CCaptureFlag::ShouldHideGlowEffect( void )
-{
-	if ( !IsGlowEnabled() )
-	{
-		return true;
-	}
-	
-	if ( m_nType == TF_FLAGTYPE_ROBOT_DESTRUCTION && tf_rd_flag_ui_mode.GetInt() )
-		return true;
-
-	if ( m_nType == TF_FLAGTYPE_PLAYER_DESTRUCTION && CTFPlayerDestructionLogic::GetPlayerDestructionLogic() )
-	{
-		C_TFPlayer *pOwner = ToTFPlayer( m_hPrevOwner );
-		if ( !pOwner )
-			return true;
-
-		return CTFPlayerDestructionLogic::GetPlayerDestructionLogic()->GetTeamLeader( pOwner->GetTeamNumber() ) != pOwner;
-	}
-
-	// If the opposite team stole our intel we need to hide the glow
-	bool bIsHiddenTeam = false;
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( pLocalPlayer )
-	{
-		if ( m_nType == TF_FLAGTYPE_CTF )
-		{
-			// In CTF the flag is the team of where it was originally sitting
-			bIsHiddenTeam = ( pLocalPlayer->GetTeamNumber() == GetTeamNumber() );
-		}
-		else
-		{
-			// In non-CTF control the flag changes to the team that's carrying it
-			bIsHiddenTeam = ( pLocalPlayer->GetTeamNumber() != TEAM_SPECTATOR && pLocalPlayer->GetTeamNumber() != GetTeamNumber() );
-		}
-
-		if ( pLocalPlayer->m_Shared.IsFullyInvisible() )
-		{
-			C_TFPlayer *pOwner = ToTFPlayer( m_hPrevOwner );
-			if ( pOwner && pOwner != pLocalPlayer )
-				return true;
-		}
-	}
-
-	bool bHide = IsStolen() && bIsHiddenTeam;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		bHide = IsHome();
-	}
-
-	return ( IsDisabled() || bHide || IsEffectActive( EF_NODRAW ) );
 }
 #endif //#ifdef CLIENT_DLL
 
@@ -615,7 +486,6 @@ void CCaptureFlag::Spawn( void )
 	m_bDisabled = m_bStartDisabled;
 	m_bStartDisabled = false;
 	m_bInstantTrailRemove = false;
-	m_flTimeToSetPoisonous = 0.f;
 
 	// Don't allow the intelligence to fade.
 	m_flFadeScale = 0.0f;
@@ -876,7 +746,6 @@ void CCaptureFlag::Reset( void )
 
 	m_bAllowOwnerPickup = true;
 	m_hPrevOwner = NULL;
-	m_flTimeToSetPoisonous = 0.f;
 
 	if ( m_nType == TF_FLAGTYPE_INVADE || m_nType == TF_FLAGTYPE_RESOURCE_CONTROL )
 	{
@@ -1691,11 +1560,6 @@ void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 		}
 	}
 
-	if ( IsPoisonous() )
-	{
-		pPlayer->m_Shared.RemoveCond( TF_COND_MARKEDFORDEATH );
-	}
-
 	IGameEvent *event = gameeventmanager->CreateEvent( "teamplay_flag_event" );
 	if ( event )
 	{
@@ -2057,11 +1921,6 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 			CTFPlayerDestructionLogic::GetPlayerDestructionLogic()->PlayPropDropSound( pPlayer );
 		}
 	}
-
-	if ( IsPoisonous() )
-	{
-		pPlayer->m_Shared.RemoveCond( TF_COND_MARKEDFORDEATH );
-	}
 	
 	m_nSkin = m_nSkin - TF_FLAG_NUMBEROFSKINS;
 
@@ -2186,10 +2045,6 @@ void CCaptureFlag::SetDisabled( bool bDisabled )
 		}
 #endif
 	}
-
-#ifdef CLIENT_DLL
-	UpdateGlowEffect();
-#endif
 }
 
 void CCaptureFlag::SetVisibleWhenDisabled( bool bVisible )
@@ -2221,10 +2076,6 @@ void CCaptureFlag::SetFlagStatus( int iStatus, CBasePlayer *pNewOwner /*= NULL*/
 			gameeventmanager->FireEvent( pEvent );
 		}
 	}
-	
-#ifdef CLIENT_DLL
-	UpdateGlowEffect();
-#endif
 
 #ifdef GAME_DLL
 	switch ( m_nFlagStatus )
@@ -2534,12 +2385,6 @@ void CCaptureFlag::InputShowTimer( inputdata_t &inputdata )
 	SetFlagReturnIn( m_nReturnTime );
 
 	CreateReturnIcon();
-}
-
-void CCaptureFlag::InputForceGlowDisabled( inputdata_t &inputdata )
-{
-	int nState = inputdata.value.Int();
-	SetGlowEnabled( nState == 0 );
 }
 
 //-----------------------------------------------------------------------------

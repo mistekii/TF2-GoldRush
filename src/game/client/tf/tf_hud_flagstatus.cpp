@@ -368,8 +368,6 @@ CTFHudFlagObjectives::CTFHudFlagObjectives( Panel *parent, const char *name ) : 
 	m_bFlagAnimationPlayed = false;
 	m_bCarryingFlag = false;
 	m_pSpecCarriedImage = NULL;
-	m_pPoisonImage = NULL;
-	m_pPoisonTimeLabel = NULL;
 
 	m_pRedFlag = new CTFFlagStatus( this, "RedFlag" );
 	m_pBlueFlag = new CTFFlagStatus( this, "BlueFlag" );
@@ -483,9 +481,6 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 	m_pCapturePoint = dynamic_cast<CTFArrowPanel *>( FindChildByName( "CaptureFlag" ) );
 
 	m_pSpecCarriedImage = dynamic_cast<ImagePanel *>( FindChildByName( "SpecCarriedImage" ) );
-
-	m_pPoisonImage = dynamic_cast<ImagePanel *>( FindChildByName( "PoisonIcon" ) );
-	m_pPoisonTimeLabel = dynamic_cast<CExLabel *>( FindChildByName( "PoisonTimeLabel" ) );
 
 	// outline is always on, so we need to init the alpha to 0
 	vgui::Panel *pOutline = FindChildByName( "OutlineImage" );
@@ -716,21 +711,6 @@ void CTFHudFlagObjectives::OnTick()
 	if ( m_pSpecCarriedImage )
 	{
 		m_pSpecCarriedImage->SetVisible( bSpecCarriedImage );
-	}
-
-	if ( m_pPoisonImage )
-	{
-		m_pPoisonImage->SetVisible( pPoisonFlag && pPoisonFlag->IsPoisonous() );
-	}
-
-	if ( m_pPoisonTimeLabel )
-	{
-		m_pPoisonTimeLabel->SetVisible( pPoisonFlag && pPoisonFlag->GetPoisonTime() > 0.f && !pPoisonFlag->IsPoisonous() );
-		if ( m_pPoisonTimeLabel->IsVisible() )
-		{
-			int nNumSecondsToPoisonous = pPoisonFlag->GetPoisonTime() - gpGlobals->curtime;
-			m_pPoisonTimeLabel->SetText( CFmtStr( "%d", nNumSecondsToPoisonous ) );
-		}
 	}
 
 	if ( TFGameRules() )

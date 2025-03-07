@@ -200,8 +200,6 @@ public:
 	bool			IsDisabled( void ) const;
 	void			SetDisabled( bool bDisabled );
 	void			SetVisibleWhenDisabled( bool bVisible );
-	bool			IsPoisonous( void ) { return m_flTimeToSetPoisonous > 0 && gpGlobals->curtime > m_flTimeToSetPoisonous; }
-	float			GetPoisonTime( void ) const { return m_flTimeToSetPoisonous; }
 
 	bool			IsVisibleWhenDisabled( void ) { return m_bVisibleWhenDisabled; }
 
@@ -229,7 +227,6 @@ public:
 	void			InputForceResetAndDisableSilent( inputdata_t &inputdata );
 	void			InputSetReturnTime( inputdata_t &inputdata );
 	void			InputShowTimer( inputdata_t &inputdata );
-	void			InputForceGlowDisabled( inputdata_t &inputdata );
 
 	void			Think( void );
 
@@ -278,7 +275,6 @@ public:
 	virtual bool IsVisibleToTargetID() const OVERRIDE;
 	virtual const char	*GetIDString( void ) { return "entity_capture_flag"; };
 
-	virtual void	OnPreDataChanged( DataUpdateType_t updateType );
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 
 	void			CreateSiren( void );
@@ -294,13 +290,7 @@ public:
 	float			GetMaxResetTime() { return m_flMaxResetTime; }
 	float			GetReturnProgress( void );
 	
-public:
-
-	void			UpdateGlowEffect( void );
-	virtual bool	ShouldHideGlowEffect( void );
-
 #endif
-	
     // TODO: Both of these should be updated to work with floats instead of ints.
 	int				GetReturnTime( int nMaxReturnTime );
     int             GetMaxReturnTime( void );
@@ -337,11 +327,7 @@ private:
 	void			PlaySound( IRecipientFilter& filter, const char *pszString, int iTeam = TEAM_ANY );
 
 	float			m_flNextTeamSoundTime[TF_TEAM_COUNT];
-
-	void			SetGlowEnabled( bool bGlowEnabled ){ m_bGlowEnabled = bGlowEnabled; }
 #endif
-
-	bool			IsGlowEnabled( void ){ return m_bGlowEnabled; }
 
 private:
 
@@ -356,7 +342,6 @@ private:
 	CNetworkHandle( CBaseEntity, m_hPrevOwner );
 	CNetworkVar( int, m_nPointValue );	// How many points this flag is worth when scored.  Used in Robot Destruction mode.
 	CNetworkVar( float, m_flAutoCapTime );
-	CNetworkVar( bool, m_bGlowEnabled );
 
 #ifdef GAME_DLL
 	string_t m_iszModel;
@@ -398,8 +383,6 @@ private:
 	bool			m_bReturnBetweenWaves; // Used in MvM mode to determine if the flag should return between waves.
 	bool			m_bUseShotClockMode; // Used to determine whether we should be using shot clock mode or not.
 	
-	CNetworkVar( float, m_flTimeToSetPoisonous ); // Time to set the flag as poisonous
-	
 	EHANDLE		m_hReturnIcon;
 
 #ifdef GAME_DLL
@@ -433,14 +416,10 @@ private:
 	IMaterial	*m_pReturnProgressMaterial_Empty;		// For labels above players' heads.
 	IMaterial	*m_pReturnProgressMaterial_Full;		
 
-	int			m_nOldTeamNumber;
 	EHANDLE		m_hOldOwner;
 
-	CGlowObject			*m_pGlowEffect;
-	CGlowObject			*m_pCarrierGlowEffect;
 	HPARTICLEFFECT		m_hSirenEffect;
 
-	bool				m_bOldGlowEnabled;
 #endif
 
 	DECLARE_DATADESC();
