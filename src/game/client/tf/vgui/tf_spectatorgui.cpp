@@ -102,9 +102,6 @@ CTFSpectatorGUI::CTFSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort
 	m_pCycleTargetRevHintIcon = m_pCycleTargetFwdHintIcon = nullptr;
 	m_pClassOrTeamHintIcon = nullptr;
 
-	m_pStudentHealth = new CTFSpectatorGUIHealth( this, "StudentGUIHealth" );
-	m_pAvatar = NULL;
-
 	m_flNextItemPanelUpdate = 0;
 	m_flNextPlayerPanelUpdate = 0;
 	m_iPrevItemShown = 0;
@@ -113,10 +110,8 @@ CTFSpectatorGUI::CTFSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort
 	m_hPrevItemPlayer = NULL;
 	m_pPlayerPanelKVs = NULL;
 	m_bReapplyPlayerPanelKVs = false;
-	m_bCoaching = false;
 
 	ListenForGameEvent( "spec_target_updated" );
-	ListenForGameEvent( "player_death" );
 }
 
 //-----------------------------------------------------------------------------
@@ -142,8 +137,6 @@ void CTFSpectatorGUI::Reset( void )
 	{
 		m_PlayerPanels[i]->Reset();
 	}
-
-	m_pStudentHealth->Reset();
 }
 
 //-----------------------------------------------------------------------------
@@ -187,18 +180,6 @@ void CTFSpectatorGUI::PerformLayout( void )
 		}
 	}
 
-	if ( m_pStudentHealth )
-	{
-		Panel* pHealthPosPanel = FindChildByName( "HealthPositioning" );
-		if ( pHealthPosPanel )
-		{
-			int xPos, yPos, iWide, iTall;
-			pHealthPosPanel->GetBounds( xPos, yPos, iWide, iTall );
-			m_pStudentHealth->SetBounds( xPos, yPos, iWide, iTall );
-			m_pStudentHealth->SetZPos( pHealthPosPanel->GetZPos() );
-		}
-	}
-
 	UpdatePlayerPanels();
 }
 
@@ -215,7 +196,6 @@ void CTFSpectatorGUI::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	m_pSwitchCamModeKeyLabel = dynamic_cast< Label* >( FindChildByName( "SwitchCamModeKeyLabel" ) );
 
-	m_pAvatar = dynamic_cast<CAvatarImagePanel *>( FindChildByName("AvatarImage") );
 	if ( ::input->IsSteamControllerActive() )
 	{
 		m_pCycleTargetFwdHintIcon = dynamic_cast< CSCHintIcon* >( FindChildByName( "CycleTargetFwdHintIcon", true ) );
@@ -225,31 +205,6 @@ void CTFSpectatorGUI::ApplySchemeSettings( vgui::IScheme *pScheme )
 	else
 	{
 		m_pClassOrTeamHintIcon = m_pCycleTargetRevHintIcon = m_pCycleTargetFwdHintIcon = nullptr;
-	}
-
-	if ( m_bCoaching )
-	{
-		if ( m_pTopBar )
-		{
-			m_pTopBar->SetBgColor( Color( 255, 255, 255, 0 ) );
-		}
-		if ( m_pBottomBarBlank )
-		{
-			m_pBottomBarBlank->SetVisible( false );
-		}
-	}
-
-	if ( m_bCoaching )
-	{
-		if ( m_pClassOrTeamLabel && m_pClassOrTeamLabel->IsVisible() )
-		{
-			m_pClassOrTeamLabel->SetVisible( false );
-		}
-
-		if ( m_pClassOrTeamKeyLabel && m_pClassOrTeamKeyLabel->IsVisible() )
-		{
-			m_pClassOrTeamKeyLabel->SetVisible( false );
-		}
 	}
 
 	// Stay the same visibility as before the scheme reload.
@@ -308,25 +263,6 @@ void CTFSpectatorGUI::Update()
 	if ( m_bPrevTournamentMode != InTournamentGUI() )
 	{
 		InvalidateLayout( false, true );
-	}
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( pLocalPlayer && m_bCoaching != pLocalPlayer->m_bIsCoaching )
-	{
-		m_bCoaching = pLocalPlayer->m_bIsCoaching;
-		InvalidateLayout( false, true );
-	}
-	if ( pLocalPlayer && pLocalPlayer->m_hStudent && m_bCoaching )
-	{
-		Vector vecTarget = pLocalPlayer->m_hStudent->GetAbsOrigin();		
-		Vector vecDelta = pLocalPlayer->GetAbsOrigin() - vecTarget;
-		float flDistance = vecDelta.Length();
-		const float kInchesToMeters = 0.0254f;
-		int distance = RoundFloatToInt( flDistance * kInchesToMeters );
-		wchar_t wzValue[32];
-		_snwprintf( wzValue, ARRAYSIZE( wzValue ), L"%u", distance );
-		wchar_t wzText[256];
-		g_pVGuiLocalize->ConstructString_safe( wzText, g_pVGuiLocalize->Find( "#TR_DistanceToStudent" ), 1, wzValue );
-		SetDialogVariable( "student_distance", wzText );
 	}
 
 	if ( m_flNextPlayerPanelUpdate < gpGlobals->curtime )
@@ -550,7 +486,7 @@ void CTFSpectatorGUI::UpdateKeyLabels( void )
 		}
 
 		static ConVarRef cl_hud_minmode( "cl_hud_minmode", true );
-		if ( m_bCoaching == true || ( cl_hud_minmode.IsValid() && ( cl_hud_minmode.GetBool() == false ) ) )
+		if ( cl_hud_minmode.IsValid() && ( cl_hud_minmode.GetBool() == false ) )
 		{
 			if ( m_pSwitchCamModeKeyLabel )
 			{
@@ -705,79 +641,6 @@ void CTFSpectatorGUI::UpdateKeyLabels( void )
 			}
 		}
 	}
-
-	// coaching stuff
-	if ( pPlayer && pPlayer->m_hStudent )
-	{
-		int iHealth = 0;
-		int iMaxHealth = 1;
-		int iMaxBuffedHealth = 0;
-
-		C_TFPlayer *pStudent = pPlayer->m_hStudent;
-		{
-			wchar_t wPlayerName[MAX_PLAYER_NAME_LENGTH];
-			wchar_t wLabel[256];
-			const char* pStudentName = g_TF_PR->GetPlayerName( pStudent->entindex() );
-
-			g_pVGuiLocalize->ConvertANSIToUnicode( pStudentName, wPlayerName, sizeof(wPlayerName));
-			g_pVGuiLocalize->ConstructString_safe( wLabel, g_pVGuiLocalize->Find( "#TF_Coach_Student_Prefix" ), 1, wPlayerName );
-			
-			SetDialogVariable( "student_name", wLabel ); 
-		}
-		for ( int i = 1; i <= 2; ++i )
-		{
-			wchar_t wLabel[256] = L"";
-			const wchar_t *wzTemp = g_pVGuiLocalize->Find( CFmtStr1024( "#TF_Coach_Slot%uLabel", i ) );
-			UTIL_ReplaceKeyBindings( wzTemp, 0, wLabel, sizeof( wLabel ) );
-			SetDialogVariable( CFmtStr1024( "coach_command_%u", i ), wLabel );
-		}
-		if ( m_pAvatar )
-		{
-			m_pAvatar->SetShouldDrawFriendIcon( false );
-
-			if ( steamapicontext && steamapicontext->SteamUser() )
-			{
-				CSteamID studentSteamID;
-				if ( pStudent->GetSteamID( &studentSteamID ) )
-				{
-					m_pAvatar->SetPlayer( studentSteamID, k_EAvatarSize64x64 );
-				}
-				else
-				{
-					m_pAvatar->ClearAvatar();
-				}				
-			}
-		}
-
-		// don't show crosshair when viewing the world from the student's POV
-		bool bShowCrosshair = pPlayer->GetObserverMode() != OBS_MODE_IN_EYE;
-		vgui::Panel *pCrosshair = FindChildByName( "Crosshair" );
-		if ( pCrosshair && pCrosshair->IsVisible() != bShowCrosshair )
-		{
-			pCrosshair->SetVisible( bShowCrosshair );
-		}
-
-		iHealth = pStudent->GetHealth();
-		iMaxHealth = pStudent->GetMaxHealth();
-		iMaxBuffedHealth = pStudent->m_Shared.GetMaxBuffedHealth();
-
-		if ( m_pStudentHealth )
-		{
-			m_pStudentHealth->SetHealth( iHealth, iMaxHealth, iMaxBuffedHealth );
-
-			if ( !m_pStudentHealth->IsVisible() )
-			{
-				m_pStudentHealth->SetVisible( true );
-			}
-		}
-	}
-	else
-	{
-		if ( m_pStudentHealth && m_pStudentHealth->IsVisible() )
-		{
-			m_pStudentHealth->SetVisible( false );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -896,19 +759,6 @@ void CTFSpectatorGUI::FireGameEvent( IGameEvent *event )
 	{
 		UpdateItemPanel();
 	}
-	else if ( Q_strcmp( "player_death", pEventName ) == 0 && m_bCoaching )
-	{
-		CBaseEntity *pVictim = ClientEntityList().GetEnt( engine->GetPlayerForUserID( event->GetInt("userid") ) );
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer && ( pVictim == pLocalPlayer->m_hStudent ) )
-		{
-			CEconNotification *pNotification = new CEconNotification();
-			pNotification->SetText( "#TF_Coach_StudentHasDied" );
-			pNotification->SetLifetime( 10.0f );
-			pNotification->SetSoundFilename( "coach/coach_student_died.wav" );
-			NotificationQueue_Add( pNotification );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1024,11 +874,7 @@ void CTFSpectatorGUI::ForceItemPanelCycle( void )
 //-----------------------------------------------------------------------------
 const char *CTFSpectatorGUI::GetResFile( void ) 
 { 
-	if ( m_bCoaching )
-	{
-		return "Resource/UI/SpectatorCoach.res"; 
-	}
-	else if ( InTournamentGUI() )
+	if ( InTournamentGUI() )
 	{
 		return "Resource/UI/SpectatorTournament.res"; 
 	}
@@ -1256,12 +1102,6 @@ void CTFSpectatorGUI::UpdatePlayerPanels( void )
 //-----------------------------------------------------------------------------
 void CTFSpectatorGUI::SelectSpec( int iSlot )
 {
-	if ( m_bCoaching )
-	{
-		engine->ClientCmd_Unrestricted( CFmtStr1024( "coach_command %u", iSlot ) );
-		return;
-	}
-
 	if ( !InTournamentGUI() )
 		return;
 

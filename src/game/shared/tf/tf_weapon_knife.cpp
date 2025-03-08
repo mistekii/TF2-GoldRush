@@ -185,7 +185,6 @@ void CTFKnife::PrimaryAttack( void )
 
 	m_hBackstabVictim = NULL;
 	int iBackstabVictimHealth = 0;
-	int nBackStabVictimRuneType = 0;
 
 #if !defined (CLIENT_DLL)
 	// Move other players back to history positions based on local player's lag

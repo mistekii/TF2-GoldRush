@@ -675,7 +675,6 @@ void CTFHudFlagObjectives::OnTick()
 
 	// check the local player to see if they're spectating, OBS_MODE_IN_EYE, and the target entity is carrying the flag
 	bool bSpecCarriedImage = false;
-	CCaptureFlag *pPoisonFlag = NULL;
 	C_TFPlayer *pPlayer = C_TFPlayer::GetLocalTFPlayer();
 	if ( pPlayer )
 	{

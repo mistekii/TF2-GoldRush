@@ -3669,10 +3669,6 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 
-	RecvPropBool( RECVINFO( m_bIsCoaching ) ),
-	RecvPropEHandle( RECVINFO( m_hCoach ) ),
-	RecvPropEHandle( RECVINFO( m_hStudent ) ),
-
 	RecvPropInt( RECVINFO( m_nCurrency ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevel ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevelProgress ) ),
@@ -3869,9 +3865,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flFirstDuckJumpInterp = 0.0f;
 	m_flLastDuckJumpInterp = 0.0f;
 	m_flDuckJumpInterp = 0.0f;
-
-	m_bIsCoaching = false;
-	m_pStudentGlowEffect = NULL;
 
 	m_nBotSkill = -1;
 	m_nOldBotSkill = -1;
@@ -4391,12 +4384,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 	if ( ( m_iOldHealth != m_iHealth ) || ( m_iOldTeam != GetTeamNumber() ) )
 	{
 		UpdateGlowColor();
-	}
-	bool bNeedsStudentGlow = m_hCoach && m_hCoach->IsLocalPlayer() && m_hCoach->m_bIsCoaching;
-	bool bHasStudentGlow = m_pStudentGlowEffect != NULL;
-	if ( bNeedsStudentGlow != bHasStudentGlow )
-	{
-		UpdateGlowEffect();
 	}
 
 	// Detect class changes
@@ -5211,12 +5198,6 @@ bool C_TFPlayer::IsEnemyPlayer( void )
 		return false;
 
 	int iTeam = pLocalPlayer->GetTeamNumber();
-
-	// if we are coaching, use the team of the student
-	if ( pLocalPlayer->m_hStudent && pLocalPlayer->m_bIsCoaching )
-	{
-		iTeam = pLocalPlayer->m_hStudent->GetTeamNumber();
-	}
 
 	switch( iTeam )
 	{
@@ -9907,11 +9888,6 @@ bool C_TFPlayer::InSameDisguisedTeam( CBaseEntity *pEnt )
 		return false;
 
 	int iMyApparentTeam = GetTeamNumber();
-	
-	if ( m_bIsCoaching && m_hStudent )
-	{
-		iMyApparentTeam = m_hStudent->GetTeamNumber();
-	}
 
 	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
 	{
@@ -11119,26 +11095,11 @@ void C_TFPlayer::UpdateGlowEffect( void )
 	DestroyGlowEffect();
 
 	BaseClass::UpdateGlowEffect();
-
-	// create a new effect if we have a coach
-	if ( m_hCoach && m_hCoach->IsLocalPlayer() && m_hCoach->m_bIsCoaching )
-	{
-		float r, g, b;
-		GetGlowEffectColor( &r, &g, &b );
-
-		m_pStudentGlowEffect = new CGlowObject( this, Vector( r, g, b ), 1.0, true );
-	}
 }
 
 void C_TFPlayer::DestroyGlowEffect( void )
 {
 	BaseClass::DestroyGlowEffect();
-
-	if ( m_pStudentGlowEffect )
-	{
-		delete m_pStudentGlowEffect;
-		m_pStudentGlowEffect = NULL;
-	}
 }
 
 //-----------------------------------------------------------------------------

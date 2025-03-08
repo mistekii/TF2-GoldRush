@@ -1558,21 +1558,7 @@ int ClientModeTFNormal::HandleSpectatorKeyInput( int down, ButtonCode_t keynum, 
 	}
 #endif
 
-	// @note Tom Bui: Coaching, so override all input
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();	
-	if ( pLocalPlayer && pLocalPlayer->m_bIsCoaching  )
-	{
-		if ( down && pszCurrentBinding && Q_strcmp( pszCurrentBinding, "+jump" ) == 0 )
-		{
-			engine->ClientCmd( "spec_mode" );
-			return 0;
-		}
-		return 1;
-	}
-	else
-	{
-		return BaseClass::HandleSpectatorKeyInput( down, keynum, pszCurrentBinding );
-	}
+	return BaseClass::HandleSpectatorKeyInput( down, keynum, pszCurrentBinding );
 }
 
 bool ClientModeTFNormal::DoPostScreenSpaceEffects( const CViewSetup *pSetup )

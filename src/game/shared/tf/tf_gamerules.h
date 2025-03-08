@@ -890,9 +890,7 @@ bool IsCreepWaveMode( void ) const;
 	void	OnNavMeshLoad( void );
 	void	OnDispenserBuilt( CBaseEntity *dispenser );
 	void	OnDispenserDestroyed( CBaseEntity *dispenser );
-	void	OnPlayerSpawned( CTFPlayer *pPlayer );
-	void	OnCoachJoining( uint32 unCoachAccountID, uint32 unStudentAccountID );
-	void 	OnRemoveCoach( uint32 unCoachAccountID );
+	//void	OnPlayerSpawned( CTFPlayer *pPlayer );
 
 	//Arena
 	void		AddPlayerToQueue( CTFPlayer *pPlayer );
@@ -1059,10 +1057,6 @@ private:
 	// for bot rosters
 	CHandle<CTFBotRoster> m_hBlueBotRoster;
 	CHandle<CTFBotRoster> m_hRedBotRoster;
-
-	// coaching
-	typedef CUtlMap<uint32, uint32> tCoachToStudentMap;
-	tCoachToStudentMap m_mapCoachToStudentMap;
 
 	// Automatic vote called near the end of a map
 	bool	m_bVoteCalled;
