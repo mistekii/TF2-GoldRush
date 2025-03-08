@@ -249,11 +249,6 @@ CWeaponMedigun::~CWeaponMedigun()
 		CSoundEnvelopeController::GetController().SoundDestroy( m_pHealSound );
 	}
 
-	if ( m_pDetachSound )
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy( m_pDetachSound );
-	}
-
 	m_flAutoCallerCheckTime = 0.0f;
 #endif
 }
@@ -330,7 +325,6 @@ void CWeaponMedigun::WeaponReset( void )
 	m_pDisruptSound = NULL;
 	m_flDenySecondary = 0.f;
 	m_pHealSound = NULL;
-	m_pDetachSound = NULL;
 #endif
 
 	HookAttributes();
@@ -366,9 +360,6 @@ void CWeaponMedigun::Precache()
 	PrecacheScriptSound( "WeaponMedigun_Vaccinator.Charged_tier_03");
 	PrecacheScriptSound( "WeaponMedigun_Vaccinator.Charged_tier_04");
 	PrecacheScriptSound( "WeaponMedigun.HealingDisrupt" );
-	PrecacheScriptSound( "WeaponMedigun.HealingDetachHealer" );
-	PrecacheScriptSound( "WeaponMedigun.HealingDetachTarget" );
-	PrecacheScriptSound( "WeaponMedigun.HealingDetachWorld" );
 	PrecacheScriptSound( "WeaponMedigun.HealingHealer" );
 	PrecacheScriptSound( "WeaponMedigun.HealingTarget" );
 	PrecacheScriptSound( "WeaponMedigun.HealingWorld" );
@@ -1087,36 +1078,6 @@ const char *CWeaponMedigun::GetHealSound( void ) const
 
 	return pszRetVal;
 }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-const char *CWeaponMedigun::GetDetachSound( void ) const
-{
-	int iMedigunType = GetMedigunType();
-	const char *pszRetVal = "WeaponMedigun.HealingDetachWorld";
-	if ( ( iMedigunType == MEDIGUN_CHARGE_INVULN ) || ( iMedigunType == MEDIGUN_CHARGE_CRITICALBOOST ) )
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			CTFPlayer *pFiringPlayer = ToTFPlayer( GetOwnerEntity() );
-			if ( pFiringPlayer && ( m_hHealingTarget.Get() || m_hLastHealingTarget.Get() ) )
-			{
-				if ( pLocalPlayer == pFiringPlayer )
-				{
-					pszRetVal = "WeaponMedigun.HealingDetachHealer";
-				}
-				else if ( ( pLocalPlayer == m_hHealingTarget.Get() ) || ( pLocalPlayer == m_hLastHealingTarget.Get() ) )
-				{
-					pszRetVal = "WeaponMedigun.HealingDetachTarget";
-				}
-			}
-		}
-	}
-
-	return pszRetVal;
-}
 #endif // CLIENT_DLL
 
 //-----------------------------------------------------------------------------
@@ -1498,7 +1459,7 @@ void CWeaponMedigun::ItemPostFrame( void )
 #if defined( CLIENT_DLL )
 				if (prediction->IsFirstTimePredicted() ) {
 					m_bPlayingSound = false;
-					StopHealSound( true, true, false );
+					StopHealSound( true, true );
 				}
 #endif
 				// can't change again until we release the attack button
@@ -1971,39 +1932,12 @@ void CWeaponMedigun::WeaponIdle( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CWeaponMedigun::StopHealSound( bool bStopHealingSound, bool bStopNoTargetSound, bool bStopDetachSound )
+void CWeaponMedigun::StopHealSound( bool bStopHealingSound, bool bStopNoTargetSound )
 {
 	if ( bStopHealingSound && m_pHealSound )
 	{
 		CSoundEnvelopeController::GetController().SoundDestroy( m_pHealSound );
 		m_pHealSound = NULL;
-
-		if ( !bStopDetachSound )
-		{
-			CLocalPlayerFilter filter;
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			C_BaseEntity *pHealingTargetEnt = m_hHealingTarget;
-			if ( !pHealingTargetEnt )
-			{
-				pHealingTargetEnt = m_hLastHealingTarget;
-			}
-			int iIndex = entindex();
-			if ( ( GetMedigunType() == MEDIGUN_CHARGE_INVULN ) || ( GetMedigunType() == MEDIGUN_CHARGE_CRITICALBOOST ) )
-			{
-				if ( pHealingTargetEnt && pHealingTargetEnt->IsPlayer() && ( pHealingTargetEnt == CBasePlayer::GetLocalPlayer() ) )
-				{
-					iIndex = pHealingTargetEnt->entindex();
-				}
-			}
-			m_pDetachSound = controller.SoundCreate( filter, iIndex, GetDetachSound() );
-			controller.Play( m_pDetachSound, 1.f, 100.f );
-		}
-	}
-
-	if ( bStopDetachSound && m_pDetachSound )
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy( m_pDetachSound );
-		m_pDetachSound = NULL;
 	}
 
 	if ( bStopNoTargetSound )
@@ -2164,7 +2098,7 @@ void CWeaponMedigun::OnDataChanged( DataUpdateType_t updateType )
 	{
 		ClientThinkList()->SetNextClientThink( GetClientHandle(), CLIENT_THINK_NEVER );
 		m_bPlayingSound = false;
-		StopHealSound( true, false, false );
+		StopHealSound( true, false );
 
 		// Are they holding the attack button but not healing anyone? Give feedback.
 		if ( IsActiveByLocalPlayer() && GetOwner() && GetOwner()->IsAlive() && m_bAttacking && GetOwner() == C_BasePlayer::GetLocalPlayer() && CanAttack() == true )
@@ -2178,7 +2112,7 @@ void CWeaponMedigun::OnDataChanged( DataUpdateType_t updateType )
 		}
 		else
 		{
-			StopHealSound( false, true, false );	// Stop the "no target" sound.
+			StopHealSound( false, true );	// Stop the "no target" sound.
 		}
 	}
 
@@ -2260,7 +2194,6 @@ void CWeaponMedigun::ClientThink()
 				}
 			}
 
-			StopHealSound( false, false, true );
 			m_pHealSound = controller.SoundCreate( filter, iIndex, GetHealSound() );
 			controller.Play( m_pHealSound, 1.f, 100.f );
 		}

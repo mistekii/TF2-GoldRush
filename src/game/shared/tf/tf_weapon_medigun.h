@@ -110,7 +110,7 @@ public:
 
 #if defined( CLIENT_DLL )
 	// Stop all sounds being output.
-	void			StopHealSound( bool bStopHealingSound = true, bool bStopNoTargetSound = true, bool bStopDetachSound = true );
+	void			StopHealSound( bool bStopHealingSound = true, bool bStopNoTargetSound = true );
 
 	virtual void	OnDataChanged( DataUpdateType_t updateType );
 	virtual void	ClientThink();
@@ -158,7 +158,6 @@ private:
 
 #ifdef CLIENT_DLL
 	const char				*GetHealSound() const;
-	const char				*GetDetachSound() const;
 #else
 	void					UberchargeChunkDeployed();
 #endif
@@ -235,7 +234,6 @@ protected:
 	CSoundPatch			*m_pChargedSound;
 	CSoundPatch			*m_pDisruptSound;
 	CSoundPatch			*m_pHealSound;
-	CSoundPatch			*m_pDetachSound;
 
 	CUtlVector< int >	m_iAutoCallers;
 	float				m_flAutoCallerCheckTime;
