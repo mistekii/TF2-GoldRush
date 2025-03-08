@@ -842,6 +842,9 @@ private:
 	CUtlVector< char* > m_aNormalGibs;
 	CUtlVector<breakmodel_t>	m_aGibs;
 
+	// Blinking.
+	CountdownTimer	m_blinkTimer;
+
 	C_TFPlayer( const C_TFPlayer & );
 
 	mutable char m_bIsCalculatingMaximumSpeed;

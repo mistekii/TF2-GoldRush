@@ -1231,7 +1231,41 @@ bool C_BaseFlex::SetupGlobalWeights( const matrix3x4_t *pBoneToWorld, int nFlexW
 		m_blinktime = gpGlobals->curtime + g_CV_BlinkDuration.GetFloat();
 	}
 
-	if (m_iBlink == -1)
+#ifdef TF_CLIENT_DLL
+	// the TF2 models have different flexes for blinking
+	int iBlinkLeft = AddGlobalFlexController( "left_CloseLid" );
+	int iBlinkRight = AddGlobalFlexController( "right_CloseLid" );
+	if ( IsAlive() )
+	{
+		// FIXME: this needs a better algorithm
+		// blink the eyes
+		float flBlinkDuration = g_CV_BlinkDuration.GetFloat();
+		float flOOBlinkDuration = (flBlinkDuration > 0) ? 1.0f / flBlinkDuration : 0.0f;
+		float t = (m_blinktime - gpGlobals->curtime) * M_PI * 0.5 * flOOBlinkDuration;
+		if ( t > 0 )
+		{
+			// do eyeblink falloff curve
+			t = cos( t );
+			if ( t > 0.0f && t < 1.0f )
+			{
+				t = sqrtf( t ) * 2.0f;
+				if ( t > 1.0f )
+					t = 2.0f - t;
+				t = clamp( t, 0.0f, 1.0f );
+				// add it to whatever the blink track is doing
+				g_flexweight[iBlinkLeft] = RemapValClamped( t, 0.0f, 1.0f, g_flexweight[iBlinkLeft], 1.0f );
+				g_flexweight[iBlinkRight] = RemapValClamped( t, 0.0f, 1.0f, g_flexweight[iBlinkRight], 1.0f );
+			}
+		}
+	}
+	else // We're dead so keep our eyes shut
+	{
+		g_flexweight[iBlinkLeft] = 1.0f;
+		g_flexweight[iBlinkRight] = 1.0f;
+	}
+#else
+	// Normal HL2-style behaviour
+	if ( m_iBlink == -1 )
 	{
 		m_iBlink = AddGlobalFlexController( "blink" );
 	}
@@ -1239,22 +1273,23 @@ bool C_BaseFlex::SetupGlobalWeights( const matrix3x4_t *pBoneToWorld, int nFlexW
 	// FIXME: this needs a better algorithm
 	// blink the eyes
 	float flBlinkDuration = g_CV_BlinkDuration.GetFloat();
-	float flOOBlinkDuration = ( flBlinkDuration > 0 ) ? 1.0f / flBlinkDuration : 0.0f;
-	float t = ( m_blinktime - gpGlobals->curtime ) * M_PI * 0.5 * flOOBlinkDuration;
-	if (t > 0)
+	float flOOBlinkDuration = (flBlinkDuration > 0) ? 1.0f / flBlinkDuration : 0.0f;
+	float t = (m_blinktime - gpGlobals->curtime) * M_PI * 0.5 * flOOBlinkDuration;
+	if ( t > 0 )
 	{
 		// do eyeblink falloff curve
-		t = cos(t);
-		if (t > 0.0f && t < 1.0f)
+		t = cos( t );
+		if ( t > 0.0f && t < 1.0f )
 		{
 			t = sqrtf( t ) * 2.0f;
-			if (t > 1.0f)
+			if ( t > 1.0f )
 				t = 2.0f - t;
 			t = clamp( t, 0.0f, 1.0f );
 			// add it to whatever the blink track is doing
 			g_flexweight[m_iBlink] = clamp( g_flexweight[m_iBlink] + t, 0.0f, 1.0f );
 		}
 	}
+#endif
 
 	// Drive the mouth from .wav file playback...
 	ProcessVisemes( m_PhonemeClasses );
