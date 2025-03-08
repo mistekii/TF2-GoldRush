@@ -268,19 +268,7 @@ void CMvMMissionSet::SetMissionBySchemaIndex( int idxMission, bool flag )
 
 bool CMvMMissionSet::GetMissionBySchemaIndex( int idxMission ) const
 {
-	// Bogus index?
-	if ( idxMission == k_iMvmMissionIndex_NotInSchema )
-		return false;
-	if ( idxMission < 0 || idxMission >= GetItemSchema()->GetMvmMissions().Count() )
-	{
-		Assert( idxMission >= 0 );
-		Assert( idxMission < GetItemSchema()->GetMvmMissions().Count() );
-		return false;
-	}
-
-	// Check the bit
-	uint64 mask = ( (uint64)1 << (unsigned)idxMission );
-	return ( m_bits & mask ) != 0;
+	return false;
 }
 
 void CMvMMissionSet::Intersect( const CMvMMissionSet &x )

@@ -1625,9 +1625,6 @@ CHudElement( pElementName ), BaseClass( NULL, "HudMannVsMachineStatus" )
 	m_pWaveCompletePanel = new CWaveCompleteSummaryPanel( this, "WaveCompleteSummaryPanel" );
 
 	m_pVictorySplash = new CVictorySplash( this, "VictorySplash" );
-	m_pVictoryContainer = new CMvMVictoryPanelContainer( this, "VictoryPanelContainer" );
-	
-	m_pWaveLossPanel = new CMvMWaveLossPanel ( this, "WaveLossPanel" );
 
 	m_nFlagCarrierUpgradeLevel = -1;
 	m_pUpgradeLevelContainer = new vgui::EditablePanel( this, "UpgradeLevelContainer" );
@@ -1780,17 +1777,10 @@ void CTFHudMannVsMachineStatus::OnTick( void )
 	if ( !TFGameRules() || !TFGameRules()->IsMannVsMachineMode() )
 		return;
 
-	if ( m_pVictoryContainer->IsVisible() )
-	{
-		m_pVictoryContainer->OnTick();
-	}
-
 	if ( !IsVisible() || !TFObjectiveResource() )
 		return;
 
 	m_pWaveCompletePanel->OnTick();
-	
-	m_pWaveLossPanel->OnTick();
 	
 	if ( g_pSpectatorGUI && m_pWaveStatusPanel )
 	{
@@ -1878,7 +1868,6 @@ void CTFHudMannVsMachineStatus::OnTick( void )
 	{
 		m_bInVictorySplash = false;
 		m_pVictorySplash->SetVisible( false );
-		m_pVictoryContainer->ShowVictoryPanel( false );
 	}
 
 	m_pVictorySplash->SetVisible( m_bInVictorySplash && TFGameRules()->State_Get() == GR_STATE_GAME_OVER );
@@ -1930,7 +1919,7 @@ void CTFHudMannVsMachineStatus::WaveFailed( void )
 {
 	if ( TFObjectiveResource() && TFObjectiveResource()->GetMannVsMachineWaveCount() > 1 )
 	{
-		m_pWaveLossPanel->ShowPanel();
+		//m_pWaveLossPanel->ShowPanel();
 	}
 }
 
@@ -1957,7 +1946,7 @@ void CTFHudMannVsMachineStatus::MVMServerKickTimeUpdate( int nTime )
 //-----------------------------------------------------------------------------
 void CTFHudMannVsMachineStatus::MVMVictoryGCResponse( CMsgMvMVictoryInfo &pData )
 {
-	m_pVictoryContainer->MannUpServerResponse( pData );
+	//m_pVictoryContainer->MannUpServerResponse( pData );
 }
 
 void CTFHudMannVsMachineStatus::ForceVictoryRefresh()
@@ -1967,7 +1956,7 @@ void CTFHudMannVsMachineStatus::ForceVictoryRefresh()
 
 void CTFHudMannVsMachineStatus::ReopenVictoryPanel( void )
 {
-	m_pVictoryContainer->ShowVictoryPanel( true );
+	//m_pVictoryContainer->ShowVictoryPanel( true );
 }
 
 //-----------------------------------------------------------------------------

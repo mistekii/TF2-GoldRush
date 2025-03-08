@@ -8,33 +8,6 @@
 #include "protoutils.h"
 
 //-----------------------------------------------------------------------------
-void ITFGroupMatchCriteriaReader::GetMvMMissionSet( CMvMMissionSet &challenges, bool bMannup ) const
-{
-	challenges.Clear();
-
-	// Use our pending changes if we've set them. Note that we cannot really clear repeated fields with merged-message
-	// logic without another field or forcing a full-set.
-	// O(n^2) goodness...
-
-	#define GET_MISSIONS( field )																			\
-	for ( int i = 0 ; i < Proto().field ## _size() ; ++i )													\
-	{																										\
-		int iChallengeIndex = GetItemSchema()->FindMvmMissionByName( Proto().field( i ).c_str() );			\
-		if ( iChallengeIndex >= 0 )																			\
-		{ challenges.SetMissionBySchemaIndex( iChallengeIndex, true ); }									\
-	}																										\
-
-	if ( bMannup )
-	{
-		GET_MISSIONS( mvm_mannup_missions )
-	}
-	else
-	{
-		GET_MISSIONS( mvm_bootcamp_missions )
-	}
-}
-
-//-----------------------------------------------------------------------------
 bool ITFGroupMatchCriteriaReader::GetLateJoin() const
 {
 	return Proto().late_join_ok();
@@ -44,12 +17,6 @@ bool ITFGroupMatchCriteriaReader::GetLateJoin() const
 uint32_t ITFGroupMatchCriteriaReader::GetCustomPingTolerance() const
 {
 	return Proto().custom_ping_tolerance();
-}
-
-//-----------------------------------------------------------------------------
-int ITFGroupMatchCriteriaReader::GetMannUpTourIndex() const
-{
-	return GetItemSchema()->FindMvmTourByName( Proto().mvm_mannup_tour().c_str() );
 }
 
 //-----------------------------------------------------------------------------
@@ -75,35 +42,6 @@ CCasualCriteriaHelper ITFGroupMatchCriteriaReader::GetCasualCriteriaHelper() con
 {
 	CCasualCriteriaHelper casualHelper( Proto().casual_criteria( ) );
 	return casualHelper;
-}
-
-//-----------------------------------------------------------------------------
-void ITFGroupMatchCriteria::SetMvMMissionSet( const CMvMMissionSet &challenges, bool bMannup )
-{
-	// No change?
-	CMvMMissionSet currentChallenges;
-	GetMvMMissionSet( currentChallenges, bMannup );
-	if ( currentChallenges == challenges )
-		{ return; }
-
-	#define CLEAR_MISSIONS( field ) 												\
-	MutProto().clear_ ## field ();													\
-	for ( int i = 0 ; i < GetItemSchema()->GetMvmMissions().Count() ; ++i )			\
-	{																				\
-		if ( challenges.GetMissionBySchemaIndex( i ) )								\
-		{																			\
-			MutProto().add_ ## field ( GetItemSchema()->GetMvmMissionName( i ) );	\
-		}																			\
-	}																				\
-
-	if ( bMannup )
-	{
-		CLEAR_MISSIONS( mvm_mannup_missions )
-	}
-	else
-	{
-		CLEAR_MISSIONS( mvm_bootcamp_missions )
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -164,50 +102,6 @@ void ITFGroupMatchCriteria::SetCasualCategorySelected( EGameCategory eCategory, 
 				SetCasualMapSelected( pCat->m_vecEnabledMaps[ i ]->m_nDefIndex, bSelected );
 			}
 		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-void ITFGroupMatchCriteria::SetMannUpTourIndex( int idxTour )
-{
-	if ( GetMannUpTourIndex() == idxTour )
-		{ return; }
-
-	const char *pszTourName = "";
-	if ( idxTour >= 0 )
-	{
-		pszTourName = GetItemSchema()->GetMvmTours()[ idxTour ].m_sTourInternalName.Get();
-	}
-	else
-	{
-		Assert( idxTour == k_iMvmTourIndex_Empty );
-	}
-
-	if ( Proto().mvm_mannup_tour().compare( pszTourName ) == 0 )
-		{ return; }
-
-	MutProto().set_mvm_mannup_tour( pszTourName );
-
-	// TODO(Universal Parties): This probably shouldn't live here
-	// Check if we need to deselect inappropriate challenges
-	if ( idxTour >= 0 )
-	{
-		CMvMMissionSet challenges;
-		GetMvMMissionSet( challenges, true );
-		bool bChanged = false;
-		for ( int i = 0 ; i < GetItemSchema()->GetMvmMissions().Count() ; ++i )
-		{
-			if ( GetItemSchema()->FindMvmMissionInTour( idxTour, i ) < 0 )
-			{
-				if ( challenges.GetMissionBySchemaIndex( i ) )
-				{
-					challenges.SetMissionBySchemaIndex( i, false );
-					bChanged = true;
-				}
-			}
-		}
-		if ( bChanged )
-			{ SetMvMMissionSet( challenges, true ); }
 	}
 }
 

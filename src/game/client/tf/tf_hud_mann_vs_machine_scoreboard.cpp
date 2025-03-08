@@ -642,34 +642,6 @@ void CTFHudMannVsMachineScoreboard::UpdateCreditSpend ( CCreditSpendPanel *panel
 //-----------------------------------------------------------------------------
 void CTFHudMannVsMachineScoreboard::UpdatePopFile( void )
 {
-	if ( TFObjectiveResource() )
-	{
-		if ( Q_strcmp( m_popfile, TFObjectiveResource()->GetMvMPopFileName() ) != 0 )
-		{
-			V_strcpy_safe( m_popfile, TFObjectiveResource()->GetMvMPopFileName() );
-			char szTempName[MAX_PATH];
-			V_FileBase( m_popfile, szTempName, sizeof( szTempName ) );
-			int iChallengeIndex = GetItemSchema()->FindMvmMissionByName( szTempName );
-
-			if ( GetItemSchema()->GetMvmMissions().IsValidIndex( iChallengeIndex ) )
-			{
-				const MvMMission_t &mission = GetItemSchema()->GetMvmMissions()[ iChallengeIndex ];
-				wchar_t wszChallengeName[ 256 ];
-				g_pVGuiLocalize->ConstructString_safe( wszChallengeName, L"%s1 (%s2)", 2, 
-					g_pVGuiLocalize->Find( mission.m_sDisplayName.Get() ), g_pVGuiLocalize->Find( mission.m_sMode.Get() ) );
-
-				SetDialogVariable( "popfile", wszChallengeName );
-				
-				m_pDifficultyContainer->SetVisible( true );
-				m_pDifficultyContainer->SetDialogVariable( "difficultyvalue", g_pVGuiLocalize->Find( GetMvMChallengeDifficultyLocName( mission.m_eDifficulty ) ) );
-			}
-			else 
-			{
-				SetDialogVariable( "popfile", GetMapDisplayName(szTempName) );
-				// Hide Difficulty Panel since we dont know what it is
-				m_pDifficultyContainer->SetVisible( false );
-			}
-		}
-	}
+	// to be removed
 }
 

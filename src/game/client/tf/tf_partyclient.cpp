@@ -702,27 +702,6 @@ bool CTFPartyClient::BCanQueueForMatch( ETFMatchGroup eGroup, CUtlVector< QueueE
 		}
 		break;
 
-		case k_eTFMatchGroup_MvM_MannUp:
-		{
-			if ( pParty ? pParty->BAnyMemberWithoutTicket() : !GTFGCClientSystem()->BLocalPlayerInventoryHasMvmTicket() )
-			{
-				lambdaCopyReason( "#TF_Matchmaking_CantQueue_NoTicket", k_eDisabledType_Criteria );
-			}
-		}
-		// Intentionally fall through for the criteria check
-
-		case k_eTFMatchGroup_MvM_Practice:
-		{
-			// Need to have at least one map
-			CMvMMissionSet searchChallenges;
-			GetEffectiveGroupCriteria().GetMvMMissionSet( searchChallenges, eGroup == k_eTFMatchGroup_MvM_MannUp );
-			if ( searchChallenges.IsEmpty() )
-			{
-				lambdaCopyReason( "#TF_Matchmaking_CantQueue_NoMvMCriteria", k_eDisabledType_Criteria );
-			}
-		}
-		break;
-
 		default:
 			// Unhandled match type!
 			Assert( false );

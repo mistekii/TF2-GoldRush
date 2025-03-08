@@ -932,21 +932,7 @@ void CHudUpgradePanel::CreateItemModelPanel( int iLoadoutSlot )
 	bool bVisible = pCurItemData && pCurItemData->IsValid();
 	if ( iLoadoutSlot == LOADOUT_POSITION_ACTION && ( !bVisible || !dynamic_cast< CTFPowerupBottle* >( m_hPlayer->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION ) ) ) )
 	{
-		static CSchemaItemDefHandle pItemDef_PowerupCanteen( CTFItemSchema::k_rchMvMPowerupBottleItemDefName );
 
-		if ( pItemDef_PowerupCanteen )
-		{
-			// Nothing in action slot or non-bottle in action slot
-			// Show a disabled powerup bottle instead
-			CEconItemView *pItemData = new CEconItemView();
-			pItemData->Init( pItemDef_PowerupCanteen->GetDefinitionIndex(), AE_UNIQUE, AE_USE_SCRIPT_VALUE, true );
-			pItemData->SetClientItemFlags( kEconItemFlagClient_Preview | kEconItemFlagClient_StoreItem );
-
-			pItemPanel->SetItem( pItemData );
-			pItemPanel->SetGreyedOut( "#TF_PVE_Need_Powerup_Equipped" );
-
-			bVisible = pItemData && pItemData->IsValid();
-		}
 	}
 
 	pItemPanel->SetVisible( bVisible );
@@ -1904,24 +1890,7 @@ void CHudUpgradePanel::AddItemStatText( const locchar_t *loc_AttrDescText, attri
 
 CEconItemView* CHudUpgradePanel::GetLocalPlayerBottleFromInventory( void )
 {
-	CPlayerInventory *pLocalInv = TFInventoryManager()->GetLocalInventory();
-	if ( pLocalInv )
-	{
-		static CSchemaItemDefHandle pItemDef_MvmPowerupBottle( CTFItemSchema::k_rchMvMPowerupBottleItemDefName );
-		Assert( pItemDef_MvmPowerupBottle );
-		if ( pItemDef_MvmPowerupBottle )
-		{
-			for ( int i = 0 ; i < pLocalInv->GetItemCount() ; ++i )
-			{
-				CEconItemView *pItem = pLocalInv->GetItem( i );
-				Assert( pItem );
-				if ( pItem->GetItemDefinition() == pItemDef_MvmPowerupBottle )
-				{
-					return pItem;
-				}
-			}
-		}
-	}
+	// to be removed
 
 	return NULL;
 }

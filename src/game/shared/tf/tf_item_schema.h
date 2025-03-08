@@ -165,54 +165,6 @@ private:
 	item_definition_index_t m_LoanerItemDef;
 };
 
-
-
-//-----------------------------------------------------------------------------
-// Wars
-//-----------------------------------------------------------------------------
-class CWarDefinition
-{
-public:
-
-	CWarDefinition();
-
-	bool BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErrors );
-
-	struct CWarSideDefinition_t
-	{
-		CWarSideDefinition_t() 
-			: m_pszLeaderboardName( NULL )
-			, m_pszLocalizedName( NULL )
-			, m_nSideIndex( INVALID_WAR_SIDE )
-		{}
-
-		bool BInitFromKV( const char* pszContainingWarName, KeyValues *pKVSide, CUtlVector<CUtlString> *pVecErrors );
-
-		const char* m_pszLocalizedName;
-		const char* m_pszLeaderboardName;
-		war_side_t	m_nSideIndex;
-	};
-	typedef CUtlMap< war_side_t, CWarSideDefinition_t > SidesMap_t;
-
-	const SidesMap_t& GetSides() const { return m_mapSides; }
-	const CWarSideDefinition_t* GetSide( war_side_t nSide ) const;
-	war_definition_index_t GetDefIndex() const { return m_nDefIndex; }
-	const char* GetDefName() const { return m_pszDefName; }
-	bool IsActive() const;
-	bool IsValidSide( war_side_t nSide ) const;
-	RTime32 GetStartDate() const { return m_rtTimeStart; }
-	RTime32 GetEndDate() const { return m_rtTimeEnd; }
-private:
-
-	const char* m_pszLocalizedWarname;
-	const char* m_pszDefName;
-	SidesMap_t m_mapSides;
-	RTime32 m_rtTimeStart;
-	RTime32 m_rtTimeEnd;
-	war_definition_index_t m_nDefIndex;
-};
-typedef CUtlMap< war_definition_index_t, const CWarDefinition* > WarDefinitionMap_t;
-
 const char *GetPlayerClassName( int iClass );
 const char *GetPlayerClassLocalizationKey( int iClass );
 itemid_t GetAssociatedQuestID( const IEconItemInterface *pEconItem );
@@ -674,56 +626,12 @@ public:
 		return (CTFCraftingRecipeDefinition *)GetRecipeDefinition( iRecipeIndex );
 	}
 
-	const CWarDefinition *GetWarDefinitionByIndex( war_definition_index_t nDefIndex ) const;
-	const CWarDefinition *GetWarDefinitionByName( const char* pszDefName ) const;
-	const WarDefinitionMap_t& GetWarDefinitions() const { return m_mapWars; }
-
 	const CUtlVector<const char *>& GetClassUsabilityStrings() const { return m_vecClassUsabilityStrings; }
 	const CUtlVector<const char *>& GetLoadoutStrings( EEquipType_t eType ) const { return eType == EQUIP_TYPE_CLASS ? m_vecClassLoadoutStrings : m_vecAccountLoadoutStrings; }
 	const CUtlVector<const char *>& GetLoadoutStringsForDisplay( EEquipType_t eType ) const { return eType == EQUIP_TYPE_CLASS ? m_vecClassLoadoutStringsForDisplay : m_vecAccountLoadoutStringsForDisplay; }
 	const CUtlVector<const char *>& GetWeaponTypeSubstrings() const { return m_vecWeaponTypeSubstrings; }
 
 	static const char k_rchOverrideItemLevelDescStringAttribName[];
-
-	static const char k_rchMvMTicketItemDefName[];
-	static const char k_rchMvMSquadSurplusVoucherItemDefName[];
-	static const char k_rchMvMPowerupBottleItemDefName[];
-	static const char k_rchMvMChallengeCompletedMaskAttribName[];
-	static const char k_rchLadderPassItemDefName[];
-	 
-	static const char *GetMvMBadgeContractPointsAttributeName( EMvMChallengeDifficulty difficulty );
-	static const char *GetMvMBadgeContractLevelAttributeName( EMvMChallengeDifficulty difficulty );
-
-	const CUtlVector<MvMMap_t>& GetMvmMaps() const { return m_vecMvMMaps; }
-	const CUtlVector<MvMMission_t>& GetMvmMissions() const { return m_vecMvMMissions; }
-	const CUtlVector<MvMTour_t>& GetMvmTours() const { return m_vecMvMTours; }
-//
-	/// Return index into mission list, or one of these special values:
-	/// k_iMvmMissionIndex_Any if empty string is passed
-	/// k_iMvmMissionIndex_NotInSchema if not found
-	///
-	/// Input is the full pop filename, but without the directory or extension
-	int FindMvmMissionByName( const char *pszChallengeName ) const;
-
-	/// Get pop filename (without extension) given the challenge index.
-	/// Handles k_iMvmMissionIndex_Any and k_iMvmMissionIndex_NotInSchema
-	const char *GetMvmMissionName( int iChallengeIndex ) const;
-
-	/// Return index into tour list, or one of these special values:
-	/// k_iMvmTourIndex_Any if empty string is passed
-	/// k_iMvmTourIndex_NotInSchema if not found
-	///
-	/// Input is the value of MvMTour_t::m_sTourInternalName
-	int FindMvmTourByName( const char *pszTourName ) const;
-
-	/// Find mission within a particular tour, and return index into MvMTour_t::m_vecMissions.
-	/// Returns -1 if invalid tour index or mission is not part of the tour
-	int FindMvmMissionInTour( int idxTour, int idxMissionInSchema ) const;
-
-	/// Get badge slot corresponding to particular mission, for a given tour.
-	/// Returns bit index MvMTourMission_t::m_iBadgeSlot (NOT BITMASK), or -1 if
-	/// invalid tour index of mission is not part of the tour
-	int GetMvmMissionBadgeSlotForTour( int idxTour, int idxMissionInSchema ) const;
 
 	int GetMapCount() const { return m_vecMasterListOfMaps.Count(); }
 	const MapDef_t *GetMasterMapDefByName( const char *pszSearchName ) const;
@@ -757,15 +665,6 @@ protected:
 private:
 	void InitializeStringTable( const char **ppStringTable, unsigned int unStringCount, CUtlVector<const char *> *out_pvecStringTable );
 
-	bool BInitMvmMissions( KeyValues *pKVMvmMaps, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitMvmTours( KeyValues *pKVMvmTours, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitGameModes( KeyValues *pKVMaps, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitMaps( KeyValues *pKVMaps, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitMMCategories( KeyValues *pKVCategories, CUtlVector<CUtlString> *pVecErrors );
-	bool BInitWarDefs( KeyValues *pKVWarDefs, CUtlVector<CUtlString> *pVecErrors );
-
-	bool BPostInitMaps( CUtlVector<CUtlString> *pVecErrors );
-
 
 	CUtlVector<const char *> m_vecClassUsabilityStrings;
 	CUtlVector<const char *> m_vecClassLoadoutStrings;
@@ -774,14 +673,10 @@ private:
 	CUtlVector<const char *> m_vecAccountLoadoutStringsForDisplay;
 	CUtlVector<const char *> m_vecWeaponTypeSubstrings;
 
-	CUtlVector<MvMMap_t> m_vecMvMMaps;
-	CUtlVector<MvMMission_t> m_vecMvMMissions;
-	CUtlVector<MvMTour_t> m_vecMvMTours;
 
 	CUtlVector<MapDef_t*> m_vecMasterListOfMaps;
 	GameCategoryMap_t m_mapGameCategories;
 	MMGroupMap_t m_mapMMGroups;
-	WarDefinitionMap_t m_mapWars;
 
 };
 

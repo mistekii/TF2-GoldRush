@@ -4708,17 +4708,6 @@ bool CEconItemSchema::BInitSchema( KeyValues *pKVRawDefinition, CUtlVector<CUtlS
 		SCHEMA_INIT_SUBSTEP( BInitEquipRegionConflicts( pKVEquipRegionConflicts, pVecErrors ) );
 	}
 
-	// Parse the loot lists block (on the GC)
-	// Must be BEFORE Item defs
-	KeyValues *pKVItemCriteriaTemplates = pKVRawDefinition->FindKey( "item_criteria_templates" );
-	SCHEMA_INIT_SUBSTEP( BInitItemCriteriaTemplates( pKVItemCriteriaTemplates, pVecErrors ) );
-
-	KeyValues *pKVRandomAttributeTemplates = pKVRawDefinition->FindKey( "random_attribute_templates" );
-	SCHEMA_INIT_SUBSTEP( BInitRandomAttributeTemplates( pKVRandomAttributeTemplates, pVecErrors ) );
-
-	KeyValues *pKVLootlistJobTemplates = pKVRawDefinition->FindKey( "lootlist_job_template_definitions" );
-	SCHEMA_INIT_SUBSTEP( BInitLootlistJobTemplates( pKVLootlistJobTemplates, pVecErrors ) );
-
 	// Initialize the items block
 	KeyValues *pKVItems = pKVRawDefinition->FindKey( "items" );
 	SCHEMA_INIT_CHECK( NULL != pKVItems, "Required key \"items\" missing.\n" );
@@ -4731,10 +4720,6 @@ bool CEconItemSchema::BInitSchema( KeyValues *pKVRawDefinition, CUtlVector<CUtlS
 
 	// Verify base item names are proper in item schema
 	SCHEMA_INIT_SUBSTEP( BVerifyBaseItemNames( pVecErrors ) );
-
-	// Parse the item_sets block.
-	KeyValues *pKVItemSets = pKVRawDefinition->FindKey( "item_sets" );
-	SCHEMA_INIT_SUBSTEP( BInitItemSets( pKVItemSets, pVecErrors ) );
 	
 	// Particles
 	KeyValues *pKVParticleSystems = pKVRawDefinition->FindKey( "attribute_controlled_attached_particles" );
@@ -4747,31 +4732,8 @@ bool CEconItemSchema::BInitSchema( KeyValues *pKVRawDefinition, CUtlVector<CUtlS
 	// Reset our loot lists.
 	m_dictLootLists.RemoveAll();
 
-	// Init Item Collections - Must be before lootlists since collections are lootlists themselves and are referenced by lootlists
-	KeyValues *pKVItemCollections = pKVRawDefinition->FindKey( "item_collections" );
-	if ( NULL != pKVItemCollections )
-	{
-		SCHEMA_INIT_SUBSTEP( BInitItemCollections( pKVItemCollections, pVecErrors ) );
-	}
-
-
-	// Parse the client loot lists block (everywhere)
-	KeyValues *pKVClientLootLists = pKVRawDefinition->FindKey( "client_loot_lists" );
-	SCHEMA_INIT_SUBSTEP( BInitLootLists( pKVClientLootLists, pVecErrors ) );
-
-	// Parse the revolving loot lists block
-	KeyValues *pKVRevolvingLootLists = pKVRawDefinition->FindKey( "revolving_loot_lists" );
-	SCHEMA_INIT_SUBSTEP( BInitRevolvingLootLists( pKVRevolvingLootLists, pVecErrors ) );
-
 	// Init Items that may reference Collections
 	SCHEMA_INIT_SUBSTEP( BInitCollectionReferences( pVecErrors ) );
-
-	// Validate Operation Pass	
-	KeyValues *pKVOperationDefinitions = pKVRawDefinition->FindKey( "operations" );
-	if ( NULL != pKVOperationDefinitions )
-	{
-		SCHEMA_INIT_SUBSTEP( BInitOperationDefinitions( pKVGameInfo, pKVOperationDefinitions, pVecErrors ) );
-	}
 
 #if   defined( CLIENT_DLL ) || defined( GAME_DLL )
 	KeyValues *pKVArmoryData = pKVRawDefinition->FindKey( "armory_data" );

@@ -90,7 +90,6 @@ class ITFGroupMatchCriteriaReader
 public:
 	virtual ~ITFGroupMatchCriteriaReader() {};
 
-	void GetMvMMissionSet( CMvMMissionSet &challenges, bool bMannup ) const;
 	bool GetLateJoin() const;
 	uint32_t GetCustomPingTolerance() const;
 
@@ -100,11 +99,7 @@ public:
 	CCasualCriteriaHelper GetCasualCriteriaHelper() const;
 
 	// Save/load the current casual criteria to/from a file.
-	void SaveCasualCriteriaToFile( const char *pszFileName ) const;
-
-#ifdef USE_MVM_TOUR
-	int GetMannUpTourIndex() const;
-#endif // USE_MVM_TOUR
+	void SaveCasualCriteriaToFile( const char* pszFileName ) const;
 
 	// Implementor provides these so we can can wrap non-owned
 	virtual const CTFGroupMatchCriteriaProto &Proto() const = 0;
@@ -116,7 +111,6 @@ class ITFGroupMatchCriteria : public ITFGroupMatchCriteriaReader
 public:
 	virtual ~ITFGroupMatchCriteria() {};
 
-	void SetMvMMissionSet( const CMvMMissionSet &challenges, bool bMannup );
 	void SetLateJoin( bool bLateJoin );
 	void SetCustomPingTolerance( uint32_t unCustomPingTolerance );
 
@@ -130,10 +124,6 @@ public:
 
 	// Save/load the current casual criteria to/from a file.
 	void LoadCasualCriteriaFromFile( const char *pszFileName );
-
-#ifdef USE_MVM_TOUR
-	void SetMannUpTourIndex( int idxTour );
-#endif // USE_MVM_TOUR
 
 	// These return true if any fields were applied to/from the delta
 	bool MakeDelta( const ITFGroupMatchCriteriaReader& msgBase, const ITFGroupMatchCriteriaReader& msgFinal );

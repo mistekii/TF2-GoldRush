@@ -29,7 +29,6 @@
 	#include "tf_duel_summary.h"
 	#include "econ_contribution.h"
 	#include "tf_player_info.h"
-	#include "tf_wardata.h"
 
 	#ifdef TF_CLIENT_DLL
 		#include "tf_gamerules.h"
@@ -319,9 +318,6 @@ void CEconItemDescription::YieldingCacheDescriptionData( const CLocalizationProv
 	// New users helped.
 	YieldingFillOutAccountTypeCache( unAccountID, CTFPlayerInfo::k_nTypeID );
 
-	// War data
-	YieldingFillOutAccountTypeCache( unAccountID, CWarData::k_nTypeID );
-
 #ifdef CLIENT_DLL
 	// Duck LeaderBoards
 	{
@@ -381,7 +377,6 @@ void CEconItemDescription::GenerateDescriptionLines( const CLocalizationProvider
 		Generate_MapStampBundleTooltip( pLocalizationProvider, pEconItem );
 		Generate_FriendlyHat( pLocalizationProvider, pEconItem );
 		Generate_SquadSurplusClaimedBy( pLocalizationProvider, pEconItem );
-		Generate_MvmChallenges( pLocalizationProvider, pEconItem );
 		Generate_DynamicRecipe( pLocalizationProvider, pEconItem );
 #endif // PROJECT_TF
 		Generate_XifierToolTargetItem( pLocalizationProvider, pEconItem );
@@ -2042,95 +2037,6 @@ void CEconItemDescription::Generate_SaxxyAwardDesc( const CLocalizationProvider 
 											(uint32)cTime.GetYear() ),
 			     ATTRIB_COL_POSITIVE,
 				 kDescLineFlag_Misc );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEconItemDescription::Generate_MvmChallenges( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
-{
-	// Look for our "challenges completed" attribute. If we have this, we assume we're a badge
-	// of some kind. If we don't, we don't display MvM information. This would be a little weird
-	// for level 0 badges that have no completed challenges, but those are something that currently
-	// exist.
-	static CSchemaAttributeDefHandle pAttrDef_ChallengesCompleted( CTFItemSchema::k_rchMvMChallengeCompletedMaskAttribName );
-
-	uint32 unMask = 0;
-	if ( !pEconItem->FindAttribute( pAttrDef_ChallengesCompleted, &unMask ) )
-		return;
-	
-	// Look through our list of MvM tours to figure out which badge this came from. The badge itself
-	// doesn't know and we need this information to figure out which completion bits map to which
-	// missions.
-	const MvMTour_t *pTour = NULL;
-
-	FOR_EACH_VEC( GetItemSchema()->GetMvmTours(), i )
-	{
-		const MvMTour_t& tour = GetItemSchema()->GetMvmTours()[i];
-
-		if ( tour.m_pBadgeItemDef == pEconItem->GetItemDefinition() )
-		{
-			pTour = &tour;
-			break;
-		}
-	}
-
-	// Couldn't find a tour matching this badge? (This can happen if a client has a busted schema or if
-	// we remove a tour for some reason.)
-	if ( !pTour )
-		return;
-
-	const CUtlVector<MvMMission_t>& vecAllMissions = GetItemSchema()->GetMvmMissions();
-	CUtlVector<int> vecCompletedMissions;
-
-	FOR_EACH_VEC( pTour->m_vecMissions, i )
-	{
-		// Make sure our mission index is valid based on our current schema. If we're a client playing a
-		// game during a GC roll, we could wind up looking at someone else's badge where they have a
-		// mission that we don't understand.
-		const int iMissionIndex = pTour->m_vecMissions[i].m_iMissionIndex;
-		if ( !vecAllMissions.IsValidIndex( iMissionIndex ) )
-			continue;
-
-		const int iBadgeSlot = pTour->m_vecMissions[i].m_iBadgeSlot;
-		if ( iBadgeSlot >= 0 && ((unMask & (1U << iBadgeSlot)) != 0) )
-		{
-			vecCompletedMissions.AddToTail( iMissionIndex );
-		}
-	}
-
-	// Add a summary line for the number they have completed
-	AddDescLine(
-		CConstructLocalizedString(
-			pLocalizationProvider->Find( "#Attrib_MvMChallengesCompletedSummary" ),
-			uint32( vecCompletedMissions.Count() )
-		),
-		ATTRIB_COL_POSITIVE,
-		kDescLineFlag_Misc
-	);
-
-	// Detail lines for each completed challenge
-	FOR_EACH_VEC( vecCompletedMissions, i )
-	{
-		const MvMMission_t& mission = vecAllMissions[ vecCompletedMissions[i] ];
-		const MvMMap_t& map = GetItemSchema()->GetMvmMaps()[ mission.m_iDisplayMapIndex ];
-		const locchar_t *pszLocFmt = pLocalizationProvider->Find( "#Attrib_MvMChallengeCompletedDetail" );
-		const locchar_t *pszLocMap = pLocalizationProvider->Find( map.m_sDisplayName.Get() );
-		const locchar_t *pszLocChal = pLocalizationProvider->Find( mission.m_sDisplayName.Get() );
-		if ( pszLocFmt && pszLocMap && pszLocChal )
-		{
-			CConstructLocalizedString locLine(
-				pszLocFmt,
-				pszLocMap,
-				pszLocChal
-			);
-			AddDescLine(
-				locLine,
-				ATTRIB_COL_POSITIVE,
-				kDescLineFlag_Misc
-			);
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

@@ -641,6 +641,7 @@ const char *CPopulationManager::GetPopulationFilenameShort( void )
 //-------------------------------------------------------------------------
 void CPopulationManager::SetPopulationFilename( const char *populationFile )
 {
+	/* to be removed
 	m_bIsInitialized = false;
 	V_strcpy_safe( m_popfileFull, populationFile );
 	V_FileBase( m_popfileFull, m_popfileShort, sizeof( m_popfileShort ) );
@@ -653,6 +654,7 @@ void CPopulationManager::SetPopulationFilename( const char *populationFile )
 		TFObjectiveResource()->SetMannVsMachineChallengeIndex( GetItemSchema()->FindMvmMissionByName( m_popfileFull ) );
 		TFObjectiveResource()->SetMvMPopfileName( MAKE_STRING( m_popfileFull ) );
 	}
+	*/
 }
 
 //-------------------------------------------------------------------------

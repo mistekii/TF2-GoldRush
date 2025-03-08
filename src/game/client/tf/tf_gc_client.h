@@ -181,20 +181,6 @@ public:
 	// World status
 	const CMsgTFWorldStatus &WorldStatus() const { return m_WorldStatus; }
 
-	/// See if we've got a ticket
-	static bool BLocalPlayerInventoryHasMvmTicket( void );
-	static int GetLocalPlayerInventoryMvmTicketCount( void );
-
-	/// See if we've got a double-down
-	static bool BLocalPlayerInventoryHasSquadSurplusVoucher( void );
-	static int GetLocalPlayerInventorySquadSurplusVoucherCount( void );
-
-#ifdef USE_MVM_TOUR
-	/// Get info about the local player's badge.  Returns false if we can't
-	/// find his inventory or he doesn't own a badge
-	static bool BGetLocalPlayerBadgeInfoForTour( int iTourIndex, uint32 *pnBadgeLevel, uint32 *pnCompletedChallenges );
-#endif // USE_MVM_TOUR
-
 	// TODO(Universal Parties): Audit which of these is still in use
 	struct MatchMakerHealthData_t
 	{

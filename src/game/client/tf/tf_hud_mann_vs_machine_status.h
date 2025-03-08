@@ -21,10 +21,8 @@
 #include <vgui_controls/EditablePanel.h>
 #include <vgui/ISurface.h>
 #include "tf_hud_objectivestatus.h"
-#include "tf_hud_mann_vs_machine_victory.h"
 #include "tf_gcmessages.h"
 #include "tf_hud_mann_vs_machine_stats.h"
-#include "tf_hud_mann_vs_machine_loss.h"
 #include "tf_mann_vs_machine_stats.h"
 
 #define MAX_TANK_PROGRESS_BARS 5
@@ -326,7 +324,7 @@ public:
 
 	bool IsVictoryPanelVisible()
 	{
-		return m_pVictoryContainer && m_pVictoryContainer->IsVictoryPanelVisible();
+		return false;
 	}
 
 	virtual GameActionSet_t GetPreferredActionSet() { return IsActive() ? (IsVictoryPanelVisible() ? GAME_ACTION_SET_MENUCONTROLS : CHudElement::GetPreferredActionSet()) : GAME_ACTION_SET_NONE; }
@@ -346,8 +344,6 @@ private:
 	CWaveCompleteSummaryPanel *m_pWaveCompletePanel;
 
 	CVictorySplash *m_pVictorySplash;
-	CMvMVictoryPanelContainer *m_pVictoryContainer;
-	CMvMWaveLossPanel *m_pWaveLossPanel;
 
 	vgui::EditablePanel *m_pServerChangeMessage;
 
