@@ -1,7 +1,11 @@
 # Team Fortress 2: Gold Rush
-New source repository for Team Fortress 2: Gold Rush, rebuilt on the Team Fortress 2 code now included in the Source SDK
+New source repository for Team Fortress 2: Gold Rush, rebuilt on the Team Fortress 2 code now included in the Source SDK.
 
-VERY WIP!!!!! Right now we're starting the process of tearing most of the new TF2 stuff that was added. Might take a while.
+[Discord server invite](https://discord.gg/AxVzvcccfX)
+
+Note: VERY WIP!!!!! Right now we're in the process of tearing most of the new TF2 stuff that was added. Might take a while.
+
+(Meanwhile, you can download the old tf_port-based build [here](https://conneath.net/repo/tf_goldrush-20-02-25.7z).)
 ## Build instructions
 
 Clone the repository using the following command:
