@@ -11070,14 +11070,6 @@ void CTFPlayer::ItemPostFrame()
 		}
 	}
 
-#ifdef GAME_DLL
-	CTFWeaponBase *pActiveWeapon = GetActiveTFWeapon();
-	if ( pActiveWeapon )
-	{
-		pActiveWeapon->HandleInspect();
-	}
-#endif // GAME_DLL
-
 	BaseClass::ItemPostFrame();
 
 	// restore m_nButtons so all the afButtons are in correct state
@@ -14030,15 +14022,6 @@ CTFDroppedWeapon* CTFPlayer::GetDroppedWeaponInRange()
 		return NULL;
 
 	return pDroppedWeapon;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns true if player is inspecting
-//-----------------------------------------------------------------------------
-bool CTFPlayer::IsInspecting() const
-{
-	return m_flInspectTime != 0.f && gpGlobals->curtime - m_flInspectTime > 0.2f;
 }
 
 

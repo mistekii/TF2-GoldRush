@@ -3746,7 +3746,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropEHandle( RECVINFO( m_hGrapplingHookTarget ) ),
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
-	RecvPropFloat( RECVINFO( m_flInspectTime ) ),
 	RecvPropFloat( RECVINFO( m_flHelpmeButtonPressTime ) ),
 	RecvPropInt( RECVINFO( m_iCampaignMedals ) ),
 	RecvPropInt( RECVINFO( m_iPlayerSkinOverride ) ),
@@ -3769,7 +3768,6 @@ BEGIN_PREDICTION_DATA( C_TFPlayer )
 	DEFINE_PRED_FIELD( m_flTauntYaw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flCurrentTauntMoveSpeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flVehicleReverseTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flInspectTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flHelpmeButtonPressTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
 
@@ -3913,12 +3911,8 @@ C_TFPlayer::C_TFPlayer() :
 	m_bUsingActionSlot = false;
 	m_iCampaignMedals = 0;
 
-	m_flInspectTime = 0.f;
-
 	m_flHelpmeButtonPressTime = 0.f;
 	m_bRegenerating = false;
-
-	m_bNotifiedWeaponInspectThisLife = false;
 
 	m_pPasstimePlayerReticle = NULL;
 	m_pPasstimeAskForBallReticle = NULL;
@@ -4709,11 +4703,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 		if ( pActiveWeapon )
 		{
 			pActiveWeapon->UpdateVisibility();
-
-			if ( GetLocalTFPlayer() == this && pActiveWeapon->CanInspect() )
-			{
-				HandleInspectHint();
-			}
 		}
 
 		m_hOldActiveWeapon = pActiveWeapon;
@@ -7736,8 +7725,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 			m_hRevivePrompt->MarkForDeletion();
 			m_hRevivePrompt = NULL;
 		}
-
-		m_bNotifiedWeaponInspectThisLife = false;
 
 		// make sure the chat window has been restored to the appropriate place
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "CompetitiveGame_RestoreChatWindow", false );
@@ -11180,45 +11167,6 @@ void C_TFPlayer::GetGlowEffectColor( float *r, float *g, float *b )
 
 	TFGameRules()->GetTeamGlowColor( nTeam, *r, *g, *b );
 }
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static ConVar tf_inspect_hint_count( "tf_inspect_hint_count", "0", FCVAR_ARCHIVE );
-void C_TFPlayer::HandleInspectHint()
-{
-	int nNotifyCount = tf_inspect_hint_count.GetInt();
-	if ( nNotifyCount > 10 )
-		return;
-
-	if ( m_bNotifiedWeaponInspectThisLife )
-		return;
-
-	CHudNotificationPanel *pNotifyPanel = GET_HUDELEMENT( CHudNotificationPanel );
-	if ( pNotifyPanel )
-	{
-		wchar_t szNotification[1024]=L"";
-		wchar_t wKeyBind[80] = L"";
-		const wchar_t *wpszFormat = g_pVGuiLocalize->Find( "#Hint_inspect_weapon" );
-		if ( wpszFormat )
-		{
-			const char *key = engine->Key_LookupBinding( "+inspect" );
-			if ( !key || FStrEq( key, "(null)" ) )
-			{
-				key = "< not bound >";
-			}
-
-			g_pVGuiLocalize->ConvertANSIToUnicode( key, wKeyBind, sizeof( wKeyBind ) );
-			g_pVGuiLocalize->ConstructString_safe( szNotification, wpszFormat, 1, wKeyBind );
-			pNotifyPanel->SetupNotifyCustom( szNotification, "", GetTeamNumber() );
-
-			tf_inspect_hint_count.SetValue( nNotifyCount + 1 );
-		}
-
-		m_bNotifiedWeaponInspectThisLife = true;
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 

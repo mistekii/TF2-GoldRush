@@ -333,7 +333,7 @@ void CTFScatterGun::FireBullet( CTFPlayer *pPlayer )
 		{
 			pPlayer->m_bScattergunJump = true;
 
-			pOwner->m_Shared.StunPlayer( 0.3f, 1.f, TF_STUN_MOVEMENT | TF_STUN_MOVEMENT_FORWARD_ONLY );
+			//pOwner->m_Shared.StunPlayer( 0.3f, 1.f, TF_STUN_MOVEMENT | TF_STUN_MOVEMENT_FORWARD_ONLY );
 
 			float flForce = AirBurstDamageForce( pOwner->WorldAlignSize(), 60, 6.f );
 
@@ -404,7 +404,7 @@ void CTFScatterGun::ApplyPostHitEffects( const CTakeDamageInfo &inputInfo, CTFPl
 
 	pTarget->ApplyGenericPushbackImpulse( vecForce, pAttacker );
 
-	pTarget->m_Shared.StunPlayer( 0.3f, 1.f, TF_STUN_MOVEMENT | TF_STUN_MOVEMENT_FORWARD_ONLY, pAttacker );
+	//pTarget->m_Shared.StunPlayer( 0.3f, 1.f, TF_STUN_MOVEMENT | TF_STUN_MOVEMENT_FORWARD_ONLY, pAttacker );
 	pTarget->m_Shared.SetWeaponKnockbackID( pAttacker->GetUserID() );
 
 #endif

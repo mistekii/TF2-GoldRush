@@ -168,8 +168,6 @@ extern ConVar	tf_bot_quota_mode;
 extern ConVar	tf_bot_quota;
 extern ConVar	halloween_starting_souls;
 
-extern ConVar tf_powerup_mode_killcount_timer_length;
-
 float GetCurrentGravity( void );
 
 float			m_flNextReflectZap = 0.f;
@@ -236,7 +234,6 @@ ConVar tf_halloween_giant_health_scale( "tf_halloween_giant_health_scale", "10",
 ConVar tf_grapplinghook_los_force_detach_time( "tf_grapplinghook_los_force_detach_time", "1", FCVAR_CHEAT );
 ConVar tf_powerup_max_charge_time( "tf_powerup_max_charge_time", "30", FCVAR_CHEAT );
 
-extern ConVar tf_powerup_mode;
 extern ConVar tf_mvm_buybacks_method;
 extern ConVar tf_mvm_buybacks_per_wave;
 
@@ -587,7 +584,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( GetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( SetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( IsUsingActionSlot, "" )
-	DEFINE_SCRIPTFUNC( IsInspecting, "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetGrapplingHookTarget, "GetGrapplingHookTarget", "What entity is the player grappling?" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptSetGrapplingHookTarget, "SetGrapplingHookTarget", "Set the player's target grapple entity" )
 	DEFINE_SCRIPTFUNC( AddCustomAttribute, "Add a custom attribute to the player" )
@@ -829,7 +825,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropEHandle( SENDINFO( m_hGrapplingHookTarget ) ),
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
 	SendPropBool( SENDINFO( m_bUsingActionSlot ) ),
-	SendPropFloat( SENDINFO( m_flInspectTime ) ),
 	SendPropFloat( SENDINFO( m_flHelpmeButtonPressTime ) ),
 	SendPropInt( SENDINFO( m_iCampaignMedals ) ),
 	SendPropInt( SENDINFO( m_iPlayerSkinOverride ) ),
@@ -3511,8 +3506,6 @@ void CTFPlayer::Spawn()
 	m_nHookAttachedPlayers = 0;
 	m_bUsingActionSlot = false;
 
-	m_flInspectTime = 0.f;
-
 	m_flHelpmeButtonPressTime = 0.f;
 
 	m_flSendPickupWeaponMessageTime = -1.f;
@@ -4687,22 +4680,6 @@ void CTFPlayer::UseActionSlotItemReleased( void )
 			return;
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Handles pressing the inspect key.
-//-----------------------------------------------------------------------------
-void CTFPlayer::InspectButtonPressed()
-{
-	m_flInspectTime = gpGlobals->curtime;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Handles releasing the inspect key.
-//-----------------------------------------------------------------------------
-void CTFPlayer::InspectButtonReleased()
-{
-	m_flInspectTime = 0.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -8341,8 +8318,6 @@ ConVar tf_debug_damage( "tf_debug_damage", "0", FCVAR_CHEAT );
 int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
-
-	bool bIsObject = info.GetInflictor() && info.GetInflictor()->IsBaseObject(); 
 
 // need to check this now, before dying
 	bool bHadBallBeforeDamage = false;

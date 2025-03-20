@@ -39,7 +39,6 @@ public:
 	virtual bool		CanHolster( void ) const OVERRIDE;
 	virtual bool		VisibleInWeaponSelection( void ) { return true; }
 	virtual const CEconItemView *GetTauntItem() const OVERRIDE;
-	virtual bool		CanInspect() const OVERRIDE { return false; }
 
 	// IHasGenericMeter
 	virtual float		GetChargeInterval() const OVERRIDE { return 50.f; }

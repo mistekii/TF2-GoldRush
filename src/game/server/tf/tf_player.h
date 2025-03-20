@@ -1431,10 +1431,6 @@ public:
 	bool HasCampaignMedal( int iMedal );
 	void SetCampaignMedalActive( int iMedal ){ m_iCampaignMedals |= iMedal; }
 
-	void InspectButtonPressed();
-	void InspectButtonReleased();
-	bool IsInspecting() const;
-
 	bool HandleHelpmeTrace();
 	void HelpmeButtonPressed();
 	void HelpmeButtonReleased();
@@ -1468,8 +1464,6 @@ private:
 
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 	CNetworkVar( bool, m_bUsingActionSlot );
-
-	CNetworkVar( float, m_flInspectTime );
 
 	CNetworkVar( float, m_flHelpmeButtonPressTime );
 

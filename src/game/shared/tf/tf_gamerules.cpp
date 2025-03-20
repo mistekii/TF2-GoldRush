@@ -14819,14 +14819,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 				pTFPlayer->UseActionSlotItemReleased();
 			}
 		}
-		else if ( FStrEq( pszCommand, "+inspect_server" ) )
-		{
-			pTFPlayer->InspectButtonPressed();
-		}
-		else if ( FStrEq( pszCommand, "-inspect_server" ) )
-		{
-			pTFPlayer->InspectButtonReleased();
-		}
 		else if ( FStrEq( pszCommand, "+helpme_server" ) )
 		{
 			pTFPlayer->HelpmeButtonPressed();
@@ -18001,7 +17993,6 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_mm_strict", "hidden", NULL },
 	{ "tf_medieval", "medieval", NULL },
 	{ "mp_holiday_nogifts", "nogifts" },
-	{ "tf_powerup_mode", "powerup", NULL },
 	{ "tf_gamemode_passtime", "passtime", NULL },
 	{ "tf_gamemode_misc", "misc", NULL }, // catch-all for matchmaking to identify sd, tc, and pd servers via sv_tags
 };
