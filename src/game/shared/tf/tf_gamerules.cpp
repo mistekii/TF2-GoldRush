@@ -5975,10 +5975,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 					EconEntity_OnOwnerKillEaterEvent( pGrenadeLauncher, pTFAttacker, pVictim, kKillEaterEvent_DoubleDonks );
 				}
 			}
-			else if ( pTFAttacker && pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_FLAME_BALL && info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
-			{
-				eBonusEffect = kBonusEffect_DragonsFury;
-			}
 			else if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_SCOUT ) && !( pTFAttacker->GetFlags() & FL_ONGROUND ) )
 			{
 				// Make sure the weapon that did this damage is the same as the one that grants mini-crits
@@ -11886,10 +11882,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	{
 		killer_weapon_name = "spellbook_athletic";
 	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING )
-	{
-		killer_weapon_name = "dragons_fury_bonus";
-	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_KRAMPUS_MELEE )
 	{
 		killer_weapon_name = "krampus_melee";
@@ -12107,10 +12099,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 				*iWeaponID = TF_WEAPON_NONE;
 			}
 		}
-	}
-	else if ( 0 == Q_strcmp( killer_weapon_name, "tf_projectile_balloffire" ) )
-	{
-		killer_weapon_name = "dragons_fury";
 	}
 	else if ( 0 == Q_strcmp( killer_weapon_name, "obj_attachment_sapper" ) )
 	{
@@ -20251,8 +20239,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 			// Non-melee version
 			return ( dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) == NULL && 
 				iWeaponID != TF_WEAPON_NONE && !bHideDmgUpgrades && 
-				iWeaponID != TF_WEAPON_FLAMETHROWER && 
-				iWeaponID != TF_WEAPON_FLAME_BALL &&
+				iWeaponID != TF_WEAPON_FLAMETHROWER &&
 				!WeaponID_IsSniperRifleOrBow( iWeaponID ) && 
 				!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
 				!bMinigun );
@@ -20326,8 +20313,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 255:	// "airblast pushback scale"
 		{
-			return ( iWeaponID == TF_WEAPON_FLAME_BALL || 
-					 ( iWeaponID == TF_WEAPON_FLAMETHROWER && pWeaponGun && assert_cast< CTFFlameThrower* >( pWeaponGun )->CanAirBlastPushPlayer() ) );
+			return ( iWeaponID == TF_WEAPON_FLAMETHROWER && pWeaponGun && assert_cast< CTFFlameThrower* >( pWeaponGun )->CanAirBlastPushPlayer() );
 		}
 		break;
 	case 266:	// "projectile penetration"
@@ -20465,15 +20451,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	case 872:	// thermal_thruster_air_launch
 		{
 			return bRocketPack;
-		}
-	case 874:	// mult_item_meter_charge_rate
-		{
-			attrib_value_t eChargeType = ATTRIBUTE_METER_TYPE_NONE;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pEntity, eChargeType, item_meter_charge_type );
-			if ( eChargeType != ATTRIBUTE_METER_TYPE_NONE )
-			{
-				return ( iWeaponID != TF_WEAPON_FLAME_BALL );
-			}
 		}
 	case 875:	// explode_on_ignite
 		{

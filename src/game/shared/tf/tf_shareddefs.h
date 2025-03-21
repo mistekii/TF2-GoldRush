@@ -508,7 +508,6 @@ enum ETFWeaponType
 	TF_WEAPON_SLAP,
 	TF_WEAPON_JAR_GAS,
 	TF_WEAPON_GRENADE_JAR_GAS,
-	TF_WEAPON_FLAME_BALL,
 
 
 	//
@@ -570,7 +569,6 @@ enum ProjectileType_t
 	TF_PROJECTILE_SENTRY_ROCKET,
 	TF_PROJECTILE_BREAD_MONSTER,
 	TF_PROJECTILE_JAR_GAS,
-	TF_PROJECTILE_FLAME_BALL,	
 
 	// Add new entries here!
 
@@ -1250,8 +1248,6 @@ enum ETFDmgCustom
 	TF_DMG_CUSTOM_KART,
 	TF_DMG_CUSTOM_GIANT_HAMMER,
 	TF_DMG_CUSTOM_RUNE_REFLECT,
-	TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE,
-	TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING,
 	TF_DMG_CUSTOM_SLAP_KILL,
 	TF_DMG_CUSTOM_CROC,
 	TF_DMG_CUSTOM_TAUNTATK_GASBLAST,
@@ -1873,7 +1869,6 @@ enum EAttackBonusEffects_t
 	kBonusEffect_DoubleDonk,
 	kBonusEffect_WaterBalloonSploosh,
 	kBonusEffect_None = 4, // Must be 4.  Yep.
-	kBonusEffect_DragonsFury,
 	kBonusEffect_Stomp,
 
 	kBonusEffect_Count, // Must be 2nd to last

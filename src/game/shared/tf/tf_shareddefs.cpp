@@ -694,7 +694,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SLAP",
 	"TF_WEAPON_JAR_GAS",
 	"TF_WEAPON_GRENADE_JAR_GAS",
-	"TF_WEPON_FLAME_BALL",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aWeaponNames ) == TF_WEAPON_COUNT );
@@ -810,7 +809,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB, // TF_WEAPON_SLAP,
 	DMG_GENERIC, // TF_WEAPON_JAR_GAS
 	DMG_GENERIC, // TF_WEAPON_GRENADE_JAR_GAS
-	DMG_GENERIC | DMG_PREVENT_PHYSICS_FORCE, // TF_WEAPON_FLAME_BALL
 
 };
 
@@ -894,8 +892,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_KART",
 	"TF_DMG_CUSTOM_GIANT_HAMMER",
 	"TF_DMG_CUSTOM_RUNE_REFLECT",
-	"TF_DMG_CUSTOM_DRAGONS_FURY_IGNITE",
-	"TF_DMG_CUSTOM_DRAGONS_FURY_BONUS_BURNING",
 	"TF_DMG_CUSTOM_SLAP_KILL",
 	"TF_DMG_CUSTOM_CROC",
 	"TF_DMG_CUSTOM_TAUNTATK_GASBLAST",
@@ -958,7 +954,6 @@ const char *g_szProjectileNames[] =
 	"projectile_sentry_rocket",
 	"projectile_bread_monster",
 	"projectile_jar_gas",
-	"tf_projectile_balloffire",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_szProjectileNames ) == TF_NUM_PROJECTILES );
@@ -996,7 +991,6 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_SENTRY_ROCKET,
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_JAR_GAS,
-	TF_WEAPON_FLAME_BALL,
 
 };
 
