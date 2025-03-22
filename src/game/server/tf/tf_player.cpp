@@ -165,7 +165,6 @@ extern ConVar	tf_gravetalk;
 
 extern ConVar	tf_bot_quota_mode;
 extern ConVar	tf_bot_quota;
-extern ConVar	halloween_starting_souls;
 
 float GetCurrentGravity( void );
 

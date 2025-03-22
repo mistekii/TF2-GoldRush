@@ -104,7 +104,6 @@
 	#include "player_vs_environment/tf_upgrades.h"
 
 	#include "tf_wheel_of_doom.h"
-	#include "tf_halloween_souls_pickup.h"
 	#include "halloween/zombie/zombie.h"
 	#include "teamplay_round_timer.h"
 	#include "halloween/spell/tf_spell_pickup.h"
@@ -118,7 +117,6 @@
 	#include "workshop/maps_workshop.h"
 	#include "tf_passtime_logic.h"
 	#include "cdll_int.h"
-	#include "halloween/halloween_gift_spawn_locations.h"
 	#include "tf_weapon_invis.h"
 	#include "tf_gc_server.h"
 	#include "gcsdk/msgprotobuf.h"
@@ -3436,23 +3434,6 @@ void CTFGameRules::LevelInitPostEntity( void )
 #ifdef GAME_DLL
 	// Refind our proxy, because we might have had it deleted due to a mapmaker placed one
 	m_hGamerulesProxy = dynamic_cast<CTFGameRulesProxy*>( gEntList.FindEntityByClassname( NULL, "tf_gamerules" ) );
-
-	// Halloween
-	// Flush Halloween Gift Location and grab locations if applicable.  NonHalloween maps will have these as zero
-	m_halloweenGiftSpawnLocations.Purge();
-
-	if ( IsHolidayActive( kHoliday_Halloween ) )
-	{
-		for ( int i=0; i<IHalloweenGiftSpawnAutoList::AutoList().Count(); ++i )
-		{
-			CHalloweenGiftSpawnLocation* pGift = static_cast< CHalloweenGiftSpawnLocation* >( IHalloweenGiftSpawnAutoList::AutoList()[i] );
-			m_halloweenGiftSpawnLocations.AddToTail( pGift->GetAbsOrigin() );
-			UTIL_Remove( pGift );
-		}
-
-		// Ask Halloween System if there are any locations
-		AddHalloweenGiftPositionsForMap( STRING(gpGlobals->mapname), m_halloweenGiftSpawnLocations );
-	}
 
 	m_flMatchSummaryTeleportTime = -1.f;
 
@@ -8070,7 +8051,6 @@ void CTFGameRules::Think()
 		m_flNextFlagAlert = gpGlobals->curtime + 5.0f;
 	}
 
-	PeriodicHalloweenUpdate();
 	SpawnHalloweenBoss();
 
 	if ( IsHalloweenScenario( HALLOWEEN_SCENARIO_HIGHTOWER ) )
@@ -8203,49 +8183,6 @@ void CTFGameRules::Think()
 
 	BaseClass::Think();
 }
-
-#ifdef GAME_DLL
-
-void CTFGameRules::PeriodicHalloweenUpdate()
-{
-	// DEBUG
-
-	// Are we on a Halloween Map?
-	// Do we have Halloween Contracts?
-	if ( !IsHolidayActive( kHoliday_Halloween ) )
-		return;
-	
-	// Loop through each player that has a quest and spawn them a gift
-	if ( m_halloweenGiftSpawnLocations.Count() == 0 )
-		return;
-	
-	// If we've never given out gifts before, set the time
-	if ( m_flNextHalloweenGiftUpdateTime < 0 )
-	{
-		m_flNextHalloweenGiftUpdateTime = gpGlobals->curtime + RandomInt( 7, 12 ) * 60;
-		return;
-	}
-
-	if ( m_flNextHalloweenGiftUpdateTime > gpGlobals->curtime )
-		return;
-
-	m_flNextHalloweenGiftUpdateTime = gpGlobals->curtime + RandomInt( 7, 12 ) * 60;
-
-	CUtlVector< CTFPlayer* > playerVector;
-	CollectPlayers( &playerVector );
-	FOR_EACH_VEC( playerVector, i )
-	{
-		Vector vLocation = m_halloweenGiftSpawnLocations.Element( RandomInt( 0, m_halloweenGiftSpawnLocations.Count() - 1 ) );
-		CHalloweenGiftPickup *pGift = assert_cast<CHalloweenGiftPickup*>( CBaseEntity::CreateNoSpawn( "tf_halloween_gift_pickup", vLocation, vec3_angle, NULL ) );
-		if ( pGift )
-		{
-			pGift->SetTargetPlayer( playerVector[i] );
-			DispatchSpawn( pGift );
-		}
-	}
-	
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -10456,47 +10393,6 @@ void EconEntity_NonEquippedItemKillTracking( CTFPlayer *pOwner, CTFPlayer *pVict
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Sends a soul with the specified value to every living member of the
-//			specified team, originating from vecPosition.
-//-----------------------------------------------------------------------------
-void CTFGameRules::DropHalloweenSoulPackToTeam( int nAmount, const Vector& vecPosition, int nTeamNumber, int nSourceTeam )
-{
-	for( int iPlayerIndex = 1 ; iPlayerIndex <= MAX_PLAYERS; iPlayerIndex++ )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerIndex ) );
-		if ( !pTFPlayer || !pTFPlayer->IsConnected() )
-			continue;
-
-		if ( pTFPlayer->GetTeamNumber() != nTeamNumber || !pTFPlayer->IsAlive() || pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_GHOST_MODE ) )
-			continue;
-
-		DropHalloweenSoulPack( nAmount, vecPosition, pTFPlayer, nSourceTeam );
-	}
-}
-
-
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::DropHalloweenSoulPack( int nAmount, const Vector& vecSource, CBaseEntity *pTarget, int nSourceTeam )
-{
-	QAngle angles(0,0,0);
-	CHalloweenSoulPack *pSoulsPack = assert_cast<CHalloweenSoulPack*>( CBaseEntity::CreateNoSpawn( "halloween_souls_pack", vecSource, angles, NULL ) );
-
-	if ( pSoulsPack )
-	{	
-		pSoulsPack->SetTarget( pTarget );
-		pSoulsPack->SetAmount( nAmount );
-		pSoulsPack->ChangeTeam( nSourceTeam );
-
-		DispatchSpawn( pSoulsPack );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldDropSpellPickup()
@@ -10982,27 +10878,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 			if ( ShouldDropBonusDuckFromPlayer( pTFScorer, pTFVictim ) )
 			{
 				DropBonusDuck( pTFVictim->GetAbsOrigin(), pTFScorer, pAssister, pTFVictim, ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-			}
-		}
-
-		// Drop a halloween soul!
-		if ( IsHolidayActive( kHoliday_Halloween ) )
-		{
-			CBaseCombatCharacter* pBaseCombatScorer = dynamic_cast< CBaseCombatCharacter*>( pScorer ? pScorer : pKiller );
-			// No souls for a pure suicide
-			if ( pTFVictim != pBaseCombatScorer )
-			{
-				// Only spawn a soul if the target is a base combat character. 
-				if ( pTFVictim && pBaseCombatScorer )
-				{
-					DropHalloweenSoulPack( 1, pVictim->EyePosition(), pBaseCombatScorer, pTFVictim->GetTeamNumber() );
-				}
-
-				// Also spawn one for the assister
-				if ( pAssister )
-				{
-					DropHalloweenSoulPack( 1, pVictim->EyePosition(), pAssister, pTFVictim->GetTeamNumber() );
-				}
 			}
 		}
 	}
