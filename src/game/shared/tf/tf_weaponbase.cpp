@@ -1175,7 +1175,7 @@ bool CTFWeaponBase::Deploy( void )
 		if ( !pPlayer )
 			return false;
 
-		float flWeaponSwitchTime = 0.5f;
+		float flWeaponSwitchTime = 0.67f;
 
 		// Overrides the anim length for calculating ready time.
 		float flDeployTimeMultiplier = 1.0f;
@@ -1212,15 +1212,6 @@ bool CTFWeaponBase::Deploy( void )
 		
 		flDeployTimeMultiplier = MAX( flDeployTimeMultiplier, 0.00001f );
 		float flDeployTime = flWeaponSwitchTime * flDeployTimeMultiplier;
-		float flPlaybackRate = Clamp( ( 1.f / flDeployTimeMultiplier ) * ( 0.67f / flWeaponSwitchTime ), -4.f, 12.f ); // clamp between the range that's defined in send table
-		if ( pPlayer->GetViewModel(0) )
-		{
-			pPlayer->GetViewModel(0)->SetPlaybackRate( flPlaybackRate );
-		}
-		if ( pPlayer->GetViewModel(1) )
-		{
-			pPlayer->GetViewModel(1)->SetPlaybackRate( flPlaybackRate );
-		}
 		
 		// Don't override primary attacks that are already further out than this. This prevents
 		// people exploiting weapon switches to allow weapons to fire faster.
