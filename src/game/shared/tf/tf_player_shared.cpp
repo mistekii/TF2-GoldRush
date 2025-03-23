@@ -10640,15 +10640,6 @@ void CTFPlayer::SetItem( CTFItem *pItem )
 	m_hItem = pItem;
 
 #ifndef CLIENT_DLL
-	if ( pItem )
-	{
-		AddGlowEffect();
-	}
-	else
-	{
-		RemoveGlowEffect();
-	}
-
 	if ( pItem && pItem->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
 		RemoveInvisibility();
