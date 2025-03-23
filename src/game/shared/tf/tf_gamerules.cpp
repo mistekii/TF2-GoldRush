@@ -706,9 +706,6 @@ ConVar tf_mm_next_map_vote_time( "tf_mm_next_map_vote_time", "30", FCVAR_REPLICA
 
 static float g_fEternaweenAutodisableTime = 0.0f;
 
-ConVar tf_spec_xray( "tf_spec_xray", "1", FCVAR_NOTIFY | FCVAR_REPLICATED, "Allows spectators to see player glows. 1 = same team, 2 = both teams" );
-ConVar tf_spawn_glows_duration( "tf_spawn_glows_duration", "10", FCVAR_NOTIFY | FCVAR_REPLICATED, "How long should teammates glow after respawning\n" );
-
 #ifdef GAME_DLL
 void cc_tf_forced_holiday_changed( IConVar *pConVar, const char *pOldString, float flOldValue )
 {
@@ -5745,7 +5742,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 
 			if ( pVictim->m_Shared.InCond( TF_COND_URINE ) ||
 				 pVictim->m_Shared.InCond( TF_COND_MAD_MILK ) ||
-				 pVictim->m_Shared.InCond( TF_COND_GAS ) ||
 			   ( pVictim->GetWaterLevel() > WL_NotInWater ) ||
 			   ( ( flWaterExitTime > 0 ) && ( gpGlobals->curtime - flWaterExitTime < 5.0f ) ) ) // or they exited the water in the last few seconds
 			{
@@ -20049,7 +20045,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 							iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD ||
 							iWeaponID == TF_WEAPON_INVIS ||
 							iWeaponID == TF_WEAPON_SPELLBOOK ||
-							iWeaponID == TF_WEAPON_JAR_GAS ||
 							iWeaponID == TF_WEAPON_LUNCHBOX ||
 							bRocketPack;
 
@@ -20326,10 +20321,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	case 872:	// thermal_thruster_air_launch
 		{
 			return bRocketPack;
-		}
-	case 875:	// explode_on_ignite
-		{
-			return ( iWeaponID == TF_WEAPON_JAR_GAS );
 		}
 	}
 

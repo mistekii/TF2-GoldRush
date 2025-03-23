@@ -3290,9 +3290,6 @@ void CTFPlayer::Spawn()
 		m_bRespawning = false;
 		m_Shared.RemoveAllCond(); // Remove conc'd, burning, rotting, hallucinating, etc.
 
-		// add team glows for a period of time after we respawn
-		m_Shared.AddCond( TF_COND_TEAM_GLOWS, tf_spawn_glows_duration.GetInt() );
-
 		UpdateSkin( GetTeamNumber() );
 
 		// Prevent firing for a second so players don't blow their faces off
@@ -3666,11 +3663,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 		if ( m_Shared.InCond( TF_COND_MAD_MILK ) )
 		{
 			m_Shared.RemoveCond( TF_COND_MAD_MILK );
-		}
-
-		if ( m_Shared.InCond( TF_COND_GAS ) )
-		{
-			m_Shared.RemoveCond( TF_COND_GAS );
 		}
 
 		if ( m_Shared.InCond( TF_COND_BLEEDING ) )
@@ -9257,91 +9249,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		EconEntity_OnOwnerKillEaterEvent_Batched( pTFWeapon, pTFAttacker, this, kKillEaterEvent_PlayersHit, 1 );
 	}
 
-	if ( bTookDamage && m_Shared.InCond( TF_COND_GAS ) )
-	{
-		CTFPlayer *pTFGasTosser = dynamic_cast< CTFPlayer* >( m_Shared.GetConditionProvider( TF_COND_GAS ) );
-		if ( pTFGasTosser )
-		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "gas_doused_player_ignited" );
-			if ( event )
-			{
-				event->SetInt( "igniter", pAttacker ? pAttacker->entindex() : 0 );
-				event->SetInt( "douser", pTFGasTosser->entindex() );
-				event->SetInt( "victim", entindex() );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-
-		if ( IsPlayerClass( TF_CLASS_PYRO ) )
-		{
-			m_Shared.AddCond( TF_COND_BURNING_PYRO, tf_afterburn_max_duration );
-		}
-
-		CTFWeaponBase *pGasCan = nullptr;
-		if ( pTFGasTosser )
-		{
-			pGasCan = dynamic_cast<CTFWeaponBase*>( pTFGasTosser->GetEntityForLoadoutSlot( LOADOUT_POSITION_SECONDARY ) );
-		}
-
-		m_Shared.Burn( pTFGasTosser ? pTFGasTosser : this, ( pGasCan && pGasCan->GetWeaponID() == TF_WEAPON_JAR_GAS ) ? pGasCan : NULL, tf_afterburn_max_duration );
-		m_Shared.RemoveCond( TF_COND_GAS );
-
-		// Explode?
-		if ( pTFGasTosser && pGasCan )
-		{
-			int iExplodeOnIgnite = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pGasCan, iExplodeOnIgnite, explode_on_ignite );
-			if ( iExplodeOnIgnite )
-			{
-				bool bExploded = false;
-				float flRadius = 200.f;
-
-				CBaseEntity	*pObjects[32];
-				int nCount = UTIL_EntitiesInSphere( pObjects, ARRAYSIZE( pObjects ), GetAbsOrigin(), flRadius, FL_CLIENT );
-				for ( int i = 0; i < nCount; i++ )
-				{
-					if ( !pObjects[i] )
-						continue;
-
-					if ( !pObjects[i]->IsAlive() )
-						continue;
-
-// 						if ( pObjects[i] == this )
-// 							continue;
-
-					if ( pAttacker->InSameTeam( pObjects[i] ) )
-						continue;
-
-					CTFPlayer *pTFBlastVictim = ToTFPlayer( pObjects[i] );
-
-					if ( pTFBlastVictim->m_Shared.InCond( TF_COND_PHASE ) || pTFBlastVictim->m_Shared.InCond( TF_COND_PASSTIME_INTERCEPTION ) )
-						continue;
-
-					if ( pTFBlastVictim->m_Shared.IsInvulnerable() )
-						continue;
-
-					if ( pTFBlastVictim->m_Shared.InCond( TF_COND_BLEEDING ) )
-					{
-						if ( pTFBlastVictim->m_Shared.GetConditionProvider( TF_COND_BLEEDING ) == pTFGasTosser )
-							continue;
-					}
-							
-					if ( !FVisible( pTFBlastVictim, MASK_OPAQUE ) )
-						continue;
-
-					pTFBlastVictim->m_Shared.MakeBleed( pTFGasTosser, pGasCan, 0.1f, 350.f, false, TF_DMG_CUSTOM_BURNING );
-					DispatchParticleEffect( "dragons_fury_effect", pTFBlastVictim->GetAbsOrigin(), vec3_angle );
-					bExploded = true;
-				}
-
-				if ( bExploded )
-				{
-					EmitSound( "Weapon_Grenade_Pipebomb.Explode" );
-				}
-			}
-		}
-	}
-
 	// bHadBallBeforeDamage will always be false in non-passtime modes
 	if ( bTookDamage && bHadBallBeforeDamage )
 	{
@@ -9402,14 +9309,6 @@ void CTFPlayer::OnDealtDamage( CBaseCombatCharacter *pVictim, const CTakeDamageI
 		// Only do this if we charge on damage
 		if ( chargetype != ATTRIBUTE_METER_TYPE_DAMAGE && chargetype != ATTRIBUTE_METER_TYPE_COMBO )
 			continue;
-
-		// Don't allow "explode on ignite" damage to refill the gas can's meter
-		if ( IsPlayerClass( TF_CLASS_PYRO ) && eLoadoutPosition == LOADOUT_POSITION_SECONDARY && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			CTFWeaponBase *pTFWeapon = dynamic_cast< CTFWeaponBase* >( info.GetWeapon() );
-			if ( pTFWeapon && pTFWeapon->GetWeaponID() == TF_WEAPON_JAR_GAS && info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING )
-				continue;
-		}
 
 		IHasGenericMeter *pGenericMeterUser = dynamic_cast< IHasGenericMeter* >( GetEntityForLoadoutSlot( eLoadoutPosition, true ) );
 		if ( !pGenericMeterUser || !pGenericMeterUser->ShouldUpdateMeter() )

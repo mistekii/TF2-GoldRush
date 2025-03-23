@@ -228,7 +228,6 @@ extern ConVar mp_developer;
 #define TF_SCREEN_OVERLAY_MATERIAL_BLEED			"effects/bleed_overlay" 
 #define TF_SCREEN_OVERLAY_MATERIAL_STEALTH			"effects/stealth_overlay"
 #define TF_SCREEN_OVERLAY_MATERIAL_SWIMMING_CURSE	"effects/jarate_overlay" 
-#define TF_SCREEN_OVERLAY_MATERIAL_GAS				"effects/gas_overlay" 
 
 #define TF_SCREEN_OVERLAY_MATERIAL_PHASE	"effects/dodge_overlay"
 
@@ -1254,7 +1253,6 @@ CBaseEntity *CTFPlayerShared::GetConditionAssistFromVictim( void )
 		TF_COND_URINE,
 		TF_COND_MAD_MILK,
 		TF_COND_MARKEDFORDEATH,
-		TF_COND_GAS,
 	};
 
 	CBaseEntity *pProvider = NULL;
@@ -1803,10 +1801,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddCompetitiveLoser();
 		break;
 
-	case TF_COND_GAS:
-		OnAddCondGas();
-		break;
-
 	case TF_COND_ROCKETPACK:
 		OnAddRocketPack();
 		break;
@@ -2119,16 +2113,8 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveCompetitiveLoser();
 		break;
 
-	case TF_COND_GAS:
-		OnRemoveCondGas();
-		break;
-
 	case TF_COND_ROCKETPACK:
 		OnRemoveRocketPack();
-		break;
-
-	case TF_COND_BURNING_PYRO:
-		OnRemoveBurningPyro();
 		break;
 
 	case TF_COND_HALLOWEEN_HELL_HEAL:
@@ -2781,7 +2767,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		else if ( gpGlobals->curtime >= m_flFlameBurnTime )
 		{
 			// Burn the player (if not pyro, who does not take persistent burning damage)
-			if ( ( TF_CLASS_PYRO != m_pOuter->GetPlayerClass()->GetClassIndex() ) || InCond( TF_COND_BURNING_PYRO ) )
+			if ( TF_CLASS_PYRO != m_pOuter->GetPlayerClass()->GetClassIndex() )
 			{
 				float flBurnDamage = TF_BURNING_DMG;
 				int nKillType = TF_DMG_CUSTOM_BURNING;
@@ -2893,12 +2879,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		{
 			// If we're underwater, wash off the Mad Milk.
 			RemoveCond( TF_COND_MAD_MILK );
-		}
-
-		if ( InCond( TF_COND_GAS ) )
-		{
-			// If we're underwater, wash off the Gas.
-			RemoveCond( TF_COND_GAS );
 		}
 	}
 
@@ -3361,11 +3341,6 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 	if ( InCond( TF_COND_MAD_MILK ) )
 	{
 		RemoveCond( TF_COND_MAD_MILK );
-	}
-
-	if ( InCond( TF_COND_GAS ) )
-	{
-		RemoveCond( TF_COND_GAS );
 	}
 
 	if ( InCond( TF_COND_PLAGUE ) )
@@ -4458,19 +4433,6 @@ void CTFPlayerShared::OnAddRocketPack( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveRocketPack( void )
 {
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveBurningPyro( void )
-{
-#ifdef GAME_DLL
-	if ( m_pOuter->IsPlayerClass( TF_CLASS_PYRO) && InCond( TF_COND_BURNING ) )
-	{
-		RemoveCond( TF_COND_BURNING );
-	}
-#endif // GAME_DLL
 }
 
 //-----------------------------------------------------------------------------
@@ -6330,10 +6292,6 @@ void CTFPlayerShared::Burn( CTFPlayer *pAttacker, CTFWeaponBase *pWeapon, float 
 
 	// pyros don't burn persistently or take persistent burning damage, but we show brief burn effect so attacker can tell they hit
 	bool bVictimIsImmunePyro = ( TF_CLASS_PYRO ==  m_pOuter->GetPlayerClass()->GetClassIndex() );
-	if ( bVictimIsImmunePyro )
-	{
-		bVictimIsImmunePyro = !InCond( TF_COND_BURNING_PYRO );
-	}
 
 #ifdef DEBUG
 	static float s_flStartAfterburnTime = 0.f;
@@ -7304,57 +7262,6 @@ void CTFPlayerShared::OnRemoveSodaPopperHype( void )
 	if ( m_pOuter->IsLocalPlayer() )
 	{
 		m_pOuter->EmitSound( "DisciplineDevice.PowerDown" );
-	}
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Soda Popper Condition
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddCondGas( void )
-{
-#ifdef CLIENT_DLL
-	// don't need to add the effect if they're already burning
-	if ( !InCond( TF_COND_BURNING ) && !m_pOuter->m_pGasEffect )
-	{
-		// You'll only have the drip effect from the opposing team
-		m_pOuter->m_pGasEffect = m_pOuter->ParticleProp()->Create( ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE ) ? "gas_can_drips_red" : "gas_can_drips_blue", PATTACH_ABSORIGIN_FOLLOW );
-	}
-
-	if ( m_pOuter->m_pGasEffect )
-	{
-		m_pOuter->ParticleProp()->AddControlPoint( m_pOuter->m_pGasEffect, 1, m_pOuter, PATTACH_ABSORIGIN_FOLLOW );
-	}
-
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		IMaterial *pMaterial = materials->FindMaterial( TF_SCREEN_OVERLAY_MATERIAL_GAS, TEXTURE_GROUP_CLIENT_EFFECTS, false );
-		if ( !IsErrorMaterial( pMaterial ) )
-		{
-			view->SetScreenOverlayMaterial( pMaterial );
-		}
-	}
-
-#endif // CLIENT_DLL
-}
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveCondGas( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pGasEffect )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pGasEffect );
-		m_pOuter->m_pGasEffect = NULL;
-	}
-
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		// only remove the overlay if it is urine
-		IMaterial *pMaterial = view->GetScreenOverlayMaterial();
-		if ( pMaterial && FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_GAS ) )
-		{
-			view->SetScreenOverlayMaterial( NULL );
-		}
 	}
 #endif // CLIENT_DLL
 }

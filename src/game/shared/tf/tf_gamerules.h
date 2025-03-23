@@ -63,7 +63,6 @@ class CObjectSentrygun;
 class CGhost;
 class CUpgrades;
 
-extern ConVar	tf_spec_xray;
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
 extern ConVar	mp_tournament_blueteamname;
@@ -72,7 +71,6 @@ extern ConVar	tf_arena_force_class;
 extern ConVar	tf_arena_change_limit;
 extern ConVar	tf_ctf_bonus_time;
 extern ConVar	tf_mvm_respec_enabled;
-extern ConVar	tf_spawn_glows_duration;
 
 #ifdef GAME_DLL
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;

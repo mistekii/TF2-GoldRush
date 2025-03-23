@@ -5838,19 +5838,6 @@ void C_TFPlayer::ClientThink()
 		m_pFallingSoundLoop = NULL;
 	}
 
-	if ( HasTheFlag() && GetGlowObject() )
-	{
-		C_TFItem *pFlag = GetItem();
-		if ( pFlag->ShouldHideGlowEffect() )
-		{
-			GetGlowObject()->SetEntity( NULL );
-		}
-		else
-		{
-			GetGlowObject()->SetEntity( this );
-		}
-	}
-
 	m_Shared.ClientKillStreakBuffThink();
 
 /*
@@ -11128,33 +11115,6 @@ void C_TFPlayer::GetGlowEffectColor( float *r, float *g, float *b )
 #endif // TF_CREEP_MODE
 
 	int nTeam = GetTeamNumber();
-
-	C_TFPlayer *pLocalPlayer = GetLocalTFPlayer();
-	// In CTF, show health color glow for alive player
-	if ( pLocalPlayer && pLocalPlayer->IsAlive() && TFGameRules() && ( TFGameRules()->GetGameType() == TF_GAMETYPE_CTF ) && HasTheFlag() )
-	{
-		float flHealth = (float)GetHealth() / (float)GetMaxHealth();
-
-		if ( flHealth > 0.6 )
-		{
-			*r = 0.33f;
-			*g = 0.75f;
-			*b = 0.23f;
-		}
-		else if( flHealth > 0.3 )
-		{
-			*r = 0.75f;
-			*g = 0.72f;
-			*b = 0.23f;
-		}
-		else
-		{
-			*r = 0.75f;
-			*g = 0.23f;
-			*b = 0.23f;
-		}
-		return;
-	}
 
 	if ( !engine->IsHLTV() && ( GetLocalPlayerTeam() >= FIRST_GAME_TEAM ) )
 	{

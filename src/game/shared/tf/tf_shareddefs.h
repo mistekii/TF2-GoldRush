@@ -506,8 +506,6 @@ enum ETFWeaponType
 	TF_WEAPON_BREAKABLE_SIGN,
 	TF_WEAPON_ROCKETPACK,
 	TF_WEAPON_SLAP,
-	TF_WEAPON_JAR_GAS,
-	TF_WEAPON_GRENADE_JAR_GAS,
 
 
 	//
@@ -568,7 +566,6 @@ enum ProjectileType_t
 	TF_PROJECTILE_GRAPPLINGHOOK,
 	TF_PROJECTILE_SENTRY_ROCKET,
 	TF_PROJECTILE_BREAD_MONSTER,
-	TF_PROJECTILE_JAR_GAS,
 
 	// Add new entries here!
 
@@ -803,18 +800,15 @@ enum ETFCond
 	TF_COND_GRAPPLED_TO_PLAYER               = 120,
 	TF_COND_GRAPPLED_BY_PLAYER               = 121,
 	TF_COND_PARACHUTE_DEPLOYED               = 122, // activated at least once while player's been airborne, but not does mean it's active now (see TF_COND_PARACHUTE_ACTIVE)
-	TF_COND_GAS                              = 123,
-	TF_COND_BURNING_PYRO                     = 124,
-	TF_COND_ROCKETPACK                       = 125,
+	TF_COND_ROCKETPACK                       = 123,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 126,
+	TF_COND_LOST_FOOTING                     = 124,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 127,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 128,
-	TF_COND_POWERUPMODE_DOMINANT			 = 129,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 130,
+	TF_COND_AIR_CURRENT                      = 125,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 126,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 127,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//

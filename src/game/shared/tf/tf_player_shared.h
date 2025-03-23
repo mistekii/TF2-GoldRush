@@ -793,7 +793,6 @@ private:
 	void OnAddInPurgatory( void );
 	void OnAddCompetitiveWinner( void );
 	void OnAddCompetitiveLoser( void );
-	void OnAddCondGas( void );
 	void OnAddRocketPack( void );
 
 
@@ -866,9 +865,7 @@ private:
 	void OnRemoveInPurgatory( void );
 	void OnRemoveCompetitiveWinner( void );
 	void OnRemoveCompetitiveLoser( void );
-	void OnRemoveCondGas( void );
 	void OnRemoveRocketPack( void );
-	void OnRemoveBurningPyro( void );
 	
 
 	// Starting a new trend, putting Add and Remove next to each other
