@@ -498,7 +498,6 @@ enum ETFWeaponType
 	TF_WEAPON_PASSTIME_GUN,
 	TF_WEAPON_CHARGED_SMG,
 	TF_WEAPON_BREAKABLE_SIGN,
-	TF_WEAPON_ROCKETPACK,
 
 
 	//
@@ -783,15 +782,14 @@ enum ETFCond
 	TF_COND_PASSTIME_PENALTY_DEBUFF          = 114, // when carrying the ball without any teammates nearby
 	TF_COND_GRAPPLED_TO_PLAYER               = 115,
 	TF_COND_GRAPPLED_BY_PLAYER               = 116,
-	TF_COND_ROCKETPACK                       = 117,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 118,
+	TF_COND_LOST_FOOTING                     = 117,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 119,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 120,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 121,
+	TF_COND_AIR_CURRENT                      = 118,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 119,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 120,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//

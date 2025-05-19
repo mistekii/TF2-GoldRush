@@ -1826,11 +1826,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pTFPlayer, flIncreasedAirControl, mod_air_control_blast_jump );
 		}
 
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_ROCKETPACK ) )
-		{
-			flCap *= 0.5f;
-		}
-
 		return ( flCap * flIncreasedAirControl );
 	}
 }

@@ -109,7 +109,6 @@
 #include "tf_hud_chat.h"
 #include "tf_item_powerup_bottle.h"
 #include <vgui_controls/AnimationController.h>
-#include "tf_weapon_rocketpack.h"
 #include "econ_paintkit.h"
 #include "soundstartparams.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"

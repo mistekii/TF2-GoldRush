@@ -29,7 +29,6 @@
 #include "halloween/tf_weapon_spellbook.h"
 #include "tf_logic_halloween_2014.h"
 #include <game/client/iviewport.h>
-#include "tf_weapon_rocketpack.h"
 #include "tf_weapon_bonesaw.h"
 
 #include <vgui_controls/ImagePanel.h>
@@ -326,7 +325,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	{
 		DECLARE_ITEM_EFFECT_METER( CTFFlameThrower, TF_WEAPON_FLAMETHROWER, true, "resource/UI/HudItemEffectMeter_Pyro.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFFlareGun_Revenge, TF_WEAPON_FLAREGUN_REVENGE, false, "resource/UI/HUDItemEffectMeter_Engineer.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFRocketPack, TF_WEAPON_ROCKETPACK, false, "resource/UI/HudRocketPack.res" );
 		lambdaAddItemEffectMeter( "tf_weapon_rocketlauncher_fireball", false );
 		break;
 	}
@@ -1022,109 +1020,6 @@ int CHudItemEffectMeter_Weapon<CTFFlareGun_Revenge>::GetCount( void )
 	{
 		return 0.f;
 	}
-}
-
-template <>
-const char *CHudItemEffectMeter_Weapon<CTFRocketPack>::GetLabelText( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		return pRocketpack->IsEnabled() ? "#TF_RocketPack_Charges" : "#TF_RocketPack_Disabled";
-	}
-
-	return CHudItemEffectMeter::GetLabelText();
-}
-
-template <>
-const char *CHudItemEffectMeter_Weapon<CTFRocketPack>::GetIconName( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack && pRocketpack->IsEnabled() )
-	{
-
-		// enabled
-		return "../hud/pyro_jetpack";
-	}
-
-	// disabled
-	return "../hud/pyro_jetpack_off2";
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketPack>::GetNumProgressBar( void ) const
-{
-	return 2;
-}
-
-template <>
-Color CHudItemEffectMeter_Weapon<CTFRocketPack>::GetProgressBarColor( void )
-{	
-	if ( m_pPlayer )
-	{
-		if ( !m_pPlayer->m_Shared.IsRocketPackReady() )
-		{
-			return Color( 255, 0, 0, 255 );
-		}
-		else
-		{
-			return Color( 255, 255, 255, 255 );
-		}
-	}
-
-	return CHudItemEffectMeter::GetProgressBarColor();
-}
-
-template <>
-float CHudItemEffectMeter_Weapon<CTFRocketPack>::GetProgress( void )
-{
-	if ( m_pPlayer )
-		return m_pPlayer->m_Shared.GetRocketPackCharge() / 100.0f;
-	return 0;
-}
-
-template <>
-Color CHudItemEffectMeter_Weapon<CTFRocketPack>::GetLabelTextColor( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		return pRocketpack->IsEnabled() ? Color( 235, 235, 235, 255 ) : Color( 178, 178, 178, 255 );
-	}
-
-	return CHudItemEffectMeter::GetLabelTextColor();
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketPack>::GetState( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		enum
-		{
-			ROCKETPACK_DISABLED = 0,
-			ROCKETPACK_ENABLED,
-			ROCKETPACK_WAITFORPASSENGER,
-			ROCKETPACK_HASPASSENGER
-		};
-
-		if ( pRocketpack && pRocketpack->IsEnabled() )
-		{
-
-			return ROCKETPACK_ENABLED;
-		}
-
-		return ROCKETPACK_DISABLED;
-	}
-
-	return CHudItemEffectMeter::GetState();
-}
-
-template <>
-bool CHudItemEffectMeter_Weapon<CTFRocketPack>::ShouldAutoAdjustPosition( void ) const
-{
-	return false;
 }
 
 //-----------------------------------------------------------------------------

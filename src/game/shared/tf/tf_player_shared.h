@@ -456,10 +456,6 @@ public:
 
 	bool	IsEnteringOrExitingFullyInvisible( void );
 
-	bool	IsRocketPackReady( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ) >= 50.f; }
-	float	GetRocketPackCharge( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ); }
-	void	SetRocketPackCharge( float flValue ) { SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, flValue ); }
-
 	// generic meter per wpn slot
 	// lets assume the value goes from 0.f->100.f for now
 	void	UpdateItemChargeMeters();
@@ -699,8 +695,6 @@ public:
 
 	void GetConditionsBits( CBitVec< TF_COND_LAST >& vbConditions ) const;
 
-	void ApplyRocketPackStun( float flStunDuration );
-
 
 	void OnAttack( void );
 
@@ -789,7 +783,6 @@ private:
 	void OnAddInPurgatory( void );
 	void OnAddCompetitiveWinner( void );
 	void OnAddCompetitiveLoser( void );
-	void OnAddRocketPack( void );
 
 
 	void OnRemoveZoomed( void );
@@ -860,7 +853,6 @@ private:
 	void OnRemoveInPurgatory( void );
 	void OnRemoveCompetitiveWinner( void );
 	void OnRemoveCompetitiveLoser( void );
-	void OnRemoveRocketPack( void );
 	
 
 	// Starting a new trend, putting Add and Remove next to each other

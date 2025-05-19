@@ -8274,56 +8274,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			info.SetDamage( 0.0f );
 		}
 */
-
-		// Apply an impact effect (intensity determined by velocity)
-		if ( m_Shared.InCond( TF_COND_ROCKETPACK ) )
-		{
-			int iImpactPushback = 0;
-			CALL_ATTRIB_HOOK_INT( iImpactPushback, falling_impact_radius_pushback );
-			if ( iImpactPushback )
-			{
-				float flPushAmount = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, tf_rocketpack_impact_push_min.GetFloat(), tf_rocketpack_impact_push_max.GetFloat() );
-				float flPushRadius = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, 150.f, 220.f );
-			
-				// Stun, too?
-				int iImpactStun = 0;
-				CALL_ATTRIB_HOOK_INT( iImpactStun, falling_impact_radius_stun );
-				if ( iImpactStun && flOriginalVelocity >= 100.f )
-				{
-					float flStunTime = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, 1.5f, 3.f );
-					m_Shared.ApplyRocketPackStun( ( bHitEnemy ) ? 5.f : flStunTime );
-				}
-				
-				TFGameRules()->PushAllPlayersAway( GetAbsOrigin(), flPushRadius, flPushAmount, GetEnemyTeam( GetTeamNumber() ) );
-
-				m_Local.m_flFallVelocity = 0.f;
-
-				// Extinguish teammates
-				CUtlVector< CTFPlayer * > vecPlayers;
-				CollectPlayers( &vecPlayers, GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-				FOR_EACH_VEC( vecPlayers, i )
-				{
-					CTFPlayer *pPlayer = vecPlayers[i];
-					if ( !pPlayer )
-						continue;
-
-					if ( !pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
-						continue;
-
-					if ( ( pPlayer->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( flPushRadius * flPushRadius ) )
-						continue;
-
-					if ( !FVisible( pPlayer, MASK_OPAQUE ) )
-						continue;
-
-					pPlayer->m_Shared.RemoveCond( TF_COND_BURNING );
-					pPlayer->EmitSound( "TFPlayer.FlameOut" );
-					CTF_GameStats.Event_PlayerAwardBonusPoints( this, pPlayer, 10 );
-				}
-			}
-
-			info.SetDamage( Max( info.GetDamage() * 0.25f, 1.f ) );
-		}
 	}
 
 	// Ignore damagers on our team, to prevent capturing rocket jumping, etc.

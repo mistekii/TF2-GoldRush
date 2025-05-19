@@ -396,11 +396,10 @@ static const char *g_aConditionNames[] =
 	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 114
 	"TF_COND_GRAPPLED_TO_PLAYER",               // = 115
 	"TF_COND_GRAPPLED_BY_PLAYER",               // = 116
-	"TF_COND_ROCKETPACK",                       // = 117
-	"TF_COND_LOST_FOOTING",                     // = 118
-	"TF_COND_AIR_CURRENT",                      // = 119
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 120
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 121
+	"TF_COND_LOST_FOOTING",                     // = 117
+	"TF_COND_AIR_CURRENT",                      // = 118
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 119
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 120
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -673,7 +672,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_PASSTIME_GUN",
 	"TF_WEAPON_CHARGED_SMG",
 	"TF_WEAPON_BREAKABLE_SIGN",
-	"TF_WEAPON_ROCKETPACK",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aWeaponNames ) == TF_WEAPON_COUNT );
@@ -779,7 +777,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC, // TF_WEAPON_PASSTIME_GUN
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_CHARGED_SMG,
 	DMG_CLUB,		// TF_WEAPON_BREAKABLE_SIGN,
-	DMG_GENERIC, // TF_WEAPON_ROCKETPACK,
 
 };
 

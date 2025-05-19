@@ -552,7 +552,7 @@ public:
 	void InputRollRareSpell( inputdata_t &inputdata );
 	void InputRoundSpawn( inputdata_t &inputdata );
 
-	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) || m_Shared.InCond( TF_COND_ROCKETPACK ) ); }
+	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) ); }
 	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) || m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) ) ); }
 
 	void DoNoiseMaker(); // Halloween event item support.

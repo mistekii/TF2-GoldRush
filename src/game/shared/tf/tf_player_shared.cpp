@@ -31,7 +31,6 @@
 #include "tf_mapinfo.h"
 #include "tf_dropped_weapon.h"
 #include "tf_weapon_passtime_gun.h"
-#include "tf_weapon_rocketpack.h"
 #include <functional>
 
 // Client specific.
@@ -93,7 +92,6 @@
 #include "entity_healthkit.h"
 #include "halloween/merasmus/merasmus.h"
 #include "tf_wearable_levelable_item.h"
-#include "tf_weapon_rocketpack.h"
 #include "tf_obj_sentrygun.h"
 #include "func_respawnroom.h"
 #endif
@@ -1786,10 +1784,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddCompetitiveLoser();
 		break;
 
-	case TF_COND_ROCKETPACK:
-		OnAddRocketPack();
-		break;
-
 	case TF_COND_HALLOWEEN_HELL_HEAL:
 		OnAddHalloweenHellHeal();
 		break;
@@ -2088,10 +2082,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_COMPETITIVE_LOSER:
 		OnRemoveCompetitiveLoser();
-		break;
-
-	case TF_COND_ROCKETPACK:
-		OnRemoveRocketPack();
 		break;
 
 	case TF_COND_HALLOWEEN_HELL_HEAL:
@@ -2958,38 +2948,6 @@ void CTFPlayerShared::ConditionThink( void )
 		// Airborne conditions end on ground contact
 		RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 		RemoveCond( TF_COND_AIR_CURRENT );
-
-		if ( InCond( TF_COND_ROCKETPACK ) )
-		{
-			// Make sure we're still not dealing with launch, where it's possible
-			// to hit your head and fall to the ground before the second stage.
-			CTFWeaponBase *pRocketPack = m_pOuter->Weapon_OwnsThisID( TF_WEAPON_ROCKETPACK );
-			if ( pRocketPack )
-			{
-				if ( gpGlobals->curtime > ( static_cast< CTFRocketPack* >( pRocketPack )->GetRefireTime() ) )
-				{
-#ifdef CLIENT_DLL
-					if ( prediction->IsFirstTimePredicted() )
-#endif
-					{
-						CPASAttenuationFilter filter( m_pOuter );
-						filter.UsePredictionRules();
-						m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Weapon_RocketPack.BoostersShutdown" );
-						m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Weapon_RocketPack.Land" );
-					}
-					RemoveCond( TF_COND_ROCKETPACK );
-
-#ifdef GAME_DLL
-					IGameEvent *pEvent = gameeventmanager->CreateEvent( "rocketpack_landed" );
-					if ( pEvent )
-					{
-						pEvent->SetInt( "userid", m_pOuter->GetUserID() );
-						gameeventmanager->FireEvent( pEvent );
-					}
-#endif
-				}
-			}
-		}
 	}
 
 	// See if we should be pulsing our radius heal
@@ -4319,62 +4277,6 @@ void CTFPlayerShared::OnRemoveMarkedForDeathSilent( void )
 void CTFPlayerShared::OnRemoveDisguisedAsDispenser( void )
 {
 	m_pOuter->TeamFortress_SetSpeed();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRocketPack( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRocketPack( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::ApplyRocketPackStun( float flStunDuration )
-{
-	if ( flStunDuration < 0.1f )
-		return;
-
-#ifdef GAME_DLL
-	int nStunFlags = TF_STUN_CONTROLS;
-	float flStunAmount = 0.85f;
-	const int nMaxEnts = 24;
-	CBaseEntity	*pObjects[ nMaxEnts ];
-	int nCount = UTIL_EntitiesInSphere( pObjects, nMaxEnts, m_pOuter->GetAbsOrigin(), 192.f, FL_CLIENT );
-	for ( int i = 0; i < nCount; i++ )
-	{
-		if ( !pObjects[i] )
-			continue;
-
-		if ( !pObjects[i]->IsAlive() )
-			continue;
-
-		if ( m_pOuter->InSameTeam( pObjects[i] ) )
-			continue;
-
-		if ( !m_pOuter->FVisible( pObjects[i], MASK_OPAQUE ) )
-			continue;
-
-		CTFPlayer *pTFPlayer = ToTFPlayer( pObjects[i] );
-		if ( !pTFPlayer )
-			continue;
-
-		if ( pTFPlayer->IsMiniBoss() )
-		{
-			nStunFlags = TF_STUN_MOVEMENT | TF_STUN_NO_EFFECTS;
-		}
-
-		pTFPlayer->m_Shared.StunPlayer( flStunDuration, flStunAmount, nStunFlags );
-	}
-#endif // GAME_DLL
 }
 
 
@@ -7362,9 +7264,6 @@ void CTFPlayerShared::UpdateItemChargeMeters()
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::CanFallStomp( void )
 {
-	if ( InCond( TF_COND_ROCKETPACK ) )
-		return true;
-
 	int iHeadStomp = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pOuter, iHeadStomp, boots_falling_stomp );
 

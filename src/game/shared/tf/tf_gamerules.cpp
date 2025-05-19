@@ -11623,7 +11623,7 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BOOTS_STOMP )
 	{
-		killer_weapon_name = ( pTFKiller && pTFKiller->m_Shared.InCond( TF_COND_ROCKETPACK ) ) ? "rocketpack_stomp" : "mantreads";
+		killer_weapon_name = "mantreads";
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BASEBALL )
 	{
@@ -20004,7 +20004,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	int iWeaponID = ( pWeapon ) ? pWeapon->GetWeaponID() : TF_WEAPON_NONE;
 	CTFWearableDemoShield *pShield = ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) ) ? dynamic_cast< CTFWearableDemoShield* >( pEntity ) : NULL;
 	bool bShield = ( pShield ) ? true : false;
-	bool bRocketPack = ( iWeaponID == TF_WEAPON_ROCKETPACK );
 
 	// Hack to simplify excluding non-weapons from damage upgrades
 	bool bHideDmgUpgrades = iWeaponID == TF_WEAPON_NONE || 
@@ -20015,8 +20014,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 							iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD ||
 							iWeaponID == TF_WEAPON_INVIS ||
 							iWeaponID == TF_WEAPON_SPELLBOOK ||
-							iWeaponID == TF_WEAPON_LUNCHBOX ||
-							bRocketPack;
+							iWeaponID == TF_WEAPON_LUNCHBOX;
 
 	// What tier upgrade is it?
 	int nQuality = pUpgrade->nQuality;
@@ -20246,8 +20244,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 396:		// "melee attack rate bonus"
 		{
-			bool bAllowed = ( !bRocketPack && 
-							iWeaponID != TF_WEAPON_BAT_WOOD &&
+			bool bAllowed = ( iWeaponID != TF_WEAPON_BAT_WOOD &&
 							iWeaponID != TF_WEAPON_BUFF_ITEM && 
 							!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
 							dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) );
@@ -20288,9 +20285,8 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 			return ( iWeaponID == TF_WEAPON_MEDIGUN );
 		}
 	case 871:	// falling_impact_radius_stun
-	case 872:	// thermal_thruster_air_launch
 		{
-			return bRocketPack;
+			return false;
 		}
 	}
 
@@ -20306,7 +20302,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		if ( pMelee )
 		{
 			// All melee weapons except buff banners
-			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades && !bRocketPack );
+			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades );
 		}
 
 		return false;
