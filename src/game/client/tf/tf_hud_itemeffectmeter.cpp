@@ -1064,7 +1064,7 @@ bool CHudItemEffectMeter_Weapon<CTFRevolver>::IsEnabled( void )
 	{
 		int iExtraDamageOnHit = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iExtraDamageOnHit, extra_damage_on_hit );
-		return pWeapon->SapperKillsCollectCrits() || iExtraDamageOnHit;
+		return iExtraDamageOnHit;
 	}
 	else
 	{
