@@ -499,11 +499,6 @@ public:
 	void	SetScoutEnergyDrinkMeter( float val ) { m_flEnergyDrinkMeter = val; }
 	void	UpdateEnergyDrinkMeter( void );
 
-	float	GetScoutHypeMeter() const		{ return m_flHypeMeter; }
-	void	SetScoutHypeMeter( float val );
-	void	StopScoutHypeDrain( void )		{ RemoveCond( TF_COND_SODAPOPPER_HYPE ); }
-	bool	IsHypeBuffed( void ) const		{ return InCond( TF_COND_SODAPOPPER_HYPE ); }
-
 	void	DemoShieldChargeThink( void );
 	void	UpdateChargeMeter( void );
 	float	GetDemomanChargeMeter() const		{ return m_flChargeMeter; }
@@ -725,7 +720,6 @@ private:
 	void OnAddDisguised( void );
 	void OnAddDemoCharge( void );
 	void OnAddCritBoost( void );
-	void OnAddSodaPopperHype( void );
 	void OnAddOverhealed( void );
 	void OnAddFeignDeath( void );
 	void OnAddStunned( void );
@@ -794,7 +788,6 @@ private:
 	void OnRemoveTeleported( void );
 	void OnRemoveDemoCharge( void );
 	void OnRemoveCritBoost( void );
-	void OnRemoveSodaPopperHype( void );
 	void OnRemoveTmpDamageBonus( void );
 	void OnRemoveOverhealed( void );
 	void OnRemoveFeignDeath( void );

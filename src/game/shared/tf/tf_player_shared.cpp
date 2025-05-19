@@ -1569,10 +1569,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddCritBoost();
 		break;
 
-	case TF_COND_SODAPOPPER_HYPE:
-		OnAddSodaPopperHype();
-		break;
-
 	case TF_COND_DISGUISING:
 		OnAddDisguising();
 		break;
@@ -1829,10 +1825,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
 		OnRemoveCritBoost();
-		break;
-
-	case TF_COND_SODAPOPPER_HYPE:
-		OnRemoveSodaPopperHype();
 		break;
 
 	case TF_COND_TMPDAMAGEBONUS:
@@ -7028,29 +7020,6 @@ void CTFPlayerShared::UpdateCritBoostEffect( ECritBoostUpdateType eUpdateType )
 #endif
 
 //-----------------------------------------------------------------------------
-// Soda Popper Condition
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddSodaPopperHype( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		m_pOuter->EmitSound( "DisciplineDevice.PowerUp" );
-	}
-#endif // CLIENT_DLL
-}
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveSodaPopperHype( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		m_pOuter->EmitSound( "DisciplineDevice.PowerDown" );
-	}
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 float CTFPlayerShared::GetStealthNoAttackExpireTime( void )
@@ -10326,20 +10295,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		}
 	}
 
-	if ( playerclass == TF_CLASS_SCOUT )
-	{
-		if ( Weapon_OwnsThisID( TF_WEAPON_PEP_BRAWLER_BLASTER ) )
-		{
-			// Make this change based on attrs, hardcode right now
-			maxfbspeed *= RemapValClamped( m_Shared.GetScoutHypeMeter(), 0.0f, 100.0f, 1.0f, 1.45f );
-		}
-		// Atomic Punch gives a move bonus while active
-// 		if ( m_Shared.InCond( TF_COND_PHASE ) )
-// 		{
-// 			maxfbspeed *= 1.25f;
-// 		}
-	}
-
 	// Mann Vs Machine mode has a speed penalty for carrying the flag
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 	{
@@ -11874,14 +11829,6 @@ bool CTFPlayer::CanAirDash( void ) const
 	if ( !bScout )
 		return false;
 
-	if ( m_Shared.InCond( TF_COND_SODAPOPPER_HYPE ) )
-	{
-		if ( m_Shared.GetAirDash() < 5 )
-			return true;
-		else
- 			return false;
-	}
-
 	CTFWeaponBase *pTFActiveWeapon = GetActiveTFWeapon();
 	int iDashCount = tf_scout_air_dash_count.GetInt();
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFActiveWeapon, iDashCount, air_dash_count );
@@ -13084,15 +13031,6 @@ void CTFPlayerShared::UpdateEnergyDrinkMeter( void )
 
 	if ( bIsLocalPlayer )
 	{
-		if ( IsHypeBuffed() )
-		{
-			m_flHypeMeter -= gpGlobals->frametime * (m_fEnergyDrinkConsumeRate*0.75f);
-			if ( m_flHypeMeter <= 0.0f )
-			{
-				RemoveCond( TF_COND_SODAPOPPER_HYPE );
-			}
-		}
-
 		if ( InCond( TF_COND_PHASE ) || InCond( TF_COND_ENERGY_BUFF ) )
 		{
 			// Drain the meter
@@ -13135,25 +13073,6 @@ void CTFPlayerShared::UpdateEnergyDrinkMeter( void )
 			}
 		}
 	}
-}
-
-void CTFPlayerShared::SetScoutHypeMeter( float val )
-{
-	if ( IsHypeBuffed() )
-		return;
-
-	m_flHypeMeter = Clamp(val, 0.0f, 100.0f);
-	//if ( m_flHypeMeter >= 100.f )
-	//{
-	//	if ( m_pOuter->IsPlayerClass( TF_CLASS_SCOUT ) )
-	//	{
-	//		CTFWeaponBase* pWeapon = m_pOuter->GetActiveTFWeapon();
-	//		if ( pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_SODA_POPPER )
-	//		{
-	//			AddCond( TF_COND_CRITBOOSTED_HYPE );
-	//		}
-	//	}
-	//}
 }
 
 //-----------------------------------------------------------------------------

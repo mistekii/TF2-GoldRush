@@ -2034,11 +2034,6 @@ public:
 				}
 				pPlayer->m_Shared.m_bChargeGlowing = false;
 			}
-			else if ( pPlayer->m_Shared.IsHypeBuffed() )
-			{
-				vResult = Vector( 50, 2, 48 );
-				pPlayer->m_Shared.m_bChargeGlowing = false;
-			}
 			else if ( pPlayer->m_Shared.InCond( TF_COND_OFFENSEBUFF ) || pPlayer->m_Shared.InCond( TF_COND_ENERGY_BUFF ) )
 			{
 				// Temporarily hijacking this proxy for buff FX.

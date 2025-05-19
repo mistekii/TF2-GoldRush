@@ -269,8 +269,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		DECLARE_ITEM_EFFECT_METER( CTFBat_Wood, TF_WEAPON_BAT_WOOD, true, NULL );
 		DECLARE_ITEM_EFFECT_METER( CTFLunchBox_Drink, TF_WEAPON_LUNCHBOX, true, "resource/UI/HudItemEffectMeter_Scout.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFJarMilk, TF_WEAPON_JAR_MILK, true, "resource/UI/HudItemEffectMeter_Scout.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFSodaPopper, TF_WEAPON_SODA_POPPER, true, "resource/UI/HudItemEffectMeter_SodaPopper.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFPEPBrawlerBlaster, TF_WEAPON_PEP_BRAWLER_BLASTER, true, "resource/UI/HudItemEffectMeter_SodaPopper.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFCleaver, TF_WEAPON_CLEAVER, true, "resource/UI/HudItemEffectMeter_Cleaver.res" );
 		break;
 
@@ -842,18 +840,6 @@ bool CHudItemEffectMeter_Weapon<CTFFlameThrower>::ShouldFlash( void )
 	{
 		return false;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Soda Popper Flash
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFSodaPopper>::ShouldFlash( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	return m_pPlayer->m_Shared.GetScoutHypeMeter() >= 100.0f;
 }
 
 //-----------------------------------------------------------------------------

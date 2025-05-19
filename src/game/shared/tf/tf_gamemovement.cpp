@@ -843,17 +843,6 @@ void CTFGameMovement::AirDash( void )
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flJumpMod, mod_jump_height_from_weapon );
 	}
 
-	// Lose hype on airdash
-	int iHypeResetsOnJump = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iHypeResetsOnJump, hype_resets_on_jump );
-	if ( iHypeResetsOnJump != 0 )
-	{
-		// Loose x hype on jump
-		float flHype = m_pTFPlayer->m_Shared.GetScoutHypeMeter();
-		m_pTFPlayer->m_Shared.SetScoutHypeMeter( flHype - iHypeResetsOnJump );
-		m_pTFPlayer->TeamFortress_SetSpeed();
-	}
-
   	float flDashZ = 268.3281572999747f * flJumpMod;
 
 	// Get the wish direction.

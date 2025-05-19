@@ -19,8 +19,6 @@
 #define CTFShotgun_Pyro C_TFShotgun_Pyro
 #define CTFScatterGun C_TFScatterGun
 #define CTFShotgun_Revenge C_TFShotgun_Revenge
-#define CTFSodaPopper C_TFSodaPopper
-#define CTFPEPBrawlerBlaster C_TFPEPBrawlerBlaster
 #define CTFLeech C_TFLeech
 #endif
 
@@ -114,10 +112,6 @@ public:
 	virtual void	FinishReload( void );
 	virtual bool	HasKnockback( void );
 	virtual bool	SendWeaponAnim( int iActivity );
-
-#ifdef GAME_DLL
-	virtual void	Equip( CBaseCombatCharacter *pOwner );
-#endif // GAME_DLL
 };
 
 class CTFShotgun_Soldier : public CTFShotgun
@@ -149,35 +143,6 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_SHOTGUN_PYRO; }
-};
-
-class CTFSodaPopper : public CTFScatterGun
-{
-public:
-	DECLARE_CLASS( CTFSodaPopper, CTFScatterGun );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_SODA_POPPER; }
-
-	virtual void	ItemBusyFrame( void );
-	virtual void	SecondaryAttack( void );
-
-	const char*		GetEffectLabelText( void )			{ return "#TF_HYPE"; }
-	float			GetProgress( void );
-};
-
-class CTFPEPBrawlerBlaster : public CTFScatterGun
-{
-public:
-	DECLARE_CLASS( CTFPEPBrawlerBlaster, CTFScatterGun );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_PEP_BRAWLER_BLASTER; }
-
-	const char*		GetEffectLabelText( void )			{ return "#TF_Boost"; }
-	float			GetProgress( void );
 };
 
 #endif // TF_WEAPON_SHOTGUN_H

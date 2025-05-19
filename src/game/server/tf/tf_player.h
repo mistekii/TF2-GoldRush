@@ -744,9 +744,6 @@ public:
 	bool				ScriptIsRageDraining()						{ return m_Shared.IsRageDraining(); }
 	float				ScriptGetRageMeter()						{ return m_Shared.GetRageMeter(); }
 	void				ScriptSetRageMeter( float flValue )			{ return m_Shared.SetRageMeter( flValue ); }
-	float				ScriptGetScoutHypeMeter()					{ return m_Shared.GetScoutHypeMeter(); }
-	void				ScriptSetScoutHypeMeter( float flValue )	{ return m_Shared.SetScoutHypeMeter( flValue ); }
-	bool				ScriptIsHypeBuffed()						{ return m_Shared.IsHypeBuffed(); }
 	bool				ScriptIsJumping()							{ return m_Shared.IsJumping(); }
 	bool				ScriptIsAirDashing()						{ return m_Shared.IsAirDashing(); }
 	bool				ScriptIsControlStunned()					{ return m_Shared.IsControlStunned(); }

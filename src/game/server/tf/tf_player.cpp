@@ -606,9 +606,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsRageDraining, "IsRageDraining", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetRageMeter, "GetRageMeter", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptSetRageMeter, "SetRageMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptGetScoutHypeMeter, "GetScoutHypeMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptSetScoutHypeMeter, "SetScoutHypeMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptIsHypeBuffed, "IsHypeBuffed", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsJumping, "IsJumping", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsAirDashing, "IsAirDashing", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsControlStunned, "IsControlStunned", "" )
@@ -1862,22 +1859,6 @@ void CTFPlayer::PreThink()
 			{
 				m_Local.m_iHideHUD &= ~HIDEHUD_MISCSTATUS;
 			}
-		}
-	}
-
-	// Hype Decreases over time
-	if ( IsPlayerClass( TF_CLASS_SCOUT ) )
-	{
-		float flHypeDecays = 0;
-		CALL_ATTRIB_HOOK_FLOAT( flHypeDecays, hype_decays_over_time );
-
-		if ( flHypeDecays != 0 )
-		{
-			// Loose hype over time
-			float flHype = m_Shared.GetScoutHypeMeter();
-			flHype = flHype - flHypeDecays;
-			m_Shared.SetScoutHypeMeter( flHype );
-			TeamFortress_SetSpeed();
 		}
 	}
 
@@ -3227,8 +3208,6 @@ void CTFPlayer::Spawn()
 
 	m_Shared.SetSpyCloakMeter( 100.0f );
 	m_Shared.SetScoutEnergyDrinkMeter( 100.0f );
-	m_Shared.SetScoutHypeMeter( 0.0f );
-	m_Shared.StopScoutHypeDrain();
 	m_Shared.SetRageMeter( 0.0f );
 	m_Shared.SetDemomanChargeMeter( 100.0f );
 
@@ -8872,20 +8851,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		{
 			float flInverseRageGainScale = TFGameRules()->IsMannVsMachineMode() ? 12.f : 3.f;
 			HandleRageGain( pTFAttacker, kRageBuffFlag_OnBurnDamageDealt, info.GetDamage() * flRageScale, flInverseRageGainScale );
-		}
-	}
-
-	if ( IsPlayerClass( TF_CLASS_SCOUT) )
-	{
-		// Lose hype on take damage
-		int iHypeResetsOnTakeDamage = 0;
-		CALL_ATTRIB_HOOK_INT( iHypeResetsOnTakeDamage, lose_hype_on_take_damage );
-		if ( iHypeResetsOnTakeDamage != 0 )
-		{
-			// Loose x hype on jump
-			float flHype = m_Shared.GetScoutHypeMeter();
-			m_Shared.SetScoutHypeMeter( flHype - iHypeResetsOnTakeDamage * info.GetDamage() );
-			TeamFortress_SetSpeed();
 		}
 	}
 

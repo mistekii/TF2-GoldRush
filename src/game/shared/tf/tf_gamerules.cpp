@@ -7143,17 +7143,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( info.GetWeapon(), flRealDamage, blast_dmg_to_self );
 			}
 		}
-
-		if ( pTFAttacker && ( pTFAttacker != pVictim ) )
-		{
-			int iHypeOnDamage = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iHypeOnDamage, hype_on_damage );
-			if ( iHypeOnDamage )
-			{
-				float flHype = RemapValClamped( flRealDamage, 1.f, 200.f, 1.f, 50.f );
-				pTFAttacker->m_Shared.SetScoutHypeMeter( Min( 100.f, flHype + pTFAttacker->m_Shared.GetScoutHypeMeter() ) );
-			}
-		}
 	}
 
 	return flRealDamage;

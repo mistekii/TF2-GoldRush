@@ -33,8 +33,6 @@ CREATE_SIMPLE_WEAPON_TABLE( TFShotgun_HWG, tf_weapon_shotgun_hwg )
 CREATE_SIMPLE_WEAPON_TABLE( TFShotgun_Pyro, tf_weapon_shotgun_pyro )
 CREATE_SIMPLE_WEAPON_TABLE( TFScatterGun, tf_weapon_scattergun )
 CREATE_SIMPLE_WEAPON_TABLE( TFShotgun_Revenge, tf_weapon_sentry_revenge )
-CREATE_SIMPLE_WEAPON_TABLE( TFSodaPopper, tf_weapon_soda_popper )
-CREATE_SIMPLE_WEAPON_TABLE( TFPEPBrawlerBlaster, tf_weapon_pep_brawler_blaster )
 
 #define SCATTERGUN_KNOCKBACK_MIN_DMG		30.0f
 #define SCATTERGUN_KNOCKBACK_MIN_RANGE_SQ	160000.0f //400x400
@@ -493,67 +491,3 @@ bool CTFScatterGun::SendWeaponAnim( int iActivity )
 
 	return BaseClass::SendWeaponAnim( iActivity );
 }
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-void CTFScatterGun::Equip( CBaseCombatCharacter *pOwner )
-{
-	CTFPlayer *pPlayer = dynamic_cast<CTFPlayer*>( pOwner );
-	if ( pPlayer )
-	{
-		pPlayer->m_Shared.SetScoutHypeMeter( 0.0f );
-	}
-
-	BaseClass::Equip( pOwner );
-}
-#endif // GAME_DLL
-//-----------------------------------------------------------------------------
-// CTFSodaPopper
-//-----------------------------------------------------------------------------
-float CTFSodaPopper::GetProgress( void )
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	if ( !pPlayer )
-		return 0.f;
-
-	return pPlayer->m_Shared.GetScoutHypeMeter() * 0.01f;
-}
-
-//-----------------------------------------------------------------------------
-void CTFSodaPopper::ItemBusyFrame( void )
-{
-#ifdef GAME_DLL
-	CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
-	if ( pOwner && pOwner->m_nButtons & IN_ATTACK2 )
-	{
-		// Check here so we can always activate buff when we want (similar to stickies)
-		SecondaryAttack();
-	}
-#endif
-
-	BaseClass::ItemBusyFrame();
-}
-
-//-----------------------------------------------------------------------------
-void CTFSodaPopper::SecondaryAttack()
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner( );
-	if ( !pPlayer || pPlayer->m_Shared.IsHypeBuffed() )
-		return;
-
-	if ( pPlayer->m_Shared.GetScoutHypeMeter() >= 100.f )
-	{
-		pPlayer->m_Shared.AddCond( TF_COND_SODAPOPPER_HYPE );
-	}
-}
-
-//-----------------------------------------------------------------------------
-float CTFPEPBrawlerBlaster::GetProgress( void )
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	if ( !pPlayer )
-		return 0.f;
-
-	return pPlayer->m_Shared.GetScoutHypeMeter() * 0.01f;
-}
-
