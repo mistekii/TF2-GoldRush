@@ -713,7 +713,7 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 			{
 				CTFLunchBox *pLunchbox = (CTFLunchBox*)pActiveWeapon;
 
-				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_ROBO ) )
+				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) )
 				{
 					if ( !TFGameRules()->IsMannVsMachineMode() && HasItem() )
 						return false;

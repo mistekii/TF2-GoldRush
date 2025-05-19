@@ -16670,7 +16670,7 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 
 				// Only count sandviches for "eat 100 sandviches" achievement
 				CTFLunchBox *pLunchbox = (CTFLunchBox*)pActiveWeapon;
-				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_ROBO ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_FESTIVE ) )
+				if ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD )
 				{
 					AwardAchievement( ACHIEVEMENT_TF_HEAVY_EAT_SANDWICHES );
 				}

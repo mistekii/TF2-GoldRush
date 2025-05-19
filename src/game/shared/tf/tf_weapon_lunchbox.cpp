@@ -64,10 +64,7 @@ END_DATADESC()
 
 #define LUNCHBOX_DROP_MODEL  "models/items/plate.mdl"
 #define LUNCHBOX_STEAK_DROP_MODEL  "models/workshop/weapons/c_models/c_buffalo_steak/plate_buffalo_steak.mdl"
-#define LUNCHBOX_ROBOT_DROP_MODEL  "models/items/plate_robo_sandwich.mdl"
-#define LUNCHBOX_FESTIVE_DROP_MODEL  "models/items/plate_sandwich_xmas.mdl"
 #define LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL		"models/workshop/weapons/c_models/c_chocolate/plate_chocolate.mdl"
-#define LUNCHBOX_BANANA_DROP_MODEL  "models/items/banana/plate_banana.mdl"
 #define LUNCHBOX_FISHCAKE_DROP_MODEL	"models/workshop/weapons/c_models/c_fishcake/plate_fishcake.mdl"
 
 #define LUNCHBOX_DROPPED_MINS	Vector( -17, -17, -10 )
@@ -122,10 +119,7 @@ void CTFLunchBox::Precache( void )
 		PrecacheModel( "models/items/medkit_medium_bday.mdl" );
 		PrecacheModel( LUNCHBOX_DROP_MODEL );
 		PrecacheModel( LUNCHBOX_STEAK_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_ROBOT_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_FESTIVE_DROP_MODEL );
 		PrecacheModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_BANANA_DROP_MODEL );
 		PrecacheModel( LUNCHBOX_FISHCAKE_DROP_MODEL );
 	}
 
@@ -221,7 +215,6 @@ void CTFLunchBox::SecondaryAttack( void )
 	switch ( nLunchBoxType )
 	{
 	case LUNCHBOX_CHOCOLATE_BAR:
-	case LUNCHBOX_BANANA:
 	case LUNCHBOX_FISHCAKE:
 		pszHealthKit = "item_healthkit_small";
 		break;
@@ -246,24 +239,10 @@ void CTFLunchBox::SecondaryAttack( void )
 		{
 			pMedKit->SetModel( LUNCHBOX_STEAK_DROP_MODEL );
 		}
-		else if ( nLunchBoxType == LUNCHBOX_STANDARD_ROBO )
-		{
-			pMedKit->SetModel( LUNCHBOX_ROBOT_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_STANDARD_FESTIVE )
-		{
-			pMedKit->SetModel( LUNCHBOX_FESTIVE_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
 		else if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
 		{
 			pMedKit->SetModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
 			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_BANANA )
-		{
-			pMedKit->SetModel( LUNCHBOX_BANANA_DROP_MODEL );
 		}
 		else if ( nLunchBoxType == LUNCHBOX_FISHCAKE )
 		{
