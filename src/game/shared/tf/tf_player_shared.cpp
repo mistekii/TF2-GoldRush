@@ -211,8 +211,6 @@ extern ConVar mp_developer;
 #define TF_SPY_STEALTH_BLINKSCALE  0.85f
 
 #define TF_BUILDING_PICKUP_RANGE 150
-#define TF_BUILDING_RESCUE_MIN_RANGE_SQ 62500  //250 * 250
-#define TF_BUILDING_RESCUE_MAX_RANGE 5500
 
 #define TF_PLAYER_CONDITION_CONTEXT	"TFPlayerConditionContext"
 
@@ -11576,19 +11574,7 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 	int iIncreasedRangeCost = 0;
 	int nSqrDist = (EyePosition() - pPickupObject->GetAbsOrigin()).LengthSqr();
 
-	// Extra range only works with primary weapon
-	CTFWeaponBase * pWeapon = GetActiveTFWeapon();
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iIncreasedRangeCost, building_teleporting_pickup );
-	if ( iIncreasedRangeCost != 0 )
-	{
-		// False on deadzone
-		if ( nSqrDist > nPickUpRangeSq && nSqrDist < TF_BUILDING_RESCUE_MIN_RANGE_SQ )
-			return false;
-		if ( nSqrDist >= TF_BUILDING_RESCUE_MIN_RANGE_SQ && GetAmmoCount( TF_AMMO_METAL ) < iIncreasedRangeCost )
-			return false;
-		return true;
-	}
-	else if ( nSqrDist > nPickUpRangeSq )
+	if ( nSqrDist > nPickUpRangeSq )
 		return false;
 
 	return true;
@@ -11631,13 +11617,6 @@ bool CTFPlayer::TryToPickupBuilding()
 	AngleVectors( EyeAngles(), &vecForward, NULL, NULL );
 
 	int iPickUpRange = TF_BUILDING_PICKUP_RANGE;
-	int iIncreasedRangeCost = 0;
-	CTFWeaponBase * pWeapon = GetActiveTFWeapon();
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iIncreasedRangeCost, building_teleporting_pickup );
-	if ( iIncreasedRangeCost != 0 )
-	{
-		iPickUpRange = TF_BUILDING_RESCUE_MAX_RANGE;
-	}
 	
 	const Vector vecStart = EyePosition();
 	const Vector vecEnd   = vecStart + vecForward * iPickUpRange;
@@ -11702,33 +11681,6 @@ bool CTFPlayer::TryToPickupBuilding()
 
 	if ( pPickupObject )
 	{
-		// remove rage for long range
-		if ( iIncreasedRangeCost )
-		{
-			int nSqrDist = (EyePosition() - pPickupObject->GetAbsOrigin()).LengthSqr();
-			if ( nSqrDist > TF_BUILDING_RESCUE_MIN_RANGE_SQ )
-			{
-				RemoveAmmo( iIncreasedRangeCost, TF_AMMO_METAL );
-
-				// Particles
-				// Spawn a railgun
-				Vector origin = pPickupObject->GetAbsOrigin();
-				CPVSFilter filter( origin );
-
-				const char *pRailParticleName = GetTeamNumber() == TF_TEAM_BLUE ? "dxhr_sniper_rail_blue" : "dxhr_sniper_rail_red";
-				const char *pTeleParticleName = GetTeamNumber() == TF_TEAM_BLUE ? "teleported_blue" : "teleported_red";
-
-				TE_TFParticleEffect( filter, 0.0, pTeleParticleName, origin, vec3_angle );
-
-				te_tf_particle_effects_control_point_t controlPoint = { PATTACH_WORLDORIGIN, pPickupObject->GetAbsOrigin() + Vector(0,0,32) };
-				TE_TFParticleEffectComplex( filter, 0.0f, pRailParticleName, GetAbsOrigin() + Vector(0,0,32), QAngle( 0, 0, 0 ), NULL, &controlPoint );
-
-				// Play Sounds
-				pPickupObject->EmitSound( "Building_Teleporter.Send" );
-				EmitSound( "Building_Teleporter.Receive" );
-			}
-		}
-
 		pPickupObject->MakeCarriedObject( this );
 
 		CTFWeaponBuilder *pBuilder = dynamic_cast<CTFWeaponBuilder*>(Weapon_OwnsThisID( TF_WEAPON_BUILDER ));

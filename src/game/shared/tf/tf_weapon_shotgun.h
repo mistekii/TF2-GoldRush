@@ -21,7 +21,6 @@
 #define CTFShotgun_Revenge C_TFShotgun_Revenge
 #define CTFSodaPopper C_TFSodaPopper
 #define CTFPEPBrawlerBlaster C_TFPEPBrawlerBlaster
-#define CTFShotgunBuildingRescue C_TFShotgunBuildingRescue
 #define CTFLeech C_TFLeech
 #endif
 
@@ -179,19 +178,6 @@ public:
 
 	const char*		GetEffectLabelText( void )			{ return "#TF_Boost"; }
 	float			GetProgress( void );
-};
-
-class CTFShotgunBuildingRescue : public CTFShotgun
-{
-public:
-	DECLARE_CLASS( CTFShotgunBuildingRescue, CTFShotgun );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_SHOTGUN_BUILDING_RESCUE; }
-	virtual float	GetProjectileSpeed( void );
-	virtual float   GetProjectileGravity( void );
-	virtual bool	IsViewModelFlipped( void );
 };
 
 #endif // TF_WEAPON_SHOTGUN_H

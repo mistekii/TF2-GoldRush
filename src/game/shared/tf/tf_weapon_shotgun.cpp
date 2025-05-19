@@ -35,7 +35,6 @@ CREATE_SIMPLE_WEAPON_TABLE( TFScatterGun, tf_weapon_scattergun )
 CREATE_SIMPLE_WEAPON_TABLE( TFShotgun_Revenge, tf_weapon_sentry_revenge )
 CREATE_SIMPLE_WEAPON_TABLE( TFSodaPopper, tf_weapon_soda_popper )
 CREATE_SIMPLE_WEAPON_TABLE( TFPEPBrawlerBlaster, tf_weapon_pep_brawler_blaster )
-CREATE_SIMPLE_WEAPON_TABLE( TFShotgunBuildingRescue, tf_weapon_shotgun_building_rescue )
 
 #define SCATTERGUN_KNOCKBACK_MIN_DMG		30.0f
 #define SCATTERGUN_KNOCKBACK_MIN_RANGE_SQ	160000.0f //400x400
@@ -558,20 +557,3 @@ float CTFPEPBrawlerBlaster::GetProgress( void )
 	return pPlayer->m_Shared.GetScoutHypeMeter() * 0.01f;
 }
 
-//-----------------------------------------------------------------------------
-float CTFShotgunBuildingRescue::GetProjectileSpeed( void )
-{
-	return RemapValClamped( 0.75f, 0.0f, 1.f, 1800, 2600 ); // Temp, if we want to ramp.
-}
-
-//-----------------------------------------------------------------------------
-float CTFShotgunBuildingRescue::GetProjectileGravity( void )
-{
-	return RemapValClamped( 0.75f, 0.0f, 1.f, 0.5f, 0.1f ); // Temp, if we want to ramp.
-}
-
-//-----------------------------------------------------------------------------
-bool CTFShotgunBuildingRescue::IsViewModelFlipped( void )
-{
-	return !BaseClass::IsViewModelFlipped(); // Invert because arrows are backwards by default.
-}

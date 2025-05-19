@@ -187,12 +187,7 @@ void CTFProjectile_Arrow::InitArrow( const QAngle &vecAngles, const float fSpeed
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::Spawn()
 {
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT )
-	{
-		SetModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
-		m_iWeaponId = TF_WEAPON_SHOTGUN_BUILDING_RESCUE;
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_ARROW )
+	if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_ARROW )
 	{
 		SetModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
 	}
@@ -280,8 +275,7 @@ bool CTFProjectile_Arrow::CanHeadshot()
 	if ( pOwner == NULL )
 		return false;
 
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT 
-		|| m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
+	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
 		|| m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT 
 	) {
 		return false;
@@ -1015,11 +1009,7 @@ void CTFProjectile_Arrow::RemoveThink( void )
 //-----------------------------------------------------------------------------
 const char *CTFProjectile_Arrow::GetTrailParticleName( void )
 {
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT )
-	{	
-		return ( GetTeamNumber() == TF_TEAM_RED ) ? CLAW_TRAIL_RED : CLAW_TRAIL_BLU;
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT || m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
+	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT || m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
 	{
 		return ( GetTeamNumber() == TF_TEAM_RED ) ? "effects/healingtrail_red.vmt" : "effects/healingtrail_blu.vmt";
 	}
@@ -1040,9 +1030,6 @@ void CTFProjectile_Arrow::CreateTrail( void )
 		int width = 3;
 		switch ( m_iProjectileType )
 		{
-			case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
-				width = 5;
-				break;
 			case TF_PROJECTILE_HEALING_BOLT:
 			case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
 				return; // do not create arrow trail for healing bolt, use particle instead (client only)

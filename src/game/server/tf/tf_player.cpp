@@ -11038,8 +11038,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// note that we don't check to see if the sentry is still alive
 			if ( pKillerWeapon &&
 				( pKillerWeapon->GetWeaponID() == TF_WEAPON_SENTRY_REVENGE ||
-				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_PRIMARY ||
-				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_BUILDING_RESCUE ) )
+				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_PRIMARY ) )
 			{
 				if ( m_AchievementData.IsSentryDamagerInHistory( pPlayerAttacker, 5.0 ) )
 				{

@@ -11810,10 +11810,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 							killer_weapon_name = "deflect_arrow";
 						}
 					}
-					else if ( *iWeaponID == TF_WEAPON_SHOTGUN_BUILDING_RESCUE )
-					{
-						killer_weapon_name = "rescue_ranger_reflect";
-					}
 				}
 				else if ( *iWeaponID == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT )
 				{
