@@ -75,7 +75,6 @@ public:
 	virtual CBaseEntity *FireArrow( CTFPlayer *pPlayer, ProjectileType_t projectileType );
 	virtual CBaseEntity *FireJar( CTFPlayer *pPlayer );
 	virtual CBaseEntity *FireFlameRocket( CTFPlayer *pPlayer );
-	virtual CBaseEntity *FireEnergyBall( CTFPlayer *pPlayer, bool bRing=false );
 
 	virtual bool HasLastShotCritical( void );
 

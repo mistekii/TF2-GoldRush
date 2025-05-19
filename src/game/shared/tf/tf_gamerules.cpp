@@ -6332,7 +6332,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			// Rocket Launchers
 			case TF_WEAPON_ROCKETLAUNCHER :
 			case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT :
-			case TF_WEAPON_PARTICLE_CANNON :
 				if ( flRandomRangeVal > 0.5 )
 				{
 					flRandomDamage *= 0.5f;
@@ -11948,19 +11947,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 						}
 					}
 				}
-			}
-		}
-	}
-	else if ( 0 == Q_strcmp( killer_weapon_name, "tf_projectile_energy_ring" ) )
-	{
-		CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
-		if ( pWeapon )
-		{
-			CEconItemView *pItem = pWeapon->GetAttributeContainer()->GetItem();
-			if ( pItem && pItem->GetStaticData() && pItem->GetStaticData()->GetIconClassname() )
-			{
-				killer_weapon_name = pItem->GetStaticData()->GetIconClassname();
-				*iWeaponID = TF_WEAPON_NONE;
 			}
 		}
 	}
@@ -20293,7 +20279,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	case 488:	// "rocket specialist"
 		if ( pWeaponGun )
 		{
-			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET || pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ENERGY_BALL );
+			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET );
 		}
 	case 499:	// generate rage on heal (shield)
 	case 554:	// revive

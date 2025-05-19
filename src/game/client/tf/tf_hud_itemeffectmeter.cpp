@@ -15,8 +15,6 @@
 #include "tf_weapon_shotgun.h"
 #include "tf_weapon_sniperrifle.h"
 #include "tf_weapon_rocketlauncher.h"
-#include "tf_weapon_particle_cannon.h"
-#include "tf_weapon_raygun.h"
 #include "tf_weapon_flaregun.h"
 #include "tf_weapon_revolver.h"
 #include "tf_weapon_flamethrower.h"
@@ -300,8 +298,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 
 	case TF_CLASS_SOLDIER:
 		DECLARE_ITEM_EFFECT_METER( CTFBuffItem, TF_WEAPON_BUFF_ITEM, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFParticleCannon, TF_WEAPON_PARTICLE_CANNON, false, "resource/UI/HUDItemEffectMeter_ParticleCannon.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFRaygun, TF_WEAPON_RAYGUN, false, "resource/UI/HUDItemEffectMeter_Raygun.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFRocketLauncher_AirStrike, TF_WEAPON_ROCKETLAUNCHER, false, "resource/UI/HudItemEffectMeter_Demoman.res" );
 		break;
 
@@ -323,7 +319,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 
 	case TF_CLASS_ENGINEER:
 		DECLARE_ITEM_EFFECT_METER( CTFShotgun_Revenge, TF_WEAPON_SENTRY_REVENGE, false, "resource/UI/HUDItemEffectMeter_Engineer.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFDRGPomson, TF_WEAPON_DRG_POMSON, false, "resource/UI/HUDItemEffectMeter_Pomson.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFRevolver, TF_WEAPON_REVOLVER, false, "resource/UI/HUDItemEffectMeter_Spy.res" );
 		break;
 
@@ -1147,20 +1142,6 @@ int CHudItemEffectMeter_Weapon<CTFSniperRifleDecap>::GetCount( void )
 	{
 		return 0.f;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------		    
-template <>
-Color CHudItemEffectMeter_Weapon<CTFParticleCannon>::GetProgressBarColor( void )
-{
-	CTFParticleCannon *pWeapon = GetWeapon();
-	
-	if ( pWeapon && pWeapon->CanChargeFire() )
-		return Color( 255, 255, 255, 255 );
-	else
-		return Color( 255, 0, 0, 255 );
 }
 
 //-----------------------------------------------------------------------------
