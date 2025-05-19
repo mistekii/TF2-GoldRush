@@ -23,7 +23,6 @@
 #ifdef CLIENT_DLL
 #define CTFRocketLauncher C_TFRocketLauncher
 #define CTFRocketLauncher_DirectHit C_TFRocketLauncher_DirectHit
-#define CTFRocketLauncher_AirStrike C_TFRocketLauncher_AirStrike
 #define CTFRocketLauncher_Mortar C_TFRocketLauncher_Mortar
 #define CTFCrossbow C_TFCrossbow
 #endif // CLIENT_DLL

@@ -296,7 +296,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 
 	case TF_CLASS_SOLDIER:
 		DECLARE_ITEM_EFFECT_METER( CTFBuffItem, TF_WEAPON_BUFF_ITEM, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFRocketLauncher_AirStrike, TF_WEAPON_ROCKETLAUNCHER, false, "resource/UI/HudItemEffectMeter_Demoman.res" );
 		break;
 
 	case TF_CLASS_SPY:
@@ -1347,23 +1346,6 @@ int CHudItemEffectMeter_Weapon< CTFBonesaw >::GetCount( void )
 	return m_pPlayer->m_Shared.GetDecapitations();
 }
 
-
-//-----------------------------------------------------------------------------
-// Rocket Launcher AirStrike Headcounter
-//-----------------------------------------------------------------------------
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketLauncher_AirStrike>::GetCount( void )
-{
-	CTFRocketLauncher_AirStrike *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetCount();
-	}
-	else
-	{
-		return 0;
-	}
-}
 
 //-----------------------------------------------------------------------------
 template <>
