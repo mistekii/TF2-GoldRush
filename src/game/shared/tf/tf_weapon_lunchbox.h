@@ -21,7 +21,6 @@ enum lunchbox_weapontypes_t
 {
 	LUNCHBOX_STANDARD = 0,		// Careful, can be the Scout BONK drink, or the Heavy sandvich.
 	LUNCHBOX_CHOCOLATE_BAR,
-	LUNCHBOX_ADDS_MINICRITS,
 	LUNCHBOX_ADDS_AMMO,
 };
 
@@ -109,7 +108,6 @@ public:
 	virtual float		InternalGetEffectBarRechargeTime( void ) { return TF_SANDWICH_REGENTIME; }
 
 #ifdef CLIENT_DLL
-	virtual const char* ModifyEventParticles( const char* token );
 	virtual bool		Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 #endif
 };

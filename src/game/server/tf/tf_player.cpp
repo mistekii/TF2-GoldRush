@@ -17353,29 +17353,22 @@ void CTFPlayer::DoTauntAttack( void )
 			{
 				float flDropDeadTime = ( 100.f / tf_scout_energydrink_consume_rate.GetFloat() ) + 1.f;	// Just in case.  Normally over in 8 seconds.
 
-				CTFLunchBox *pLunchbox = static_cast< CTFLunchBox* >( pActiveWeapon );
-				if ( pLunchbox && pLunchbox->GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS )
-				{
-					m_Shared.AddCond( TF_COND_ENERGY_BUFF, flDropDeadTime );
-				}
-				else
-				{
-					m_Shared.AddCond( TF_COND_PHASE, flDropDeadTime );
 
-					if ( HasTheFlag() )
+				m_Shared.AddCond( TF_COND_PHASE, flDropDeadTime );
+
+				if ( HasTheFlag() )
+				{
+					bool bShouldDrop = true;
+
+					// Always allow teams to hear each other in TD mode
+					if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
 					{
-						bool bShouldDrop = true;
+						bShouldDrop = false;
+					}
 
-						// Always allow teams to hear each other in TD mode
-						if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-						{
-							bShouldDrop = false;
-						}
-
-						if ( bShouldDrop )
-						{
-							DropFlag();
-						}
+					if ( bShouldDrop )
+					{
+						DropFlag();
 					}
 				}
 

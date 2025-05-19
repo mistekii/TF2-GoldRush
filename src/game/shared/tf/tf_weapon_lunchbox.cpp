@@ -232,11 +232,7 @@ void CTFLunchBox::SecondaryAttack( void )
 		AngleVectors( angForward, &vecForward, &vecRight, &vecUp );
 		Vector vecVelocity = vecForward * 500.0;
 		
-		if ( nLunchBoxType == LUNCHBOX_ADDS_MINICRITS )
-		{
-			pMedKit->SetModel( LUNCHBOX_STEAK_DROP_MODEL );
-		}
-		else if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
+		if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
 		{
 			pMedKit->SetModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
 			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
@@ -281,7 +277,7 @@ void CTFLunchBox::DrainAmmo( bool bForceCooldown )
 	// If we're damaged while eating/taunting, bForceCooldown will be true
 	if ( pOwner->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
 	{
-		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS || iLunchboxType == LUNCHBOX_CHOCOLATE_BAR || bForceCooldown )
+		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || iLunchboxType == LUNCHBOX_CHOCOLATE_BAR || bForceCooldown )
 		{
 			pOwner->m_Shared.SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, 0.f );
 		}
@@ -361,17 +357,6 @@ void CTFLunchBox::ApplyBiteEffects( CTFPlayer *pPlayer )
 	{
 		// add 50 health to player for 30 seconds
 		pPlayer->AddCustomAttribute( "hidden maxhealth non buffed", DALOKOHS_MAXHEALTH_BUFF, 30.f );
-	}
-	else if ( nLunchBoxType == LUNCHBOX_ADDS_MINICRITS )
-	{
-		static const float s_fSteakSandwichDuration = 16.0f;
-
-		// Steak sandvich.
-		pPlayer->m_Shared.AddCond( TF_COND_ENERGY_BUFF, s_fSteakSandwichDuration );
-		pPlayer->m_Shared.AddCond( TF_COND_CANNOT_SWITCH_FROM_MELEE, s_fSteakSandwichDuration );
-		pPlayer->m_Shared.SetBiteEffectWasApplied();
-
-		return;
 	}
 	
 	// Then heal the player
@@ -508,31 +493,6 @@ bool CTFLunchBox_Drink::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	return BaseClass::Holster( pSwitchingTo );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-const char* CTFLunchBox_Drink::ModifyEventParticles( const char* token )
-{
-	if ( GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS )
-	{
-		if ( FStrEq( token, "energydrink_splash") )
-		{
-			CEconItemView *pItem = m_AttributeManager.GetItem();
-			int iSystems = pItem->GetStaticData()->GetNumAttachedParticles( GetTeamNumber() );
-			for ( int i = 0; i < iSystems; i++ )
-			{
-				attachedparticlesystem_t *pSystem = pItem->GetStaticData()->GetAttachedParticleData( GetTeamNumber(),i );
-				if ( pSystem->iCustomType == 1 )
-				{
-					return pSystem->pszSystemName;
-				}
-			}
-		}
-	}
-
-	return BaseClass::ModifyEventParticles( token );
 }
 
 #endif // CLIENT_DLL
