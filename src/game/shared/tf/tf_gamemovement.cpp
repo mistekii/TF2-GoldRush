@@ -50,12 +50,6 @@ ConVar  tf_clamp_airducks( "tf_clamp_airducks", "1", FCVAR_REPLICATED );
 ConVar  tf_resolve_stuck_players( "tf_resolve_stuck_players", "1", FCVAR_REPLICATED );
 ConVar  tf_scout_hype_mod( "tf_scout_hype_mod", "55", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_max_charge_speed( "tf_max_charge_speed", "750", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT  | FCVAR_DEVELOPMENTONLY );
-ConVar  tf_parachute_gravity( "tf_parachute_gravity", "0.2f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Gravity while parachute is deployed" );
-ConVar  tf_parachute_maxspeed_xy( "tf_parachute_maxspeed_xy", "300.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max XY Speed while Parachute is deployed" );
-ConVar  tf_parachute_maxspeed_z( "tf_parachute_maxspeed_z", "-100.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max Z Speed while Parachute is deployed" );
-ConVar  tf_parachute_maxspeed_onfire_z( "tf_parachute_maxspeed_onfire_z", "10.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max Z Speed when on Fire and Parachute is deployed" );
-ConVar  tf_parachute_aircontrol( "tf_parachute_aircontrol", "2.5f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Multiplier for how much air control players have when Parachute is deployed" );
-ConVar	tf_parachute_deploy_toggle_allowed( "tf_parachute_deploy_toggle_allowed", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar  tf_halloween_kart_aircontrol( "tf_halloween_kart_aircontrol", "1.2f", FCVAR_CHEAT | FCVAR_REPLICATED, "Multiplier for how much air control players have when in Kart Mode" );
 ConVar	tf_ghost_up_speed( "tf_ghost_up_speed", "300.f", FCVAR_CHEAT | FCVAR_REPLICATED, "Speed that ghost go upward while holding jump key" );
@@ -145,7 +139,6 @@ private:
 	bool		CheckWaterJumpButton( void );
 	void		AirDash( void );
 	void		PreventBunnyJumping();
-	void		ToggleParachute( void );
 	void		CheckKartWallBumping();
 
 	// Ducking.
@@ -1095,54 +1088,6 @@ void CTFGameMovement::PreventBunnyJumping()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameMovement::ToggleParachute()
-{
-	if ( ( m_pTFPlayer->GetFlags() & FL_ONGROUND ) )
-	{
-		m_pTFPlayer->m_Shared.RemoveCond( TF_COND_PARACHUTE_DEPLOYED );
-		return;
-	}
-
-	if ( mv->m_nOldButtons & IN_JUMP )
-		return;
-
-	// Can not add if in kart (Kart code does it for spell) but players can manually undeploy
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_pTFPlayer->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-		return;
-	}
-
-	// Check for Parachute and deploy / undeploy
-	int iParachute = 0;
-	// Passive version
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iParachute, parachute_attribute );
-	if ( iParachute )
-	{
-		// Toggle between the conditions
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_pTFPlayer->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-		else
-		{
-			int iParachuteDisabled = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iParachuteDisabled, parachute_disabled );
-			if ( !iParachuteDisabled && ( tf_parachute_deploy_toggle_allowed.GetBool() || !m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_DEPLOYED ) ) )
-			{
-				m_pTFPlayer->m_Shared.AddCond( TF_COND_PARACHUTE_ACTIVE );
-				m_pTFPlayer->m_Shared.AddCond( TF_COND_PARACHUTE_DEPLOYED );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFGameMovement::CheckJumpButton()
 {
 	// Are we dead?  Then we cannot jump.
@@ -1195,8 +1140,6 @@ bool CTFGameMovement::CheckJumpButton()
 	bool bAirDash = false;
 	bool bOnGround = ( player->GetGroundEntity() != NULL );
 
-	ToggleParachute();
-
 	// Cannot jump will ducked.
 	if ( player->GetFlags() & FL_DUCKING )
 	{
@@ -1216,7 +1159,7 @@ bool CTFGameMovement::CheckJumpButton()
 		return false;
 
 	// In air, so ignore jumps 
-	// (unless you are a scout or ghost or parachute
+	// (unless you are a scout or ghost
 	if ( !bOnGround )
 	{
 		if ( m_pTFPlayer->CanAirDash() )
@@ -2028,11 +1971,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 		}
 #endif
 */
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			flCap *= tf_parachute_aircontrol.GetFloat();
-		}
-
 		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 		{
 			if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART_DASH ) )
@@ -2587,21 +2525,6 @@ void CTFGameMovement::FullWalkMove()
 {
 	if ( !InWater() ) 
 	{
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) && mv->m_vecVelocity[2] < 0 )
-		{
-			mv->m_vecVelocity[2] = Max( mv->m_vecVelocity[2], tf_parachute_maxspeed_z.GetFloat() );
-			
-			float flDrag = tf_parachute_maxspeed_xy.GetFloat();
-			// Instead of clamping, we'll dampen
-			float flSpeedX = abs( mv->m_vecVelocity[0] );
-			float flSpeedY = abs( mv->m_vecVelocity[1] );
-			float flReductionX = flSpeedX > flDrag ? ( flSpeedX - flDrag ) / 3.0f - 10.0f : 0;
-			float flReductionY = flSpeedY > flDrag ? ( flSpeedY - flDrag ) / 3.0f - 10.0f : 0;
-
-			mv->m_vecVelocity[0] = Clamp( mv->m_vecVelocity[0], -flDrag - flReductionX, flDrag + flReductionX );
-			mv->m_vecVelocity[1] = Clamp( mv->m_vecVelocity[1], -flDrag - flReductionY, flDrag + flReductionY );
-		}
-
 		StartGravity();
 	}
 

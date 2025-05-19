@@ -20033,9 +20033,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	bool bShield = ( pShield ) ? true : false;
 	bool bRocketPack = ( iWeaponID == TF_WEAPON_ROCKETPACK );
 
-	if ( iWeaponID == TF_WEAPON_PARACHUTE )
-		return false;
-
 	// Hack to simplify excluding non-weapons from damage upgrades
 	bool bHideDmgUpgrades = iWeaponID == TF_WEAPON_NONE || 
 							iWeaponID == TF_WEAPON_LASER_POINTER || 

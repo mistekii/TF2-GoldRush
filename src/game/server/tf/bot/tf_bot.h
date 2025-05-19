@@ -266,8 +266,7 @@ public:
 		BULLET_IMMUNE				= 1<<23,				// Has a shield that makes the bot immune to bullets
 		BLAST_IMMUNE				= 1<<24,				// "" blast
 		FIRE_IMMUNE					= 1<<25,				// "" fire
-		PARACHUTE					= 1<<26,				// demo/soldier parachute when falling
-		PROJECTILE_SHIELD			= 1<<27,				// medic projectile shield
+		PROJECTILE_SHIELD			= 1<<26,				// medic projectile shield
 	};
 	void SetAttribute( int attributeFlag );
 	void ClearAttribute( int attributeFlag );

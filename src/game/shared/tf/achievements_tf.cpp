@@ -1175,31 +1175,6 @@ class CAchievementTF_DominateForGoggles : public CBaseTFAchievement
 DECLARE_ACHIEVEMENT( CAchievementTF_DominateForGoggles, ACHIEVEMENT_TF_DOMINATE_FOR_GOGGLES, "TF_DOMINATE_FOR_GOGGLES", 5 );
 
 //----------------------------------------------------------------------------------------------------------------
-class CAchievementTF_ParachuteKillGrind : public CBaseTFAchievement
-{
-public:
-	void Init()
-	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
-		SetGoal( 10 );
-		SetStoreProgressInSteam( true );
-	}
-
-	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event )
-	{
-		CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
-		if ( pTFVictim && ( pAttacker == C_TFPlayer::GetLocalTFPlayer() ) )
-		{
-			if ( pTFVictim->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-			{
-				IncrementCount();
-			}
-		}
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTF_ParachuteKillGrind, ACHIEVEMENT_TF_PARACHUTE_KILL_GRIND, "TF_PARACHUTE_KILL_GRIND", 5 );
-
-//----------------------------------------------------------------------------------------------------------------
 class CAchievementTF_MeleeKillClassicRifleSniper : public CBaseTFAchievement
 {
 public:

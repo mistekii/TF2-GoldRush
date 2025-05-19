@@ -1484,7 +1484,6 @@ bool CTFSpellBook::CastKartRocketJump( CTFPlayer *pPlayer )
 	// Give a little health to compensate for fall damage
 	//pPlayer->TakeHealth( 25, DMG_GENERIC );
 	pPlayer->RemoveFlag( FL_ONGROUND );
-	pPlayer->m_Shared.AddCond( TF_COND_PARACHUTE_ACTIVE );
 
 	// Collect players and cause knockback to enemies
 	// Treat this trace exactly like radius damage

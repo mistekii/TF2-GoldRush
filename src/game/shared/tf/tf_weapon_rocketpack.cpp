@@ -500,7 +500,6 @@ bool CTFRocketPack::PreLaunch( void )
 	// Pop them off the ground
 	Vector vForward( 0.f, 0.f, 350.f );
 	pOwner->ApplyAbsVelocityImpulse( vForward );
-	pOwner->m_Shared.AddCond( TF_COND_PARACHUTE_ACTIVE );
 
 #ifdef GAME_DLL
 	const Vector &vecOrigin = pOwner->GetAbsOrigin();
@@ -527,7 +526,6 @@ bool CTFRocketPack::Launch( void )
 	pOwner->StopSound( "Weapon_LooseCannon.Charge" );
 
 	m_flLaunchTime = 0.f;
-	pOwner->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
 
 #ifdef CLIENT_DLL
 	Vector m_vecLaunchDir;
@@ -810,7 +808,6 @@ void CTFRocketPack::ItemPostFrame( void )
 			// rocketpack was disabled while waiting for player, just turn it off
 			m_flInitLaunchTime = 0.f;
 			m_flNextSecondaryAttack = gpGlobals->curtime + tf_rocketpack_launch_delay.GetFloat();
-			pOwner->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
 		}
 		else
 		{

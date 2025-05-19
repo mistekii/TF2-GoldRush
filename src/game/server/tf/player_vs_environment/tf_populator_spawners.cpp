@@ -742,10 +742,6 @@ static bool ParseDynamicAttributes( CTFBot::EventChangeAttributes_t& event, KeyV
 		{
 			event.m_attributeFlags |= CTFBot::FIRE_IMMUNE;
 		}
-		else if ( !Q_stricmp( value, "Parachute" ) )
-		{
-			event.m_attributeFlags |= CTFBot::PARACHUTE;
-		}
 		else if ( !Q_stricmp( value, "ProjectileShield" ) )
 		{
 			event.m_attributeFlags |= CTFBot::PROJECTILE_SHIELD;

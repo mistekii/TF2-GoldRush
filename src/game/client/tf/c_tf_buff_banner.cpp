@@ -66,12 +66,6 @@ void CTFBuffBanner::ClientThink( void )
 		return;
 	}
 
-	// Parachute's never expire
-	if ( m_iBuffType == EParachute )
-	{
-		m_flDetachTime = gpGlobals->curtime + 10.0f;
-	}
-
 	// Normal Banners
 	if ( m_pAttachedTo )
 	{	

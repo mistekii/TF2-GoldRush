@@ -765,7 +765,6 @@ public:
 	int					ScriptGetKillAssists() const				{ return m_Shared.GetKillAssists( 0 ); }
 	int					ScriptGetBonusPoints() const				{ return m_Shared.GetBonusPoints( 0 ); }
 	void				ScriptResetScores()							{ m_Shared.ResetScores(); }
-	bool				ScriptIsParachuteEquipped()					{ return m_Shared.IsParachuteEquipped(); }
 
 	int					ScriptGetPlayerClass()
 	{

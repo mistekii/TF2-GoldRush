@@ -1416,33 +1416,4 @@ private:
 };
 DECLARE_ACHIEVEMENT( CAchievementTFSniper_ClassicRifleGibGrind, ACHIEVEMENT_TF_SNIPER_CLASSIC_RIFLE_GIB_GRIND, "TF_SNIPER_CLASSIC_RIFLE_GIB_GRIND", 5 );
 
-//----------------------------------------------------------------------------------------------------------------
-class CAchievementTFSniper_ParachuteGrind : public CBaseTFAchievement
-{
-public:
-	void Init()
-	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
-		SetGoal( 25 );
-		SetStoreProgressInSteam( true );
-	}
-
-	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event )
-	{
-		if ( pVictim && ( pAttacker == CBasePlayer::GetLocalPlayer() ) )
-		{
-			CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
-			if ( pTFVictim && 
-				( pAttacker == C_TFPlayer::GetLocalTFPlayer() ) && 
-				( IsHeadshot( event->GetInt( "customkill" ) ) ) && 
-				( event->GetInt( "damagebits" ) & DMG_CRITICAL ) && 
-				( pTFVictim->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) ) )
-			{
-				IncrementCount();
-			}
-		}
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTFSniper_ParachuteGrind, ACHIEVEMENT_TF_SNIPER_PARACHUTE_GRIND, "TF_SNIPER_PARACHUTE_GRIND", 5 );
-
 #endif // CLIENT_DLL

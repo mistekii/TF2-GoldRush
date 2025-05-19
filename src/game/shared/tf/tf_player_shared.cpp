@@ -374,7 +374,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropBool( RECVINFO( m_bLoadoutUnavailable ) ),
 	RecvPropInt( RECVINFO( m_iItemFindBonus ) ),
 	RecvPropBool( RECVINFO( m_bShieldEquipped ) ),
-	RecvPropBool( RECVINFO( m_bParachuteEquipped ) ),
 	RecvPropInt( RECVINFO( m_iNextMeleeCrit ) ),
 	RecvPropInt( RECVINFO( m_iDecapitations ) ),
 	RecvPropInt( RECVINFO( m_iRevengeCrits ) ),
@@ -548,7 +547,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropBool( SENDINFO( m_bLoadoutUnavailable ) ),
 	SendPropInt( SENDINFO( m_iItemFindBonus ) ),
 	SendPropBool( SENDINFO( m_bShieldEquipped ) ),
-	SendPropBool( SENDINFO( m_bParachuteEquipped ) ),
 	SendPropInt( SENDINFO( m_iNextMeleeCrit ) ),
 	SendPropInt( SENDINFO( m_iDecapitations ), 8, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iRevengeCrits ), 7, SPROP_UNSIGNED ),
@@ -807,8 +805,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_bPostShieldCharge = false;
 	m_iNextMeleeCrit = 0;
 
-	m_bParachuteEquipped = false;
-
 	m_iDecapitations = m_iOldDecapitations = 0;
 	m_iOldKillStreak = 0;
 	m_iOldKillStreakWepSlot = 0;
@@ -910,8 +906,6 @@ void CTFPlayerShared::Init( CTFPlayer *pPlayer )
 	m_bShieldEquipped = false;
 	m_bPostShieldCharge = false;
 	m_iNextMeleeCrit = 0;
-
-	m_bParachuteEquipped = false;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
 	m_iOldKillStreak = 0;
@@ -1753,10 +1747,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddHalloweenGhostMode();
 		break;
 
-	case TF_COND_PARACHUTE_ACTIVE:
-		OnAddCondParachute();
-		break;
-
 	case TF_COND_HALLOWEEN_KART_DASH:
 		OnAddHalloweenKartDash();
 		break;
@@ -2064,10 +2054,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_HALLOWEEN_GHOST_MODE:
 		OnRemoveHalloweenGhostMode();
-		break;
-
-	case TF_COND_PARACHUTE_ACTIVE:
-		OnRemoveCondParachute();
 		break;
 
 	case TF_COND_HALLOWEEN_KART_DASH:
@@ -2982,11 +2968,6 @@ void CTFPlayerShared::ConditionThink( void )
 		RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 		RemoveCond( TF_COND_AIR_CURRENT );
 
-		if ( InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-
 		if ( InCond( TF_COND_ROCKETPACK ) )
 		{
 			// Make sure we're still not dealing with launch, where it's possible
@@ -3561,78 +3542,6 @@ void CTFPlayerShared::OnRemoveMarkedForDeath( void )
 #endif
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: PARACHUTE
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddCondParachute( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->GetPredictable() && ( prediction->IsFirstTimePredicted() && !m_bSyncingConditions ) )
-	{
-		m_pOuter->EmitSound( "Parachute_open" );
-	}
-
-	if ( InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		if ( !m_hKartParachuteEntity )
-		{
-			C_BaseAnimating* pBanner = new C_BaseAnimating;
-			//if ( pBanner )
-			//	return;
-
-			pBanner->m_nSkin = 0;
-			pBanner->InitializeAsClientEntity( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_parachute.mdl", RENDER_GROUP_OPAQUE_ENTITY );
-			pBanner->ForceClientSideAnimationOn();
-			int iSpine = m_pOuter->LookupBone( "bip_spine_3" );
-			Assert( iSpine != -1 );
-			if ( iSpine != -1 )
-			{
-				pBanner->AttachEntityToBone( m_pOuter, iSpine );
-			}
-
-			int sequence = pBanner->SelectWeightedSequence( ACT_PARACHUTE_DEPLOY_IDLE );
-			pBanner->ResetSequence( sequence );
-			m_hKartParachuteEntity.Set( pBanner );
-		}
-	}
-	else
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "parachute_deploy" );
-		if ( event )
-		{
-			event->SetInt( "index", m_pOuter->entindex() );
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-#endif
-}
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveCondParachute( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->GetPredictable() && ( prediction->IsFirstTimePredicted() && !m_bSyncingConditions ) )
-	{
-		m_pOuter->EmitSound( "Parachute_close" );
-	}
-
-	if ( m_hKartParachuteEntity )
-	{
-		m_hKartParachuteEntity->Release();
-		m_hKartParachuteEntity = NULL;
-	}
-
-	if ( !InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "parachute_holster" );
-		if ( event )
-		{
-			event->SetInt( "index", m_pOuter->entindex() );
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-#endif
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 

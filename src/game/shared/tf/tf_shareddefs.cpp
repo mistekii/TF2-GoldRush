@@ -359,54 +359,52 @@ static const char *g_aConditionNames[] =
 	"TF_COND_HALLOWEEN_GHOST_MODE",             // = 77
 	"TF_COND_MINICRITBOOSTED_ON_KILL",          // = 78
 	"TF_COND_OBSCURED_SMOKE",                   // = 79
-	"TF_COND_PARACHUTE_ACTIVE",                 // = 80
-	"TF_COND_BLASTJUMPING",                     // = 81
-	"TF_COND_HALLOWEEN_KART",                   // = 82
-	"TF_COND_HALLOWEEN_KART_DASH",              // = 83
-	"TF_COND_BALLOON_HEAD",                     // = 84 - larger head, lower-gravity-feeling jumps
-	"TF_COND_MELEE_ONLY",                       // = 85 - melee only
-	"TF_COND_SWIMMING_CURSE",                   // = 86 - player movement become swimming movement
-	"TF_COND_FREEZE_INPUT",                     // = 87 - freezes player input
-	"TF_COND_HALLOWEEN_KART_CAGE",              // = 88 - attach cage model to player while in kart
-	"TF_COND_DONOTUSE_0",                       // = 89
-	"TF_COND_RUNE_STRENGTH",                    // = 90
-	"TF_COND_RUNE_HASTE",                       // = 91
-	"TF_COND_RUNE_REGEN",                       // = 92
-	"TF_COND_RUNE_RESIST",                      // = 93
-	"TF_COND_RUNE_VAMPIRE",                     // = 94
-	"TF_COND_RUNE_REFLECT",                     // = 95
-	"TF_COND_RUNE_PRECISION",                   // = 96
-	"TF_COND_RUNE_AGILITY",                     // = 97
-	"TF_COND_GRAPPLINGHOOK",                    // = 98
-	"TF_COND_GRAPPLINGHOOK_SAFEFALL",           // = 99
-	"TF_COND_GRAPPLINGHOOK_LATCHED",            // = 100
-	"TF_COND_GRAPPLINGHOOK_BLEEDING",           // = 101
-	"TF_COND_AFTERBURN_IMMUNE",                 // = 102
-	"TF_COND_RUNE_KNOCKOUT",                    // = 103
-	"TF_COND_RUNE_IMBALANCE",                   // = 104
-	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 105
-	"TF_COND_PASSTIME_INTERCEPTION",            // = 106
-	"TF_COND_SWIMMING_NO_EFFECTS",              // = 107 - =107_DNOC_FT
-	"TF_COND_PURGATORY",                        // = 108
-	"TF_COND_RUNE_KING",                        // = 109
-	"TF_COND_RUNE_PLAGUE",                      // = 110
-	"TF_COND_RUNE_SUPERNOVA",                   // = 111
-	"TF_COND_PLAGUE",                           // = 112
-	"TF_COND_KING_BUFFED",                      // = 113
-	"TF_COND_TEAM_GLOWS",                       // = 114 - used to show team glows to living players
-	"TF_COND_KNOCKED_INTO_AIR",                 // = 115
-	"TF_COND_COMPETITIVE_WINNER",               // = 116
-	"TF_COND_COMPETITIVE_LOSER",                // = 117
-	"TF_COND_HEALING_DEBUFF",                   // = 118
-	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 119
-	"TF_COND_GRAPPLED_TO_PLAYER",               // = 120
-	"TF_COND_GRAPPLED_BY_PLAYER",               // = 121
-	"TF_COND_PARACHUTE_DEPLOYED",               // = 122
-	"TF_COND_ROCKETPACK",                       // = 123
-	"TF_COND_LOST_FOOTING",                     // = 124
-	"TF_COND_AIR_CURRENT",                      // = 125
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 126
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 127
+	"TF_COND_BLASTJUMPING",                     // = 80
+	"TF_COND_HALLOWEEN_KART",                   // = 81
+	"TF_COND_HALLOWEEN_KART_DASH",              // = 82
+	"TF_COND_BALLOON_HEAD",                     // = 83 - larger head, lower-gravity-feeling jumps
+	"TF_COND_MELEE_ONLY",                       // = 84 - melee only
+	"TF_COND_SWIMMING_CURSE",                   // = 85 - player movement become swimming movement
+	"TF_COND_FREEZE_INPUT",                     // = 86 - freezes player input
+	"TF_COND_HALLOWEEN_KART_CAGE",              // = 87 - attach cage model to player while in kart
+	"TF_COND_DONOTUSE_0",                       // = 88
+	"TF_COND_RUNE_STRENGTH",                    // = 89
+	"TF_COND_RUNE_HASTE",                       // = 90
+	"TF_COND_RUNE_REGEN",                       // = 91
+	"TF_COND_RUNE_RESIST",                      // = 92
+	"TF_COND_RUNE_VAMPIRE",                     // = 93
+	"TF_COND_RUNE_REFLECT",                     // = 94
+	"TF_COND_RUNE_PRECISION",                   // = 95
+	"TF_COND_RUNE_AGILITY",                     // = 96
+	"TF_COND_GRAPPLINGHOOK",                    // = 97
+	"TF_COND_GRAPPLINGHOOK_SAFEFALL",           // = 98
+	"TF_COND_GRAPPLINGHOOK_LATCHED",            // = 99
+	"TF_COND_GRAPPLINGHOOK_BLEEDING",           // = 100
+	"TF_COND_AFTERBURN_IMMUNE",                 // = 101
+	"TF_COND_RUNE_KNOCKOUT",                    // = 102
+	"TF_COND_RUNE_IMBALANCE",                   // = 103
+	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 104
+	"TF_COND_PASSTIME_INTERCEPTION",            // = 105
+	"TF_COND_SWIMMING_NO_EFFECTS",              // = 106 - =107_DNOC_FT
+	"TF_COND_PURGATORY",                        // = 107
+	"TF_COND_RUNE_KING",                        // = 108
+	"TF_COND_RUNE_PLAGUE",                      // = 109
+	"TF_COND_RUNE_SUPERNOVA",                   // = 110
+	"TF_COND_PLAGUE",                           // = 111
+	"TF_COND_KING_BUFFED",                      // = 112
+	"TF_COND_TEAM_GLOWS",                       // = 113 - used to show team glows to living players
+	"TF_COND_KNOCKED_INTO_AIR",                 // = 114
+	"TF_COND_COMPETITIVE_WINNER",               // = 115
+	"TF_COND_COMPETITIVE_LOSER",                // = 116
+	"TF_COND_HEALING_DEBUFF",                   // = 117
+	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 118
+	"TF_COND_GRAPPLED_TO_PLAYER",               // = 119
+	"TF_COND_GRAPPLED_BY_PLAYER",               // = 120
+	"TF_COND_ROCKETPACK",                       // = 121
+	"TF_COND_LOST_FOOTING",                     // = 122
+	"TF_COND_AIR_CURRENT",                      // = 123
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 124
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 125
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -680,13 +678,11 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SPELLBOOK",
 	"TF_WEAPON_SPELLBOOK_PROJECTILE",
 	"TF_WEAPON_SNIPERRIFLE_CLASSIC",
-	"TF_WEAPON_PARACHUTE",
 	"TF_WEAPON_GRAPPLINGHOOK",
 	"TF_WEAPON_PASSTIME_GUN",
 	"TF_WEAPON_CHARGED_SMG",
 	"TF_WEAPON_BREAKABLE_SIGN",
 	"TF_WEAPON_ROCKETPACK",
-	"TF_WEAPON_SLAP",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aWeaponNames ) == TF_WEAPON_COUNT );
@@ -793,13 +789,11 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK_PROJECTILE
 	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE_CLASSIC,
-	DMG_GENERIC, // TF_WEAPON_PARACHUTE,
 	DMG_GENERIC, // TF_WEAPON_GRAPPLINGHOOK,
 	DMG_GENERIC, // TF_WEAPON_PASSTIME_GUN
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_CHARGED_SMG,
 	DMG_CLUB,		// TF_WEAPON_BREAKABLE_SIGN,
 	DMG_GENERIC, // TF_WEAPON_ROCKETPACK,
-	DMG_CLUB, // TF_WEAPON_SLAP,
 
 };
 
@@ -883,7 +877,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_KART",
 	"TF_DMG_CUSTOM_GIANT_HAMMER",
 	"TF_DMG_CUSTOM_RUNE_REFLECT",
-	"TF_DMG_CUSTOM_SLAP_KILL",
 	"TF_DMG_CUSTOM_CROC",
 	"TF_DMG_CUSTOM_TAUNTATK_GASBLAST",
 	"TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED",
@@ -1685,21 +1678,6 @@ wpntranslation_class_weapons_t pszWpnEntTranslationList[] =
 			"tf_weapon_throwable_secondary",			// TF_CLASS_PYRO,
 			"tf_weapon_throwable_secondary",			// TF_CLASS_SPY,
 			"tf_weapon_throwable_secondary",			// TF_CLASS_ENGINEER,		
-		}
-	},
-	{
-		"tf_weapon_parachute",
-		{
-			"",											// TF_CLASS_UNDEFINED = 0,
-			"",			// TF_CLASS_SCOUT,
-			"",			// TF_CLASS_SNIPER,
-			"tf_weapon_parachute_secondary",			// TF_CLASS_SOLDIER,
-			"tf_weapon_parachute_primary",				// TF_CLASS_DEMOMAN,
-			"",			// TF_CLASS_MEDIC,
-			"",			// TF_CLASS_HEAVYWEAPONS
-			"",			// TF_CLASS_PYRO,
-			""			// TF_CLASS_SPY,
-			"",			// TF_CLASS_ENGINEER,		
 		}
 	},
 	{

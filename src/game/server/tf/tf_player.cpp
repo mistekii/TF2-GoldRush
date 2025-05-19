@@ -631,7 +631,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetKillAssists, "GetKillAssists", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetBonusPoints, "GetBonusPoints", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptResetScores, "ResetScores", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptIsParachuteEquipped, "IsParachuteEquipped", "" )
 
 	DEFINE_SCRIPTFUNC( GetCurrency, "Get player's cash for game modes with upgrades, ie. MvM" )
 	DEFINE_SCRIPTFUNC( SetCurrency, "Set player's cash for game modes with upgrades, ie. MvM" )
@@ -2810,10 +2809,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheScriptSound( "General.banana_slip" ); // Used for SodaPopper Hype Jumps
 
 
-	PrecacheScriptSound( "Parachute_open" );
-	PrecacheScriptSound( "Parachute_close" );
-
-
 	// precache the EOTL bomb cart replacements
 	PrecacheModel( "models/props_trainyard/bomb_eotl_blue.mdl" );
 	PrecacheModel( "models/props_trainyard/bomb_eotl_red.mdl" );
@@ -3030,15 +3025,6 @@ void CTFPlayer::ApplyAbsVelocityImpulse( const Vector &vecImpulse )
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_TINY ) && !m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 	{
 		flImpulseScale *= 2.f;
-	}
-
-	// take extra force if you have a parachute deployed in x-y directions
-	if ( m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-	{
-		// don't allow parachute robot to get push in MvM
-		float flHorizontalScale = TFGameRules()->IsMannVsMachineMode() && IsBot() ? 0.f : 1.5f;
-		vecForce.x *= flHorizontalScale;
-		vecForce.y *= flHorizontalScale;
 	}
 
 	CBaseMultiplayerPlayer::ApplyAbsVelocityImpulse( vecForce * flImpulseScale );
@@ -3685,11 +3671,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 			m_Shared.RemoveCond( TF_COND_PHASE );
 		}
 
-		if ( m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-
 		if ( m_Shared.InCond( TF_COND_PLAGUE ) )
 		{
 			m_Shared.RemoveCond( TF_COND_PLAGUE );
@@ -4294,7 +4275,6 @@ void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 	CTFWeaponBase *pPrev = dynamic_cast<CTFWeaponBase*>( GetLastWeapon() );
 	if ( ( pCurr && pCurr->GetAttributeContainer()->GetItem()->GetEquippedPositionForClass( GetPlayerClass()->GetClassIndex() ) == LOADOUT_POSITION_ACTION )
 	  || ( pPrev && pPrev->GetAttributeContainer()->GetItem()->GetEquippedPositionForClass( GetPlayerClass()->GetClassIndex() ) == LOADOUT_POSITION_ACTION )
-	  || ( pCurr && pCurr->GetWeaponID() == TF_WEAPON_PARACHUTE )
 	) {
 		m_bRegenerating.Set( false );
 		m_iLastWeaponSlot = 0;

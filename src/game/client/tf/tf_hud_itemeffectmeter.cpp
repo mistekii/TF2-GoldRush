@@ -820,10 +820,6 @@ bool CHudItemEffectMeter_Weapon<CTFBuffItem>::ShouldDraw()
 	CTFBuffItem *pWeapon = GetWeapon();
 	if ( !pWeapon )
 		return false;
-
-	// do not draw for the parachute
-	if ( pWeapon->GetBuffType() == EParachute )
-		return false;
 	
 	return CHudItemEffectMeter::ShouldDraw();
 }

@@ -497,9 +497,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_DEFENSEBUFF, BUFF_CLASS_SOLDIER_DEFENSE, new ImagePanel( this, "PlayerStatus_SoldierDefenseBuff" ),						"../Effects/soldier_buff_defense_blue",		"../Effects/soldier_buff_defense_red" ) );
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_REGENONDAMAGEBUFF, BUFF_CLASS_SOLDIER_HEALTHONHIT, new ImagePanel( this, "PlayerStatus_SoldierHealOnHitBuff" ),			"../Effects/soldier_buff_healonhit_blue",	"../Effects/soldier_buff_healonhit_red" ) );
 
-	// Parachute
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_PARACHUTE_ACTIVE, BUFF_CLASS_PARACHUTE, new ImagePanel( this, "PlayerStatus_Parachute" ), "../HUD/hud_parachute_active", "../HUD/hud_parachute_active" ) );
-
 	m_iAnimState = HUD_HEALTH_NO_ANIM;
 	m_bAnimate = true;
 }
