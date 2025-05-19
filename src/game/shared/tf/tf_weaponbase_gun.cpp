@@ -293,7 +293,6 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 	case TF_PROJECTILE_PIPEBOMB:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 	case TF_PROJECTILE_PIPEBOMB_PRACTICE:
-	case TF_PROJECTILE_CANNONBALL:
 		pProjectile = FirePipeBomb( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;

@@ -5560,7 +5560,6 @@ int CTFRadiusDamageInfo::ApplyToEntity( CBaseEntity *pEntity )
 		{
 			case TF_WEAPON_PIPEBOMBLAUNCHER :
 			case TF_WEAPON_GRENADELAUNCHER :
-			case TF_WEAPON_CANNON :
 			case TF_WEAPON_STICKBOMB :
 				flAdjustedDamage *= 0.75f;
 				break;
@@ -5932,17 +5931,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				{
 					// Taunt crits fired from the scorch shot at short range are super powerful!
 					flDamage += Max( 400.f, flDamage );
-				}
-			}
-			else if( pTFAttacker && pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_CANNON && ( info.GetDamageType() & DMG_BLAST ) )
-			{
-				CTFGrenadeLauncher* pGrenadeLauncher = static_cast<CTFGrenadeLauncher*>( pWeapon );
-				if( pGrenadeLauncher->IsDoubleDonk( pVictim ) )
-				{
-					info.SetCritType( CTakeDamageInfo::CRIT_MINI );
-					eBonusEffect = kBonusEffect_DoubleDonk;
-					flDamage = Max( flDamage, info.GetMaxDamage() ); // Double donk victims score max damage
-					EconEntity_OnOwnerKillEaterEvent( pGrenadeLauncher, pTFAttacker, pVictim, kKillEaterEvent_DoubleDonks );
 				}
 			}
 			else if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_SCOUT ) && !( pTFAttacker->GetFlags() & FL_ONGROUND ) )
@@ -6339,7 +6327,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				break;
 			case TF_WEAPON_PIPEBOMBLAUNCHER :	// Stickies
 			case TF_WEAPON_GRENADELAUNCHER :
-			case TF_WEAPON_CANNON :
 			case TF_WEAPON_STICKBOMB:
 				if ( !( bitsDamage & DMG_NOCLOSEDISTANCEMOD ) )
 				{
@@ -11694,10 +11681,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	{
 		killer_weapon_name = "merasmus_player_bomb";
 	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_CANNONBALL_PUSH )
-	{
-		killer_weapon_name = "loose_cannon_impact";
-	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_SPELL_TELEPORT )
 	{
 		killer_weapon_name = "spellbook_teleport";
@@ -11857,10 +11840,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 						else if ( *iWeaponID == TF_WEAPON_BAT_WOOD )
 						{
 							killer_weapon_name = "deflect_ball";
-						}
-						else if ( *iWeaponID == TF_WEAPON_CANNON )
-						{
-							killer_weapon_name = "loose_cannon_reflect";
 						}
 					}
 				}
