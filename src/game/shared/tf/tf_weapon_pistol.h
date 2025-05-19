@@ -16,7 +16,6 @@
 #ifdef CLIENT_DLL
 #define CTFPistol C_TFPistol
 #define CTFPistol_Scout C_TFPistol_Scout
-#define CTFPistol_ScoutPrimary C_TFPistol_ScoutPrimary
 #define CTFPistol_ScoutSecondary C_TFPistol_ScoutSecondary
 #endif
 
@@ -63,33 +62,6 @@ public:
 	DECLARE_PREDICTABLE();
 
 	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_PISTOL_SCOUT; }
-};
-
-class CTFPistol_ScoutPrimary : public CTFPistol_Scout
-{
-public:
-	DECLARE_CLASS( CTFPistol_ScoutPrimary, CTFPistol_Scout );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-	
-	CTFPistol_ScoutPrimary();
-
-	virtual int		GetViewModelWeaponRole() { return TF_WPN_TYPE_SECONDARY; }
-	virtual int		GetWeaponID( void ) const	{ return TF_WEAPON_HANDGUN_SCOUT_PRIMARY; }
-	virtual void	PlayWeaponShootSound( void );
-	virtual void	SecondaryAttack( void );
-	virtual void	ItemPostFrame();
-	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
-	virtual void	Precache( void );
-
-	void			Push( void );
-
-#ifdef CLIENT_DLL
-	virtual bool	ShouldPlayClientReloadSound() { return true; }
-#endif
-
-private:
-	float			m_flPushTime;
 };
 
 class CTFPistol_ScoutSecondary : public CTFPistol_Scout
