@@ -120,47 +120,6 @@ float CTFShovel::GetMeleeDamage( CBaseEntity *pTarget, int* piDamageType, int* p
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-float CTFShovel::GetSpeedMod( void )
-{
-	if ( m_bHolstering || !HasSpeedBoost() )
-		return 1.f;
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-	if ( !pOwner )
-		return 0;
-
-	float flOwnerHealthRatio = (float) pOwner->GetHealth() / (float) pOwner->GetMaxHealth();
-	if ( flOwnerHealthRatio > 0.8 )
-		return 1.f;
-	else if ( flOwnerHealthRatio > 0.6 )
-		return 1.1f;
-	else if ( flOwnerHealthRatio > 0.4 )
-		return 1.2f;
-	else if ( flOwnerHealthRatio > 0.2 )
-		return 1.4f;
-	else
-		return 1.6f;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFShovel::Deploy( void )
-{
-	bool ret = BaseClass::Deploy();
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-	if ( pOwner && HasSpeedBoost() )
-	{
-		SetContextThink( &CTFShovel::MoveSpeedThink, gpGlobals->curtime + 0.25f, "SHOVEL_SPEED_THINK" );
-	}
-
-	return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFShovel::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
 	m_bHolstering = true;
@@ -168,23 +127,6 @@ bool CTFShovel::Holster( CBaseCombatWeapon *pSwitchingTo )
 	m_bHolstering = false;
 
 	return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFShovel::MoveSpeedThink( void )
-{
-	CTFPlayer *pOwner = ToTFPlayer( GetOwner() );
-	if ( !pOwner || !pOwner->IsAlive() )
-		return;
-
-	if ( this != pOwner->GetActiveWeapon() )
-		return;
-
-	pOwner->TeamFortress_SetSpeed();
-
-	SetContextThink( &CTFShovel::MoveSpeedThink, gpGlobals->curtime + 0.25f, "SHOVEL_SPEED_THINK" );
 }
 
 #ifndef CLIENT_DLL
@@ -208,7 +150,7 @@ float CTFShovel::GetForceScale( void )
 //-----------------------------------------------------------------------------
 int CTFShovel::GetDamageCustom()
 {
-	if ( GetShovelType() == SHOVEL_SPEED_BOOST || GetShovelType() == SHOVEL_DAMAGE_BOOST )
+	if ( GetShovelType() == SHOVEL_DAMAGE_BOOST )
 	{
 		return TF_DMG_CUSTOM_PICKAXE;
 	}
