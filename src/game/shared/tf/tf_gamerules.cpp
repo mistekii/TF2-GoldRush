@@ -20185,7 +20185,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 279:	// "maxammo grenades1 increased"
 		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD || iWeaponID == TF_WEAPON_BAT_GIFTWRAP );
+			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
 		}
 		break;
 	case 313:	// "applies snare effect"
