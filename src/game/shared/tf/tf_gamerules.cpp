@@ -887,7 +887,6 @@ extern ConVar mp_tournament_post_match_period;
 
 extern ConVar tf_flag_return_on_touch;
 extern ConVar tf_flag_return_time_credit_factor;
-ConVar tf_grapplinghook_enable( "tf_grapplinghook_enable", "0", FCVAR_REPLICATED );
 
 #ifdef GAME_DLL
 CUtlString s_strNextMvMPopFile;
@@ -3549,12 +3548,6 @@ bool CTFGameRules::IsUsingSpells( void ) const
 		return true;
 
 	return m_bIsUsingSpells;
-}
-
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsUsingGrapplingHook( void ) const
-{
-	return tf_grapplinghook_enable.GetBool();
 }
 
 //-----------------------------------------------------------------------------
@@ -12717,12 +12710,6 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 		return 0;
 	}
 
-	// grappling hook don't take fall damage
-	if ( pTFPlayer->GetGrapplingHookTarget() )
-	{
-		return 0;
-	}
-
 	if ( pPlayer->m_Local.m_flFallVelocity > TF_PLAYER_MAX_SAFE_FALL_SPEED )
 	{
 		// Old TFC damage formula
@@ -20588,7 +20575,6 @@ void	ScriptSetPlayersInHell( bool bInHell )						{ return TFGameRules()->SetPlay
 bool	ScriptArePlayersInHell()									{ return TFGameRules()->ArePlayersInHell(); }
 void	ScriptSetUsingSpells( bool bUsingSpells )					{ return TFGameRules()->SetUsingSpells( bUsingSpells ); }
 bool	ScriptIsUsingSpells()										{ return TFGameRules()->IsUsingSpells(); }
-bool	ScriptIsUsingGrapplingHook()								{ return TFGameRules()->IsUsingGrapplingHook(); }
 bool	ScriptIsTruceActive()										{ return TFGameRules()->IsTruceActive(); }
 bool	ScriptMapHasMatchSummaryStage()								{ return TFGameRules()->MapHasMatchSummaryStage(); }
 bool	ScriptPlayersAreOnMatchSummaryStage()						{ return TFGameRules()->PlayersAreOnMatchSummaryStage(); }
@@ -20644,7 +20630,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( ArePlayersInHell,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetUsingSpells,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsUsingSpells,							"" );
-	TF_GAMERULES_SCRIPT_FUNC( IsUsingGrapplingHook,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsTruceActive,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( MapHasMatchSummaryStage,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayersAreOnMatchSummaryStage,			"" );

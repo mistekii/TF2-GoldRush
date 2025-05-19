@@ -893,8 +893,6 @@ private:
 	bool m_bShowHudMenuTauntSelection;
 
 public:
-	CBaseEntity *GetGrapplingHookTarget() const { return m_hGrapplingHookTarget; }
-
 	bool IsUsingActionSlot() const { return m_bUsingActionSlot; }
 	void SetUsingActionSlot( bool bUsingActionSlot ) { m_bUsingActionSlot = bUsingActionSlot; }
 	
@@ -925,7 +923,6 @@ private:
 	void ClientAdjustVOPitch( int& pitch );
 
 private:
-	CNetworkHandle( CBaseEntity, m_hGrapplingHookTarget );
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 	CNetworkVar( bool, m_bUsingActionSlot );
 	CNetworkVar( int, m_iCampaignMedals );

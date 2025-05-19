@@ -499,7 +499,6 @@ enum ETFWeaponType
 	TF_WEAPON_SPELLBOOK,
 	TF_WEAPON_SPELLBOOK_PROJECTILE,
 	TF_WEAPON_SNIPERRIFLE_CLASSIC,
-	TF_WEAPON_GRAPPLINGHOOK,
 	TF_WEAPON_PASSTIME_GUN,
 	TF_WEAPON_CHARGED_SMG,
 	TF_WEAPON_BREAKABLE_SIGN,
@@ -561,7 +560,6 @@ enum ProjectileType_t
 	TF_PROJECTILE_FESTIVE_HEALING_BOLT,
 	TF_PROJECTILE_BREADMONSTER_JARATE,
 	TF_PROJECTILE_BREADMONSTER_MADMILK,
-	TF_PROJECTILE_GRAPPLINGHOOK,
 	TF_PROJECTILE_SENTRY_ROCKET,
 	TF_PROJECTILE_BREAD_MONSTER,
 
@@ -594,7 +592,6 @@ enum arrow_models
 	MODEL_SYRINGE,
 	MODEL_FESTIVE_HEALING_BOLT,
 	MODEL_BREAD_MONSTER,
-	MODEL_GRAPPLINGHOOK,
 
 	// Staging
 	MODEL_THROWING_KNIFE,
@@ -772,39 +769,35 @@ enum ETFCond
 	TF_COND_RUNE_REFLECT                     = 94,
 	TF_COND_RUNE_PRECISION                   = 95,
 	TF_COND_RUNE_AGILITY                     = 96,
-	TF_COND_GRAPPLINGHOOK                    = 97,
-	TF_COND_GRAPPLINGHOOK_SAFEFALL           = 98,
-	TF_COND_GRAPPLINGHOOK_LATCHED            = 99,
-	TF_COND_GRAPPLINGHOOK_BLEEDING           = 100,
-	TF_COND_AFTERBURN_IMMUNE                 = 101,
-	TF_COND_RUNE_KNOCKOUT                    = 102,
-	TF_COND_RUNE_IMBALANCE                   = 103,
-	TF_COND_CRITBOOSTED_RUNE_TEMP            = 104,
-	TF_COND_PASSTIME_INTERCEPTION            = 105,
-	TF_COND_SWIMMING_NO_EFFECTS              = 106, // =106_DNOC_FT
-	TF_COND_PURGATORY                        = 107,
-	TF_COND_RUNE_KING                        = 108,
-	TF_COND_RUNE_PLAGUE                      = 109,
-	TF_COND_RUNE_SUPERNOVA                   = 110,
-	TF_COND_PLAGUE                           = 111,
-	TF_COND_KING_BUFFED                      = 112,
-	TF_COND_TEAM_GLOWS                       = 113, // used to show team glows to living players
-	TF_COND_KNOCKED_INTO_AIR                 = 114,
-	TF_COND_COMPETITIVE_WINNER               = 115,
-	TF_COND_COMPETITIVE_LOSER                = 116,
-	TF_COND_HEALING_DEBUFF                   = 117,
-	TF_COND_PASSTIME_PENALTY_DEBUFF          = 118, // when carrying the ball without any teammates nearby
-	TF_COND_GRAPPLED_TO_PLAYER               = 119,
-	TF_COND_GRAPPLED_BY_PLAYER               = 120,
-	TF_COND_ROCKETPACK                       = 121,
+	TF_COND_AFTERBURN_IMMUNE                 = 97,
+	TF_COND_RUNE_KNOCKOUT                    = 98,
+	TF_COND_RUNE_IMBALANCE                   = 99,
+	TF_COND_CRITBOOSTED_RUNE_TEMP            = 100,
+	TF_COND_PASSTIME_INTERCEPTION            = 101,
+	TF_COND_SWIMMING_NO_EFFECTS              = 102, // =102_DNOC_FT
+	TF_COND_PURGATORY                        = 103,
+	TF_COND_RUNE_KING                        = 104,
+	TF_COND_RUNE_PLAGUE                      = 105,
+	TF_COND_RUNE_SUPERNOVA                   = 106,
+	TF_COND_PLAGUE                           = 107,
+	TF_COND_KING_BUFFED                      = 108,
+	TF_COND_TEAM_GLOWS                       = 109, // used to show team glows to living players
+	TF_COND_KNOCKED_INTO_AIR                 = 110,
+	TF_COND_COMPETITIVE_WINNER               = 111,
+	TF_COND_COMPETITIVE_LOSER                = 112,
+	TF_COND_HEALING_DEBUFF                   = 113,
+	TF_COND_PASSTIME_PENALTY_DEBUFF          = 114, // when carrying the ball without any teammates nearby
+	TF_COND_GRAPPLED_TO_PLAYER               = 115,
+	TF_COND_GRAPPLED_BY_PLAYER               = 116,
+	TF_COND_ROCKETPACK                       = 117,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 122,
+	TF_COND_LOST_FOOTING                     = 118,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 123,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 124,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 125,
+	TF_COND_AIR_CURRENT                      = 119,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 120,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 121,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//
@@ -2592,7 +2585,6 @@ extern helltower_vo_t g_pszHelltowerAnnouncerLines[];
 
 // flags to ignore certain check in CanAttack function
 #define TF_CAN_ATTACK_FLAG_NONE				0
-#define TF_CAN_ATTACK_FLAG_GRAPPLINGHOOK	0x01
 
 struct PlayerHistoryInfo_t
 {

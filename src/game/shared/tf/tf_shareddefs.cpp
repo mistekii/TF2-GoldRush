@@ -376,35 +376,31 @@ static const char *g_aConditionNames[] =
 	"TF_COND_RUNE_REFLECT",                     // = 94
 	"TF_COND_RUNE_PRECISION",                   // = 95
 	"TF_COND_RUNE_AGILITY",                     // = 96
-	"TF_COND_GRAPPLINGHOOK",                    // = 97
-	"TF_COND_GRAPPLINGHOOK_SAFEFALL",           // = 98
-	"TF_COND_GRAPPLINGHOOK_LATCHED",            // = 99
-	"TF_COND_GRAPPLINGHOOK_BLEEDING",           // = 100
-	"TF_COND_AFTERBURN_IMMUNE",                 // = 101
-	"TF_COND_RUNE_KNOCKOUT",                    // = 102
-	"TF_COND_RUNE_IMBALANCE",                   // = 103
-	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 104
-	"TF_COND_PASSTIME_INTERCEPTION",            // = 105
-	"TF_COND_SWIMMING_NO_EFFECTS",              // = 106 - =107_DNOC_FT
-	"TF_COND_PURGATORY",                        // = 107
-	"TF_COND_RUNE_KING",                        // = 108
-	"TF_COND_RUNE_PLAGUE",                      // = 109
-	"TF_COND_RUNE_SUPERNOVA",                   // = 110
-	"TF_COND_PLAGUE",                           // = 111
-	"TF_COND_KING_BUFFED",                      // = 112
-	"TF_COND_TEAM_GLOWS",                       // = 113 - used to show team glows to living players
-	"TF_COND_KNOCKED_INTO_AIR",                 // = 114
-	"TF_COND_COMPETITIVE_WINNER",               // = 115
-	"TF_COND_COMPETITIVE_LOSER",                // = 116
-	"TF_COND_HEALING_DEBUFF",                   // = 117
-	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 118
-	"TF_COND_GRAPPLED_TO_PLAYER",               // = 119
-	"TF_COND_GRAPPLED_BY_PLAYER",               // = 120
-	"TF_COND_ROCKETPACK",                       // = 121
-	"TF_COND_LOST_FOOTING",                     // = 122
-	"TF_COND_AIR_CURRENT",                      // = 123
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 124
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 125
+	"TF_COND_AFTERBURN_IMMUNE",                 // = 97
+	"TF_COND_RUNE_KNOCKOUT",                    // = 98
+	"TF_COND_RUNE_IMBALANCE",                   // = 99
+	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 100
+	"TF_COND_PASSTIME_INTERCEPTION",            // = 101
+	"TF_COND_SWIMMING_NO_EFFECTS",              // = 102 - =102_DNOC_FT
+	"TF_COND_PURGATORY",                        // = 103
+	"TF_COND_RUNE_KING",                        // = 104
+	"TF_COND_RUNE_PLAGUE",                      // = 105
+	"TF_COND_RUNE_SUPERNOVA",                   // = 106
+	"TF_COND_PLAGUE",                           // = 107
+	"TF_COND_KING_BUFFED",                      // = 108
+	"TF_COND_TEAM_GLOWS",                       // = 109 - used to show team glows to living players
+	"TF_COND_KNOCKED_INTO_AIR",                 // = 110
+	"TF_COND_COMPETITIVE_WINNER",               // = 111
+	"TF_COND_COMPETITIVE_LOSER",                // = 112
+	"TF_COND_HEALING_DEBUFF",                   // = 113
+	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 114
+	"TF_COND_GRAPPLED_TO_PLAYER",               // = 115
+	"TF_COND_GRAPPLED_BY_PLAYER",               // = 116
+	"TF_COND_ROCKETPACK",                       // = 117
+	"TF_COND_LOST_FOOTING",                     // = 118
+	"TF_COND_AIR_CURRENT",                      // = 119
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 120
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 121
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -678,7 +674,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SPELLBOOK",
 	"TF_WEAPON_SPELLBOOK_PROJECTILE",
 	"TF_WEAPON_SNIPERRIFLE_CLASSIC",
-	"TF_WEAPON_GRAPPLINGHOOK",
 	"TF_WEAPON_PASSTIME_GUN",
 	"TF_WEAPON_CHARGED_SMG",
 	"TF_WEAPON_BREAKABLE_SIGN",
@@ -789,7 +784,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK_PROJECTILE
 	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE_CLASSIC,
-	DMG_GENERIC, // TF_WEAPON_GRAPPLINGHOOK,
 	DMG_GENERIC, // TF_WEAPON_PASSTIME_GUN
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_CHARGED_SMG,
 	DMG_CLUB,		// TF_WEAPON_BREAKABLE_SIGN,
@@ -934,7 +928,6 @@ const char *g_szProjectileNames[] =
 	"projectile_festive_healing_bolt",
 	"projectfile_breadmonster_jarate",
 	"projectfile_breadmonster_madmilk",
-	"projectile_grapplinghook",
 	"projectile_sentry_rocket",
 	"projectile_bread_monster",
 
@@ -970,7 +963,6 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_CROSSBOW,
 	TF_WEAPON_JAR,
 	TF_WEAPON_JAR,
-	TF_PROJECTILE_GRAPPLINGHOOK,
 	TF_WEAPON_SENTRY_ROCKET,
 	TF_WEAPON_THROWABLE,
 
@@ -1109,7 +1101,6 @@ const char *g_pszArrowModels[] =
 	"models/weapons/w_models/w_syringe_proj.mdl",
 	"models/workshop/weapons/c_models/c_crusaders_crossbow/c_crusaders_crossbow_xmas_proj.mdl",
 	"models/weapons/w_models/w_breadmonster/w_breadmonster.mdl",
-	"models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl",
 	"models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_pszArrowModels ) == TF_ARROW_MODEL_COUNT );

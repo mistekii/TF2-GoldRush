@@ -260,9 +260,6 @@ void CTFWeaponInvis::SetFeignDeathState( bool bEnabled )
 	if ( !pOwner )
 		return;
 
-	if ( pOwner->m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) )
-		return;
-
 	if ( bEnabled )
 	{
 		pOwner->m_Shared.SetFeignDeathReady( true );

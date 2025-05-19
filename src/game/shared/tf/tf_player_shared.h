@@ -785,7 +785,6 @@ private:
 	void OnAddMeleeOnly( void );
 	void OnAddSwimmingCurse( void );
 	void OnAddHalloweenKartCage( void );
-	void OnAddGrapplingHookLatched( void );
 	void OnAddPasstimeInterception( void );
 	void OnAddInPurgatory( void );
 	void OnAddCompetitiveWinner( void );
@@ -857,7 +856,6 @@ private:
 	void OnRemoveMeleeOnly( void );
 	void OnRemoveSwimmingCurse( void );
 	void OnRemoveHalloweenKartCage( void );
-	void OnRemoveGrapplingHookLatched( void );
 	void OnRemovePasstimeInterception( void );
 	void OnRemoveInPurgatory( void );
 	void OnRemoveCompetitiveWinner( void );

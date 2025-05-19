@@ -92,7 +92,6 @@
 #include "tf_weapon_passtime_gun.h"
 #include "entity_healthkit.h"
 #include "halloween/merasmus/merasmus.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_wearable_levelable_item.h"
 #include "tf_weapon_rocketpack.h"
 #include "tf_obj_sentrygun.h"
@@ -1771,10 +1770,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddHalloweenKartCage();
 		break;
 
-	case TF_COND_GRAPPLINGHOOK_LATCHED:
-		OnAddGrapplingHookLatched();
-		break;
-
 	case TF_COND_PASSTIME_INTERCEPTION:
 		OnAddPasstimeInterception();
 		break;
@@ -2077,10 +2072,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_HALLOWEEN_KART_CAGE:
 		OnRemoveHalloweenKartCage();
-		break;
-
-	case TF_COND_GRAPPLINGHOOK_LATCHED:
-		OnRemoveGrapplingHookLatched();
 		break;
 
 	case TF_COND_PASSTIME_INTERCEPTION:
@@ -4792,22 +4783,6 @@ void CTFPlayerShared::OnRemoveMedEffectSmallFireResist( void )
 #ifdef CLIENT_DLL
 	RemoveResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddGrapplingHookLatched( void )
-{
-	m_pOuter->DoAnimationEvent( PLAYERANIMEVENT_CUSTOM_GESTURE, ACT_GRAPPLE_PULL_START );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveGrapplingHookLatched( void )
-{
-	// DO NOTHING
 }
 
 //-----------------------------------------------------------------------------
@@ -11488,17 +11463,6 @@ bool CTFPlayer::CanAttack( int iCanAttackFlags )
 		return true;
 	}
 
-	if ( ( m_Shared.GetStealthNoAttackExpireTime() > gpGlobals->curtime && !m_Shared.InCond( TF_COND_STEALTHED_USER_BUFF ) ) || m_Shared.InCond( TF_COND_STEALTHED ) )
-	{
-		if ( !( iCanAttackFlags & TF_CAN_ATTACK_FLAG_GRAPPLINGHOOK ) )
-		{
-#ifdef CLIENT_DLL
-			HintMessage( HINT_CANNOT_ATTACK_WHILE_CLOAKED, true, true );
-#endif
-			return false;
-		}
-	}
-
 	if ( m_Shared.IsFeignDeathReady() )
 	{
 #ifdef CLIENT_DLL
@@ -11701,10 +11665,6 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 		return false;
 
 	if ( TFGameRules()->State_Get() != GR_STATE_RND_RUNNING && TFGameRules()->State_Get() != GR_STATE_STALEMATE && TFGameRules()->State_Get() != GR_STATE_BETWEEN_RNDS )
-		return false;
-
-	// don't allow to pick up building while grappling hook
-	if ( m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) )
 		return false;
 
 	// There's ammo in the clip... no switching away!

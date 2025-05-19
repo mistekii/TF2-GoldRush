@@ -104,7 +104,6 @@
 #include "tf_gc_server.h"
 #include "tf_logic_halloween_2014.h"
 #include "tf_weapon_knife.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_dropped_weapon.h"
 #include "tf_passtime_logic.h"
 #include "tf_weapon_passtime_gun.h"
@@ -228,7 +227,6 @@ ConVar tf_test_teleport_home_fx( "tf_test_teleport_home_fx", "0", FCVAR_CHEAT );
 
 ConVar tf_halloween_giant_health_scale( "tf_halloween_giant_health_scale", "10", FCVAR_CHEAT );
 
-ConVar tf_grapplinghook_los_force_detach_time( "tf_grapplinghook_los_force_detach_time", "1", FCVAR_CHEAT );
 ConVar tf_powerup_max_charge_time( "tf_powerup_max_charge_time", "30", FCVAR_CHEAT );
 
 extern ConVar tf_mvm_buybacks_method;
@@ -581,8 +579,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( GetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( SetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( IsUsingActionSlot, "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptGetGrapplingHookTarget, "GetGrapplingHookTarget", "What entity is the player grappling?" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptSetGrapplingHookTarget, "SetGrapplingHookTarget", "Set the player's target grapple entity" )
 	DEFINE_SCRIPTFUNC( AddCustomAttribute, "Add a custom attribute to the player" )
 	DEFINE_SCRIPTFUNC( RemoveCustomAttribute, "Remove a custom attribute to the player" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptAddCond, "AddCond", "" )
@@ -818,7 +814,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropFloat( SENDINFO( m_flKartNextAvailableBoost ) ),
 	SendPropInt( SENDINFO( m_iKartHealth ) ),
 	SendPropInt( SENDINFO( m_iKartState ) ),
-	SendPropEHandle( SENDINFO( m_hGrapplingHookTarget ) ),
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
 	SendPropBool( SENDINFO( m_bUsingActionSlot ) ),
 	SendPropFloat( SENDINFO( m_flHelpmeButtonPressTime ) ),
@@ -1039,82 +1034,6 @@ void CTFPlayer::ForcePlayerViewAngles( const QAngle& qTeleportAngles )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::SetGrapplingHookTarget( CBaseEntity *pTarget, bool bShouldBleed /*= false*/ )
-{
-	if ( pTarget )
-	{
-		// prevent fall damage after a successful hook
-		m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_SAFEFALL );
-		m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_LATCHED );
-	}
-	else
-	{
-		m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK_LATCHED );
-	}
-
-	CBaseEntity *pPreviousTarget = m_hGrapplingHookTarget;
-	m_hGrapplingHookTarget = pTarget;
-	
-	if ( pTarget )
-	{
-		if ( pTarget->IsPlayer() )
-		{
-			CTFPlayer *pTargetPlayer = ToTFPlayer( pTarget );
-
-			m_Shared.AddCond( TF_COND_GRAPPLED_TO_PLAYER );
-
-			// make player bleed
-			if ( bShouldBleed )
-			{
-				CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-				if ( pGrapplingHook )
-					pTargetPlayer->m_Shared.MakeBleed( this, pGrapplingHook, 0, TF_BLEEDING_DMG, true );
-
-				pTargetPlayer->m_nHookAttachedPlayers++;
-			}
-
-			if ( !pTargetPlayer->m_Shared.InCond( TF_COND_GRAPPLINGHOOK_BLEEDING ) && pTargetPlayer->m_nHookAttachedPlayers > 0 )
-			{
-				pTargetPlayer->m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_BLEEDING );
-			}
-			if ( !pTargetPlayer->m_Shared.InCond( TF_COND_GRAPPLED_BY_PLAYER ) && pTargetPlayer->m_nHookAttachedPlayers > 0 )
-			{
-				pTargetPlayer->m_Shared.AddCond( TF_COND_GRAPPLED_BY_PLAYER );
-			}
-		}
-
-		m_flLastSeenHookTarget = gpGlobals->curtime;
-	}
-	else
-	{
-		if ( pPreviousTarget && pPreviousTarget->IsPlayer() )
-		{
-			CTFPlayer *pPreviousTargetPlayer = ToTFPlayer( pPreviousTarget );
-
-			m_Shared.RemoveCond( TF_COND_GRAPPLED_TO_PLAYER );
-			
-			// try to remove bleeding from hook if there's one
-			if ( pPreviousTargetPlayer->m_Shared.InCond( TF_COND_BLEEDING ) )
-			{
-				CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-				if ( pGrapplingHook )
-					pPreviousTargetPlayer->m_Shared.StopBleed( this, pGrapplingHook );
-			}
-
-			pPreviousTargetPlayer->m_nHookAttachedPlayers--;
-			Assert( pPreviousTargetPlayer->m_nHookAttachedPlayers >= 0 );
-			if ( pPreviousTargetPlayer->m_nHookAttachedPlayers == 0 )
-			{
-				pPreviousTargetPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK_BLEEDING );
-				pPreviousTargetPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLED_BY_PLAYER );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFPlayer::CanBeForcedToLaugh( void )
 {
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsBot() && ( GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
@@ -1219,50 +1138,6 @@ void CTFPlayer::TFPlayerThink()
 				pGhost->ApplyGenericPushbackImpulse( tf_halloween_kart_punting_ghost_force_scale.GetFloat() * flImpactForce * vPuntDir, nullptr );
 				pGhost->EmitSound( "BumperCar.HitGhost" );
 				pGhost->m_flGhostLastHitByKartTime = gpGlobals->curtime;
-			}
-		}
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		if ( IsUsingActionSlot() && GetActiveTFWeapon() && GetActiveTFWeapon()->GetWeaponID() != TF_WEAPON_GRAPPLINGHOOK )
-		{
-			CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-			if ( pGrapplingHook )
-			{
-				Weapon_Switch( pGrapplingHook );
-			}
-		}
-
-		CBaseEntity *pHookTarget = GetGrapplingHookTarget();
-		if ( pHookTarget )
-		{
-			// detatch hook if the object's picked up
-			if ( pHookTarget->IsBaseObject() )
-			{
-				CBaseObject *pObj = assert_cast< CBaseObject* >( pHookTarget );
-				if ( pObj->IsCarried() )
-				{
-					SetGrapplingHookTarget( NULL );
-					pHookTarget = NULL;
-				}
-			}
-
-			// check if something is blocking the player from traveling to the hook target
-			if ( pHookTarget )
-			{
-				trace_t tr;
-				CTraceFilterLOS filter( this, COLLISION_GROUP_PLAYER_MOVEMENT, pHookTarget );
-				UTIL_TraceLine( WorldSpaceCenter(), pHookTarget->WorldSpaceCenter(), MASK_SOLID, &filter, &tr );
-				if ( !tr.DidHit() )
-				{
-					m_flLastSeenHookTarget = gpGlobals->curtime;
-				}
-				else if ( gpGlobals->curtime - m_flLastSeenHookTarget > tf_grapplinghook_los_force_detach_time.GetFloat() )
-				{
-					// force to detach if the hooker lost sight of the target for sometime
-					SetGrapplingHookTarget( NULL );
-				}
 			}
 		}
 	}
@@ -3452,8 +3327,6 @@ void CTFPlayer::Spawn()
 	m_bIsMiniBoss = false;
 	m_bUseBossHealthBar = false;
 
-	m_hGrapplingHookTarget = NULL;
-	m_nHookAttachedPlayers = 0;
 	m_bUsingActionSlot = false;
 
 	m_flHelpmeButtonPressTime = 0.f;
@@ -4581,16 +4454,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 		Weapon_Switch( pThrowable );
 		return;
 	}
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( pActionSlotEntity );
-		if ( pGrapplingHook )
-		{
-			Weapon_Switch( pGrapplingHook );
-			return;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4599,26 +4462,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 void CTFPlayer::UseActionSlotItemReleased( void )
 {
 	m_bUsingActionSlot = false;
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		// if we're using the hook, switch back to the last weapon
-		if ( GetActiveTFWeapon() && GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK )
-		{
-			CBaseCombatWeapon *pLastWeapon = GetLastWeapon();
-			if ( pLastWeapon && Weapon_CanSwitchTo( pLastWeapon ) )
-			{
-				Weapon_Switch( pLastWeapon );
-			}
-			else
-			{
-				// in case we failed to switch back to last weapon for some reason, just find the next best
-				SwitchToNextBestWeapon( pLastWeapon );
-			}
-
-			return;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

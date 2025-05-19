@@ -78,18 +78,6 @@ BEGIN_DATADESC( CTFProjectile_HealingBolt )
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( tf_projectile_grapplinghook, CTFProjectile_GrapplingHook );
-PRECACHE_WEAPON_REGISTER( tf_projectile_grapplinghook );
-
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_GrapplingHook, DT_TFProjectile_GrapplingHook )
-
-BEGIN_NETWORK_TABLE( CTFProjectile_GrapplingHook, DT_TFProjectile_GrapplingHook )
-END_NETWORK_TABLE()
-
-BEGIN_DATADESC( CTFProjectile_GrapplingHook )
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 CTFProjectile_Arrow::CTFProjectile_Arrow()
@@ -122,8 +110,6 @@ static const char* GetArrowEntityName( ProjectileType_t projectileType )
 	case TF_PROJECTILE_HEALING_BOLT:
 	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
 		return "tf_projectile_healing_bolt";
-	case TF_PROJECTILE_GRAPPLINGHOOK:
-		return "tf_projectile_grapplinghook";
 	
 	default:
 		return "tf_projectile_arrow";
@@ -219,10 +205,6 @@ void CTFProjectile_Arrow::Spawn()
 	{
 		SetModel( g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT] );
 		SetModelScale( 3.0f );
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_GRAPPLINGHOOK )
-	{
-		SetModel( g_pszArrowModels[MODEL_GRAPPLINGHOOK] );
 	}
 	else
 	{
@@ -1063,7 +1045,6 @@ void CTFProjectile_Arrow::CreateTrail( void )
 				break;
 			case TF_PROJECTILE_HEALING_BOLT:
 			case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-			case TF_PROJECTILE_GRAPPLINGHOOK:
 				return; // do not create arrow trail for healing bolt, use particle instead (client only)
 		}
 		
@@ -1286,209 +1267,4 @@ void CTFProjectile_HealingBolt::ImpactTeamPlayer( CTFPlayer *pOther )
 	pOther->m_Shared.AddCond( TF_COND_HEALTH_OVERHEALED, 1.2f );
 
 	EconEntity_OnOwnerKillEaterEvent_Batched( dynamic_cast<CEconEntity *>( GetLauncher() ), pOwner, pOther, kKillEaterEvent_AllyHealingDone, flHealth );
-}
-
-
-CTFProjectile_GrapplingHook::CTFProjectile_GrapplingHook()
-	: m_pImpactFleshSoundLoop( NULL )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::Spawn()
-{
-	BaseClass::Spawn();
-
-	SetMoveType( MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM );
-}
-
-
-void CTFProjectile_GrapplingHook::Precache()
-{
-	BaseClass::Precache();
-
-	PrecacheModel( "models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactFlesh" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactDefault" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactFleshLoop" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::UpdateOnRemove()
-{
-	// clear hook target
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->SetGrapplingHookTarget( NULL );
-		pTFPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK );
-	}
-
-	StopImpactFleshSoundLoop();
-
-	BaseClass::UpdateOnRemove();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Setup function.
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner, CBaseEntity *pScorer )
-{
-	BaseClass::InitArrow( vecAngles, fSpeed, fGravity, projectileType, pOwner, pScorer );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.AddCond( TF_COND_GRAPPLINGHOOK );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: OnArrowImpact
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::OnArrowImpact( mstudiobbox_t *pBox, CBaseEntity *pOther, CBaseEntity *pAttacker )
-{
-	HookTarget( pOther );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: OnArrowImpactObject
-//-----------------------------------------------------------------------------
-bool CTFProjectile_GrapplingHook::OnArrowImpactObject( CBaseEntity *pOther )
-{
-	HookTarget( pOther );
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: CheckSkyboxImpact
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::CheckSkyboxImpact( CBaseEntity *pOther )
-{
-	trace_t tr;
-	Vector velDir = GetAbsVelocity();
-	VectorNormalize( velDir );
-	Vector vecSpot = GetAbsOrigin() - velDir * 32;
-	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID, this, COLLISION_GROUP_DEBRIS, &tr );
-	if ( tr.fraction < 1.0 && tr.surface.flags & SURF_SKY )
-	{
-		// We hit the skybox, go away soon.
-		FadeOut( 1.f );
-		return;
-	}
-
-	if ( !pOther->IsWorld() )
-	{
-		HookTarget( pOther );
-	}
-	else
-	{
-		HookTarget( pOther );
-
-		// rotate the hook model to be perpendicular to the world surface
-		Vector vUp;
-		AngleVectors( GetAbsAngles(), NULL, NULL, &vUp );
-		QAngle qNewAngles;
-		VectorAngles( -tr.plane.normal, vUp, qNewAngles );
-		SetAbsAngles( qNewAngles );
-		SetAbsOrigin( GetAbsOrigin() + 3.f * tr.plane.normal );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: HookTarget
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::HookTarget( CBaseEntity *pOther )
-{
-	if ( !GetOwnerEntity() || !pOther )
-		return;
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( !pTFPlayer || pTFPlayer->GetGrapplingHookTarget() )
-		return;
-
-	CBaseEntity *pTarget = pOther->IsWorld() ? this : pOther;
-	const char *pszSoundName = NULL;
-	if ( pTarget->IsPlayer() )
-	{
-		pszSoundName = "WeaponGrapplingHook.ImpactFlesh";
-	}
-	else
-	{
-		pszSoundName = "WeaponGrapplingHook.ImpactDefault";
-	}
-	ImpactSound( pszSoundName );
-
-	pTFPlayer->SetGrapplingHookTarget( pTarget, true );
-
-	// Stop moving!
-	if ( pOther->IsPlayer() )
-	{
-		FollowEntity( pOther, false );
-		StartImpactFleshSoundLoop();
-	}
-	else
-		SetMoveType( MOVETYPE_NONE );
-
-	SetContextThink( &CTFProjectile_GrapplingHook::HookLatchedThink, gpGlobals->curtime + 0.1f, "HookLatchedThink" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: HookLatchedThink
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::HookLatchedThink()
-{
-	// if owner is dead, remove the hook
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( !pTFPlayer || !pTFPlayer->IsAlive() )
-	{
-		UTIL_Remove( this );
-		return;
-	}
-
-	// if the target nolonger exist or target player is dead, remove the hook
-	CBaseEntity *pHookTarget = pTFPlayer->GetGrapplingHookTarget();
-	if ( !pHookTarget || ( pHookTarget->IsPlayer() && !pHookTarget->IsAlive() ) )
-	{
-		UTIL_Remove( this );
-		return;
-	}
-	
-	SetContextThink( &CTFProjectile_GrapplingHook::HookLatchedThink, gpGlobals->curtime + 0.1f, "HookLatchedThink" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::StartImpactFleshSoundLoop()
-{
-	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-	CPASAttenuationFilter filter( this );
-	m_pImpactFleshSoundLoop = controller.SoundCreate( filter, entindex(), "WeaponGrapplingHook.ImpactFleshLoop" );
-	controller.Play( m_pImpactFleshSoundLoop, 1.0, 100 );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::StopImpactFleshSoundLoop()
-{
-	if ( m_pImpactFleshSoundLoop )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundDestroy( m_pImpactFleshSoundLoop );
-		m_pImpactFleshSoundLoop = NULL;
-	}
 }

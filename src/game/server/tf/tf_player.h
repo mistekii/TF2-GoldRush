@@ -553,7 +553,7 @@ public:
 	void InputRoundSpawn( inputdata_t &inputdata );
 
 	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) || m_Shared.InCond( TF_COND_ROCKETPACK ) ); }
-	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) || m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) || m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) || m_Shared.InCond( TF_COND_GRAPPLINGHOOK_SAFEFALL ) ) ); }
+	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) || m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) ) ); }
 
 	void DoNoiseMaker(); // Halloween event item support.
 
@@ -1403,11 +1403,6 @@ public:
 	// clientmode_tf.cpp. Sets Local and Abs angles, along with TauntYaw and VehicleMovingAngles.
 	void ForcePlayerViewAngles( const QAngle& qTeleportAngles );
 
-	CBaseEntity *GetGrapplingHookTarget() const { return m_hGrapplingHookTarget; }
-	void SetGrapplingHookTarget( CBaseEntity *pTarget, bool bShouldBleed = false );
-	HSCRIPT ScriptGetGrapplingHookTarget() const { return ToHScript( m_hGrapplingHookTarget.Get() ); }
-	void ScriptSetGrapplingHookTarget( HSCRIPT pTarget, bool bShouldBleed ) { return SetGrapplingHookTarget( ToEnt( pTarget ), bShouldBleed ); }
-
 	void AddHudHideFlags(int flags) { m_Local.m_iHideHUD |= flags; }
 	void RemoveHudHideFlags(int flags) { m_Local.m_iHideHUD &= ~flags; }
 	void SetHudHideFlags(int flags) { m_Local.m_iHideHUD = flags; }
@@ -1455,10 +1450,6 @@ private:
 	float m_flSendPickupWeaponMessageTime;
 
 	void ModifyDamageInfo( CTakeDamageInfo *pInfo, const CBaseEntity *pTarget );
-
-	CNetworkHandle( CBaseEntity, m_hGrapplingHookTarget );
-	float m_flLastSeenHookTarget;
-	int m_nHookAttachedPlayers;
 
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 	CNetworkVar( bool, m_bUsingActionSlot );

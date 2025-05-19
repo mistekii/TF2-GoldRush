@@ -315,7 +315,6 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 	case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
 	case TF_PROJECTILE_FESTIVE_ARROW:
 	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-	case TF_PROJECTILE_GRAPPLINGHOOK:
 		pProjectile = FireArrow( pPlayer, ProjectileType_t( iProjectile ) );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;

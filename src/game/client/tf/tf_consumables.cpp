@@ -24,7 +24,6 @@
 #include "tf_item_tools.h"
 #include "c_tf_freeaccount.h"
 #include "tf_item_powerup_bottle.h"
-#include "tf_weapon_grapplinghook.h"
 
 // for UI
 #include "clientmode_tf.h"
@@ -1074,23 +1073,6 @@ static void StartUseActionSlotItem( const CCommand &args )
 		return;
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( pLocalPlayer->GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-		if ( pGrapplingHook )
-		{
-			if ( pLocalPlayer->GetActiveTFWeapon() != pGrapplingHook )
-			{
-				pLocalPlayer->Weapon_Switch( pGrapplingHook );
-			}
-
-			KeyValues *kv = new KeyValues( "+use_action_slot_item_server" );
-			engine->ServerCmdKeyValues( kv );
-
-			return;
-		}
-	}
-
 	// send a request to the GC to use the item
 	g_bUsedGCItem = false;
 	CEconItemView *pItem = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pLocalPlayer, LOADOUT_POSITION_ACTION );
@@ -1122,31 +1104,6 @@ static void EndUseActionSlotItem( const CCommand &args )
 		return;
 
 	pLocalPlayer->SetUsingActionSlot( false );
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() && pLocalPlayer->GetActiveTFWeapon() )
-	{
-		// if we're using the hook, switch back to the last weapon
-		if ( pLocalPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK )
-		{
-			KeyValues *kv = new KeyValues( "-use_action_slot_item_server" );
-			engine->ServerCmdKeyValues( kv );
-
-			C_BaseCombatWeapon* pLastWeapon = pLocalPlayer->GetLastWeapon();
-
-			// switch away from the hook
-			if ( pLastWeapon && pLocalPlayer->Weapon_CanSwitchTo( pLastWeapon ) )
-			{
-				pLocalPlayer->Weapon_Switch( pLastWeapon );
-			}
-			else
-			{
-				// in case we failed to switch back to last weapon for some reason, just find the next best
-				pLocalPlayer->SwitchToNextBestWeapon( pLastWeapon );
-			}
-
-			return;
-		}
-	}
 
 	// tell the game server we let go of the button if this wasn't a GC item
 	if ( !g_bUsedGCItem )

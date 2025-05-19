@@ -93,7 +93,6 @@
 #include "baseanimatedtextureproxy.h"
 #include "econ_entity.h"
 #include "halloween/tf_weapon_spellbook.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_logic_robot_destruction.h"
 #include "econ_notifications.h"
 #include "tf_weapon_buff_item.h"
@@ -3742,7 +3741,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropFloat( RECVINFO( m_flKartNextAvailableBoost ) ),
 	RecvPropInt( RECVINFO( m_iKartHealth ) ),
 	RecvPropInt( RECVINFO( m_iKartState ) ),
-	RecvPropEHandle( RECVINFO( m_hGrapplingHookTarget ) ),
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
 	RecvPropFloat( RECVINFO( m_flHelpmeButtonPressTime ) ),
@@ -10787,28 +10785,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 				{
 					NotificationQueue_Remove( &CEquipSpellbookNotification::IsNotificationType );
 				}
-			}
-			// ADD EconNotification to equip grapplinghook here
-			else if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-			{
-				int iCount = NotificationQueue_Count( &CEquipGrapplingHookNotification::IsNotificationType );
-				CEconItemView *pItem = TFInventoryManager()->GetItemInLoadoutForClass( event->GetInt( "class"), LOADOUT_POSITION_ACTION );
-				// no spell book
-				if ( !pItem || !pItem->GetStaticData()->GetItemClass() || !FStrEq( pItem->GetStaticData()->GetItemClass(), "tf_weapon_grapplinghook" ) )
-				{
-					if ( iCount == 0 )
-					{
-						CEquipGrapplingHookNotification *pNotification = new CEquipGrapplingHookNotification();
-						pNotification->SetText( "#TF_GrapplingHook_EquipAction" );
-						pNotification->SetLifetime( 10.0f );
-						NotificationQueue_Add( pNotification );
-					}
-				}
-				else
-				{
-					NotificationQueue_Remove( &CEquipGrapplingHookNotification::IsNotificationType );
-				}
-				
 			}
 			// Add EconNotification to equip Canteen here
 			else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )

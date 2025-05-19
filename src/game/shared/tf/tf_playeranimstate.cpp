@@ -1347,7 +1347,7 @@ bool CTFPlayerAnimState::HandleJumping( Activity &idealActivity )
 	TFPlayerClassData_t *pData = m_pTFPlayer->GetPlayerClass()->GetData();
 	bool bValidAirWalkClass = ( pData && pData->m_bDontDoAirwalk == false );
 
-	if ( bValidAirWalkClass && ( vecVelocity.z > 300.0f || m_bInAirWalk || m_pTFPlayer->GetGrapplingHookTarget() != NULL ) && !bInDuck )
+	if ( bValidAirWalkClass && ( vecVelocity.z > 300.0f || m_bInAirWalk ) && !bInDuck )
 	{
 		// Check to see if we were in an airwalk and now we are basically on the ground.
 		if ( ( GetBasePlayer()->GetFlags() & FL_ONGROUND ) && m_bInAirWalk )
