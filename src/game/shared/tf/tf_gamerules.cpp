@@ -12271,7 +12271,7 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 	{
 		if ( pScorer && pVictim && pScorer != pVictim )
 		{
-			if ( !FStrEq( eventName, "fish_notice" ) && !FStrEq( eventName, "fish_notice__arm" ) && !FStrEq( eventName, "slap_notice" ) && !FStrEq( eventName, "throwable_hit" ) )
+			if ( !FStrEq( eventName, "fish_notice" ) && !FStrEq( eventName, "fish_notice__arm" ) && !FStrEq( eventName, "throwable_hit" ) )
 			{
 #ifndef _DEBUG
 				if ( GetGlobalTeam( pVictim->GetTeamNumber() ) && GetGlobalTeam( pVictim->GetTeamNumber() )->GetNumPlayers() > 1 )

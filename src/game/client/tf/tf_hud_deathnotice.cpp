@@ -649,7 +649,6 @@ void CTFHudDeathNotice::Init()
 	ListenForGameEvent( "fish_notice" );
 	ListenForGameEvent( "fish_notice__arm" );
 	ListenForGameEvent( "duck_xp_level_up" );
-	ListenForGameEvent( "slap_notice" );
 	//ListenForGameEvent( "throwable_hit" );
 
 	m_bShowItemOnKill = true;
@@ -773,7 +772,6 @@ bool CTFHudDeathNotice::EventIsPlayerDeath( const char* eventName )
 {
 	return FStrEq( eventName, "fish_notice" )
 		|| FStrEq( eventName, "fish_notice__arm" )
-		|| FStrEq( eventName, "slap_notice" )
 		//|| FStrEq( eventName, "throwable_hit" )
 		|| BaseClass::EventIsPlayerDeath( eventName );
 }
@@ -1262,22 +1260,18 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 
 		Q_strncpy( msg.szIcon, bDefense ? szDefenseIcons[iIndex] : szCaptureIcons[iIndex], ARRAYSIZE( msg.szIcon ) );
 	}
-	else if ( FStrEq( "fish_notice", pszEventName ) || FStrEq( "fish_notice__arm", pszEventName ) || FStrEq( "slap_notice", pszEventName ) )
+	else if ( FStrEq( "fish_notice", pszEventName ) || FStrEq( "fish_notice__arm", pszEventName ) )
 	{
 		DeathNoticeItem &msg = m_DeathNotices[ iDeathNoticeMsg ];
 		int deathFlags = event->GetInt( "death_flags" );
 		int iCustomDamage = event->GetInt( "customkill" );
 
-		if ( ( iCustomDamage == TF_DMG_CUSTOM_FISH_KILL ) || ( deathFlags & TF_DEATH_FEIGN_DEATH ) || ( iCustomDamage == TF_DMG_CUSTOM_SLAP_KILL ) )
+		if ( ( iCustomDamage == TF_DMG_CUSTOM_FISH_KILL ) || ( deathFlags & TF_DEATH_FEIGN_DEATH ) )
 		{
 			const wchar_t *wpszFormat = g_pVGuiLocalize->Find( "#Humiliation_Kill" );
 			if ( FStrEq( "fish_notice__arm", pszEventName ) )
 			{
 				wpszFormat = g_pVGuiLocalize->Find( "#Humiliation_Kill_Arm" );
-			}
-			else if ( FStrEq( "slap_notice", pszEventName ) )
-			{
-				wpszFormat = g_pVGuiLocalize->Find( "#Humiliation_Kill_Slap" );
 			}
 			g_pVGuiLocalize->ConstructString_safe( msg.wzInfoText, wpszFormat, 0 );
 		}
@@ -1626,7 +1620,7 @@ int CTFHudDeathNotice::UseExistingNotice( IGameEvent *event )
 	// Fish Notices and Throwables
 	// Add check for all throwables
 	int iTarget = event->GetInt( "weaponid" );
-	if ( ( iTarget == TF_WEAPON_BAT_FISH ) || ( iTarget == TF_WEAPON_SLAP ) || ( iTarget == TF_WEAPON_THROWABLE ) || ( iTarget == TF_WEAPON_GRENADE_THROWABLE ) )
+	if ( ( iTarget == TF_WEAPON_BAT_FISH ) || ( iTarget == TF_WEAPON_THROWABLE ) || ( iTarget == TF_WEAPON_GRENADE_THROWABLE ) )
 	{
 		// Look for a matching pre-existing notice.
 		for ( int i=0; i<m_DeathNotices.Count(); ++i )

@@ -125,7 +125,6 @@
 #include "tf_revive.h"
 #include "tf_logic_halloween_2014.h"
 #include "tf_logic_player_destruction.h"
-#include "tf_weapon_slap.h"
 #include "func_croc.h"
 #include "tf_weapon_bonesaw.h"
 #include "pointhurt.h"
@@ -9115,14 +9114,13 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	if ( pWeapon && ( ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH ) || ( pWeapon->GetWeaponID() == TF_WEAPON_SLAP ) ) )
+	if ( pWeapon && ( ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH ) ) )
 	{
 		bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED ) && pTFAttacker && ( m_Shared.GetDisguiseTeam() == pTFAttacker->GetTeamNumber() );
-		bool bFish = ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH );
 
 		if ( m_iHealth <= 0 )
 		{
-			info.SetDamageCustom( bFish ? TF_DMG_CUSTOM_FISH_KILL : TF_DMG_CUSTOM_SLAP_KILL );
+			info.SetDamageCustom( TF_DMG_CUSTOM_FISH_KILL );
 		}
 
 		if ( m_iHealth <= 0 || !bDisguised )
@@ -9130,12 +9128,10 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			// Do you ever find yourself typing "fish damage override" into a million-lines-of-code project and
 			// wondering about the world? Because I do.
 			int iFishDamageOverride = 0;
-			if ( bFish )
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iFishDamageOverride, fish_damage_override );
-			}
 
-			TFGameRules()->DeathNotice( this, info, bFish ? ( iFishDamageOverride ? "fish_notice__arm" : "fish_notice" ) : "slap_notice" );
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iFishDamageOverride, fish_damage_override );
+
+			TFGameRules()->DeathNotice( this, info, iFishDamageOverride ? "fish_notice__arm" : "fish_notice" );
 		}
 	}
 
@@ -11976,14 +11972,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Create the ragdoll entity.
 	if ( bGib || bRagdoll )
 	{
-// 		if ( !bBurning && pKillerWeapon && ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SLAP ) )
-// 		{
-// 			CTFSlap *pSlap = dynamic_cast< CTFSlap* >( pKillerWeapon );
-// 			if ( pSlap )
-// 			{
-// 				bBurning = ( pSlap->GetNumKills() > 1 ); // first kill doesn't burn
-// 			}
-// 		}
 
 		CreateRagdollEntity( bGib, bBurning, bElectrocuted, bOnGround, bCloakedCorpse, iGoldRagdoll != 0, iIceRagdoll != 0, iRagdollsBecomeAsh != 0, iCustomDamage, ( iCritOnHardHit != 0 ) );
 	}

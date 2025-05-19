@@ -33,7 +33,6 @@
 #include <game/client/iviewport.h>
 #include "tf_weapon_rocketpack.h"
 #include "tf_weapon_bonesaw.h"
-#include "tf_weapon_slap.h"
 
 #include <vgui_controls/ImagePanel.h>
 
