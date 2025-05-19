@@ -30,14 +30,8 @@ IMPLEMENT_NETWORKCLASS_ALIASED( TFKnife, DT_TFWeaponKnife )
 BEGIN_NETWORK_TABLE( CTFKnife, DT_TFWeaponKnife )
 #if defined( CLIENT_DLL )
 	RecvPropBool( RECVINFO( m_bReadyToBackstab ) ),
-	RecvPropBool( RECVINFO( m_bKnifeExists ) ),
-	RecvPropFloat( RECVINFO( m_flKnifeRegenerateDuration ) ),
-	RecvPropFloat( RECVINFO( m_flKnifeMeltTimestamp ) ),
 #else
 	SendPropBool( SENDINFO( m_bReadyToBackstab ) ),
-	SendPropBool( SENDINFO( m_bKnifeExists ) ),
-	SendPropFloat( SENDINFO( m_flKnifeRegenerateDuration ), 0, SPROP_NOSCALE ),
-	SendPropFloat( SENDINFO( m_flKnifeMeltTimestamp ), 0, SPROP_NOSCALE ),
 #endif
 END_NETWORK_TABLE()
 
@@ -74,9 +68,6 @@ CTFKnife::CTFKnife()
 //-----------------------------------------------------------------------------
 void CTFKnife::ResetVars( void )
 {
-	m_bKnifeExists = true;
-	m_flKnifeRegenerateDuration = 1.0f;
-	m_flKnifeMeltTimestamp = 0.0f;
 	m_bWasTaunting = false;
 	m_bAllowHolsterBecauseForced = false;
 }
@@ -109,65 +100,6 @@ bool CTFKnife::DoSwingTrace( trace_t &trace )
 {
 	return BaseClass::DoSwingTrace( trace );
 }
-
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFKnife::ApplyOnInjuredAttributes( CTFPlayer *pVictim, CTFPlayer *pAttacker, const CTakeDamageInfo &info )
-{
-	BaseClass::ApplyOnInjuredAttributes( pVictim, pAttacker, info );
-
-	int iMeltsInFire = 0;
-	CALL_ATTRIB_HOOK_INT( iMeltsInFire, melts_in_fire );
-	if ( iMeltsInFire > 0 && ( ( info.GetDamageType() & DMG_BURN ) || ( info.GetDamageType() & DMG_IGNITE ) ) )
-	{
-		if ( m_bKnifeExists )
-		{
-			// melt it!
-			m_bKnifeExists = false;
-			m_flKnifeRegenerateDuration = iMeltsInFire;
-			m_flKnifeMeltTimestamp = gpGlobals->curtime;
-
-			CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
-			if ( pPlayer )
-			{
-				pPlayer->EmitSound( "Icicle.Melt" );
-
-				// force switch to sapper
-				// Set flag to allow holstering during this forced switch (holstering might otherwise have been inhibited by being blocked). This addresses
-				// a corner-case where a Spy stabbing a Razorback-equipped sniper with the Spycicle and then immediately burned doesn't switch away and could backstab immediately
-				// even though their knife should have melted.
-				CBaseCombatWeapon *mySapper = pPlayer->Weapon_GetWeaponByType( TF_WPN_TYPE_BUILDING );
-				m_bAllowHolsterBecauseForced = true;
-				if ( !mySapper )
-				{
-					// this should never happen
-					pPlayer->SwitchToNextBestWeapon( this );
-				}
-				else
-				{
-					pPlayer->Weapon_Switch( mySapper );
-				}
-				m_bAllowHolsterBecauseForced = false;
-			}
-		}		
-	}
-}
-
-//-----------------------------------------------------------------------------
-bool CTFKnife::DecreaseRegenerationTime( float value, bool bForce )
-{
-	// didn't do anything
-	if ( m_bKnifeExists )
-		return false;
-	
-	float flTime = value * 0.005f * m_flKnifeRegenerateDuration;
-	m_flKnifeMeltTimestamp -= flTime;
-	return true;
-}
-#endif
 
 
 //-----------------------------------------------------------------------------
@@ -488,29 +420,11 @@ void CTFKnife::SendPlayerAnimEvent( CTFPlayer *pPlayer )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFKnife::CanDeploy( void )
-{
-	m_bKnifeExists = ( gpGlobals->curtime - m_flKnifeMeltTimestamp > m_flKnifeRegenerateDuration );
-
-	if ( m_bKnifeExists == false )
-	{
-		// melted icicle has not yet regenerated
-		return false;
-	}
-
-	return BaseClass::CanDeploy();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFKnife::Deploy( void )
 {
 	bool bDeployed = BaseClass::Deploy();
 
 	m_bReadyToBackstab = false;
-
-	m_bKnifeExists = true;
 
 	return bDeployed;
 }

@@ -4499,18 +4499,6 @@ void CTFPlayer::HelpmeButtonReleased()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::AddToSpyKnife( float value, bool force )
-{
-	CTFKnife *pWpn = (CTFKnife *)Weapon_OwnsThisID( TF_WEAPON_KNIFE );
-	if ( !pWpn )
-		return false;
-
-	return pWpn->DecreaseRegenerationTime( value, force );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::RemoveAllItems()
 {
 	// Nuke items.

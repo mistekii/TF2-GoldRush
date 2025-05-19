@@ -300,8 +300,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		break;
 
 	case TF_CLASS_SPY:
-		DECLARE_ITEM_EFFECT_METER( CTFKnife, TF_WEAPON_KNIFE, true, "resource/UI/HUDItemEffectMeter_SpyKnife.res" );
-
 		hNewMeter = new CHudItemEffectMeter( pszElementName, pPlayer );
 		if ( hNewMeter )
 		{
@@ -1087,23 +1085,6 @@ bool CHudItemEffectMeter_Weapon<CTFRevolver>::ShowPercentSymbol( void )
 	}
 	
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFKnife>::IsEnabled( void )
-{
-	CTFKnife *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetKnifeType() == KNIFE_ICICLE;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 //-----------------------------------------------------------------------------
