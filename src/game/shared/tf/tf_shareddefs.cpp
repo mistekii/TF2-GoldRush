@@ -655,7 +655,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_GRENADE_CLEAVER",
 	"TF_WEAPON_STICKY_BALL_LAUNCHER",
 	"TF_WEAPON_GRENADE_STICKY_BALL",
-	"TF_WEAPON_CANNON",
 	"TF_WEAPON_THROWABLE",
 	"TF_WEAPON_GRENADE_THROWABLE",
 	"TF_WEAPON_PDA_SPY_BUILD",
@@ -756,7 +755,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_SLASH,		// TF_WEAPON_GRENADE_CLEAVER
 	DMG_GENERIC,	// TF_WEAPON_STICKY_BALL_LAUNCHER,
 	DMG_GENERIC,	// TF_WEAPON_GRENADE_STICKY_BALL,
-	DMG_BLAST | DMG_HALF_FALLOFF,	// TF_WEAPON_CANNON
 	DMG_BULLET,		// TF_WEAPON_THROWABLE
 	DMG_BULLET,		// TF_WEAPON_GRENADE_THROWABLE
 	DMG_BULLET,		// TF_WEAPON_PDA_SPY_BUILD
@@ -833,7 +831,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_MERASMUS_GRENADE",
 	"TF_DMG_CUSTOM_MERASMUS_ZAP",
 	"TF_DMG_CUSTOM_MERASMUS_DECAPITATION",
-	"TF_DMG_CUSTOM_CANNONBALL_PUSH",
 	"TF_DMG_CUSTOM_TAUNTATK_ALLCLASS_GUITAR_RIFF",
 	"TF_DMG_CUSTOM_THROWABLE",
 	"TF_DMG_CUSTOM_THROWABLE_KILL",
@@ -896,7 +893,6 @@ const char *g_szProjectileNames[] =
 	"projectile_pipe_remote_practice",
 	"projectile_cleaver",
 	"projectile_sticky_ball",
-	"projectile_cannonball",
 	"projectile_festive_arrow",
 	"projectile_throwable",
 	"projectile_spellfireball",
@@ -928,7 +924,6 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_GRENADELAUNCHER,			// practice pipes should never kill anyone anyway
 	TF_WEAPON_CLEAVER,
 	TF_WEAPON_STICKY_BALL_LAUNCHER,
-	TF_WEAPON_CANNON,
 	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_SPELLBOOK,
