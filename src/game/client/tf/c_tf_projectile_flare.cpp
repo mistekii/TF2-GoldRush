@@ -54,31 +54,13 @@ void C_TFProjectile_Flare::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 const char *GetFlareTrailParticleName( int iTeamNumber, bool bCritical, int nType )
 {
-	if ( nType == FLAREGUN_GRORDBORT )
+	if ( iTeamNumber == TF_TEAM_BLUE )
 	{
-		return "drg_manmelter_projectile";
-	}
-	else if ( nType == FLAREGUN_SCORCHSHOT )
-	{
-		if ( iTeamNumber == TF_TEAM_BLUE )
-		{
-			return ( bCritical ? "scorchshot_trail_crit_blue" : "scorchshot_trail_blue" );
-		}
-		else
-		{
-			return ( bCritical ? "scorchshot_trail_crit_red" : "scorchshot_trail_red" );
-		}
+		return ( bCritical ? "flaregun_trail_crit_blue" : "flaregun_trail_blue" );
 	}
 	else
 	{
-		if ( iTeamNumber == TF_TEAM_BLUE )
-		{
-			return ( bCritical ? "flaregun_trail_crit_blue" : "flaregun_trail_blue" );
-		}
-		else
-		{
-			return ( bCritical ? "flaregun_trail_crit_red" : "flaregun_trail_red" );
-		}
+		return ( bCritical ? "flaregun_trail_crit_red" : "flaregun_trail_red" );
 	}
 }
 

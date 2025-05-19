@@ -5918,7 +5918,7 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			else if ( ( info.GetDamageType() & DMG_IGNITE ) && pVictim && pVictim->m_Shared.InCond( TF_COND_BURNING ) && info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING_FLARE )
 			{
 				CTFFlareGun *pFlareGun = dynamic_cast< CTFFlareGun* >( pWeapon );
-				if ( pFlareGun && pFlareGun->GetFlareGunType() != FLAREGUN_GRORDBORT )
+				if ( pFlareGun )
 				{
 					info.SetCritType( CTakeDamageInfo::CRIT_MINI );
 					eBonusEffect = kBonusEffect_MiniCrit;
@@ -16230,10 +16230,6 @@ void CTFGameRules::SetUpVisionFilterKeyValues( void )
 	pKVFlag->SetString( "flaregun_trail_crit_blue", "pyrovision_flaregun_trail_crit_blue" );
 	pKVFlag->SetString( "flaregun_trail_crit_red", "pyrovision_flaregun_trail_crit_red" );
 	pKVFlag->SetString( "flaregun_destroyed", "pyrovision_flaregun_destroyed" );
-	pKVFlag->SetString( "scorchshot_trail_blue", "pyrovision_scorchshot_trail_blue" );
-	pKVFlag->SetString( "scorchshot_trail_red", "pyrovision_scorchshot_trail_red" );
-	pKVFlag->SetString( "scorchshot_trail_crit_blue", "pyrovision_scorchshot_trail_crit_blue" );
-	pKVFlag->SetString( "scorchshot_trail_crit_red", "pyrovision_scorchshot_trail_crit_red" );
 	pKVFlag->SetString( "ExplosionCore_MidAir_Flare", "pyrovision_flaregun_destroyed" );
 	pKVFlag->SetString( "pyrotaunt_rainbow_norainbow", "pyrotaunt_rainbow" );
 	pKVFlag->SetString( "pyrotaunt_rainbow_bubbles_flame", "pyrotaunt_rainbow_bubbles" );
