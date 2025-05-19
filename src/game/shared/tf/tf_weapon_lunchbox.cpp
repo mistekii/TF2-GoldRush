@@ -65,7 +65,6 @@ END_DATADESC()
 #define LUNCHBOX_DROP_MODEL  "models/items/plate.mdl"
 #define LUNCHBOX_STEAK_DROP_MODEL  "models/workshop/weapons/c_models/c_buffalo_steak/plate_buffalo_steak.mdl"
 #define LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL		"models/workshop/weapons/c_models/c_chocolate/plate_chocolate.mdl"
-#define LUNCHBOX_FISHCAKE_DROP_MODEL	"models/workshop/weapons/c_models/c_fishcake/plate_fishcake.mdl"
 
 #define LUNCHBOX_DROPPED_MINS	Vector( -17, -17, -10 )
 #define LUNCHBOX_DROPPED_MAXS	Vector( 17, 17, 10 )
@@ -120,7 +119,6 @@ void CTFLunchBox::Precache( void )
 		PrecacheModel( LUNCHBOX_DROP_MODEL );
 		PrecacheModel( LUNCHBOX_STEAK_DROP_MODEL );
 		PrecacheModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_FISHCAKE_DROP_MODEL );
 	}
 
 	BaseClass::Precache();
@@ -215,7 +213,6 @@ void CTFLunchBox::SecondaryAttack( void )
 	switch ( nLunchBoxType )
 	{
 	case LUNCHBOX_CHOCOLATE_BAR:
-	case LUNCHBOX_FISHCAKE:
 		pszHealthKit = "item_healthkit_small";
 		break;
 
@@ -242,11 +239,6 @@ void CTFLunchBox::SecondaryAttack( void )
 		else if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
 		{
 			pMedKit->SetModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_FISHCAKE )
-		{
-			pMedKit->SetModel( LUNCHBOX_FISHCAKE_DROP_MODEL );
 			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
 		}
 		else
@@ -289,7 +281,7 @@ void CTFLunchBox::DrainAmmo( bool bForceCooldown )
 	// If we're damaged while eating/taunting, bForceCooldown will be true
 	if ( pOwner->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
 	{
-		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS || iLunchboxType == LUNCHBOX_CHOCOLATE_BAR || iLunchboxType == LUNCHBOX_FISHCAKE || bForceCooldown )
+		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS || iLunchboxType == LUNCHBOX_CHOCOLATE_BAR || bForceCooldown )
 		{
 			pOwner->m_Shared.SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, 0.f );
 		}
@@ -328,7 +320,7 @@ void CTFLunchBox::Detach( void )
 {
 #ifdef GAME_DLL
 	// Terrible - but for now, we're the only place that adds this (custom) attribute
-	if ( GetLunchboxType() == LUNCHBOX_CHOCOLATE_BAR || GetLunchboxType() == LUNCHBOX_FISHCAKE )
+	if ( GetLunchboxType() == LUNCHBOX_CHOCOLATE_BAR )
 	{
 		CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
 		if ( pOwner )
@@ -365,7 +357,7 @@ void CTFLunchBox::ApplyBiteEffects( CTFPlayer *pPlayer )
 
 	const float DALOKOHS_MAXHEALTH_BUFF = 50.f;
 
-	if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE )
+	if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
 	{
 		// add 50 health to player for 30 seconds
 		pPlayer->AddCustomAttribute( "hidden maxhealth non buffed", DALOKOHS_MAXHEALTH_BUFF, 30.f );
@@ -383,9 +375,9 @@ void CTFLunchBox::ApplyBiteEffects( CTFPlayer *pPlayer )
 	}
 	
 	// Then heal the player
-	int iHeal = ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE ) ? 25 : 75;
+	int iHeal = ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR ) ? 25 : 75;
 	int iHealType = DMG_GENERIC;
-	if ( ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE ) && pPlayer->GetHealth() < ( 300.f + DALOKOHS_MAXHEALTH_BUFF ) )
+	if ( ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR ) && pPlayer->GetHealth() < ( 300.f + DALOKOHS_MAXHEALTH_BUFF ) )
 	{
 		iHealType = DMG_IGNORE_MAXHEALTH;
 		iHeal = Min( 25, 350 - pPlayer->GetHealth() );
