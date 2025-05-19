@@ -986,7 +986,7 @@ void CTFPlayerShared::Spawn( void )
 	m_bKingRuneBuffActive = false;
 
 	// Reset our assist here incase something happens before we get killed
-	// again that checks this (getting slapped with a fish)
+	// again that checks this
 	SetAssist( NULL );
 }
 

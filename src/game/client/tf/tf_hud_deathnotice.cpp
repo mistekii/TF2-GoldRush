@@ -646,8 +646,6 @@ void CTFHudDeathNotice::Init()
 {
 	BaseClass::Init();
 
-	ListenForGameEvent( "fish_notice" );
-	ListenForGameEvent( "fish_notice__arm" );
 	ListenForGameEvent( "duck_xp_level_up" );
 	//ListenForGameEvent( "throwable_hit" );
 
@@ -770,10 +768,7 @@ void CTFHudDeathNotice::FireGameEvent( IGameEvent *event )
 //-----------------------------------------------------------------------------
 bool CTFHudDeathNotice::EventIsPlayerDeath( const char* eventName )
 {
-	return FStrEq( eventName, "fish_notice" )
-		|| FStrEq( eventName, "fish_notice__arm" )
-		//|| FStrEq( eventName, "throwable_hit" )
-		|| BaseClass::EventIsPlayerDeath( eventName );
+	return BaseClass::EventIsPlayerDeath( eventName );
 }
 
 //-----------------------------------------------------------------------------
@@ -1260,38 +1255,6 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 
 		Q_strncpy( msg.szIcon, bDefense ? szDefenseIcons[iIndex] : szCaptureIcons[iIndex], ARRAYSIZE( msg.szIcon ) );
 	}
-	else if ( FStrEq( "fish_notice", pszEventName ) || FStrEq( "fish_notice__arm", pszEventName ) )
-	{
-		DeathNoticeItem &msg = m_DeathNotices[ iDeathNoticeMsg ];
-		int deathFlags = event->GetInt( "death_flags" );
-		int iCustomDamage = event->GetInt( "customkill" );
-
-		if ( ( iCustomDamage == TF_DMG_CUSTOM_FISH_KILL ) || ( deathFlags & TF_DEATH_FEIGN_DEATH ) )
-		{
-			const wchar_t *wpszFormat = g_pVGuiLocalize->Find( "#Humiliation_Kill" );
-			if ( FStrEq( "fish_notice__arm", pszEventName ) )
-			{
-				wpszFormat = g_pVGuiLocalize->Find( "#Humiliation_Kill_Arm" );
-			}
-			g_pVGuiLocalize->ConstructString_safe( msg.wzInfoText, wpszFormat, 0 );
-		}
-		else
-		{
-			wchar_t wzCount[10];
-			_snwprintf( wzCount, ARRAYSIZE( wzCount ), L"%d", ++msg.iCount );
-			g_pVGuiLocalize->ConstructString_safe( msg.wzInfoText, g_pVGuiLocalize->Find("#Humiliation_Count"), 1, wzCount );
-		}
-
-		// if there was an assister, put both the killer's and assister's names in the death message
-		int iAssisterID = engine->GetPlayerForUserID( event->GetInt( "assister" ) );
-		const char *assister_name = ( iAssisterID > 0 ? g_PR->GetPlayerName( iAssisterID ) : NULL );
-		if ( assister_name )
-		{
-			char szKillerBuf[MAX_PLAYER_NAME_LENGTH*2];
-			Q_snprintf( szKillerBuf, ARRAYSIZE(szKillerBuf), "%s + %s", msg.Killer.szName, assister_name );
-			Q_strncpy( msg.Killer.szName, szKillerBuf, ARRAYSIZE( msg.Killer.szName ) );
-		}
-	}
 	//else if ( FStrEq( "throwable_hit", pszEventName ) )
 	//{
 	//	DeathNoticeItem &msg = m_DeathNotices[ iDeathNoticeMsg ];
@@ -1617,10 +1580,10 @@ Color CTFHudDeathNotice::GetBackgroundColor ( int iDeathNoticeMsg )
 //-----------------------------------------------------------------------------
 int CTFHudDeathNotice::UseExistingNotice( IGameEvent *event )
 {
-	// Fish Notices and Throwables
+	// Throwables
 	// Add check for all throwables
 	int iTarget = event->GetInt( "weaponid" );
-	if ( ( iTarget == TF_WEAPON_BAT_FISH ) || ( iTarget == TF_WEAPON_THROWABLE ) || ( iTarget == TF_WEAPON_GRENADE_THROWABLE ) )
+	if ( ( iTarget == TF_WEAPON_THROWABLE ) || ( iTarget == TF_WEAPON_GRENADE_THROWABLE ) )
 	{
 		// Look for a matching pre-existing notice.
 		for ( int i=0; i<m_DeathNotices.Count(); ++i )

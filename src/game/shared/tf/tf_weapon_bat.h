@@ -19,7 +19,6 @@
 #ifdef CLIENT_DLL
 #define CTFBat C_TFBat
 #define CTFBat_Wood C_TFBat_Wood
-#define CTFBat_Fish C_TFBat_Fish
 #define CTFStunBall C_TFStunBall
 #endif
 
@@ -45,21 +44,6 @@ public:
 private:
 
 	CTFBat( const CTFBat & ) {}
-};
-
-
-//=============================================================================
-//
-// CTFBat_Fish class.
-//
-class CTFBat_Fish : public CTFBat
-{
-public:
-	DECLARE_CLASS( CTFBat_Fish, CTFBat );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_BAT_FISH; }
 };
 
 //=============================================================================

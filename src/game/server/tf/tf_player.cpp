@@ -8875,27 +8875,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	if ( pWeapon && ( ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH ) ) )
-	{
-		bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED ) && pTFAttacker && ( m_Shared.GetDisguiseTeam() == pTFAttacker->GetTeamNumber() );
-
-		if ( m_iHealth <= 0 )
-		{
-			info.SetDamageCustom( TF_DMG_CUSTOM_FISH_KILL );
-		}
-
-		if ( m_iHealth <= 0 || !bDisguised )
-		{
-			// Do you ever find yourself typing "fish damage override" into a million-lines-of-code project and
-			// wondering about the world? Because I do.
-			int iFishDamageOverride = 0;
-
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iFishDamageOverride, fish_damage_override );
-
-			TFGameRules()->DeathNotice( this, info, iFishDamageOverride ? "fish_notice__arm" : "fish_notice" );
-		}
-	}
-
 	if ( IsPlayerClass( TF_CLASS_SCOUT) )
 	{
 		// Lose hype on take damage
