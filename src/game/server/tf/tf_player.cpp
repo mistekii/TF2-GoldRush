@@ -9721,10 +9721,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			CTFLunchBox *pLunchBox = dynamic_cast <CTFLunchBox *> ( m_Shared.GetActiveTFWeapon() );
 			if ( pLunchBox )
 			{
-				if ( pLunchBox->GetLunchboxType() != LUNCHBOX_CHOCOLATE_BAR )
-				{
-					pLunchBox->DrainAmmo( true );
-				}
+				pLunchBox->DrainAmmo( true );
 			}
 		}
 	}

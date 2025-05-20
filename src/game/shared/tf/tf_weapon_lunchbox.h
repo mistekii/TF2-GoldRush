@@ -20,12 +20,10 @@
 enum lunchbox_weapontypes_t
 {
 	LUNCHBOX_STANDARD = 0,		// Careful, can be the Scout BONK drink, or the Heavy sandvich.
-	LUNCHBOX_CHOCOLATE_BAR,
 	LUNCHBOX_ADDS_AMMO,
 };
 
 #define TF_SANDWICH_REGENTIME	30
-#define TF_CHOCOLATE_BAR_REGENTIME	10
 
 //=============================================================================
 //
@@ -59,7 +57,6 @@ public:
 
 	void			DrainAmmo( bool bForceCooldown = false );
 
-	virtual void	Detach( void ) OVERRIDE;
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo = NULL ) OVERRIDE;
 
 #ifdef GAME_DLL
