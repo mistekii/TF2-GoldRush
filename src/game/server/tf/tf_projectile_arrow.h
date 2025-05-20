@@ -39,7 +39,6 @@ public:
 	void			GetBoneAttachmentInfo( mstudiobbox_t *pBox, CBaseAnimating *pOtherAnim, Vector &bonePosition, QAngle &boneAngles, int &boneIndexAttached, int &physicsBoneIndex );
 
 	void			ImpactThink( void );
-	void			BuildingHealingArrow( CBaseEntity *pOther );
 
 	int				GetArrowSkin() const;
 

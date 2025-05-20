@@ -551,7 +551,6 @@ enum medigun_charge_types
 enum arrow_models
 {
 	MODEL_ARROW_REGULAR,
-	MODEL_ARROW_BUILDING_REPAIR,
 	MODEL_SNOWBALL,
 	MODEL_SYRINGE,
 

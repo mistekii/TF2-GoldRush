@@ -1013,7 +1013,6 @@ const char *g_pszHintMessages[] =
 const char *g_pszArrowModels[] = 
 {
 	"models/weapons/w_models/w_arrow.mdl",
-	"models/weapons/w_models/w_repair_claw.mdl",
 	"models/weapons/w_models/w_baseball.mdl",
 	"models/weapons/w_models/w_syringe_proj.mdl",
 	"models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"

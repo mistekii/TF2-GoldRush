@@ -41,14 +41,6 @@
 #define ARROW_GRAVITY				0.3f
 
 #define ARROW_THINK_CONTEXT			"CTFProjectile_ArrowThink"
-
-#define CLAW_TRAIL_RED				"effects/repair_claw_trail_red.vmt"
-#define CLAW_TRAIL_BLU				"effects/repair_claw_trail_blue.vmt"
-#define CLAW_GIB1					"models/weapons/w_models/w_repair_claw_gib1.mdl"
-#define CLAW_GIB2					"models/weapons/w_models/w_repair_claw_gib2.mdl"
-
-#define CLAW_REPAIR_EFFECT_BLU		"repair_claw_heal_blue"
-#define CLAW_REPAIR_EFFECT_RED		"repair_claw_heal_red"
 //-----------------------------------------------------------------------------
 LINK_ENTITY_TO_CLASS( tf_projectile_arrow, CTFProjectile_Arrow );
 PRECACHE_WEAPON_REGISTER( tf_projectile_arrow );
@@ -189,16 +181,10 @@ void CTFProjectile_Arrow::Spawn()
 void CTFProjectile_Arrow::Precache()
 {
 	int arrow_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
-	int claw_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
 
 	PrecacheGibsForModel( arrow_model );
-	PrecacheGibsForModel( claw_model );
 	PrecacheModel( "effects/arrowtrail_red.vmt" );
 	PrecacheModel( "effects/arrowtrail_blu.vmt" );
-	PrecacheModel( CLAW_TRAIL_RED );
-	PrecacheModel( CLAW_TRAIL_BLU );
-	PrecacheParticleSystem( CLAW_REPAIR_EFFECT_BLU );
-	PrecacheParticleSystem( CLAW_REPAIR_EFFECT_RED );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactFlesh" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactMetal" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactWood" );
@@ -552,10 +538,6 @@ void CTFProjectile_Arrow::OnArrowImpact( mstudiobbox_t *pBox, CBaseEntity *pOthe
 //-----------------------------------------------------------------------------
 bool CTFProjectile_Arrow::OnArrowImpactObject( CBaseEntity *pOther )
 {
-	if ( InSameTeam( pOther ) )
-	{
-		BuildingHealingArrow( pOther );
-	}
 	return false;
 }
 
@@ -566,47 +548,6 @@ bool CTFProjectile_Arrow::OnArrowImpactObject( CBaseEntity *pOther )
 void CTFProjectile_Arrow::ImpactThink( void )
 {
 }
-
-//-----------------------------------------------------------------------------
-void CTFProjectile_Arrow::BuildingHealingArrow( CBaseEntity *pOther )
-{
-	// This arrow impacted a building
-	// If its a building on our team, heal it
-	if ( !pOther->IsBaseObject() )
-		return;
-
-	CTFPlayer *pTFAttacker = ToTFPlayer( GetScorer() );
-	if ( !pTFAttacker )
-		return;
-
-	// if not on our team, forget about it
-	if ( GetTeamNumber() != pOther->GetTeamNumber() )
-		return;
-
-	int iArrowHealAmount = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iArrowHealAmount, arrow_heals_buildings );
-	if ( iArrowHealAmount == 0 )
-		return;
-
-	CBaseObject *pBuilding = dynamic_cast< CBaseObject * >( pOther );
-	if ( !pBuilding || pBuilding->HasSapper() || pBuilding->IsPlasmaDisabled() || pBuilding->IsBuilding() || pBuilding->IsPlacing() )
-		return;
-
-	// if building is shielded, reduce health gain
-	if ( pBuilding->GetShieldLevel() == SHIELD_NORMAL )
-	{
-		iArrowHealAmount *= SHIELD_NORMAL_VALUE;
-	}
-
-	int nHealed = pBuilding->Command_Repair( pTFAttacker, iArrowHealAmount, 1.f, 4.f, true );
-	if ( nHealed > 0 )
-	{
-		const char *pParticleName = GetTeamNumber() == TF_TEAM_BLUE ? CLAW_REPAIR_EFFECT_BLU : CLAW_REPAIR_EFFECT_RED;
-		CPVSFilter filter( GetAbsOrigin() );
-		TE_TFParticleEffect( filter, 0.0, pParticleName, GetAbsOrigin(), vec3_angle );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
