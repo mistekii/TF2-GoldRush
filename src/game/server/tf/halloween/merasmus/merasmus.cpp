@@ -409,12 +409,6 @@ float MerasmusModifyDamage( const CTakeDamageInfo &info )
 		case TF_WEAPON_MINIGUN:
 			return info.GetDamage() * 0.5f;
 
-		case TF_WEAPON_SODA_POPPER:
-			return info.GetDamage() * 1.5f;
-
-		case TF_WEAPON_HANDGUN_SCOUT_PRIMARY:
-			return info.GetDamage() * 1.75;
-
 		case TF_WEAPON_SCATTERGUN:
 		case TF_WEAPON_REVOLVER:
 			return info.GetDamage() * 2.f;
@@ -422,7 +416,6 @@ float MerasmusModifyDamage( const CTakeDamageInfo &info )
 		case TF_WEAPON_SNIPERRIFLE:
 		case TF_WEAPON_COMPOUND_BOW:
 		case TF_WEAPON_KNIFE:
-		case TF_WEAPON_PEP_BRAWLER_BLASTER:
 			return info.GetDamage() * 3.f;
 		}
 	}

@@ -6328,9 +6328,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				}
 				break;
 			case TF_WEAPON_SCATTERGUN :
-			case TF_WEAPON_SODA_POPPER :
-			case TF_WEAPON_PEP_BRAWLER_BLASTER :
-			//case TF_WEAPON_HANDGUN_SCOUT_PRIMARY :		// Shortstop
 				// Scattergun gets 50% bonus at short range
 				if ( flRandomRangeVal > 0.5 )
 				{
