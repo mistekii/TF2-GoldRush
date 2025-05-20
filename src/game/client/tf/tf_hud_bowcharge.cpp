@@ -149,23 +149,6 @@ void CHudBowChargeMeter::FireGameEvent( IGameEvent *event )
 				flScale = 1.4f;
 			}
 			break;
-		case TF_PROJECTILE_BREAD_MONSTER:
-		case TF_PROJECTILE_BREADMONSTER_JARATE:
-		case TF_PROJECTILE_BREADMONSTER_MADMILK:
-			{
-				pszModelName = g_pszArrowModels[MODEL_BREAD_MONSTER];
-				// pull the syringe back slightly
-				Vector vForward;
-				AngleVectors( boneAngles, &vForward );
-				bonePosition = bonePosition - ( vForward * 1.0f );
-				flScale = 2.5f;
-				pArrow->SetLifeTime( 10.0f );
-				if ( event->GetBool( "isCrit" ) )
-				{
-					flScale = RandomFloat( 3.0f, 5.0f );
-				}
-				break;
-			}
 		default:
 			Warning( " Unsupported Projectile type on event arrow_impact - %d", type );
 			return;

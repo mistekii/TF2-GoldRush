@@ -612,7 +612,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_GRENADE_HEAL",
 	"TF_WEAPON_GRENADE_STUNBALL",
 	"TF_WEAPON_GRENADE_JAR",
-	"TF_WEAPON_GRENADE_JAR_MILK",
 	"TF_WEAPON_PISTOL",
 	"TF_WEAPON_PISTOL_SCOUT",
 	"TF_WEAPON_REVOLVER",
@@ -642,7 +641,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_LASER_POINTER",
 	"TF_WEAPON_DISPENSER_GUN",
 	"TF_WEAPON_SENTRY_REVENGE",
-	"TF_WEAPON_JAR_MILK",
 	"TF_WEAPON_HANDGUN_SCOUT_PRIMARY",
 	"TF_WEAPON_CROSSBOW",
 	"TF_WEAPON_STICKBOMB",
@@ -650,8 +648,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_SODA_POPPER",
 	"TF_WEAPON_FLAREGUN_REVENGE",
 	"TF_WEAPON_PEP_BRAWLER_BLASTER",
-	"TF_WEAPON_CLEAVER",
-	"TF_WEAPON_GRENADE_CLEAVER",
 	"TF_WEAPON_STICKY_BALL_LAUNCHER",
 	"TF_WEAPON_GRENADE_STICKY_BALL",
 	"TF_WEAPON_THROWABLE",
@@ -709,7 +705,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_GRENADE_HEAL
 	DMG_CLUB,		// TF_WEAPON_GRENADE_STUNBALL
 	DMG_CLUB,		// TF_WEAPON_GRENADE_JAR
-	DMG_CLUB,		// TF_WEAPON_GRENADE_JAR_MILK
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_PISTOL,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_PISTOL_SCOUT,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_REVOLVER,
@@ -739,7 +734,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB,		// TF_WEAPON_LASER_POINTER
 	DMG_BULLET,		// TF_WEAPON_DISPENSER_GUN
 	DMG_BUCKSHOT | DMG_USEDISTANCEMOD, // TF_WEAPON_SENTRY_REVENGE
-	DMG_GENERIC,	// TF_WEAPON_JAR_MILK
 	DMG_BUCKSHOT | DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_HANDGUN_SCOUT_PRIMARY
 	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_CROSSBOW
 	DMG_CLUB, // TF_WEAPON_STICKBOMB
@@ -747,8 +741,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_SODA_POPPER,
 	DMG_BULLET | DMG_IGNITE,	// TF_WEAPON_FLAREGUN_REVENGE,
 	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_PEP_BRAWLER_BLASTER,
-	DMG_GENERIC,	// TF_WEAPON_CLEAVER
-	DMG_SLASH,		// TF_WEAPON_GRENADE_CLEAVER
 	DMG_GENERIC,	// TF_WEAPON_STICKY_BALL_LAUNCHER,
 	DMG_GENERIC,	// TF_WEAPON_GRENADE_STICKY_BALL,
 	DMG_BULLET,		// TF_WEAPON_THROWABLE
@@ -818,8 +810,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_HEADSHOT_DECAPITATION",
 	"TF_DMG_CUSTOM_TAUNTATK_ARMAGEDDON",
 	"TF_DMG_CUSTOM_FLARE_PELLET",
-	"TF_DMG_CUSTOM_CLEAVER",
-	"TF_DMG_CUSTOM_CLEAVER_CRIT",
 	"TF_DMG_CUSTOM_SAPPER_RECORDER_DEATH",
 	"TF_DMG_CUSTOM_MERASMUS_PLAYER_BOMB",
 	"TF_DMG_CUSTOM_MERASMUS_GRENADE",
@@ -882,20 +872,14 @@ const char *g_szProjectileNames[] =
 	"projectile_jar",
 	"projectile_arrow",
 	"projectile_flame_rocket",
-	"projectile_jar_milk",
 	"projectile_healing_bolt",
 	"projectile_pipe_remote_practice",
-	"projectile_cleaver",
 	"projectile_sticky_ball",
 	"projectile_festive_arrow",
 	"projectile_throwable",
 	"projectile_spellfireball",
-	"projectile_festive_urine",
 	"projectile_festive_healing_bolt",
-	"projectfile_breadmonster_jarate",
-	"projectfile_breadmonster_madmilk",
 	"projectile_sentry_rocket",
-	"projectile_bread_monster",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_szProjectileNames ) == TF_NUM_PROJECTILES );
@@ -913,20 +897,14 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_JAR,
 	TF_WEAPON_COMPOUND_BOW,
 	TF_PROJECTILE_FLAME_ROCKET,
-	TF_WEAPON_JAR_MILK,
 	TF_WEAPON_CROSSBOW,
 	TF_WEAPON_GRENADELAUNCHER,			// practice pipes should never kill anyone anyway
-	TF_WEAPON_CLEAVER,
 	TF_WEAPON_STICKY_BALL_LAUNCHER,
 	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_SPELLBOOK,
-	TF_WEAPON_JAR,
 	TF_WEAPON_CROSSBOW,
-	TF_WEAPON_JAR,
-	TF_WEAPON_JAR,
 	TF_WEAPON_SENTRY_ROCKET,
-	TF_WEAPON_THROWABLE,
 
 };
 
@@ -1062,7 +1040,6 @@ const char *g_pszArrowModels[] =
 	"models/weapons/w_models/w_arrow_xmas.mdl",
 	"models/weapons/w_models/w_syringe_proj.mdl",
 	"models/workshop/weapons/c_models/c_crusaders_crossbow/c_crusaders_crossbow_xmas_proj.mdl",
-	"models/weapons/w_models/w_breadmonster/w_breadmonster.mdl",
 	"models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_pszArrowModels ) == TF_ARROW_MODEL_COUNT );

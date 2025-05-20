@@ -65,13 +65,6 @@ void CreateCrossbowBoltTF( const Vector &vecOrigin, const Vector &vecDirection, 
 		pszModelName = g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT];
 		flScale = 2.5f;
 		break;
-	case TF_PROJECTILE_BREAD_MONSTER:
-	case TF_PROJECTILE_BREADMONSTER_JARATE:
-	case TF_PROJECTILE_BREADMONSTER_MADMILK:
-		pszModelName = g_pszArrowModels[MODEL_BREAD_MONSTER];
-		flLifeTime = 8.0f;
-		flScale = 2.5f;
-		break;
 	default:
 		// Unsupported Model
 		Assert( 0 );

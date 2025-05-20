@@ -5902,12 +5902,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
 				eBonusEffect = kBonusEffect_MiniCrit;
 			}
-			else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_CLEAVER_CRIT )
-			{
-				// Long range cleaver hit
-				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
-				eBonusEffect = kBonusEffect_MiniCrit;
-			}
 			else if ( pTFAttacker && ( pTFAttacker->m_Shared.InCond( TF_COND_ENERGY_BUFF ) ) )
 			{
 				// Scouts using crit drink do mini-crits, as well as receive them
@@ -20150,7 +20144,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 313:	// "applies snare effect"
 		{
-			return ( iWeaponID == TF_WEAPON_JAR || iWeaponID == TF_WEAPON_JAR_MILK );
+			return ( iWeaponID == TF_WEAPON_JAR );
 		}
 		break;
 	case 318:	// "faster reload rate"

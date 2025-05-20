@@ -268,8 +268,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	case TF_CLASS_SCOUT:
 		DECLARE_ITEM_EFFECT_METER( CTFBat_Wood, TF_WEAPON_BAT_WOOD, true, NULL );
 		DECLARE_ITEM_EFFECT_METER( CTFLunchBox_Drink, TF_WEAPON_LUNCHBOX, true, "resource/UI/HudItemEffectMeter_Scout.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFJarMilk, TF_WEAPON_JAR_MILK, true, "resource/UI/HudItemEffectMeter_Scout.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFCleaver, TF_WEAPON_CLEAVER, true, "resource/UI/HudItemEffectMeter_Cleaver.res" );
 		break;
 
 	case TF_CLASS_HEAVYWEAPONS:
