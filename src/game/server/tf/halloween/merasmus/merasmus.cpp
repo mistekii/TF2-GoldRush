@@ -420,8 +420,6 @@ float MerasmusModifyDamage( const CTakeDamageInfo &info )
 			return info.GetDamage() * 2.f;
 
 		case TF_WEAPON_SNIPERRIFLE:
-		case TF_WEAPON_SNIPERRIFLE_DECAP:
-		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		case TF_WEAPON_COMPOUND_BOW:
 		case TF_WEAPON_KNIFE:
 		case TF_WEAPON_PEP_BRAWLER_BLASTER:

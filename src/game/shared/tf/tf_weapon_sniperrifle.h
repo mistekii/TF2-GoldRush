@@ -14,19 +14,8 @@
 
 #if defined( CLIENT_DLL )
 #define CTFSniperRifle C_TFSniperRifle
-#define CTFSniperRifleDecap C_TFSniperRifleDecap
-#define CTFSniperRifleClassic C_TFSniperRifleClassic
-#define CTFSniperRifleRevolver C_TFSniperRifleRevolver
 #define CSniperDot C_SniperDot
 #endif
-
-enum RifleTypes_t
-{
-	RIFLE_NORMAL = 0,
-	RIFLE_JARATE,
-	RIFLE_MACHINA,
-	RIFLE_CLASSIC,
-};
 
 //=============================================================================
 //
@@ -208,68 +197,6 @@ private:
 	float m_flRezoomTime;
 
 	CTFSniperRifle( const CTFSniperRifle & );
-};
-
-class CTFSniperRifleDecap : public CTFSniperRifle
-{
-public:
-	DECLARE_CLASS( CTFSniperRifleDecap, CTFSniperRifle );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int	GetWeaponID( void ) const			{ return TF_WEAPON_SNIPERRIFLE_DECAP; }
-
-#ifdef GAME_DLL
-	virtual void	OnPlayerKill( CTFPlayer *pVictim, const CTakeDamageInfo &info );
-#endif // GAME_DLL
-
-	virtual float	SniperRifleChargeRateMod() OVERRIDE;
-	const char*		GetEffectLabelText( void ) { return "#TF_BERZERK"; }
-	float		GetProgress( void ) { return 0.f; }
-	int			GetCount( void );
-};
-
-//=============================================================================
-//
-// Classic Sniper Rifle class.
-//
-class CTFSniperRifleClassic : public CTFSniperRifle
-{
-public:
-
-	DECLARE_CLASS( CTFSniperRifleClassic, CTFSniperRifle );
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-
-	CTFSniperRifleClassic();
-	~CTFSniperRifleClassic();
-	virtual void Precache() OVERRIDE;
-
-	virtual int	GetWeaponID( void ) const			{ return TF_WEAPON_SNIPERRIFLE_CLASSIC; }
-
-	virtual void ZoomOut( void ) OVERRIDE;
-	virtual void ZoomIn( void ) OVERRIDE;
-	virtual void Zoom( void ) OVERRIDE;
- 	virtual void HandleZooms( void ) OVERRIDE;
- 	virtual void ItemPostFrame( void ) OVERRIDE;
-	virtual bool Lower( void ) OVERRIDE;
-	virtual bool Deploy( void ) OVERRIDE;
-	virtual bool MustBeZoomedToFire( void ) OVERRIDE { return false; }
-	virtual int	GetDamageType() const OVERRIDE;
-	virtual bool Holster( CBaseCombatWeapon *pSwitchingTo ) OVERRIDE;
-	virtual void WeaponReset( void ) OVERRIDE;
-#ifdef CLIENT_DLL
-	virtual void OnDataChanged( DataUpdateType_t updateType ) OVERRIDE;
-#endif
-
-	void		Detach( void ) OVERRIDE;
-
-private:
-	CNetworkVar( bool, m_bCharging );
-#ifdef CLIENT_DLL
-	void ManageChargeBeam( void );
-	HPARTICLEFFECT	m_pChargedEffect;
-#endif
 };
 
 

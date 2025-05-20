@@ -20150,16 +20150,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 313:	// "applies snare effect"
 		{
-// 			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-// 			{
-// 				if ( iWeaponID == TF_WEAPON_SNIPERRIFLE )
-// 				{
-// 					CTFSniperRifle *pRifle = static_cast< CTFSniperRifle* >( pEntity );
-// 					return ( pRifle->GetRifleType() == RIFLE_JARATE );
-// 				}
-// 				return false;
-// 			}
-
 			return ( iWeaponID == TF_WEAPON_JAR || iWeaponID == TF_WEAPON_JAR_MILK );
 		}
 		break;

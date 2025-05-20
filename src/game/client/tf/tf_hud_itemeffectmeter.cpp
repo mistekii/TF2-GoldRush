@@ -282,7 +282,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	case TF_CLASS_SNIPER:
 	{
 		DECLARE_ITEM_EFFECT_METER( CTFJar, TF_WEAPON_JAR, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFSniperRifleDecap, TF_WEAPON_SNIPERRIFLE_DECAP, false, "resource/UI/HudItemEffectMeter_Sniper.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFSniperRifle, TF_WEAPON_SNIPERRIFLE, true, "resource/UI/HudItemEffectMeter_SniperFocus.res" );
 		lambdaAddItemEffectMeter( "tf_wearable_razorback", true );
 		break;
@@ -977,23 +976,6 @@ template <>
 int CHudItemEffectMeter_Weapon<CTFFlareGun_Revenge>::GetCount( void )
 {
 	CTFFlareGun_Revenge *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetCount();
-	}
-	else
-	{
-		return 0.f;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-int CHudItemEffectMeter_Weapon<CTFSniperRifleDecap>::GetCount( void )
-{
-	CTFSniperRifleDecap *pWeapon = GetWeapon();
 	if ( pWeapon )
 	{
 		return pWeapon->GetCount();

@@ -9346,11 +9346,6 @@ void CTFPlayer::MaybeDrawRailgunBeam( IRecipientFilter *pFilter, CTFWeaponBase *
 	if ( iShouldFireTracer )
 	{
 		const char *pParticleSystemName = pWeapon->GetTeamNumber() == TF_TEAM_BLUE ? "dxhr_sniper_rail_blue" : "dxhr_sniper_rail_red";
-		CTFSniperRifle *pRifle = dynamic_cast< CTFSniperRifle* >( pWeapon );
-		if ( pRifle && ( pRifle->GetRifleType() == RIFLE_CLASSIC ) )
-		{
-			pParticleSystemName = "tfc_sniper_distortion_trail";
-		}
 
 #ifdef GAME_DLL
 		te_tf_particle_effects_control_point_t controlPoint = { PATTACH_WORLDORIGIN, vEndPos };
@@ -10606,10 +10601,6 @@ bool CTFPlayerShared::IsAiming( void )
 		return false;
 
 	bool bAiming = InCond( TF_COND_AIMING ) && !m_pOuter->IsPlayerClass( TF_CLASS_SOLDIER );
-	if ( m_pOuter->IsPlayerClass( TF_CLASS_SNIPER ) && m_pOuter->GetActiveTFWeapon() && ( m_pOuter->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-	{
-		bAiming = InCond( TF_COND_ZOOMED );
-	}
 
 	return bAiming;
 }

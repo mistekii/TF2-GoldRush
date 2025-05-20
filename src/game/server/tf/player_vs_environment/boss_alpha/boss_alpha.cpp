@@ -251,8 +251,6 @@ float ModifyBossDamage( const CTakeDamageInfo &info )
 		switch( pWeapon->GetWeaponID() )
 		{
 		case TF_WEAPON_SNIPERRIFLE:
-		case TF_WEAPON_SNIPERRIFLE_DECAP:
-		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		case TF_WEAPON_COMPOUND_BOW:
 			return info.GetDamage() * tf_boss_alpha_dmg_mult_sniper.GetFloat();
 

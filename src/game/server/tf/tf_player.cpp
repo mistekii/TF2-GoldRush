@@ -9649,7 +9649,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( pTFWeapon && WeaponID_IsSniperRifle( pTFWeapon->GetWeaponID() ) )
 	{
 		CTFSniperRifle *pSniper = dynamic_cast<CTFSniperRifle*>( pTFWeapon );
-		if ( pSniper && ( pSniper->IsZoomed() || ( pSniper->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) ) )
+		if ( pSniper && pSniper->IsZoomed() )
 		{
 			float flJarateTime = pSniper->GetJarateTime();
 			if ( flJarateTime >= 1.f )
@@ -10832,17 +10832,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 				{
 					pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_KILL_RJER );
 				}
-
-				if ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC )
-				{
-					if ( ( info.GetDamageCustom() == TF_DMG_CUSTOM_HEADSHOT ) && ( info.GetDamageType() & DMG_CRITICAL ) )
-					{
-						if ( pPlayerAttacker->m_Shared.IsAiming() == false )
-						{
-							pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_CLASSIC_RIFLE_HEADSHOT_JUMPER );
-						}
-					}
-				}
 			}
 		}
 	}
@@ -10875,19 +10864,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 	}
-	else if ( IsPlayerClass( TF_CLASS_SNIPER ) )
-	{
-		if ( pPlayerAttacker )
-		{
-			if ( GetActiveTFWeapon() && ( GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-			{
-				if ( pKillerWeapon && ( pKillerWeapon->GetTFWpnData().m_iWeaponType == TF_WPN_TYPE_MELEE ) )
-				{
-					pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_MELEE_KILL_CLASSIC_RIFLE_SNIPER );
-				}
-			}
-		}
-	}
 
 	if ( pPlayerAttacker )
 	{
@@ -10910,17 +10886,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			if ( pKillerWeapon && WeaponID_IsSniperRifle( pKillerWeapon->GetWeaponID() ) && pPlayerAttacker->m_Shared.IsAiming() == false )
 			{
 				pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_KILL_UNSCOPED );
-			}
-
-			if ( pKillerWeapon && ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-			{
-				if ( ( info.GetDamageCustom() == TF_DMG_CUSTOM_HEADSHOT ) && ( info.GetDamageType() & DMG_CRITICAL ) )
-				{
-					if ( pPlayerAttacker->m_Shared.IsAiming() == false )
-					{
-						pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_CLASSIC_RIFLE_NOSCOPE_HEADSHOT );
-					}
-				}
 			}
 		}
 		else if ( pPlayerAttacker->IsPlayerClass( TF_CLASS_SPY ) )
