@@ -56,7 +56,6 @@
 #include "econ_item_description.h"
 #include "c_tf_playerresource.h"
 #include "c_team.h"
-#include "tf_hud_menu_eureka_teleport.h"
 #include "tf_hud_menu_taunt_selection.h"
 #include "tf_hud_inspectpanel.h"
 #include "engine/IEngineSound.h"
@@ -339,7 +338,6 @@ ClientModeTFNormal::ClientModeTFNormal()
 	m_pMenuEngyBuild = NULL;
 	m_pMenuEngyDestroy = NULL;
 	m_pMenuSpyDisguise = NULL;
-	m_pEurekaTeleportMenu = NULL;
 	m_pMenuTauntSelection = NULL;
 	m_pGameUI = NULL;
 	m_pFreezePanel = NULL;
@@ -401,9 +399,6 @@ void ClientModeTFNormal::Init()
 
 	m_pMenuSpell = ( CHudSpellMenu * )GET_HUDELEMENT( CHudSpellMenu);
 	Assert( m_pMenuSpell );
-
-	m_pEurekaTeleportMenu = ( CHudEurekaEffectTeleportMenu * )GET_HUDELEMENT( CHudEurekaEffectTeleportMenu );
-	Assert( m_pEurekaTeleportMenu  );
 
 	m_pTeamGoalTournament = (CHudTeamGoalTournament *)GET_HUDELEMENT( CHudTeamGoalTournament );
 	Assert( m_pTeamGoalTournament );
@@ -1504,14 +1499,6 @@ int	ClientModeTFNormal::HudElementKeyInput( int down, ButtonCode_t keynum, const
 	}
 
 
-	if ( m_pEurekaTeleportMenu )
-	{
-		if ( !m_pEurekaTeleportMenu->HudElementKeyInput( down, keynum, pszCurrentBinding ) )
-		{
-			return 0;
-		}
-	}
-
 	if ( m_pInspectPanel )
 	{
 		if ( !m_pInspectPanel->HudElementKeyInput( down, keynum, pszCurrentBinding ) )
@@ -1974,12 +1961,6 @@ bool ClientModeTFNormal::IsEngyBuildVisible() const
 bool ClientModeTFNormal::IsEngyDestroyVisible() const
 {
 	return m_pMenuEngyDestroy && m_pMenuEngyDestroy->IsVisible();
-}
-
-//----------------------------------------------------------------------------
-bool ClientModeTFNormal::IsEngyEurekaTeleportVisible() const
-{
-	return m_pEurekaTeleportMenu && m_pEurekaTeleportMenu->IsVisible();
 }
 
 //----------------------------------------------------------------------------

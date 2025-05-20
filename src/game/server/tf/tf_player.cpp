@@ -1325,68 +1325,6 @@ void CTFPlayer::TFPlayerThink()
 	}
 #endif
 
-	// Wrenchmotron taunt effect
-	if ( m_bIsTeleportingUsingEurekaEffect )
-	{
-		if ( m_teleportHomeFlashTimer.HasStarted() && m_teleportHomeFlashTimer.IsElapsed() )
-		{
-			m_teleportHomeFlashTimer.Invalidate();
-
-			if ( !tf_test_teleport_home_fx.GetBool() )
-			{
-				// cover up the end of the taunt with a flash
-				color32 colorHit = { 255, 255, 255, 255 };
-				UTIL_ScreenFade( this, colorHit, 0.25f, 0.25f, FFADE_IN );
-			}
-
-			Vector origin = GetAbsOrigin();
-			CPVSFilter filter( origin );
-
-			UserMessageBegin( filter, "PlayerTeleportHomeEffect" );
-				WRITE_BYTE( entindex() );
-			MessageEnd();
-
-			// DispatchParticleEffect( "drg_wrenchmotron_teleport", PATTACH_ABSORIGIN );
-
-			switch( GetTeamNumber() )
-			{
-			case TF_TEAM_RED:
-				TE_TFParticleEffect( filter, 0.0, "teleported_red", origin, vec3_angle );
-				TE_TFParticleEffect( filter, 0.0, "player_sparkles_red", origin, vec3_angle, this, PATTACH_POINT );
-				break;
-			case TF_TEAM_BLUE:
-				TE_TFParticleEffect( filter, 0.0, "teleported_blue", origin, vec3_angle );
-				TE_TFParticleEffect( filter, 0.0, "player_sparkles_blue", origin, vec3_angle, this, PATTACH_POINT );
-				break;
-			default:
-				break;
-			}
-		}
-
-		// teleport home when taunt finishes
-		if ( !IsTaunting() )
-		{
-			// drop the intel we are carrying
-			DropFlag();
-
-			EmitSound( "Building_Teleporter.Send" );
-			m_bIsTeleportingUsingEurekaEffect = false;
-
-			CObjectTeleporter* pTeleExit = assert_cast< CObjectTeleporter* >( GetObjectOfType( OBJ_TELEPORTER, MODE_TELEPORTER_EXIT ) );
-			 
-			// Check if they wanted to go to their teleporter AND their teleporter can accept them
-			if ( m_eEurekaTeleportTarget == EUREKA_TELEPORT_TELEPORTER_EXIT && pTeleExit && ( pTeleExit->GetState() != TELEPORTER_STATE_BUILDING ) )
-			{
-				pTeleExit->RecieveTeleportingPlayer( this );
-			}
-			else
-			{
-				// Default to the spawn
-				TFGameRules()->GetPlayerSpawnSpot( this );
-			}
-		}
-	}
-
 	// Send active weapon's clip state to attached medics
 	bool bSendClipInfo = gpGlobals->curtime > m_flNextClipSendTime &&
 						 m_Shared.GetNumHealers() &&
@@ -2240,15 +2178,6 @@ float CTFPlayer::GetKartKnockbackMultiplier( float flExtraMultiplier /*= 1.f*/ )
 void CTFPlayer::ResetKartDamage() 
 { 
 	m_iKartHealth = 0; 
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::CancelEurekaTeleport()
-{
-	m_bIsTeleportingUsingEurekaEffect = false;
-	m_teleportHomeFlashTimer.Invalidate();
 }
 
 //-----------------------------------------------------------------------------
@@ -3291,8 +3220,6 @@ void CTFPlayer::Spawn()
 
 	m_purgatoryPainMultiplier = 1;
 	m_purgatoryPainMultiplierTimer.Invalidate();
-
-	m_bIsTeleportingUsingEurekaEffect = false;
 
 	m_playerMovementStuckTimer.Invalidate();
 
@@ -7043,41 +6970,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		}
 		return true;
 	}
-	else if ( FStrEq( pcmd, "eureka_teleport" ) )
-	{
-		if ( ShouldRunRateLimitedCommand( args ) )
-		{
-			CTFWeaponBase* pWeapon = GetActiveTFWeapon();
-			if ( !pWeapon )
-				return true;
-
-			if ( m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-				return true;
-
-			if ( TFGameRules() && TFGameRules()->ArePlayersInHell() )
-				return true;
-
-			int iAltFireTeleportToSpawn = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iAltFireTeleportToSpawn, alt_fire_teleport_to_spawn );
-
-			if ( IsPlayerClass( TF_CLASS_ENGINEER ) && iAltFireTeleportToSpawn )
-			{
-				if ( args.ArgC() == 2 )
-				{
-					m_eEurekaTeleportTarget = (eEurekaTeleportTargets)atoi( args[1] );
-				}
-				else
-				{
-					m_eEurekaTeleportTarget = EUREKA_TELEPORT_HOME;
-				}
-
-				// Do the Eureka Effect teleport taunt
-				Taunt( TAUNT_SPECIAL, MP_CONCEPT_TAUNT_EUREKA_EFFECT_TELEPORT );
-			}
-		}
-
-		return true;
-	}
 	else if ( FStrEq( pcmd, "arena_changeclass" ) )
 	{
 		if ( ShouldRunRateLimitedCommand( args ) )
@@ -10686,8 +10578,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 	}
-
-	m_bIsTeleportingUsingEurekaEffect = false;
 
 	for ( int i=0; i<GetNumWearables(); ++i )
 	{
@@ -16575,35 +16465,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 			}
 		}
 	}
-	else if ( iTauntIndex == TAUNT_SPECIAL )
-	{
-		if ( IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			// Wrenchmotron taunt teleport home effect
-			if ( !Q_stricmp( szResponse, "scenes/player/engineer/low/taunt_drg_melee.vcd" ) )
-			{
-				m_bIsTeleportingUsingEurekaEffect = true;
-
-				m_teleportHomeFlashTimer.Start( 1.9f );
-
-				// play teleport sound at location we are leaving
-				Vector soundOrigin = WorldSpaceCenter();
-				CPASAttenuationFilter filter( soundOrigin );
-
-				EmitSound_t ep;
-				ep.m_nChannel = CHAN_STATIC;
-				ep.m_pSoundName = "Weapon_DRG_Wrench.Teleport";
-				ep.m_flVolume = 1.0f;
-				ep.m_SoundLevel = SNDLVL_150dB;
-				ep.m_nFlags = 0;
-				ep.m_nPitch = PITCH_NORM;
-				ep.m_pOrigin = &soundOrigin;
-
-				int worldEntIndex = 0;
-				EmitSound( filter, worldEntIndex, ep );
-			}
-		}
-	}
 
 	// Setup taunt attacks. Hacky, but a lot easier to do than getting server side anim events working.
 	if ( IsPlayerClass(TF_CLASS_PYRO) )
@@ -16742,9 +16603,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 //-----------------------------------------------------------------------------
 void CTFPlayer::CancelTaunt( void )
 {
-	m_bIsTeleportingUsingEurekaEffect = false;
-	m_teleportHomeFlashTimer.Reset();
-
 	StopTaunt();
 }
 

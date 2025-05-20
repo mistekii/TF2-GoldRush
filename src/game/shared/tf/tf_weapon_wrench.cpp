@@ -14,7 +14,6 @@
 #ifdef CLIENT_DLL
 	#include "c_tf_player.h"
 	#include "in_buttons.h"
-	#include "tf_hud_menu_eureka_teleport.h"
 	// NVNT haptics system interface
 	#include "haptics/ihaptics.h"
 // Server specific.
@@ -189,17 +188,6 @@ void CTFWrench::ItemPostFrame()
 	if ( pOwner->m_nButtons & IN_RELOAD && !m_bReloadDown )
 	{
 		m_bReloadDown = true;
-		int iAltFireTeleportToSpawn = 0;
-		CALL_ATTRIB_HOOK_INT( iAltFireTeleportToSpawn, alt_fire_teleport_to_spawn );
-		if ( iAltFireTeleportToSpawn )
-		{
-			// Tell the teleport menu to show
-			CHudEurekaEffectTeleportMenu *pTeleportMenu = ( CHudEurekaEffectTeleportMenu * )GET_HUDELEMENT( CHudEurekaEffectTeleportMenu );
-			if ( pTeleportMenu )
-			{
-				pTeleportMenu->WantsToTeleport();
-			}
-		}
 	}
 	else if ( !(pOwner->m_nButtons & IN_RELOAD) && m_bReloadDown )
 	{

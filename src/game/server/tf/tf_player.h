@@ -1322,15 +1322,10 @@ public:
 	void				AddHalloweenKartPushEvent( CTFPlayer *pOther, CBaseEntity *pInflictor, CBaseEntity *pWeapon, Vector vForce, int iDamage, int iDamageType = 0 );
 	QAngle				GetAnimRenderAngles( void ) { return m_PlayerAnimState->GetRenderAngles(); }
 
-	void				CancelEurekaTeleport();
-
 	
 	CNetworkVar( int,	m_iKartState );
 	CNetworkVar( float, m_flKartNextAvailableBoost );
 	float				m_flHHHKartAttackTime;
-
-	// Wrenchmotron teleport
-	bool				m_bIsTeleportingUsingEurekaEffect;
 
 private:
 	void				UpdateHalloween( void );
@@ -1354,10 +1349,6 @@ private:
 	CNetworkVar( float, m_flHandScale );
 
 	//CountdownTimer		m_fireproofTimer;		// if active, we're fireproof
-
-	// Wrenchmotron teleport
-	CountdownTimer		m_teleportHomeFlashTimer;
-	eEurekaTeleportTargets	m_eEurekaTeleportTarget;
 
 	float				m_accumulatedSentryGunDamageDealt;	// for Sentry Buster missions in MvM
 	int					m_accumulatedSentryGunKillCount;	// for Sentry Buster missions in MvM

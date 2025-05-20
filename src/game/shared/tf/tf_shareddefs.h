@@ -1767,18 +1767,6 @@ enum taunts_t
 	//
 };
 
-enum eEurekaTeleportTargets
-{
-	EUREKA_FIRST_TARGET = 0,
-
-	EUREKA_TELEPORT_HOME = 0,
-	EUREKA_TELEPORT_TELEPORTER_EXIT,
-
-	EUREKA_LAST_TARGET = EUREKA_TELEPORT_TELEPORTER_EXIT,
-		
-	EUREKA_NUM_TARGETS
-};
-
 #define TF_HIGHFIVE_HINT_MASK			( 0x10100 ) // annotations have id ( TF_HIGHFIVE_HINT_MASK | entindex )
 
 enum BombDeployingState_t

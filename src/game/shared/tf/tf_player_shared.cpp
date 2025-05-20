@@ -11547,8 +11547,6 @@ bool CTFPlayer::TryToPickupBuilding()
 		return false;
 
 #ifdef GAME_DLL
-	if ( m_bIsTeleportingUsingEurekaEffect )
-		return false;
 
 	int iCannotPickUpBuildings = 0;
 	CALL_ATTRIB_HOOK_INT( iCannotPickUpBuildings, cannot_pick_up_buildings );

@@ -493,8 +493,6 @@ void CTFHalloweenMinigame::TeleportAllPlayersThink()
 	{
 		CTFPlayer *pPlayer = vecPlayers[i];
 
-		pPlayer->CancelEurekaTeleport();
-
 		// Fade from white
 		color32 fadeColor = {255,255,255,255};
 		UTIL_ScreenFade( pPlayer, fadeColor, 1.f, 0.2f, FFADE_IN );
