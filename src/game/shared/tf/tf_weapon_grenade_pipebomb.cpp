@@ -412,7 +412,6 @@ const char* CTFGrenadePipebombProjectile::GetPipebombClass( int iPipeBombType )
 	case TF_GL_MODE_REGULAR:
 		return "tf_projectile_pipe";
 	case TF_GL_MODE_REMOTE_DETONATE:
-	case TF_GL_MODE_REMOTE_DETONATE_PRACTICE:
 		return "tf_projectile_pipe_remote";
 	default:
 		return "tf_projectile_pipe";
@@ -434,11 +433,6 @@ CTFGrenadePipebombProjectile* CTFGrenadePipebombProjectile::Create( const Vector
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 		{
 			iPipeBombDetonateType = TF_GL_MODE_REMOTE_DETONATE;
-		}
-		break;
-	case TF_PROJECTILE_PIPEBOMB_PRACTICE:
-		{
-			iPipeBombDetonateType = TF_GL_MODE_REMOTE_DETONATE_PRACTICE;
 		}
 		break;
 	default:
@@ -484,14 +478,7 @@ void CTFGrenadePipebombProjectile::Spawn()
 	{
 		// Set this to max, so effectively they do not self-implode.
 
-		if ( m_iType == TF_GL_MODE_REMOTE_DETONATE_PRACTICE )
-		{
-			SetModel( TF_WEAPON_PIPEBOMB2_MODEL );
-		}
-		else
-		{
-			SetModel( TF_WEAPON_PIPEBOMB_MODEL );
-		}
+		SetModel( TF_WEAPON_PIPEBOMB_MODEL );
 		SetDetonateTimerLength( FLT_MAX );
 		SetContextThink( &CTFGrenadePipebombProjectile::PreArmThink, gpGlobals->curtime + 0.001f, "PRE_ARM_THINK" ); // Next frame.
 		SetTouch( &CTFGrenadePipebombProjectile::StickybombTouch );
@@ -1266,10 +1253,6 @@ int CTFGrenadePipebombProjectile::GetDamageCustom()
 		{
 			return TF_DMG_CUSTOM_STANDARD_STICKY;
 		}
-	}
-	else if ( m_iType == TF_GL_MODE_REMOTE_DETONATE_PRACTICE )
-	{
-		return TF_DMG_CUSTOM_PRACTICE_STICKY;
 	}
 
 	return BaseClass::GetDamageCustom();

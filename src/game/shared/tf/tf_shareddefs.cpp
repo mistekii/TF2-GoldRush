@@ -797,7 +797,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_PLASMA",
 	"TF_DMG_CUSTOM_PLASMA_CHARGED",
 	"TF_DMG_CUSTOM_PLASMA_GIB",
-	"TF_DMG_CUSTOM_PRACTICE_STICKY",
 	"TF_DMG_CUSTOM_EYEBALL_ROCKET",
 	"TF_DMG_CUSTOM_HEADSHOT_DECAPITATION",
 	"TF_DMG_CUSTOM_TAUNTATK_ARMAGEDDON",
@@ -865,7 +864,6 @@ const char *g_szProjectileNames[] =
 	"projectile_arrow",
 	"projectile_flame_rocket",
 	"projectile_healing_bolt",
-	"projectile_pipe_remote_practice",
 	"projectile_sticky_ball",
 	"projectile_festive_arrow",
 	"projectile_throwable",
@@ -890,7 +888,6 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_COMPOUND_BOW,
 	TF_PROJECTILE_FLAME_ROCKET,
 	TF_WEAPON_CROSSBOW,
-	TF_WEAPON_GRENADELAUNCHER,			// practice pipes should never kill anyone anyway
 	TF_WEAPON_STICKY_BALL_LAUNCHER,
 	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_THROWABLE,

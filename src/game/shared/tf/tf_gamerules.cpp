@@ -7123,8 +7123,7 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 				int iNoSelfBlastDamage = 0;
 				CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iNoSelfBlastDamage, no_self_blast_dmg );
 
-				const bool bIgnoreThisSelfDamage = ( iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromAllWeapons )
-					|| ( (iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromThisWeapon) && (info.GetDamageCustom() == TF_DMG_CUSTOM_PRACTICE_STICKY) );
+				const bool bIgnoreThisSelfDamage = ( iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromAllWeapons );
 				if ( bIgnoreThisSelfDamage )
 				{
 					flRealDamage = 0;
