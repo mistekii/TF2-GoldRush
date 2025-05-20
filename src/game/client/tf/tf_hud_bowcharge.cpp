@@ -129,26 +129,6 @@ void CHudBowChargeMeter::FireGameEvent( IGameEvent *event )
 		case TF_PROJECTILE_FESTIVE_ARROW:
 			pszModelName = g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR];
 			break;
-		case TF_PROJECTILE_HEALING_BOLT:
-			{
-				pszModelName = g_pszArrowModels[MODEL_SYRINGE];
-				// pull the syringe back slightly
-				Vector vForward;
-				AngleVectors( boneAngles, &vForward );
-				bonePosition = bonePosition - (vForward * 6.0f);
-				flScale = 1.6f;
-			}
-			break;
-		case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-			{
-				pszModelName = g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT];
-				// pull the syringe back slightly
-				Vector vForward;
-				AngleVectors( boneAngles, &vForward );
-				bonePosition = bonePosition - ( vForward * 1.0f );
-				flScale = 1.4f;
-			}
-			break;
 		default:
 			Warning( " Unsupported Projectile type on event arrow_impact - %d", type );
 			return;

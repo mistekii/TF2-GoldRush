@@ -66,18 +66,6 @@ DEFINE_THINKFUNC( ImpactThink ),
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( tf_projectile_healing_bolt, CTFProjectile_HealingBolt );
-PRECACHE_WEAPON_REGISTER( tf_projectile_healing_bolt );
-
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-
-BEGIN_NETWORK_TABLE( CTFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-END_NETWORK_TABLE()
-
-BEGIN_DATADESC( CTFProjectile_HealingBolt )
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 CTFProjectile_Arrow::CTFProjectile_Arrow()
@@ -105,15 +93,7 @@ CTFProjectile_Arrow::~CTFProjectile_Arrow()
 
 static const char* GetArrowEntityName( ProjectileType_t projectileType )
 {
-	switch ( projectileType )
-	{
-	case TF_PROJECTILE_HEALING_BOLT:
-	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-		return "tf_projectile_healing_bolt";
-	
-	default:
-		return "tf_projectile_arrow";
-	}
+	return "tf_projectile_arrow";
 }
 
 //-----------------------------------------------------------------------------
@@ -191,16 +171,6 @@ void CTFProjectile_Arrow::Spawn()
 	{
 		SetModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
 	}
-	else if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
-	) {
-		SetModel( g_pszArrowModels[MODEL_SYRINGE] );
-		SetModelScale( 3.0f );
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
-	{
-		SetModel( g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT] );
-		SetModelScale( 3.0f );
-	}
 	else
 	{
 		SetModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
@@ -228,7 +198,6 @@ void CTFProjectile_Arrow::Precache()
 	int arrow_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
 	int claw_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
 	int festive_arrow_model = PrecacheModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
-	PrecacheModel( g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT] );
 
 	PrecacheGibsForModel( arrow_model );
 	PrecacheGibsForModel( claw_model );
@@ -236,8 +205,6 @@ void CTFProjectile_Arrow::Precache()
 	//PrecacheGibsForModel( festive_healing_arrow_model );
 	PrecacheModel( "effects/arrowtrail_red.vmt" );
 	PrecacheModel( "effects/arrowtrail_blu.vmt" );
-	PrecacheModel( "effects/healingtrail_red.vmt" );
-	PrecacheModel( "effects/healingtrail_blu.vmt" );
 	PrecacheModel( CLAW_TRAIL_RED );
 	PrecacheModel( CLAW_TRAIL_BLU );
 	PrecacheParticleSystem( CLAW_REPAIR_EFFECT_BLU );
@@ -247,7 +214,6 @@ void CTFProjectile_Arrow::Precache()
 	PrecacheScriptSound( "Weapon_Arrow.ImpactWood" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactConcrete" );
 	PrecacheScriptSound( "Weapon_Arrow.Nearmiss" );
-	PrecacheScriptSound( "Weapon_Arrow.ImpactFleshCrossbowHeal" );
 
 	BaseClass::Precache();
 }
@@ -275,12 +241,6 @@ bool CTFProjectile_Arrow::CanHeadshot()
 	if ( pOwner == NULL )
 		return false;
 
-	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
-		|| m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT 
-	) {
-		return false;
-	}
-
 
 	return true; 
 }
@@ -290,12 +250,6 @@ bool CTFProjectile_Arrow::CanHeadshot()
 //-----------------------------------------------------------------------------
 float CTFProjectile_Arrow::GetDamage()
 {
-	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT
-		|| m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT
-	) {
-		float lifeTimeScale = RemapValClamped( gpGlobals->curtime - m_flInitTime, 0.0f, 0.6f, 0.5f, 1.0f );	
-		return m_flDamage * lifeTimeScale;
-	}
 	return BaseClass::GetDamage();
 }
 
@@ -1009,11 +963,6 @@ void CTFProjectile_Arrow::RemoveThink( void )
 //-----------------------------------------------------------------------------
 const char *CTFProjectile_Arrow::GetTrailParticleName( void )
 {
-	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT || m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
-	{
-		return ( GetTeamNumber() == TF_TEAM_RED ) ? "effects/healingtrail_red.vmt" : "effects/healingtrail_blu.vmt";
-	}
-
 	return ( GetTeamNumber() == TF_TEAM_RED ) ? "effects/arrowtrail_red.vmt" : "effects/arrowtrail_blu.vmt";
 }
 
@@ -1028,12 +977,6 @@ void CTFProjectile_Arrow::CreateTrail( void )
 	if ( !m_pTrail )
 	{
 		int width = 3;
-		switch ( m_iProjectileType )
-		{
-			case TF_PROJECTILE_HEALING_BOLT:
-			case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-				return; // do not create arrow trail for healing bolt, use particle instead (client only)
-		}
 		
 		const char *pTrailTeamName = GetTrailParticleName();
 		CSpriteTrail *pTempTrail = NULL;
@@ -1145,113 +1088,4 @@ void CTFProjectile_Arrow::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 	m_HitEntities.Purge();
 	// Add ourselves so we dont hit ourselves
 	m_HitEntities.AddToTail( pTFDeflector->entindex() );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Setup function.
-//-----------------------------------------------------------------------------
-void CTFProjectile_HealingBolt::InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner, CBaseEntity *pScorer )
-{
-	BaseClass::InitArrow( vecAngles, fSpeed, fGravity, projectileType, pOwner, pScorer );
-
-	//SetNextThink( gpGlobals->curtime );
-}
-
-// ConVar healingbolt_uber_scale( "healingbolt_uber_scale", "1.0", FCVAR_REPLICATED, "" );
-
-//-----------------------------------------------------------------------------
-// Purpose: Healing bolt heal.
-//-----------------------------------------------------------------------------
-void CTFProjectile_HealingBolt::ImpactTeamPlayer( CTFPlayer *pOther )
-{
-	if ( !pOther )
-		return;
-
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( !pOwner )
-		return;
-
-	// Don't heal players using a weapon that blocks healing
-	CTFWeaponBase *pWeapon = pOther->GetActiveTFWeapon();
-	if ( pWeapon )
-	{
-		int iBlockHealing = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iBlockHealing, weapon_blocks_healing );
-		if ( iBlockHealing )
-			return;
-	}
-
-	float flHealth = GetDamage() * 2.0f;
-
-
-	// Scale this if needed
-	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pOther, flHealth, mult_healing_from_medics );
-
-	CTFWeaponBase *pActiveWeapon = pOther->GetActiveTFWeapon();
-	if ( pActiveWeapon )
-	{
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pActiveWeapon, flHealth, mult_health_fromhealers_penalty_active );
-	}
-	
-	int iActualHealed = pOther->TakeHealth( flHealth, DMG_GENERIC );
-	if ( iActualHealed <= 0 )
-		return;
-
-	// Play an impact sound.
-	ImpactSound( "Weapon_Arrow.ImpactFleshCrossbowHeal" );
-
-	CTF_GameStats.Event_PlayerHealedOther( pOwner, flHealth );
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_healed" );
-	if ( event )
-	{
-		// HLTV event priority, not transmitted
-		event->SetInt( "priority", 1 );	
-
-		// Healed by another player.
-		event->SetInt( "patient", pOther->GetUserID() );
-		event->SetInt( "healer", pOwner->GetUserID() );
-		event->SetInt( "amount", flHealth );
-		gameeventmanager->FireEvent( event );
-	}
-
-	event = gameeventmanager->CreateEvent( "player_healonhit" );
-	if ( event )
-	{
-		event->SetInt( "amount", flHealth );
-		event->SetInt( "entindex", pOther->entindex() );
-		item_definition_index_t healingItemDef = INVALID_ITEM_DEF_INDEX;
-		if ( pWeapon && pWeapon->GetAttributeContainer() && pWeapon->GetAttributeContainer()->GetItem() )
-		{
-			healingItemDef = pWeapon->GetAttributeContainer()->GetItem()->GetItemDefIndex();
-		}
-		event->SetInt( "weapon_def_index", healingItemDef );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	event = gameeventmanager->CreateEvent( "crossbow_heal" );
-	if ( event )
-	{
-		event->SetInt( "healer", pOwner->GetUserID() );
-		event->SetInt( "target", pOther->GetUserID() );
-		event->SetInt( "amount", flHealth );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	// Add ubercharge based on amount healed
-	CWeaponMedigun *pMedigun = static_cast<CWeaponMedigun *>( pOwner->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-	if ( pMedigun )
-	{
-		float flTimeSinceDamage = gpGlobals->curtime - pOther->GetLastDamageReceivedTime();
-		float flScale = RemapValClamped( flTimeSinceDamage, 10.f, 15.f, 3.f, 1.f ); /*healingbolt_uber_scale.GetFloat()*/
-		const float flGainRate = 24.f * flScale;
-
-		// Ubercharge rate is based on the medigun's heal rate, then scaled based on last combat time (same rule as the medigun's heal rate)
-		pMedigun->AddCharge( ( iActualHealed / flGainRate ) * gpGlobals->frametime );
-	}
-	pOther->m_Shared.AddCond( TF_COND_HEALTH_OVERHEALED, 1.2f );
-
-	EconEntity_OnOwnerKillEaterEvent_Batched( dynamic_cast<CEconEntity *>( GetLauncher() ), pOwner, pOther, kKillEaterEvent_AllyHealingDone, flHealth );
 }

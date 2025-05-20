@@ -56,15 +56,6 @@ void CreateCrossbowBoltTF( const Vector &vecOrigin, const Vector &vecDirection, 
 	case TF_PROJECTILE_FESTIVE_ARROW:
 		pszModelName = g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR];
 		break;
-	case TF_PROJECTILE_HEALING_BOLT:
-		pszModelName = g_pszArrowModels[MODEL_SYRINGE];
-		flDirOffset = 0.0f;
-		flScale = 3.0f;
-		break;
-	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-		pszModelName = g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT];
-		flScale = 2.5f;
-		break;
 	default:
 		// Unsupported Model
 		Assert( 0 );

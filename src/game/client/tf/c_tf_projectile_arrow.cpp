@@ -22,12 +22,6 @@ BEGIN_NETWORK_TABLE( C_TFProjectile_Arrow, DT_TFProjectile_Arrow )
 	RecvPropInt( RECVINFO( m_iProjectileType ) ),
 END_NETWORK_TABLE()
 
-//-----------------------------------------------------------------------------
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-
-BEGIN_NETWORK_TABLE( C_TFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-END_NETWORK_TABLE()
-
 #define NEAR_MISS_THRESHOLD 120
 
 //-----------------------------------------------------------------------------
@@ -183,23 +177,4 @@ void C_TFProjectile_Arrow::CreateCritTrail( void )
 			break;
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-void C_TFProjectile_HealingBolt::OnDataChanged( DataUpdateType_t updateType )
-{
-	if ( updateType == DATA_UPDATE_CREATED )
-	{
-		switch( GetTeamNumber() )
-		{
-		case TF_TEAM_BLUE:
-			ParticleProp()->Create( "healshot_trail_blue", PATTACH_ABSORIGIN_FOLLOW );
-			break;
-		case TF_TEAM_RED:
-			ParticleProp()->Create( "healshot_trail_red", PATTACH_ABSORIGIN_FOLLOW );
-			break;
-		}
-	}
-
-	BaseClass::OnDataChanged( updateType );
 }

@@ -113,20 +113,4 @@ protected:
 	bool			m_bApplyMilkOnHit;		// For Apothacary's Arrow which can sometimes be special
 };
 
-class CTFProjectile_HealingBolt : public CTFProjectile_Arrow
-{
-public:
-
-	DECLARE_CLASS( CTFProjectile_HealingBolt, CTFProjectile_Arrow );
-	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC();
-
-	virtual void	InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner = NULL, CBaseEntity *pScorer = NULL ) OVERRIDE;
-
-	virtual bool CanHeadshot() { return false; }
-	virtual void ImpactTeamPlayer( CTFPlayer *pOther );
-	
-	virtual float GetCollideWithTeammatesDelay() const { return 0.f; }
-};
-
 #endif	//TF_PROJECTILE_ARROW_H

@@ -53,18 +53,4 @@ private:
 	CNetworkVar( int, m_iProjectileType );
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: Arrow projectile.
-//-----------------------------------------------------------------------------
-class C_TFProjectile_HealingBolt : public C_TFProjectile_Arrow
-{
-	DECLARE_CLASS( C_TFProjectile_HealingBolt, C_TFProjectile_Arrow );
-
-	virtual void	OnDataChanged( DataUpdateType_t updateType );
-
-public:
-
-	DECLARE_NETWORKCLASS();
-};
-
 #endif // C_TF_PROJECTILE_ARROW_H
