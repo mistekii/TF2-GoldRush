@@ -3473,7 +3473,6 @@ bool CTFBot::IsHitScanWeapon( CTFWeaponBase *weapon ) const
 		case TF_WEAPON_SNIPERRIFLE:
 		case TF_WEAPON_MINIGUN:
 		case TF_WEAPON_SMG:
-		case TF_WEAPON_CHARGED_SMG:
 		case TF_WEAPON_PISTOL:
 		case TF_WEAPON_PISTOL_SCOUT:
 		case TF_WEAPON_REVOLVER:

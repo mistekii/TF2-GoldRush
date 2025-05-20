@@ -284,7 +284,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		DECLARE_ITEM_EFFECT_METER( CTFJar, TF_WEAPON_JAR, true, NULL );
 		DECLARE_ITEM_EFFECT_METER( CTFSniperRifleDecap, TF_WEAPON_SNIPERRIFLE_DECAP, false, "resource/UI/HudItemEffectMeter_Sniper.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFSniperRifle, TF_WEAPON_SNIPERRIFLE, true, "resource/UI/HudItemEffectMeter_SniperFocus.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFChargedSMG, TF_WEAPON_CHARGED_SMG, false, NULL );
 		lambdaAddItemEffectMeter( "tf_wearable_razorback", true );
 		break;
 	}
@@ -840,22 +839,6 @@ bool CHudItemEffectMeter_Weapon<CTFFlameThrower>::ShouldFlash( void )
 	{
 		return false;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Charged SMG Flash
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFChargedSMG>::ShouldFlash( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	CTFChargedSMG* pWeapon = GetWeapon();
-	if ( !pWeapon )
-		return false;
-
-	return pWeapon->ShouldFlashChargeBar();
 }
 
 //-----------------------------------------------------------------------------
