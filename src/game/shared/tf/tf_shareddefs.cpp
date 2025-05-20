@@ -862,7 +862,6 @@ const char *g_szProjectileNames[] =
 	"projectile_arrow",
 	"projectile_flame_rocket",
 	"projectile_sticky_ball",
-	"projectile_festive_arrow",
 	"projectile_throwable",
 	"projectile_spellfireball",
 	"projectile_sentry_rocket",
@@ -884,7 +883,6 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_COMPOUND_BOW,
 	TF_PROJECTILE_FLAME_ROCKET,
 	TF_WEAPON_STICKY_BALL_LAUNCHER,
-	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_SPELLBOOK,
 	TF_WEAPON_SENTRY_ROCKET,
@@ -1017,7 +1015,6 @@ const char *g_pszArrowModels[] =
 	"models/weapons/w_models/w_arrow.mdl",
 	"models/weapons/w_models/w_repair_claw.mdl",
 	"models/weapons/w_models/w_baseball.mdl",
-	"models/weapons/w_models/w_arrow_xmas.mdl",
 	"models/weapons/w_models/w_syringe_proj.mdl",
 	"models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"
 };

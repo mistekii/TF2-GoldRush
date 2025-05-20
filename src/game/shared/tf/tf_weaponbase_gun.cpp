@@ -302,7 +302,6 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 	case TF_PROJECTILE_ARROW:
-	case TF_PROJECTILE_FESTIVE_ARROW:
 		pProjectile = FireArrow( pPlayer, ProjectileType_t( iProjectile ) );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;

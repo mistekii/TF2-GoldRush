@@ -126,9 +126,6 @@ void CHudBowChargeMeter::FireGameEvent( IGameEvent *event )
 		case TF_PROJECTILE_ARROW:
 			pszModelName = g_pszArrowModels[MODEL_ARROW_REGULAR];
 			break;
-		case TF_PROJECTILE_FESTIVE_ARROW:
-			pszModelName = g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR];
-			break;
 		default:
 			Warning( " Unsupported Projectile type on event arrow_impact - %d", type );
 			return;

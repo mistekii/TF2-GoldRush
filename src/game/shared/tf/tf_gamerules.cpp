@@ -20109,7 +20109,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 				if ( !( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY ) )
 				{
 					int iProjectile = pWeaponGun->GetWeaponProjectileType();
-					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET || iProjectile == TF_PROJECTILE_FESTIVE_ARROW );
+					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET );
 				}
 			}
 

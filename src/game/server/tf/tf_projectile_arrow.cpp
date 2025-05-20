@@ -167,14 +167,7 @@ void CTFProjectile_Arrow::InitArrow( const QAngle &vecAngles, const float fSpeed
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::Spawn()
 {
-	if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_ARROW )
-	{
-		SetModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
-	}
-	else
-	{
-		SetModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
-	}
+	SetModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	UTIL_SetSize( this, Vector( -1.0f, -1.0f, -1.0f ), Vector( 1.0f, 1.0f, 1.0f ) );
@@ -197,12 +190,9 @@ void CTFProjectile_Arrow::Precache()
 {
 	int arrow_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
 	int claw_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
-	int festive_arrow_model = PrecacheModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
 
 	PrecacheGibsForModel( arrow_model );
 	PrecacheGibsForModel( claw_model );
-	PrecacheGibsForModel( festive_arrow_model );
-	//PrecacheGibsForModel( festive_healing_arrow_model );
 	PrecacheModel( "effects/arrowtrail_red.vmt" );
 	PrecacheModel( "effects/arrowtrail_blu.vmt" );
 	PrecacheModel( CLAW_TRAIL_RED );
