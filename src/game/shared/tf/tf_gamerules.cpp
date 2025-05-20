@@ -4024,7 +4024,6 @@ static const char *s_PreserveEnts[] =
 	"tf_mann_vs_machine_stats",
 	"tf_wearable",
 	"tf_wearable_demoshield",
-	"tf_wearable_robot_arm",
 	"tf_wearable_vm",
 	"tf_logic_bonusround",
 	"vote_controller",
@@ -11564,10 +11563,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	{
 		killer_weapon_name = "tf_weapon_taunt_guitar_riff_kill";
 	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL )
-	{
-		killer_weapon_name = "robot_arm_blender_kill";
-	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 	{
 		killer_weapon_name = "telefrag";
@@ -11595,10 +11590,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BASEBALL )
 	{
 		killer_weapon_name = "ball";
-	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_COMBO_PUNCH )
-	{
-		killer_weapon_name = "robot_arm_combo_kill";
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BLEEDING )
 	{

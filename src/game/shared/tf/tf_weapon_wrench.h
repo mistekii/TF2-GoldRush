@@ -15,8 +15,6 @@
 
 #ifdef CLIENT_DLL
 #define CTFWrench C_TFWrench
-#define CTFRobotArm C_TFRobotArm
-#define CTFWearableRobotArm C_TFWearableRobotArm
 #endif
 
 //=============================================================================
@@ -57,55 +55,6 @@ public:
 private:
 	bool				m_bReloadDown;
 	CTFWrench( const CTFWrench & ) {}
-};
-
-//=============================================================================
-//
-// Robot Arm class.
-//
-class CTFRobotArm : public CTFWrench
-{
-public:
-	DECLARE_CLASS( CTFRobotArm, CTFWrench );
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-
-	CTFRobotArm();
-
-	virtual void		Precache();
-
-#ifdef GAME_DLL
-	virtual void		Equip( CBaseCombatCharacter *pOwner );
-	virtual void		Drop( const Vector &vecVelocity );
-	virtual void		UpdateOnRemove( void );
-	void				RemoveRobotArm();
-	virtual void		OnActiveStateChanged( int iOldState );
-	virtual int			GetDamageCustom();
-	virtual float		GetForceScale( void );
-	virtual bool 		HideAttachmentsAndShowBodygroupsWhenPerformingWeaponIndependentTaunt() const OVERRIDE { return false; }
-#endif
-
-	virtual void		PrimaryAttack();
-
-	virtual void		Smack( void );
-	virtual void		WeaponIdle( void );
-
-	virtual void		DoViewModelAnimation( void );
-
-private:
-	CNetworkHandle( CTFWearable, m_hRobotArm );
-
-	int					m_iComboCount;
-	float				m_flLastComboHit;
-	bool				m_bBigIdle;
-	bool				m_bBigHit;
-};
-
-class CTFWearableRobotArm : public CTFWearable
-{
-public:
-	DECLARE_CLASS( CTFWearableRobotArm, CTFWearable );
-	DECLARE_NETWORKCLASS();
 };
 
 #endif // TF_WEAPON_WRENCH_H

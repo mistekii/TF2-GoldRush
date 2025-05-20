@@ -156,13 +156,9 @@ const char	*CTFPlayerClassShared::GetModelName( void ) const
 //-----------------------------------------------------------------------------
 // Purpose: Initialize the player class.
 //-----------------------------------------------------------------------------
-const char *g_HACK_GunslingerEngineerArmsOverride = "models\\weapons\\c_models\\c_engineer_gunslinger.mdl";
-
 const char *CTFPlayerClassShared::GetHandModelName( int iHandIndex = 0 ) const
 {
-	return iHandIndex == 0
-		 ? GetPlayerClassData( m_iClass )->m_szHandModelName
-		 :g_HACK_GunslingerEngineerArmsOverride;				// this is precached in the CTFRobotArm class
+	return GetPlayerClassData(m_iClass)->m_szHandModelName;
 }
 //-----------------------------------------------------------------------------
 // Purpose: Initialize the player class.
