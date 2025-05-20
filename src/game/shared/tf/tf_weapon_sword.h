@@ -21,7 +21,6 @@
 
 #ifdef CLIENT_DLL
 #define CTFSword C_TFSword
-#define CTFKatana C_TFKatana
 #endif
 
 //=============================================================================
@@ -109,34 +108,6 @@ private:
 	float				m_flNextIdleWavRoll;
 	int					m_iPrevWavDecap;
 #endif
-};
-
-//=============================================================================
-//
-// Sword class. (On head-take causes short-term soldier buff effects.)
-//
-class CTFKatana : public CTFDecapitationMeleeWeaponBase
-{
-public:
-
-	DECLARE_CLASS( CTFKatana, CTFDecapitationMeleeWeaponBase );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	CTFKatana();
-	virtual ~CTFKatana() {}
-
-	virtual bool	Deploy( void );
-	virtual float	GetMeleeDamage( CBaseEntity *pTarget, int* piDamageType, int* piCustomDamage );
-	virtual void	OnDecapitation( CTFPlayer *pDeadPlayer );
-
-	virtual int		GetActivityWeaponRole() const OVERRIDE;
-
-protected:
-	virtual int		GetSkinOverride() const;
-	
-private:
-	CNetworkVar( bool, m_bIsBloody );
 };
 
 
