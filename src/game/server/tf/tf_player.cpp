@@ -2611,9 +2611,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheParticleSystem( "xms_ornament_smash_blue" );
 	PrecacheParticleSystem( "xms_ornament_smash_red" );
 
-	PrecacheParticleSystem( "drg_pomson_muzzleflash" );
-	PrecacheParticleSystem( "drg_pomson_impact" );
-	PrecacheParticleSystem( "drg_pomson_impact_drain" );
 	PrecacheParticleSystem( "dragons_fury_effect" );
 
 	PrecacheParticleSystem( "dxhr_arm_muzzleflash" );
@@ -2647,10 +2644,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheScriptSound( "Bombinomicon.Explode" );
 
 	PrecacheScriptSound( "Weapon_DRG_Wrench.Teleport" );
-	PrecacheScriptSound( "Weapon_Pomson.Single" );
-	PrecacheScriptSound( "Weapon_Pomson.SingleCrit" );
-	PrecacheScriptSound( "Weapon_Pomson.Reload" );
-	PrecacheScriptSound( "Weapon_Pomson.DrainedVictim" );
 
 	PrecacheScriptSound( "BlastJump.Whistle" );
 
