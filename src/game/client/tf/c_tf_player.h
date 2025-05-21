@@ -709,9 +709,6 @@ public:
 	// Urine
 	HPARTICLEFFECT		m_pUrineEffect;
 
-	// Gas
-	HPARTICLEFFECT		m_pGasEffect;
-
 	// Soldier Buff
 	HPARTICLEFFECT		m_pSoldierOffensiveBuffEffect;
 	HPARTICLEFFECT		m_pSoldierDefensiveBuffEffect;
