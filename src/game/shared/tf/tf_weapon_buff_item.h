@@ -28,9 +28,8 @@ enum EBuffItemTypes
 {
 	EBuffBanner = 1,
 	EBattalion,
-	EConcheror,
 
-	NUM_BUFF_ITEM_TYPES = EConcheror
+	NUM_BUFF_ITEM_TYPES = EBattalion
 };
 
 class CTFBuffItem : public CTFWeaponBaseMelee

@@ -40,8 +40,7 @@ PRECACHE_WEAPON_REGISTER( tf_weapon_buff_item );
 const char* BannerModels[] =
 {
 	"models/weapons/c_models/c_buffbanner/c_buffbanner.mdl",
-	"models/workshop/weapons/c_models/c_battalion_buffbanner/c_battalion_buffbanner.mdl",
-	"models/workshop_partner/weapons/c_models/c_shogun_warbanner/c_shogun_warbanner.mdl"
+	"models/workshop/weapons/c_models/c_battalion_buffbanner/c_battalion_buffbanner.mdl"
 };
 
 COMPILE_TIME_ASSERT( ARRAYSIZE( BannerModels ) == NUM_BUFF_ITEM_TYPES );
@@ -92,14 +91,12 @@ void CTFBuffItem::Precache()
 
 	PrecacheModel( "models/weapons/c_models/c_buffpack/c_buffpack.mdl" );
 	PrecacheModel( "models/workshop/weapons/c_models/c_battalion_buffpack/c_battalion_buffpack.mdl" );
-	PrecacheModel( "models/workshop_partner/weapons/c_models/c_shogun_warpack/c_shogun_warpack.mdl" );
 
 	PrecacheScriptSound( "Weapon_BuffBanner.HornRed" );
 	PrecacheScriptSound( "Weapon_BuffBanner.HornBlue" );
 	PrecacheScriptSound( "Weapon_BattalionsBackup.HornRed" );
 	PrecacheScriptSound( "Weapon_BattalionsBackup.HornBlue" );
 	PrecacheScriptSound( "Weapon_BuffBanner.Flag" );
-	PrecacheScriptSound( "Samurai.Conch" );
 
 	BaseClass::Precache();
 }
@@ -164,13 +161,8 @@ void CTFBuffItem::BlowHorn( void )
 	int iBuffType = 0;
 	CALL_ATTRIB_HOOK_INT( iBuffType, set_buff_type );
 
-	// Samurai conch shell.
-	if ( iBuffType == EConcheror )
-	{
-		pPlayer->EmitSound( "Samurai.Conch" );
-	}
 	// Bugle.
-	else if ( iBuffType == EBuffBanner )
+	if ( iBuffType == EBuffBanner )
 	{
 		if ( pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 		{
