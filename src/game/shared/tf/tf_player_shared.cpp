@@ -688,10 +688,6 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 	if ( m_Shared.IsCarryingObject() )
 		return false;
 
-	// Can't taunt if hooked into a player
-	if ( m_Shared.InCond( TF_COND_GRAPPLED_TO_PLAYER ) )
-		return false;
-
 	if ( IsPlayerClass( TF_CLASS_SCOUT ) )
 	{
 		if ( pActiveWeapon && pActiveWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX )
