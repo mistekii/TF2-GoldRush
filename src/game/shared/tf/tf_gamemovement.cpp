@@ -324,24 +324,7 @@ bool CTFGameMovement::ChargeMove()
 {
 	if ( !m_pTFPlayer->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
 	{
-		// Check for Quick Fix Medic healing a charging player
-		if ( !m_pTFPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
-			return false;
-
-		CTFWeaponBase *pTFWeapon = m_pTFPlayer->GetActiveTFWeapon();
-		if ( !pTFWeapon )
-			return false;
-
-		if ( pTFWeapon->GetWeaponID() != TF_WEAPON_MEDIGUN )
-			return false;
-
-		CWeaponMedigun *pMedigun = static_cast< CWeaponMedigun* >( pTFWeapon );
-		if ( !pMedigun || pMedigun->GetMedigunType() != MEDIGUN_QUICKFIX )
-			return false;
-
-		CTFPlayer *pHealTarget = ToTFPlayer( pMedigun->GetHealTarget() );
-		if ( !pHealTarget || !pHealTarget->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
-			return false;
+		return false;
 	}
 
 	mv->m_flMaxSpeed = tf_max_charge_speed.GetFloat();

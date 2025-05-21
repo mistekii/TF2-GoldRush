@@ -566,17 +566,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	CWeaponMedigun *medigun = dynamic_cast< CWeaponMedigun * >( me->m_Shared.GetActiveTFWeapon() );
 	if ( medigun )
 	{
-		if( medigun->GetMedigunType() == MEDIGUN_RESIST )
-		{
-			// If I'm a Vaccinnator medic and am told to prefer a certain type of resist, then cycle to that resist
-			while( ( me->HasAttribute( CTFBot::PREFER_VACCINATOR_BULLETS )	&& medigun->GetResistType() != MEDIGUN_BULLET_RESIST )
-				|| ( me->HasAttribute( CTFBot::PREFER_VACCINATOR_BLAST )	&& medigun->GetResistType() != MEDIGUN_BLAST_RESIST )
-				|| ( me->HasAttribute( CTFBot::PREFER_VACCINATOR_FIRE )		&& medigun->GetResistType() != MEDIGUN_FIRE_RESIST ) )
-			{
-				medigun->CycleResistType();
-			}
-		}
-
 		// if our primary patient is healthy and safe, heal others in our immediate vicinity who need it
 		// No opportunistic healing if I'm in a squad - stay on the leader
 		if ( !medigun->IsReleasingCharge() && IsStable( m_patient ) && !me->IsInASquad() )
@@ -622,54 +611,38 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 		bool useUber = false;
 		if ( IsReadyToDeployUber( medigun ) && CanDeployUber( me, medigun ) )
 		{
-			if( medigun->GetMedigunType() == MEDIGUN_RESIST )
-			{
-				// uber if I'm getting low and have recently taken damage
-				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f )
-				{
-					useUber = true;
-				}
+			// use uber if our patient's health is getting low
+			const float healthyRatio = 0.5f;
+			useUber = ( ( (float)m_patient->GetHealth() / (float)m_patient->GetMaxHealth() ) < healthyRatio );
 
-				if( m_patient->GetTimeSinceLastInjury( GetEnemyTeam( m_patient->GetTeamNumber() ) ) < 1.0f )
+			// don't uber our patient if he's already uber from some other source
+			if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE ) )
+			{
+				useUber = false;
+			}
+
+			// uber if I'm getting low and have recently taken damage
+			if ( me->GetHealth() < me->GetUberHealthThreshold() )
+			{
+				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || TFGameRules()->IsMannVsMachineMode() )
 				{
 					useUber = true;
 				}
 			}
-			else
-			{
-				// use uber if our patient's health is getting low
-				const float healthyRatio = 0.5f;
-				useUber = ( ( (float)m_patient->GetHealth() / (float)m_patient->GetMaxHealth() ) < healthyRatio );
 
-				// don't uber our patient if he's already uber from some other source
-				if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE ) || m_patient->m_Shared.InCond( TF_COND_MEGAHEAL ) )
+			// also uber if I'm about to die!
+			if ( me->GetHealth() < 25 )
+			{
+				useUber = true;
+			}
+
+			// special case for bots in mvm spawn zones
+			if ( TFGameRules()->IsMannVsMachineMode() )
+			{
+				if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && 
+						me->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
 				{
 					useUber = false;
-				}
-
-				// uber if I'm getting low and have recently taken damage
-				if ( me->GetHealth() < me->GetUberHealthThreshold() )
-				{
-					if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || TFGameRules()->IsMannVsMachineMode() )
-					{
-						useUber = true;
-					}
-				}
-
-				// also uber if I'm about to die!
-				if ( me->GetHealth() < 25 )
-				{
-					useUber = true;
-				}
-
-				// special case for bots in mvm spawn zones
-				if ( TFGameRules()->IsMannVsMachineMode() )
-				{
-					if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && 
-						 me->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
-					{
-						useUber = false;
-					}
 				}
 			}
 

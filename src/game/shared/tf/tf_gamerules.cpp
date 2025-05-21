@@ -625,9 +625,6 @@ bool IsCommunityMap( const char *pMapName )
 extern ConVar mp_capstyle;
 extern ConVar sv_turbophysics;
 
-extern ConVar tf_vaccinator_small_resist;
-extern ConVar tf_vaccinator_uber_resist;
-
 extern ConVar tf_teleporter_fov_time;
 extern ConVar tf_teleporter_fov_start;
 
@@ -6598,180 +6595,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-static bool CheckForDamageTypeImmunity( int nDamageType, CTFPlayer* pVictim, float &flDamageBase, float &flCritBonusDamage )
-{
-	bool bImmune = false;
-	if( nDamageType & (DMG_BURN|DMG_IGNITE) )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_FIRE_IMMUNE );
-	}
-	else if( nDamageType & (DMG_BULLET|DMG_BUCKSHOT) )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_BULLET_IMMUNE );
-	}
-	else if( nDamageType & DMG_BLAST )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_BLAST_IMMUNE );
-	}
-
-	if( bImmune )
-	{
-		flDamageBase = flCritBonusDamage = 0.f;
-
-		IGameEvent* event = gameeventmanager->CreateEvent( "damage_resisted" );
-		if ( event )
-		{
-			event->SetInt( "entindex", pVictim->entindex() );
-			gameeventmanager->FireEvent( event ); 
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static bool CheckMedicResist( ETFCond ePassiveCond, ETFCond eDeployedCond, CTFPlayer* pVictim, float flRawDamage, float& flDamageBase, bool bCrit, float& flCritBonusDamage )
-{
-	// Might be a tank or some other object that's getting shot
-	if( !pVictim || !pVictim->IsPlayer() )
-		return false;
-
-	ETFCond eActiveCond;
-	// Be in the condition!
-	if( pVictim->m_Shared.InCond( eDeployedCond ) )
-	{
-		eActiveCond = eDeployedCond;
-	}
-	else if( pVictim->m_Shared.InCond( ePassiveCond ) )
-	{
-		eActiveCond = ePassiveCond;
-	}
-	else
-	{
-		return false;
-	}
-
-	// Get our condition provider
-	CBaseEntity* pProvider = pVictim->m_Shared.GetConditionProvider( eActiveCond );
-	CTFPlayer* pTFProvider = ToTFPlayer( pProvider );
-	Assert( pTFProvider );
-	
-	float flDamageScale = 0.f;
-	//float flCritBarDeplete = 0.f;
-	bool bUberResist = false;
-
-	if( pTFProvider )
-	{
-		switch( eActiveCond )
-		{
-		case TF_COND_MEDIGUN_UBER_BULLET_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_bullet_resist_deployed );
-			bUberResist = true;
-//			if ( bCrit )
-//			{
-//				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_bullet_percent_bar_deplete );
-//			}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_BULLET_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_bullet_resist_passive );
-			break;
-
-		case TF_COND_MEDIGUN_UBER_BLAST_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_blast_resist_deployed );
-			bUberResist = true;
-			//if( bCrit )
-			//{
-			//	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_blast_percent_bar_deplete );
-			//}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_BLAST_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_blast_resist_passive );
-			break;
-
-		case TF_COND_MEDIGUN_UBER_FIRE_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_fire_resist_deployed );
-			bUberResist = true;
-//			if( bCrit )
-//			{
-//				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_fire_percent_bar_deplete );
-//			}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_FIRE_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_fire_resist_passive );
-			break;
-		}
-	}
-
-	if ( bUberResist && pVictim->m_Shared.InCond( TF_COND_HEALING_DEBUFF ) )
-	{
-		flDamageScale *= ( 1.f - PYRO_AFTERBURN_HEALING_REDUCTION );
-	}
-
-	flDamageScale = 1.f - flDamageScale;
-	if( flDamageScale < 0.f ) 
-		flDamageScale = 0.f;
-
-	//// Dont let the medic heal themselves when they take damage
-	//if( pTFProvider && pTFProvider != pVictim )
-	//{
-	//	// Heal the medic for 10% of the incoming damage
-	//	int nHeal = flRawDamage * 0.10f;
-	//	// Heal!
-	//	int iHealed = pTFProvider->TakeHealth( nHeal, DMG_GENERIC );
-
-	//	// Tell them about it!
-	//	if ( iHealed )
-	//	{
-	//		CTF_GameStats.Event_PlayerHealedOther( pTFProvider, iHealed );
-	//	}
-
-	//	IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-	//	if ( event )
-	//	{
-	//		event->SetInt( "amount", nHeal );
-	//		event->SetInt( "entindex", pTFProvider->entindex() );
-	//		gameeventmanager->FireEvent( event ); 
-	//	}
-	//}
-
-	IGameEvent* event = gameeventmanager->CreateEvent( "damage_resisted" );
-	if ( event )
-	{
-		event->SetInt( "entindex", pVictim->entindex() );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	if ( bCrit && pTFProvider && bUberResist )
-	{
-		flCritBonusDamage = ( pVictim->m_Shared.InCond( TF_COND_HEALING_DEBUFF ) ) ? flCritBonusDamage * PYRO_AFTERBURN_HEALING_REDUCTION : 0.f;
-
-		//CWeaponMedigun* pMedigun = dynamic_cast<CWeaponMedigun*>( pTFProvider->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-		//if( pMedigun )
-		//{
-		//	if( pMedigun->GetChargeLevel() > 0.f && pMedigun->IsReleasingCharge() )
-		//	{
-		//		flCritBonusDamage = 0;
-		//	}
-		//	pMedigun->SubtractCharge( flCritBarDeplete );
-		//}
-	}
-
-	// Scale the damage!
-	flDamageBase = flDamageBase * flDamageScale;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 static void PotentiallyDamageMitigatedEvent( const CTFPlayer* pMitigator, const CTFPlayer* pDamaged, const CEconEntity* pMitigationProvidingEconItem, float flBeforeDamage, float flAfterDamage )
 {
 	int nAmount = flBeforeDamage - flAfterDamage;
@@ -6842,12 +6665,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 					return -1;
 				}
 			}
-
-			if ( pVictim->m_Shared.InCond( TF_COND_FIRE_IMMUNE ) )
-			{
-				// Do a hard out in the caller
-				return -1;
-			}
 		}
 
 		// When obscured by smoke, attacks have a chance to miss
@@ -6901,9 +6718,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 		// This raw damage wont get scaled.  Used for determining how much health to give resist medics.
 		float flRawDamage = flDamageBase;
 		
-		// Check if we're immune
-		outParams.bPlayDamageReductionSound = CheckForDamageTypeImmunity( info.GetDamageType(), pVictim, flDamageBase, flDamageBonus );
-
 		if ( !iPierceResists )
 		{
 			// Reduce only the crit portion of the damage with crit resist
@@ -6919,9 +6733,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			{
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_fire );
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim->GetActiveWeapon(), flDamageBase, mult_dmgtaken_from_fire_active );
-
-				// Check for medic resist
-				outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_FIRE_RESIST, TF_COND_MEDIGUN_UBER_FIRE_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 			}
 
 			if ( pTFAttacker && pVictim && pVictim->m_Shared.InCond( TF_COND_BURNING ) )
@@ -6942,18 +6753,12 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 				if ( bReduceBlast )
 				{
 					CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_explosions );
-
-					// Check for medic resist
-					outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_BLAST_RESIST, TF_COND_MEDIGUN_UBER_BLAST_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 				}
 			}
 
 			if ( info.GetDamageType() & (DMG_BULLET|DMG_BUCKSHOT) )
 			{
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_bullets );
-
-				// Check for medic resist
-				outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_BULLET_RESIST, TF_COND_MEDIGUN_UBER_BULLET_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 			}
 
 			if ( info.GetDamageType() & DMG_MELEE )
@@ -15928,7 +15733,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-	if ( ( pTFPlayer->m_Shared.IsInvulnerable() || pTFPlayer->m_Shared.InCond( TF_COND_MEGAHEAL ) ) && !IsMannVsMachineMode() )
+	if ( ( pTFPlayer->m_Shared.IsInvulnerable() ) && !IsMannVsMachineMode() )
 	{
 		if ( pszReason )
 		{

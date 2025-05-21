@@ -574,7 +574,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( ApplyAbsVelocityImpulse, "" )
 	DEFINE_SCRIPTFUNC( ApplyPunchImpulseX, "" )
 	DEFINE_SCRIPTFUNC( SetUseBossHealthBar, "" )
-	DEFINE_SCRIPTFUNC( IsFireproof, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToTaunt, "" )
 	DEFINE_SCRIPTFUNC( IsRegenerating, "" )
 	DEFINE_SCRIPTFUNC( GetCurrentTauntMoveSpeed, "" )
@@ -8558,37 +8557,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			m_rgbTimeBasedDamage[i] = 0;
 		}
 	}
-
-	const char* pzsMedigunResistEffect = NULL;
 	const char* pzsTeam = GetTeamNumber() == TF_TEAM_RED ? "red" : "blue";
-
-	// If we have one of the medigun resist buffs and get hit with the matching damage type then
-	// spawn a particle above our head to let enemies know their damage is being resisted, and tell
-	// the medic he's doing the right thing.
-
-	bool bMedicBulletResist		= m_Shared.InCond( TF_COND_MEDIGUN_UBER_BULLET_RESIST ) || m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BULLET_RESIST );
-	bool bMedicExplosiveResist	= m_Shared.InCond( TF_COND_MEDIGUN_UBER_BLAST_RESIST )	|| m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BLAST_RESIST );
-	bool bMedicFireResist		= m_Shared.InCond( TF_COND_MEDIGUN_UBER_FIRE_RESIST )	|| m_Shared.InCond( TF_COND_MEDIGUN_SMALL_FIRE_RESIST );
-
-	if( ( bMedicBulletResist && ( bitsDamage & DMG_BULLET	) ) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff1_burst", pzsTeam );
-	}
-	else if( bMedicExplosiveResist	&& ( bitsDamage & DMG_BLAST	) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff2_burst", pzsTeam );
-	}
-	else if( bMedicFireResist && ( bitsDamage & DMG_BURN ) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff3_burst", pzsTeam );
-	}
-
-	if( pzsMedigunResistEffect != NULL )
-	{
-		const Vector& vecOrigin = GetAbsOrigin();
-		CPVSFilter filter( vecOrigin );
-		TE_TFParticleEffect( filter, 0, pzsMedigunResistEffect, vecOrigin, vec3_angle );
-	}
 
 	// Display any effect associate with this damage type
 	DamageEffect( info.GetDamage(),bitsDamage );
@@ -8755,40 +8724,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( pTFAttacker )
 	{
 		pTFAttacker->OnDealtDamage( this, info );
-	}
-
-	bool bIsPyroDetonateJumping = ( IsPlayerClass( TF_CLASS_PYRO ) && pAttacker == this && !(GetFlags() & FL_ONGROUND) && !(GetFlags() & FL_INWATER));
-	if ( bIsDemomanPipeJumping || bIsSoldierRocketJumping || bIsPyroDetonateJumping )
-	{
-		// Are we being healed by any QuickFix medics?
-		for ( int i = 0; i < m_Shared.m_nNumHealers; i++ )
-		{
-			CTFPlayer *pMedic = ToTFPlayer( m_Shared.m_aHealers[i].pHealer );
-			if ( !pMedic )
-				continue;
-
-			// Share blast jump with them
-			CWeaponMedigun *pMedigun = dynamic_cast< CWeaponMedigun* >( pMedic->GetActiveTFWeapon() );
-			if ( pMedigun && pMedigun->GetMedigunType() == MEDIGUN_QUICKFIX )
-			{
-// 				Vector vecDir = vec3_origin;
-// 				if ( info.GetInflictor() )
-// 				{
-// 					vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
-// 					info.GetInflictor()->AdjustDamageDirection( info, vecDir, this );
-// 					VectorNormalize( vecDir );
-// 				}
-// 				pMedic->RemoveFlag( FL_ONGROUND );
-// 				pMedic->ApplyPushFromDamage( info, vecDir );
-
-				float flForce = GetAbsVelocity().Length();
-				flForce = MIN( flForce, 900.f );
-				Vector vecNewVelocity = GetAbsVelocity();
-				VectorNormalize( vecNewVelocity );
-				pMedic->RemoveFlag( FL_ONGROUND );
-				pMedic->ApplyAbsVelocityImpulse( vecNewVelocity * flForce );
-			}
-		}
 	}
 
 	if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_SOLDIER ) )
@@ -16430,7 +16365,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 					// Pyro needs high defense while he's taunting
 					//m_Shared.AddCond( TF_COND_DEFENSEBUFF_HIGH, 3.0f );
 					m_Shared.AddCond( TF_COND_INVULNERABLE_USER_BUFF, 2.60f );
-					m_Shared.AddCond( TF_COND_MEGAHEAL, 2.60f );
 				}
 			}
 		}

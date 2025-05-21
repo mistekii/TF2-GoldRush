@@ -540,10 +540,6 @@ enum medigun_charge_types
 	MEDIGUN_CHARGE_INVALID = -1,
 	MEDIGUN_CHARGE_INVULN = 0,
 	MEDIGUN_CHARGE_CRITICALBOOST,
-	MEDIGUN_CHARGE_MEGAHEAL,
-	MEDIGUN_CHARGE_BULLET_RESIST,
-	MEDIGUN_CHARGE_BLAST_RESIST,
-	MEDIGUN_CHARGE_FIRE_RESIST,
 
 	MEDIGUN_NUM_CHARGE_TYPES,
 };
@@ -660,103 +656,90 @@ enum ETFCond
 	TF_COND_URINE                            = 24,
 	TF_COND_BLEEDING                         = 25,
 	TF_COND_DEFENSEBUFF                      = 26, // 35% defense! No crit damage.
-	TF_COND_MAD_MILK                         = 27,
-	TF_COND_MEGAHEAL                         = 28,
-	TF_COND_REGENONDAMAGEBUFF                = 29,
-	TF_COND_MARKEDFORDEATH                   = 30,
-	TF_COND_NOHEALINGDAMAGEBUFF              = 31,
-	TF_COND_SPEED_BOOST                      = 32, // = 32
-	TF_COND_CRITBOOSTED_PUMPKIN              = 33, // Brandon hates bits
-	TF_COND_CRITBOOSTED_USER_BUFF            = 34,
-	TF_COND_CRITBOOSTED_DEMO_CHARGE          = 35,
-	TF_COND_CRITBOOSTED_FIRST_BLOOD          = 36, // arena mode first blood
-	TF_COND_CRITBOOSTED_BONUS_TIME           = 37,
-	TF_COND_CRITBOOSTED_CTF_CAPTURE          = 38,
-	TF_COND_CRITBOOSTED_ON_KILL              = 39, // =40. KGB, etc.
-	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 40,
-	TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK        = 41, // 35% defense! Still damaged by crits.
-	TF_COND_REPROGRAMMED                     = 42, // Bots only
-	TF_COND_CRITBOOSTED_RAGE_BUFF            = 43,
-	TF_COND_DEFENSEBUFF_HIGH                 = 44, // 75% defense! Still damaged by crits.
-	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 45, // Sniper Rage - Charge time speed up
-	TF_COND_DISGUISE_WEARINGOFF              = 46, // Applied for half-second post-disguise
-	TF_COND_MARKEDFORDEATH_SILENT            = 47, // Sans sound
-	TF_COND_DISGUISED_AS_DISPENSER           = 48,
-	TF_COND_SAPPED                           = 49, // =50. Bots only
-	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 50,
-	TF_COND_INVULNERABLE_USER_BUFF           = 51,
-	TF_COND_HALLOWEEN_BOMB_HEAD              = 52,
-	TF_COND_HALLOWEEN_THRILLER               = 53,
-	TF_COND_RADIUSHEAL_ON_DAMAGE             = 54,
-	TF_COND_CRITBOOSTED_CARD_EFFECT          = 55,
-	TF_COND_INVULNERABLE_CARD_EFFECT         = 56,
-	TF_COND_MEDIGUN_UBER_BULLET_RESIST       = 57,
-	TF_COND_MEDIGUN_UBER_BLAST_RESIST        = 58,
-	TF_COND_MEDIGUN_UBER_FIRE_RESIST         = 59,
-	TF_COND_MEDIGUN_SMALL_BULLET_RESIST      = 60, // =60
-	TF_COND_MEDIGUN_SMALL_BLAST_RESIST       = 61,
-	TF_COND_MEDIGUN_SMALL_FIRE_RESIST        = 62,
-	TF_COND_STEALTHED_USER_BUFF              = 63, // Any class can have this
-	TF_COND_MEDIGUN_DEBUFF                   = 64,
-	TF_COND_STEALTHED_USER_BUFF_FADING       = 65,
-	TF_COND_BULLET_IMMUNE                    = 66,
-	TF_COND_BLAST_IMMUNE                     = 67,
-	TF_COND_FIRE_IMMUNE                      = 68,
-	TF_COND_PREVENT_DEATH                    = 69,
-	TF_COND_MVM_BOT_STUN_RADIOWAVE           = 70, // =70Bots only
-	TF_COND_HALLOWEEN_SPEED_BOOST            = 71,
-	TF_COND_HALLOWEEN_QUICK_HEAL             = 72,
-	TF_COND_HALLOWEEN_GIANT                  = 73,
-	TF_COND_HALLOWEEN_TINY                   = 74,
-	TF_COND_HALLOWEEN_IN_HELL                = 75,
-	TF_COND_HALLOWEEN_GHOST_MODE             = 76,
-	TF_COND_MINICRITBOOSTED_ON_KILL          = 77,
-	TF_COND_OBSCURED_SMOKE                   = 78,
-	TF_COND_BLASTJUMPING                     = 79,
-	TF_COND_HALLOWEEN_KART                   = 80, // =80
-	TF_COND_HALLOWEEN_KART_DASH              = 81,
-	TF_COND_BALLOON_HEAD                     = 82, // =82 larger head, lower-gravity-feeling jumps
-	TF_COND_MELEE_ONLY                       = 83, // =83 melee only
-	TF_COND_SWIMMING_CURSE                   = 84, // player movement become swimming movement
-	TF_COND_FREEZE_INPUT                     = 85, // freezes player input
-	TF_COND_HALLOWEEN_KART_CAGE              = 86, // attach cage model to player while in kart
-	TF_COND_DONOTUSE_0                       = 87,
-	TF_COND_RUNE_STRENGTH                    = 88,
-	TF_COND_RUNE_HASTE                       = 89,
-	TF_COND_RUNE_REGEN                       = 90,
-	TF_COND_RUNE_RESIST                      = 91,
-	TF_COND_RUNE_VAMPIRE                     = 92,
-	TF_COND_RUNE_REFLECT                     = 93,
-	TF_COND_RUNE_PRECISION                   = 94,
-	TF_COND_RUNE_AGILITY                     = 95,
-	TF_COND_AFTERBURN_IMMUNE                 = 96,
-	TF_COND_RUNE_KNOCKOUT                    = 97,
-	TF_COND_RUNE_IMBALANCE                   = 98,
-	TF_COND_CRITBOOSTED_RUNE_TEMP            = 99,
-	TF_COND_PASSTIME_INTERCEPTION            = 100,
-	TF_COND_SWIMMING_NO_EFFECTS              = 101, // =101_DNOC_FT
-	TF_COND_PURGATORY                        = 102,
-	TF_COND_RUNE_KING                        = 103,
-	TF_COND_RUNE_PLAGUE                      = 104,
-	TF_COND_RUNE_SUPERNOVA                   = 105,
-	TF_COND_PLAGUE                           = 106,
-	TF_COND_KING_BUFFED                      = 107,
-	TF_COND_TEAM_GLOWS                       = 108, // used to show team glows to living players
-	TF_COND_KNOCKED_INTO_AIR                 = 109,
-	TF_COND_COMPETITIVE_WINNER               = 110,
-	TF_COND_COMPETITIVE_LOSER                = 111,
-	TF_COND_HEALING_DEBUFF                   = 112,
-	TF_COND_PASSTIME_PENALTY_DEBUFF          = 113, // when carrying the ball without any teammates nearby
-	TF_COND_GRAPPLED_TO_PLAYER               = 114,
-	TF_COND_GRAPPLED_BY_PLAYER               = 115,
+	TF_COND_REGENONDAMAGEBUFF                = 27,
+	TF_COND_MARKEDFORDEATH                   = 28,
+	TF_COND_NOHEALINGDAMAGEBUFF              = 29,
+	TF_COND_SPEED_BOOST                      = 30, // = 32
+	TF_COND_CRITBOOSTED_PUMPKIN              = 31, // Brandon hates bits
+	TF_COND_CRITBOOSTED_USER_BUFF            = 32,
+	TF_COND_CRITBOOSTED_DEMO_CHARGE          = 33,
+	TF_COND_CRITBOOSTED_FIRST_BLOOD          = 34, // arena mode first blood
+	TF_COND_CRITBOOSTED_BONUS_TIME           = 35,
+	TF_COND_CRITBOOSTED_CTF_CAPTURE          = 36,
+	TF_COND_CRITBOOSTED_ON_KILL              = 37, // KGB, etc.
+	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 38, // =40
+	TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK        = 39, // 35% defense! Still damaged by crits.
+	TF_COND_REPROGRAMMED                     = 40, // Bots only
+	TF_COND_CRITBOOSTED_RAGE_BUFF            = 41,
+	TF_COND_DEFENSEBUFF_HIGH                 = 42, // 75% defense! Still damaged by crits.
+	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 43, // Sniper Rage - Charge time speed up
+	TF_COND_DISGUISE_WEARINGOFF              = 44, // Applied for half-second post-disguise
+	TF_COND_MARKEDFORDEATH_SILENT            = 45, // Sans sound
+	TF_COND_DISGUISED_AS_DISPENSER           = 46,
+	TF_COND_SAPPED                           = 47, // Bots only
+	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 48, // =50
+	TF_COND_INVULNERABLE_USER_BUFF           = 49,
+	TF_COND_HALLOWEEN_BOMB_HEAD              = 50,
+	TF_COND_HALLOWEEN_THRILLER               = 51,
+	TF_COND_RADIUSHEAL_ON_DAMAGE             = 52,
+	TF_COND_CRITBOOSTED_CARD_EFFECT          = 53,
+	TF_COND_INVULNERABLE_CARD_EFFECT         = 54,
+	TF_COND_STEALTHED_USER_BUFF              = 55, // Any class can have this
+	TF_COND_MEDIGUN_DEBUFF                   = 56,
+	TF_COND_STEALTHED_USER_BUFF_FADING       = 57,
+	TF_COND_PREVENT_DEATH                    = 58,
+	TF_COND_MVM_BOT_STUN_RADIOWAVE           = 59, // Bots only
+	TF_COND_HALLOWEEN_SPEED_BOOST            = 60,
+	TF_COND_HALLOWEEN_QUICK_HEAL             = 61,
+	TF_COND_HALLOWEEN_GIANT                  = 62,
+	TF_COND_HALLOWEEN_TINY                   = 63,
+	TF_COND_HALLOWEEN_IN_HELL                = 64,
+	TF_COND_HALLOWEEN_GHOST_MODE             = 65, // =70
+	TF_COND_MINICRITBOOSTED_ON_KILL          = 66,
+	TF_COND_OBSCURED_SMOKE                   = 67,
+	TF_COND_BLASTJUMPING                     = 68,
+	TF_COND_HALLOWEEN_KART                   = 69, 
+	TF_COND_HALLOWEEN_KART_DASH              = 70,
+	TF_COND_BALLOON_HEAD                     = 71, // =76 larger head, lower-gravity-feeling jumps
+	TF_COND_MELEE_ONLY                       = 72, // =77 melee only
+	TF_COND_SWIMMING_CURSE                   = 73, // player movement become swimming movement
+	TF_COND_FREEZE_INPUT                     = 74, // freezes player input
+	TF_COND_HALLOWEEN_KART_CAGE              = 75, // =80 attach cage model to player while in kart
+	TF_COND_DONOTUSE_0                       = 76,
+	TF_COND_RUNE_STRENGTH                    = 77,
+	TF_COND_RUNE_HASTE                       = 78,
+	TF_COND_RUNE_REGEN                       = 79,
+	TF_COND_RUNE_RESIST                      = 80,
+	TF_COND_RUNE_VAMPIRE                     = 81,
+	TF_COND_RUNE_REFLECT                     = 82,
+	TF_COND_RUNE_PRECISION                   = 83,
+	TF_COND_RUNE_AGILITY                     = 84,
+	TF_COND_AFTERBURN_IMMUNE                 = 85,
+	TF_COND_RUNE_KNOCKOUT                    = 86,
+	TF_COND_RUNE_IMBALANCE                   = 87,
+	TF_COND_CRITBOOSTED_RUNE_TEMP            = 88,
+	TF_COND_PASSTIME_INTERCEPTION            = 89,
+	TF_COND_SWIMMING_NO_EFFECTS              = 90, // =95_DNOC_FT
+	TF_COND_PURGATORY                        = 91,
+	TF_COND_RUNE_KING                        = 92,
+	TF_COND_RUNE_PLAGUE                      = 93,
+	TF_COND_RUNE_SUPERNOVA                   = 94,
+	TF_COND_PLAGUE                           = 95,
+	TF_COND_KING_BUFFED                      = 96,
+	TF_COND_TEAM_GLOWS                       = 97, // used to show team glows to living players
+	TF_COND_KNOCKED_INTO_AIR                 = 98,
+	TF_COND_COMPETITIVE_WINNER               = 99,
+	TF_COND_COMPETITIVE_LOSER                = 100,
+	TF_COND_HEALING_DEBUFF                   = 101,
+	TF_COND_PASSTIME_PENALTY_DEBUFF          = 102, // when carrying the ball without any teammates nearby
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 116,
+	TF_COND_LOST_FOOTING                     = 103,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 117,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 118,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 119,
+	TF_COND_AIR_CURRENT                      = 104,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 105,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 106,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//

@@ -696,7 +696,6 @@ public:
 	void				UseActionSlotItemPressed( void );
 	void				UseActionSlotItemReleased( void );
 
-	bool				IsFireproof( void ) const;
 	bool				AddToSpyKnife( float value, bool force );
 
 private:
@@ -1540,11 +1539,6 @@ inline CTFPlayer *ToTFPlayer( CBaseEntity *pEntity )
 
 	Assert( dynamic_cast<CTFPlayer*>( pEntity ) != 0 );
 	return static_cast< CTFPlayer* >( pEntity );
-}
-
-inline bool CTFPlayer::IsFireproof( void ) const
-{
-	return m_Shared.InCond( TF_COND_FIRE_IMMUNE );
 }
 
 inline bool CTFPlayer::HasPurgatoryBuff( void ) const

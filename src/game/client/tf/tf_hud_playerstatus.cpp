@@ -484,13 +484,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_nBonusHealthOrigW = -1;
 	m_nBonusHealthOrigH = -1;
 
-	// Vaccinator
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_BULLET_RESIST, BUFF_CLASS_BULLET_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberBulletResistImage" ),	"../HUD/defense_buff_bullet_blue",		"../HUD/defense_buff_bullet_red"  ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_BLAST_RESIST, BUFF_CLASS_BLAST_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberBlastResistImage" ),		"../HUD/defense_buff_explosion_blue",	"../HUD/defense_buff_explosion_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_FIRE_RESIST, BUFF_CLASS_FIRE_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberFireResistImage" ),		"../HUD/defense_buff_fire_blue",		"../HUD/defense_buff_fire_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_BULLET_RESIST, BUFF_CLASS_BULLET_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallBulletResistImage" ),	"../HUD/defense_buff_bullet_blue",		"../HUD/defense_buff_bullet_red"  ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_BLAST_RESIST, BUFF_CLASS_BLAST_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallBlastResistImage" ),	"../HUD/defense_buff_explosion_blue",	"../HUD/defense_buff_explosion_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_FIRE_RESIST, BUFF_CLASS_FIRE_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallFireResistImage" ),		"../HUD/defense_buff_fire_blue",		"../HUD/defense_buff_fire_red" ) );
 	// Soldier buffs
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_OFFENSEBUFF, BUFF_CLASS_SOLDIER_OFFENSE, new ImagePanel( this, "PlayerStatus_SoldierOffenseBuff" ),						"../Effects/soldier_buff_offense_blue",		"../Effects/soldier_buff_offense_red" ) );
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_DEFENSEBUFF, BUFF_CLASS_SOLDIER_DEFENSE, new ImagePanel( this, "PlayerStatus_SoldierDefenseBuff" ),						"../Effects/soldier_buff_defense_blue",		"../Effects/soldier_buff_defense_red" ) );

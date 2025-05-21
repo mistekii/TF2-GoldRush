@@ -260,13 +260,7 @@ public:
 		IGNORE_FLAG					= 1<<17,				// don't pick up flag/bomb
 		AUTO_JUMP					= 1<<18,				// auto jump
 		AIR_CHARGE_ONLY				= 1<<19,				// demo knight only charge in the air
-		PREFER_VACCINATOR_BULLETS	= 1<<20,				// When using the vaccinator, prefer to use the bullets shield
-		PREFER_VACCINATOR_BLAST		= 1<<21,				// When using the vaccinator, prefer to use the blast shield
-		PREFER_VACCINATOR_FIRE		= 1<<22,				// When using the vaccinator, prefer to use the fire shield
-		BULLET_IMMUNE				= 1<<23,				// Has a shield that makes the bot immune to bullets
-		BLAST_IMMUNE				= 1<<24,				// "" blast
-		FIRE_IMMUNE					= 1<<25,				// "" fire
-		PROJECTILE_SHIELD			= 1<<26,				// medic projectile shield
+		PROJECTILE_SHIELD			= 1<<20,				// medic projectile shield
 	};
 	void SetAttribute( int attributeFlag );
 	void ClearAttribute( int attributeFlag );

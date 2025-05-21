@@ -718,30 +718,6 @@ static bool ParseDynamicAttributes( CTFBot::EventChangeAttributes_t& event, KeyV
 		{
 			event.m_attributeFlags |= CTFBot::AIR_CHARGE_ONLY;
 		}
-		else if( !Q_stricmp( value, "VaccinatorBullets" ) )
-		{
-			event.m_attributeFlags |= CTFBot::PREFER_VACCINATOR_BULLETS;
-		}
-		else if( !Q_stricmp( value, "VaccinatorBlast" ) )
-		{
-			event.m_attributeFlags |= CTFBot::PREFER_VACCINATOR_BLAST;
-		}
-		else if( !Q_stricmp( value, "VaccinatorFire" ) )
-		{
-			event.m_attributeFlags |= CTFBot::PREFER_VACCINATOR_FIRE;
-		}
-		else if( !Q_stricmp( value, "BulletImmune" ) )
-		{
-			event.m_attributeFlags |= CTFBot::BULLET_IMMUNE;
-		}
-		else if( !Q_stricmp( value, "BlastImmune" ) )
-		{
-			event.m_attributeFlags |= CTFBot::BLAST_IMMUNE;
-		}
-		else if( !Q_stricmp( value, "FireImmune" ) )
-		{
-			event.m_attributeFlags |= CTFBot::FIRE_IMMUNE;
-		}
 		else if ( !Q_stricmp( value, "ProjectileShield" ) )
 		{
 			event.m_attributeFlags |= CTFBot::PROJECTILE_SHIELD;
@@ -1141,21 +1117,6 @@ bool CTFBotSpawner::Spawn( const Vector &rawHere, EntityHandleVector_t *result )
 		if ( m_defaultAttributes.m_attributeFlags & CTFBot::AUTO_JUMP )
 		{
 			newBot->SetAutoJump( m_flAutoJumpMin, m_flAutoJumpMax );
-		}
-
-		if( m_defaultAttributes.m_attributeFlags & CTFBot::BULLET_IMMUNE )
-		{
-			newBot->m_Shared.AddCond( TF_COND_BULLET_IMMUNE );
-		}
-
-		if( m_defaultAttributes.m_attributeFlags & CTFBot::BLAST_IMMUNE )
-		{
-			newBot->m_Shared.AddCond( TF_COND_BLAST_IMMUNE );
-		}
-
-		if( m_defaultAttributes.m_attributeFlags & CTFBot::FIRE_IMMUNE )
-		{
-			newBot->m_Shared.AddCond( TF_COND_FIRE_IMMUNE );
 		}
 
 		if ( TFGameRules()->IsMannVsMachineMode() )
