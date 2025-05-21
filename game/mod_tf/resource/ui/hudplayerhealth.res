@@ -139,22 +139,6 @@
 		"image"			"../vgui/bleed_drop_grapple"
 		"fgcolor"		"TanDark"
 	}
-	"PlayerStatusMilkImage"
-	{
-		"ControlName"	"ImagePanel"
-		"fieldName"		"PlayerStatusMilkImage"
-		"xpos"			"117"
-		"xpos_minmode"	"102"
-		"ypos"			"0"
-		"zpos"			"7"
-		"wide"			"32"
-		"tall"			"32"
-		"visible"		"1"
-		"enabled"		"1"
-		"scaleImage"	"1"	
-		"image"			"../vgui/bleed_drop"
-		"fgcolor"		"TanDark"
-	}
 	"PlayerStatusMarkedForDeathImage"
 	{
 		"ControlName"	"ImagePanel"

@@ -420,20 +420,6 @@ bool CTFProjectile_Arrow::StrikeTarget( mstudiobbox_t *pBox, CBaseEntity *pOther
 			// Damage
 			if ( bApplyEffect )
 			{
-				// Apply Milk First so we can get health from this
-				if ( m_bApplyMilkOnHit && pOther->IsPlayer() )
-				{
-					CTFPlayer *pVictim = ToTFPlayer( pOther );
-					if ( pVictim && pVictim->m_Shared.CanBeDebuffed() && pVictim->CanGetWet() )
-					{
-						// duration is based on damage
-						float flDuration = RemapValClamped( GetDamage(), 25.0f, 75.0f, 6.0f, 10.0f );
-						pVictim->m_Shared.AddCond( TF_COND_MAD_MILK, flDuration, pAttacker );
-						pVictim->m_Shared.SetPeeAttacker( ToTFPlayer( pAttacker ) );
-						pVictim->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
-					}
-				}
-
 				CTakeDamageInfo info( this, pAttacker, m_hLauncher, vecVelocity, vecOrigin, GetDamage(), nDamageType, nDamageCustom );
 				pOther->TakeDamage( info );
 

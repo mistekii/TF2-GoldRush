@@ -218,7 +218,6 @@ extern ConVar mp_developer;
 #define TF_SCREEN_OVERLAY_MATERIAL_INVULN_RED	"effects/invuln_overlay_red" 
 #define TF_SCREEN_OVERLAY_MATERIAL_INVULN_BLUE	"effects/invuln_overlay_blue" 
 
-#define TF_SCREEN_OVERLAY_MATERIAL_MILK				"effects/milk_screen" 
 #define TF_SCREEN_OVERLAY_MATERIAL_URINE			"effects/jarate_overlay" 
 #define TF_SCREEN_OVERLAY_MATERIAL_BLEED			"effects/bleed_overlay" 
 #define TF_SCREEN_OVERLAY_MATERIAL_STEALTH			"effects/stealth_overlay"
@@ -1240,7 +1239,6 @@ CBaseEntity *CTFPlayerShared::GetConditionAssistFromVictim( void )
 	static const ETFCond nTrackedConditions[] = 
 	{
 		TF_COND_URINE,
-		TF_COND_MAD_MILK,
 		TF_COND_MARKEDFORDEATH,
 	};
 
@@ -1639,10 +1637,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddMegaHeal();
 		break;
 
-	case TF_COND_MAD_MILK:
-		OnAddMadMilk();
-		break;
-
 	case TF_COND_SPEED_BOOST:				OnAddSpeedBoost( false );		break;
 
 	case TF_COND_SAPPED:
@@ -1929,10 +1923,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_MEGAHEAL:
 		OnRemoveMegaHeal();
-		break;
-
-	case TF_COND_MAD_MILK:
-		OnRemoveMadMilk();
 		break;
 
 	case TF_COND_TAUNTING:
@@ -2831,12 +2821,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			// If we're underwater, wash off the urine.
 			RemoveCond( TF_COND_URINE );
 		}
-
-		if ( InCond( TF_COND_MAD_MILK ) )
-		{
-			// If we're underwater, wash off the Mad Milk.
-			RemoveCond( TF_COND_MAD_MILK );
-		}
 	}
 
 	if ( !InCond( TF_COND_DISGUISED ) )
@@ -3258,11 +3242,6 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 		RemoveCond( TF_COND_BLEEDING );
 	}
 
-	if ( InCond( TF_COND_MAD_MILK ) )
-	{
-		RemoveCond( TF_COND_MAD_MILK );
-	}
-
 	if ( InCond( TF_COND_PLAGUE ) )
 	{
 		RemoveCond( TF_COND_PLAGUE );
@@ -3497,72 +3476,6 @@ void CTFPlayerShared::OnRemoveHalloweenHellHeal( void )
 #ifdef GAME_DLL
 	StopHealing( m_pOuter );
 #endif // SERVER_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMadMilk( void )
-{
-#ifdef GAME_DLL
-	Assert( InCond( TF_COND_MAD_MILK ) );
-
-	// Check for the attribute that extends duration on successive hits
-	if ( m_ConditionData[TF_COND_MAD_MILK].m_bPrevActive )
-	{
-		CBaseEntity *pProvider = GetConditionProvider( TF_COND_MAD_MILK );
-		if ( pProvider )
-		{
-			int iMadMilkSyringes = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pProvider, iMadMilkSyringes, mad_milk_syringes );
-			if ( iMadMilkSyringes )
-			{
-				float flDuration = GetConditionDuration( TF_COND_MAD_MILK ) + 0.5f;
-				SetConditionDuration( TF_COND_MAD_MILK, Min( flDuration , 4.f ) );
-			}
-		}
-	}
-#else
-	if ( !m_pOuter->m_pMilkEffect )
-	{
-		m_pOuter->m_pMilkEffect = m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
-	}
-
-	m_pOuter->ParticleProp()->AddControlPoint( m_pOuter->m_pMilkEffect, 1, m_pOuter, PATTACH_ABSORIGIN_FOLLOW );
-
-// 	if ( m_pOuter->IsLocalPlayer() )
-// 	{
-// 		IMaterial *pMaterial = materials->FindMaterial( TF_SCREEN_OVERLAY_MATERIAL_MILK, TEXTURE_GROUP_CLIENT_EFFECTS, false );
-// 		if ( !IsErrorMaterial( pMaterial ) )
-// 		{
-// 			view->SetScreenOverlayMaterial( pMaterial );
-// 		}
-// 	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMadMilk( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pMilkEffect )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pMilkEffect );
-		m_pOuter->m_pMilkEffect = NULL;
-	}
-
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-//		IMaterial *pMaterial = view->GetScreenOverlayMaterial();
-
-//		if ( pMaterial && FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_MILK ) )
-//		{
-//			view->SetScreenOverlayMaterial( NULL );
-//		}
-	}
-#endif
 }
 
 #ifdef CLIENT_DLL

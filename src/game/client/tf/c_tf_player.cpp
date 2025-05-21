@@ -3796,7 +3796,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_pBurningSound = NULL;
 	m_pBurningEffect = NULL;
 	m_pUrineEffect = NULL;
-	m_pMilkEffect = NULL;
 	m_pGasEffect = NULL;
 	m_pSoldierOffensiveBuffEffect = NULL;
 	m_pSoldierDefensiveBuffEffect = NULL;

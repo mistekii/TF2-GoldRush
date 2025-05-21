@@ -312,7 +312,7 @@ void JarExplode( int iEntIndex, CTFPlayer *pAttacker, CBaseEntity *pOriginalWeap
 					}
 
 					// Stats tracking?
-					if ( cond == TF_COND_URINE || cond == TF_COND_MAD_MILK )
+					if ( cond == TF_COND_URINE )
 					{
 						if ( TFGameRules() && TFGameRules()->IsPVEModeActive() )
 						{
@@ -343,9 +343,6 @@ void JarExplode( int iEntIndex, CTFPlayer *pAttacker, CBaseEntity *pOriginalWeap
 					{
 					case TF_COND_URINE:
 						pszEvent = "jarate_attack";
-						break;
-					case TF_COND_MAD_MILK:
-						pszEvent = "milk_attack";
 						break;
 					}
 

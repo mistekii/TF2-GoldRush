@@ -740,7 +740,6 @@ private:
 	void OnAddEnergyDrinkBuff( void	);
 	void OnAddRadiusHeal( void );
 	void OnAddMegaHeal( void );
-	void OnAddMadMilk( void );
 	void OnAddTaunting( void );
 	void OnAddNoHealingDamageBuff( void );
 	void OnAddSpeedBoost( bool IsNonCombat );
@@ -809,7 +808,6 @@ private:
 	void OnRemoveEnergyDrinkBuff( void );
 	void OnRemoveRadiusHeal( void );
 	void OnRemoveMegaHeal( void );
-	void OnRemoveMadMilk( void );
 	void OnRemoveTaunting( void );
 	void OnRemoveNoHealingDamageBuff( void );
 	void OnRemoveSpeedBoost( bool IsNonCombat );

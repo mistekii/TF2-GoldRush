@@ -443,21 +443,6 @@ void CTFBaseProjectile::ProjectileTouch( CBaseEntity *pOther )
 	pOther->DispatchTraceAttack( info, dir, pNewTrace );
 	ApplyMultiDamage();
 
-	if ( pOther && pOther->IsPlayer() )
-	{
-		int iMadMilkSyringes = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwnerEntity(), iMadMilkSyringes, mad_milk_syringes );
-		if ( iMadMilkSyringes )
-		{
-			CTFPlayer *pTFVictim = ToTFPlayer( pOther );
-			CTFPlayer *pTFOwner = ToTFPlayer( GetOwnerEntity() );
-			if ( pTFVictim && pTFOwner && pTFVictim->GetTeamNumber() != pTFOwner->GetTeamNumber() )
-			{
-				pTFVictim->m_Shared.AddCond( TF_COND_MAD_MILK, 1.f, pTFOwner );
-			}
-		}
-	}
-
 	UTIL_Remove( this );
 }
 

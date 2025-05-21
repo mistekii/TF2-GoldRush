@@ -473,7 +473,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_pHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
 	m_pMarkedForDeathImage = new ImagePanel( this, "PlayerStatusMarkedForDeathImage" );
 	m_pMarkedForDeathImageSilent = new ImagePanel( this, "PlayerStatusMarkedForDeathSilentImage" );
-	m_pMilkImage = new ImagePanel( this, "PlayerStatusMilkImage" );
 	m_pSlowedImage = new ImagePanel( this, "PlayerStatusSlowed" );
 
 	m_pWheelOfDoomImage = new ImagePanel( this, "PlayerStatus_WheelOfDoom" );
@@ -795,7 +794,6 @@ void CTFHudPlayerHealth::OnThink()
 			// Turn all the panels off, and below conditionally turn them on
 			m_pBleedImage->SetVisible( false );
 			m_pHookBleedImage->SetVisible( false );
-			m_pMilkImage->SetVisible( false );
 			m_pMarkedForDeathImage->SetVisible( false );
 			m_pMarkedForDeathImageSilent->SetVisible( false );
 			m_pSlowedImage->SetVisible( false );
@@ -803,7 +801,6 @@ void CTFHudPlayerHealth::OnThink()
 			// Old method for goofy color manipulation
 			int nBloodX = nXOffset;
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_BLEEDING,					m_pBleedImage,					nXOffset,	Color( color_fade, 0, 0, 255 ) );
-			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MAD_MILK,					m_pMilkImage,					nXOffset,	Color( color_fade, color_fade, color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH,			m_pMarkedForDeathImage,			nXOffset,	Color( 255 - color_fade, 245 - color_fade, 245 - color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH_SILENT,	m_pMarkedForDeathImageSilent,	nXOffset,	Color( 125 - color_fade, 255 - color_fade, 255 - color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_PASSTIME_PENALTY_DEBUFF,	m_pMarkedForDeathImageSilent,	nXOffset,	Color( 125 - color_fade, 255 - color_fade, 255 - color_fade, 255 ) );

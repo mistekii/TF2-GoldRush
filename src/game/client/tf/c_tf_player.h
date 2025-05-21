@@ -709,9 +709,6 @@ public:
 	// Urine
 	HPARTICLEFFECT		m_pUrineEffect;
 
-	// Milk
-	HPARTICLEFFECT		m_pMilkEffect;
-
 	// Gas
 	HPARTICLEFFECT		m_pGasEffect;
 

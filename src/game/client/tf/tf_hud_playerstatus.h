@@ -182,7 +182,6 @@ private:
 	vgui::ImagePanel	*m_pBuildingHealthImageBG;
 	vgui::ImagePanel	*m_pBleedImage;
 	vgui::ImagePanel	*m_pHookBleedImage;
-	vgui::ImagePanel	*m_pMilkImage;
 	vgui::ImagePanel	*m_pMarkedForDeathImage;
 	vgui::ImagePanel	*m_pMarkedForDeathImageSilent;
 	vgui::ImagePanel	*m_pWheelOfDoomImage;

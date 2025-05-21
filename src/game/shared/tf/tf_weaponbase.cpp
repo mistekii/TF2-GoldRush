@@ -4767,47 +4767,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 		pAttacker->m_Shared.AddCond( TF_COND_SPEED_BOOST, iSpeedBoostOnHit );
 	}
 
-	if ( pVictim )
-	{
-		if ( pVictim->m_Shared.InCond( TF_COND_MAD_MILK ) )
-		{
-			int nAmount = info.GetDamage() * 0.6f;
-			iModHealthOnHit += nAmount;
-
-			CTFPlayer *pProvider = ToTFPlayer( pVictim->m_Shared.GetConditionProvider( TF_COND_MAD_MILK ) );
-			if ( pProvider )
-			{
-				// Only give points for the portion they're responsible for
-				if ( pProvider != pAttacker )
-				{
-					CTF_GameStats.Event_PlayerHealedOtherAssist( pProvider, nAmount );
-				}
-
-				// Show in the medic's UI as primary healing
-				IGameEvent *event = gameeventmanager->CreateEvent( "player_healed" );
-				if ( event )
-				{
-					event->SetInt( "priority", 1 );	// HLTV event priority
-					event->SetInt( "patient", pAttacker->GetUserID() );
-					event->SetInt( "healer", pProvider->GetUserID() );
-					event->SetInt( "amount", iModHealthOnHit );
-					gameeventmanager->FireEvent( event );
-				}
-
-				// Give them a little bit of Uber
-				CWeaponMedigun *pMedigun = static_cast<CWeaponMedigun *>( pProvider->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-				if ( pMedigun )
-				{
-					int iHealedAmount = Max( Min( (int)pAttacker->GetMaxHealth() - (int)pAttacker->GetHealth(), nAmount ), 0 );
-
-					// On Mediguns, per frame, the amount of uber added is based on 
-					// Default heal rate is 24per second, we scale based on that and frametime
-					pMedigun->AddCharge( (iHealedAmount / 24.0f ) * gpGlobals->frametime );
-				}
-			}
-		}
-	}
-
 	if ( pAttacker->m_Shared.InCond( TF_COND_REGENONDAMAGEBUFF ) )
 	{
 		int nAmount = info.GetDamage() * tf_dev_health_on_damage_recover_percentage.GetFloat();

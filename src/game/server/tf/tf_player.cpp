@@ -3419,11 +3419,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 			m_Shared.RemoveCond( TF_COND_URINE );
 		}
 
-		if ( m_Shared.InCond( TF_COND_MAD_MILK ) )
-		{
-			m_Shared.RemoveCond( TF_COND_MAD_MILK );
-		}
-
 		if ( m_Shared.InCond( TF_COND_BLEEDING ) )
 		{
 			m_Shared.RemoveCond( TF_COND_BLEEDING );

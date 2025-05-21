@@ -265,7 +265,6 @@ ETFCond g_aDebuffConditions[] =
 	TF_COND_BURNING,
 	TF_COND_URINE,
 	TF_COND_BLEEDING,
-	TF_COND_MAD_MILK,
 	TF_COND_LAST
 };
 
@@ -273,8 +272,7 @@ bool ConditionExpiresFast( ETFCond eCond )
 {
 	return eCond == TF_COND_BURNING
 		|| eCond == TF_COND_URINE
-		|| eCond == TF_COND_BLEEDING
-		|| eCond == TF_COND_MAD_MILK;
+		|| eCond == TF_COND_BLEEDING;
 }
 
 static const char *g_aConditionNames[] =
