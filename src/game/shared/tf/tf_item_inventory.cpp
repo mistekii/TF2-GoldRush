@@ -1522,6 +1522,7 @@ bool CTFPlayerInventory::CanPurchaseItems( int iItemCount ) const
 //-----------------------------------------------------------------------------
 int	CTFPlayerInventory::GetMaxItemCount( void ) const
 {
+#if 0
 	int iMaxItems = DEFAULT_NUM_BACKPACK_SLOTS;
 	CEconGameAccountClient *pGameAccountClient = GetSOCacheGameAccountClient( m_pSOCache );
 	if ( pGameAccountClient )
@@ -1533,6 +1534,10 @@ int	CTFPlayerInventory::GetMaxItemCount( void ) const
 		iMaxItems += pGameAccountClient->Obj().additional_backpack_slots();
 	}
 	return MIN( iMaxItems, MAX_NUM_BACKPACK_SLOTS );
+#else
+	// Fixed amount of backpack slots.
+	return MAX_NUM_BACKPACK_SLOTS;
+#endif
 }
 
 #ifdef CLIENT_DLL
