@@ -6,6 +6,7 @@ Scheme
 	{
 		// scheme-specific colors
 		MainMenu.TextColor			"TanLight"			[$WIN32]
+		MainMenu.MenuItemHeight		"14"
 		MainMenu.ArmedTextColor		"117 107 94 255"	[$WIN32]
 		MainMenu.Inset				"32"	
 	}
@@ -17,7 +18,7 @@ Scheme
 			"1"	[$WIN32]
 			{
 				"name"		"TF2 Build"
-				"tall"		"18"
+				"tall"		"8"
 				"weight"	"500"
 				"additive"	"0"
 				"antialias" "1"
