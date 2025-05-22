@@ -105,8 +105,6 @@
 #include "tf_logic_halloween_2014.h"
 #include "tf_weapon_knife.h"
 #include "tf_dropped_weapon.h"
-#include "tf_passtime_logic.h"
-#include "tf_weapon_passtime_gun.h"
 #include "player_resource.h"
 #include "tf_player_resource.h"
 #include "gcsdk/gcclient_sharedobjectcache.h"
@@ -991,7 +989,6 @@ CTFPlayer::CTFPlayer()
 	m_flVehicleReverseTime = FLT_MAX;
 	m_iCampaignMedals = 0;
 
-	m_bPasstimeBallSlippery = false;
 	m_flNextScorePointForPD = -1;
 
 	m_iPlayerSkinOverride = 0;
@@ -2951,13 +2948,6 @@ int	CTFPlayer::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 	// always send information to student or client
 	if ( pInfo->m_pClientEnt )
 	{
-		if ( TFGameRules() && TFGameRules()->IsPasstimeMode() )
-		{
-			// TODO it should be possible to restrict this further based on
-			// the values of tf_passtime_player_reticles_friends/enemies
-			return FL_EDICT_ALWAYS;
-		}
-
 		CBaseEntity *pRecipientEntity = CBaseEntity::Instance( pInfo->m_pClientEnt );
 		if ( pRecipientEntity && pRecipientEntity->ShouldForceTransmitsForTeam( GetTeamNumber() ) )
 			return FL_EDICT_ALWAYS;
@@ -3081,12 +3071,6 @@ void CTFPlayer::Spawn()
 
 		if ( !m_bSeenRoundInfo )
 		{
-			if ( TFGameRules() && TFGameRules()->IsPasstimeMode() )
-			{
-				CSingleUserRecipientFilter filter( this );
-				TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_PASSTIME_HOWTO );
-			}
-
 			TFGameRules()->ShowRoundInfoPanel( this );
 			m_bSeenRoundInfo = true;
 		}
@@ -3773,12 +3757,6 @@ bool CTFPlayer::ItemIsAllowed( CEconItemView *pItem )
 
 	int iClass = GetPlayerClass()->GetClassIndex();
 	int iSlot = pItem->GetStaticData()->GetLoadoutSlot(iClass);
-
-	// Passtime hack to allow passtime gun
-	if ( V_stristr( pItem->GetItemDefinition()->GetDefinitionName(), "passtime" ) )
-	{
-		return TFGameRules() && TFGameRules()->IsPasstimeMode();
-	}
 
 	// Holiday Restriction
 	CEconItemDefinition* pData = pItem->GetStaticData();
@@ -7948,13 +7926,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 {
 	CTakeDamageInfo info = inputInfo;
 
-// need to check this now, before dying
-	bool bHadBallBeforeDamage = false;
-	if ( TFGameRules() && TFGameRules()->IsPasstimeMode() )
-	{
-		bHadBallBeforeDamage = m_Shared.HasPasstimeBall();
-	}
-
 	// damage may not come from a weapon (ie: Bosses, etc)
 	// The existing code below already checked for NULL pWeapon, anyways
 	CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase * >( inputInfo.GetWeapon() );
@@ -8326,7 +8297,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	}
 
 	//Don't take damage while I'm phasing.
-	if ( ( m_Shared.InCond( TF_COND_PHASE ) || m_Shared.InCond( TF_COND_PASSTIME_INTERCEPTION ) ) && bAllowDamage == false )
+	if ( m_Shared.InCond( TF_COND_PHASE ) && bAllowDamage == false )
 	{
 		SpeakConceptIfAllowed( MP_CONCEPT_DODGE_SHOT );
 
@@ -8588,20 +8559,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				PlayFlinch( info );
 			}
 		}
-
-		// PASSTIME intense flinch to make it hard to throw straight while taking damage
-		extern ConVar tf_passtime_flinch_boost;
-		if( TFGameRules() && TFGameRules()->IsPasstimeMode() && (tf_passtime_flinch_boost.GetInt() > 0) )
-		{
-			int iFlinch = tf_passtime_flinch_boost.GetInt();
-			CTFWeaponBase *pMyWeapon = GetActiveTFWeapon();
-			if( pMyWeapon && pMyWeapon->GetWeaponID() == TF_WEAPON_PASSTIME_GUN )
-			{
-				QAngle punch;
-				punch.Random( -iFlinch, iFlinch );
-				SetPunchAngle( punch );
-			}
-		}
 	}
 
 	// Do special explosion damage effect
@@ -8761,12 +8718,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	{
 		EconEntity_OnOwnerKillEaterEvent_Batched( pTFWeapon, pTFAttacker, this, kKillEaterEvent_DamageDealt, info.GetDamage() );
 		EconEntity_OnOwnerKillEaterEvent_Batched( pTFWeapon, pTFAttacker, this, kKillEaterEvent_PlayersHit, 1 );
-	}
-
-	// bHadBallBeforeDamage will always be false in non-passtime modes
-	if ( bTookDamage && bHadBallBeforeDamage )
-	{
-		g_pPasstimeLogic->OnBallCarrierDamaged( this, pTFAttacker, info );
 	}
 
 	return info.GetDamage();
@@ -9470,7 +9421,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			float flJarateTime = pSniper->GetJarateTime();
 			if ( flJarateTime >= 1.f )
 			{
-				if ( !m_Shared.IsInvulnerable() && !m_Shared.InCond( TF_COND_PHASE ) && !m_Shared.InCond( TF_COND_PASSTIME_INTERCEPTION ) )
+				if ( !m_Shared.IsInvulnerable() && !m_Shared.InCond( TF_COND_PHASE ) )
 				{
 					Vector vecOrigin = info.GetDamagePosition();
 					CPVSFilter filter( vecOrigin );
@@ -11343,22 +11294,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		SaveLastWeaponSlot();
 	}
 
-	if ( pPlayerAttacker && ( pPlayerAttacker != this ) && TFGameRules() && TFGameRules()->IsPasstimeMode() )
-	{
-		if ( m_Shared.HasPasstimeBall() )
-		{
-			CTFPlayer *pTFAssister = ToTFPlayer( TFGameRules()->GetAssister( this, pPlayerAttacker, info.GetInflictor() ) );
-			IGameEvent *event = gameeventmanager->CreateEvent( "killed_ball_carrier" );
-			if ( event )
-			{
-				event->SetInt( "attacker", pPlayerAttacker->entindex() );
-				event->SetInt( "victim", entindex() );
-				event->SetInt( "assister", pTFAssister ? pTFAssister->entindex() : -1 );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-
 	// Remove all items...
 	RemoveAllItems( true );
 
@@ -11925,11 +11860,6 @@ void CTFPlayer::PlayerDeathThink( void )
 //-----------------------------------------------------------------------------
 void CTFPlayer::RemoveAllItems( bool removeSuit )
 {
-	if ( TFGameRules() && TFGameRules()->IsPasstimeMode() && m_Shared.HasPasstimeBall() )
-	{
-		g_pPasstimeLogic->EjectBall( this, this );
-	}
-
 	// If the player has a capture flag, drop it.
 	if ( HasItem() )
 	{
@@ -12354,15 +12284,6 @@ bool CTFPlayer::SetObserverMode(int mode)
 	if ( TFGameRules()->ShowMatchSummary() )
 		return false;
 
-	// Skip over OBS_MODE_POI if we're not in Passtime mode
-	if ( mode == OBS_MODE_POI )
-	{
-		if ( !TFGameRules()->IsPasstimeMode() )
-		{
-			mode = OBS_MODE_ROAMING;
-		}
-	}
-
 	// Skip over OBS_MODE_ROAMING for dead players
 	if( GetTeamNumber() > TEAM_SPECTATOR )
 	{
@@ -12431,11 +12352,6 @@ bool CTFPlayer::SetObserverMode(int mode)
 		SetMoveType( MOVETYPE_OBSERVER );
 		break;
 
-	case OBS_MODE_POI : // PASSTIME
-		SetObserverTarget( TFGameRules()->GetObjectiveObserverTarget() );	
-		SetMoveType( MOVETYPE_OBSERVER );
-		break;
-
 	case OBS_MODE_ROAMING :
 		SetFOV( this, 0 );	// Reset FOV
 		SetObserverTarget( m_hObserverTarget );
@@ -12480,14 +12396,7 @@ void CTFPlayer::StateEnterOBSERVER( void )
 	// force the initial mode to last mode
 	if ( m_iObserverMode <= OBS_MODE_FREEZECAM )
 	{
-		if ( TFGameRules() && TFGameRules()->IsPasstimeMode() )
-		{
-			m_iObserverMode = OBS_MODE_POI;
-		}
-		else
-		{
-			m_iObserverMode = m_iObserverLastMode;
-		}
+		m_iObserverMode = m_iObserverLastMode;
 	}
 
 	// If we're in fixed mode, but we found an observer target, move to non fixed.
@@ -12608,14 +12517,8 @@ void CTFPlayer::StateThinkDYING( void )
 
 				FindInitialObserverTarget();
 
-				if ( TFGameRules() && TFGameRules()->IsPasstimeMode() )
-				{
-					SetObserverMode( OBS_MODE_POI );
-				}
-				else
-				{
-					SetObserverMode( OBS_MODE_CHASE );
-				}
+				SetObserverMode( OBS_MODE_CHASE );
+
 				ShowViewPortPanel( "specgui" , ModeWantsSpectatorGUI(OBS_MODE_CHASE) );
 			}
 		}
@@ -14512,51 +14415,6 @@ void CTFPlayer::RemoveInvisibility( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::SayAskForBall() 
-{
-	if ( !TFGameRules() || !TFGameRules()->IsPasstimeMode() 
-		|| ( m_Shared.AskForBallTime() > gpGlobals->curtime ) )
-	{
-		return false;
-	}
-
-	CPasstimeBall *pBall = g_pPasstimeLogic->GetBall();
-	if ( !pBall )
-	{
-		return false;
-	}
-
-	CTFPlayer *pBallCarrier = pBall->GetCarrier();
-	if ( !pBallCarrier )
-	{
-		return false;
-	}
-
-	HudNotification_t cantCarryReason;
-	if ( !CPasstimeGun::BValidPassTarget( pBallCarrier, this, &cantCarryReason ) )
-	{
-		if ( cantCarryReason ) 
-		{
-			CSingleUserReliableRecipientFilter filter( this );
-			TFGameRules()->SendHudNotification( filter, cantCarryReason );
-		}
-		return false;
-	}
-
-	CRecipientFilter filter;
-	filter.AddRecipient( this );
-	filter.AddRecipient( pBallCarrier );
-	filter.MakeReliable();
-	EmitSound( filter, entindex(), "Passtime.AskForBall" );
-
-	++CTF_GameStats.m_passtimeStats.summary.nTotalPassRequests;
-	m_Shared.SetAskForBallTime( gpGlobals->curtime + 5.0f );
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::SaveMe( void )
 {
 	if ( !IsAlive() || IsPlayerClass( TF_CLASS_UNDEFINED ) || GetTeamNumber() < TF_TEAM_RED )
@@ -14870,9 +14728,6 @@ bool CTFPlayer::IsValidObserverTarget( CBaseEntity * target )
 {
 	if ( !target || ( target == this ) )
 		return false;
-
-	if ( TFGameRules()->IsPasstimeMode() && ( target == TFGameRules()->GetObjectiveObserverTarget() ) )
-		return true;
 
 	if ( !target->IsPlayer() )
 	{
@@ -15197,20 +15052,6 @@ void CTFPlayer::CheckObserverSettings()
 		if ( TFGameRules()->GetRequiredObserverTarget() )
 		{
 			SetObserverTarget( TFGameRules()->GetRequiredObserverTarget() );
-			return;
-		}
-
-		if ( TFGameRules()->IsPasstimeMode() && g_pPasstimeLogic && (GetObserverMode() == OBS_MODE_POI)  )
-		{
-			CPasstimeBall *pBall = g_pPasstimeLogic->GetBall();
-			if ( !pBall || ((m_hObserverTarget.Get() == pBall) && pBall->BOutOfPlay()) )
-			{
-				FindInitialObserverTarget();
-			}
-			else if ( !pBall->BOutOfPlay() && (GetObserverTarget() != TFGameRules()->GetObjectiveObserverTarget()) )
-			{
-				SetObserverTarget( TFGameRules()->GetObjectiveObserverTarget() );
-			}
 			return;
 		}
 		
@@ -17605,7 +17446,7 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 
 	criteriaSet.AppendCriteria( "stunned", m_Shared.IsControlStunned() ? "1" : "0" );
 	criteriaSet.AppendCriteria( "snared",  m_Shared.IsSnared() ? "1" : "0" );
-	criteriaSet.AppendCriteria( "dodging",  (m_Shared.InCond( TF_COND_PHASE ) || m_Shared.InCond( TF_COND_PASSTIME_INTERCEPTION )) ? "1" : "0" );
+	criteriaSet.AppendCriteria( "dodging", m_Shared.InCond( TF_COND_PHASE ) ? "1" : "0" );
 	criteriaSet.AppendCriteria( "doublejumping", (m_Shared.GetAirDash()>0) ? "1" : "0" );
 
 	switch ( GetTFTeam()->GetRole() )
@@ -18203,12 +18044,6 @@ bool CTFPlayer::SpeakConceptIfAllowed( int iConcept, const char *modifiers, char
 	if ( IsSpeaking() )
 	{
 		if ( iConcept != MP_CONCEPT_DIED )
-			return false;
-	}
-
-	if ( iConcept == MP_CONCEPT_PLAYER_ASK_FOR_BALL )
-	{
-		if ( !SayAskForBall() ) 
 			return false;
 	}
 

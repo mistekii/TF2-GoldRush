@@ -357,7 +357,6 @@ static TagPair_t kMapTags[] = {
 	{ "MapsCheckBox_MVM", "Mann vs. Machine" },
 	{ "MapsCheckBox_Powerup", "Mannpower" },
 	{ "MapsCheckBox_Medieval", "Medieval" },
-	{ "MapsCheckBox_PassTime", "PASS Time" },
 	{ "MapsCheckBox_Specialty", "Specialty" },
 	{ "MapsCheckBox_Halloween", "Halloween" },
 	{ "MapsCheckbox_Smissmas", "Smissmas" },

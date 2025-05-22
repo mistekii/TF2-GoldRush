@@ -149,7 +149,7 @@ bool CBonusPack::ValidTouch( CBasePlayer *pPlayer )
 		return false;
 
 	// No bonk'd scouts
-	if ( pTFPlayer->m_Shared.InCond( TF_COND_PHASE ) || pTFPlayer->m_Shared.InCond( TF_COND_PASSTIME_INTERCEPTION ) )
+	if ( pTFPlayer->m_Shared.InCond( TF_COND_PHASE ) )
 		return false;
 
 	// No teleporting players

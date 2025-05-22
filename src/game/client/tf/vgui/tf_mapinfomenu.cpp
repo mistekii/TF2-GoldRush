@@ -529,9 +529,6 @@ void CTFMapInfoMenu::LoadMapPage()
 						case TF_GAMETYPE_RD:
 							pszDescription = "#default_rd_description";
 							break;
-						case TF_GAMETYPE_PASSTIME:
-							pszDescription = "#default_passtime_description";
-							break;
 						case TF_GAMETYPE_PD:
 							pszDescription = "#default_pd_description";
 							break;

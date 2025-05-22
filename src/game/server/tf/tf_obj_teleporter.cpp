@@ -524,9 +524,6 @@ bool CObjectTeleporter::PlayerCanBeTeleported( CTFPlayer *pPlayer )
 	if ( m_bWasMapPlaced && GetTeamNumber() != pPlayer->GetTeamNumber() )
 		return false;
 
-	if ( TFGameRules() && TFGameRules()->IsPasstimeMode() && pPlayer->m_Shared.HasPasstimeBall() )
-		return false;
-
 	return true;
 }
 
@@ -582,11 +579,6 @@ void CObjectTeleporter::TeleporterTouch( CBaseEntity *pOther )
 			// If they have the flag, print a warning that you can't tele with the flag
 			CSingleUserRecipientFilter filter( pPlayer );
 			TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_NO_TELE_WITH_FLAG );
-		}
-		else if ( pPlayer->m_Shared.HasPasstimeBall() )
-		{
-			CSingleUserRecipientFilter filter( pPlayer );
-			TFGameRules()->SendHudNotification( filter, HUD_NOTIFY_PASSTIME_NO_TELE );
 		}
 
 		if ( m_hReservedForPlayer == pPlayer )

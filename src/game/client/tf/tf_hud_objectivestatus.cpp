@@ -34,8 +34,6 @@
 #include "tf_hud_arena_player_count.h"
 #include "c_tf_playerresource.h"
 #include "tf_hud_robot_destruction_status.h"
-#include "tf_hud_passtime.h"
-#include "c_tf_passtime_logic.h"
 
 void AddSubKeyNamed( KeyValues *pKeys, const char *pszName );
 
@@ -71,7 +69,6 @@ CTFHudObjectiveStatus::CTFHudObjectiveStatus( const char *pElementName )
 	m_pEscortPanel = new CTFHudEscort( this, "ObjectiveStatusEscort" );
 	m_pMultipleEscortPanel = new CTFHudMultipleEscort( this, "ObjectiveStatusMultipleEscort" );
 	m_pRobotDestructionPanel = NULL;
-	m_pHudPasstime = new CTFHudPasstime( this );
 
 	SetHiddenBits( 0 );
 
@@ -141,11 +138,6 @@ void CTFHudObjectiveStatus::Reset()
 	if ( m_pRobotDestructionPanel )
 	{
 		m_pRobotDestructionPanel->Reset();
-	}
-
-	if ( m_pHudPasstime )
-	{
-		m_pHudPasstime->Reset();
 	}
 }
 
@@ -239,13 +231,6 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 		{
 			m_pMultipleEscortPanel->SetVisible( false );
 		}
-	}
-
-	if ( m_pHudPasstime )
-	{
-		bool bIsPasstime = iGameType == TF_GAMETYPE_PASSTIME;
-		m_pHudPasstime->SetVisible( bIsPasstime );
-		m_pHudPasstime->SetEnabled( bIsPasstime );
 	}
 
 	//=============================================================================

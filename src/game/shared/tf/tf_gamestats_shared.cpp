@@ -552,7 +552,6 @@ const char* GetGameTypeID()
 	ConVarRef tf_gamemode_sd( "tf_gamemode_sd" );
 	ConVarRef tf_gamemode_payload( "tf_gamemode_payload" );
 	ConVarRef tf_gamemode_mvm( "tf_gamemode_mvm" );
-	ConVarRef tf_gamemode_passtime( "tf_gamemode_passtime" );
 
 	const char* pszGameTypeID = NULL;
 	if ( tf_gamemode_arena.GetBool() )
@@ -579,10 +578,6 @@ const char* GetGameTypeID()
 	{
 		pszGameTypeID = "mvm";
 	}
-	else if ( tf_gamemode_passtime.GetBool() )
-	{
-		pszGameTypeID = "pass"; // intentionally not "passtime"
-	}
 	else
 	{
 		pszGameTypeID = "custom";
@@ -593,33 +588,7 @@ const char* GetGameTypeID()
 
 //-----------------------------------------------------------------------------
 // TF2 Beta Maps
-// Passtime
 //-----------------------------------------------------------------------------
-void PasstimeStats_t::Clear()
-{
-	memset( &summary, 0, sizeof(summary) );
-	memset( &classes, 0, sizeof(classes) );
-}
-
-//-----------------------------------------------------------------------------
-void PasstimeStats_t::AddBallFracSample( float f )
-{
-	Assert( f >= 0 && f <= 1.0f );
-	int iBin = (uint8) Floor2Int( f * 255 );
-	summary.nBallFracHistSum += iBin;
-	++summary.arrBallFracHist[ iBin ];
-	++summary.nBallFracSampleCount;
-}
-
-//-----------------------------------------------------------------------------
-void PasstimeStats_t::AddPassTravelDistSample( float f )
-{
-	if ( summary.nPassTravelDistSampleCount >= summary.k_nMaxPassTravelDistSamples )
-		return;
-	Assert( f >= 0 );
-	summary.arrPassTravelDistSamples[ summary.nPassTravelDistSampleCount ] = (uint16) Float2Int( f );
-	++summary.nPassTravelDistSampleCount;
-}
 
 #ifdef CLIENT_DLL
 MapStats_t &GetMapStats( map_identifier_t iMapID )

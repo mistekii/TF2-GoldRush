@@ -366,24 +366,22 @@ static const char *g_aConditionNames[] =
 	"TF_COND_RUNE_KNOCKOUT",                    // = 88
 	"TF_COND_RUNE_IMBALANCE",                   // = 89
 	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 90
-	"TF_COND_PASSTIME_INTERCEPTION",            // = 91
-	"TF_COND_SWIMMING_NO_EFFECTS",              // = 92 - =102_DNOC_FT
-	"TF_COND_PURGATORY",                        // = 93
-	"TF_COND_RUNE_KING",                        // = 94
-	"TF_COND_RUNE_PLAGUE",                      // = 95
-	"TF_COND_RUNE_SUPERNOVA",                   // = 96
-	"TF_COND_PLAGUE",                           // = 97
-	"TF_COND_KING_BUFFED",                      // = 98
-	"TF_COND_TEAM_GLOWS",                       // = 99 - used to show team glows to living players
-	"TF_COND_KNOCKED_INTO_AIR",                 // = 100
-	"TF_COND_COMPETITIVE_WINNER",               // = 101
-	"TF_COND_COMPETITIVE_LOSER",                // = 102
-	"TF_COND_HEALING_DEBUFF",                   // = 103
-	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 104
-	"TF_COND_LOST_FOOTING",                     // = 105
-	"TF_COND_AIR_CURRENT",                      // = 106
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 107
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 108
+	"TF_COND_SWIMMING_NO_EFFECTS",              // = 91 - =91_DNOC_FT
+	"TF_COND_PURGATORY",                        // = 92
+	"TF_COND_RUNE_KING",                        // = 93
+	"TF_COND_RUNE_PLAGUE",                      // = 94
+	"TF_COND_RUNE_SUPERNOVA",                   // = 95
+	"TF_COND_PLAGUE",                           // = 96
+	"TF_COND_KING_BUFFED",                      // = 97
+	"TF_COND_TEAM_GLOWS",                       // = 98 - used to show team glows to living players
+	"TF_COND_KNOCKED_INTO_AIR",                 // = 99
+	"TF_COND_COMPETITIVE_WINNER",               // = 100
+	"TF_COND_COMPETITIVE_LOSER",                // = 101
+	"TF_COND_HEALING_DEBUFF",                   // = 102
+	"TF_COND_LOST_FOOTING",                     // = 103
+	"TF_COND_AIR_CURRENT",                      // = 104
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 105
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 106
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -429,7 +427,6 @@ static const char *s_aGameTypeNames[] =
 	"#Gametype_Arena",
 	"#Gametype_MVM",
 	"#Gametype_RobotDestruction",
-	"#GameType_Passtime",
 	"#GameType_PlayerDestruction",
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aGameTypeNames ) );
@@ -448,7 +445,6 @@ static const char *s_aEnumGameTypeName[] =
 	"TF_GAMETYPE_ARENA",
 	"TF_GAMETYPE_MVM",
 	"TF_GAMETYPE_RD",
-	"TF_GAMETYPE_PASSTIME",
 	"TF_GAMETYPE_PD"
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aEnumGameTypeName ) );
@@ -638,7 +634,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_HARVESTER_SAW",
 	"TF_WEAPON_SPELLBOOK",
 	"TF_WEAPON_SPELLBOOK_PROJECTILE",
-	"TF_WEAPON_PASSTIME_GUN",
 	"TF_WEAPON_BREAKABLE_SIGN",
 
 };
@@ -727,7 +722,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_SLASH,		// TF_WEAPON_HARVESTER_SAW
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK_PROJECTILE
-	DMG_GENERIC, // TF_WEAPON_PASSTIME_GUN
 	DMG_CLUB,		// TF_WEAPON_BREAKABLE_SIGN,
 
 };

@@ -490,44 +490,6 @@ const char *CHudNotificationPanel::GetNotificationByType( int iType, float& flDu
 		flDuration = 10.f;
 		break;
 
-	// Passtime
-	case HUD_NOTIFY_PASSTIME_HOWTO: 
-		pszResult = "resource/UI/notifications/notify_passtime_howto.res"; 
-		flDuration = 10.f; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_TELE: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_tele.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_CARRY: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_carry.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_INVULN: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_invuln.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_DISGUISE: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_disguise.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_CLOAK:
-		pszResult = "resource/UI/notifications/notify_passtime_no_cloak.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_OOB:
-		pszResult = "resource/UI/notifications/notify_passtime_no_oob.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_HOLSTER: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_holster.res"; 
-		break;
-
-	case HUD_NOTIFY_PASSTIME_NO_TAUNT: 
-		pszResult = "resource/UI/notifications/notify_passtime_no_taunt.res"; 
-		break;
-
 	// Competitive
 	case HUD_NOTIFY_COMPETITIVE_GC_DOWN:
 		pszResult = "resource/UI/notifications/notify_competitive_gc_down.res";

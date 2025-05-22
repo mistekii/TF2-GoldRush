@@ -115,7 +115,6 @@
 	#include "tf_obj_sentrygun.h"
 	#include "entity_halloween_pickup.h"
 	#include "workshop/maps_workshop.h"
-	#include "tf_passtime_logic.h"
 	#include "cdll_int.h"
 	#include "tf_weapon_invis.h"
 	#include "tf_gc_server.h"
@@ -140,8 +139,6 @@
 #include "rtime.h"
 #include "tf_revive.h"
 #include "tf_duckleaderboard.h"
-
-#include "passtime_convars.h"
 
 #include "tier3/tier3.h"
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1053,7 +1050,6 @@ ConVar tf_gamemode_tc ( "tf_gamemode_tc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY |
 ConVar tf_beta_content ( "tf_beta_content", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_payload ( "tf_gamemode_payload", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_mvm ( "tf_gamemode_mvm", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_passtime ( "tf_gamemode_passtime", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_misc ( "tf_gamemode_misc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_bot_count( "tf_bot_count", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
@@ -2467,13 +2463,6 @@ bool CTFGameRules::ReportMatchResultsToGC( CMsgGC_Match_Result_Status nCode )
 		// PL - Count the points captured by each team.  We do this A/D style where each team has
 		//		a chance to score points.
 		flBlueScoreRatio = RemapValClamped( pTFTeamBlue->GetScore(), 0.f, pTFTeamBlue->GetScore() + pTFTeamRed->GetScore() , 0.f, 1.f );
-	}
-	else if ( tf_gamemode_ctf.GetInt() || tf_gamemode_passtime.GetInt() )
-	{
-		// Flag captures
-		// Mannpower is a variant of CTF and Passtime effectively is CTF. In all of these modes
-		// we don't use rounds so our best metric is individual flag captures.
-		flBlueScoreRatio = RemapValClamped( pTFTeamBlue->GetTotalFlagCaptures(), 0.f, pTFTeamBlue->GetTotalFlagCaptures() + pTFTeamRed->GetTotalFlagCaptures(), 0.f, 1.f );
 	}
 	else if ( m_bPlayingKoth )
 	{
@@ -4065,7 +4054,6 @@ void CTFGameRules::Activate()
 	tf_gamemode_pd.SetValue( 0 );
 	tf_gamemode_tc.SetValue( 0 );
 	tf_beta_content.SetValue( 0 );
-	tf_gamemode_passtime.SetValue( 0 );
 	tf_gamemode_misc.SetValue( 0 );
 
 	tf_bot_count.SetValue( 0 );
@@ -4194,13 +4182,6 @@ void CTFGameRules::Activate()
 	{
 		m_nGameType.Set( TF_GAMETYPE_CP );
 		tf_gamemode_cp.SetValue( 1 );
-	}
-	
-	auto *pPasstime = dynamic_cast<CTFPasstimeLogic*> ( gEntList.FindEntityByClassname( NULL, "passtime_logic" ) );
-	if ( pPasstime )
-	{
-		m_nGameType.Set( TF_GAMETYPE_PASSTIME );
-		tf_gamemode_passtime.SetValue( 1 );
 	}
 
 	m_bIsInItemTestingMode.Set( false );
@@ -5860,8 +5841,7 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 
 			if ( pVictim && ( pVictim->m_Shared.InCond( TF_COND_URINE ) ||
 			                  pVictim->m_Shared.InCond( TF_COND_MARKEDFORDEATH ) ||
-			                  pVictim->m_Shared.InCond( TF_COND_MARKEDFORDEATH_SILENT ) ||
-			                  pVictim->m_Shared.InCond( TF_COND_PASSTIME_PENALTY_DEBUFF ) ) )
+			                  pVictim->m_Shared.InCond( TF_COND_MARKEDFORDEATH_SILENT ) ) )
 			{
 				bAllSeeCrit = true;
 				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
@@ -8548,42 +8528,7 @@ void CTFGameRules::FrameUpdatePostEntityThink()
 //-----------------------------------------------------------------------------
 bool CTFGameRules::CheckCapsPerRound()
 {
-	return IsPasstimeMode() 
-		? SetPasstimeWinningTeam()
-		: SetCtfWinningTeam();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFGameRules::SetPasstimeWinningTeam()
-{
-	Assert( IsPasstimeMode() );
-
-	int iScoreLimit = tf_passtime_scores_per_round.GetInt();
-	if ( iScoreLimit <= 0 )
-	{
-		// no score limit set, play forever
-		return false;
-	}
-
-	// TODO need to generalize the "flag captures" parts of CTFTeam to avoid 
-	// this confusing overload of the flag captures concept, or maybe defer 
-	// this logic to the specific object that manages the mode.
-	CTFTeamManager *pTeamMgr = TFTeamMgr();
-	int iBlueScore = pTeamMgr->GetFlagCaptures( TF_TEAM_BLUE );
-	int iRedScore = pTeamMgr->GetFlagCaptures( TF_TEAM_RED );
-	if ( ( iBlueScore < iScoreLimit ) && ( iRedScore < iScoreLimit ) )
-	{
-		// no team has exceeded the score limit
-		return false;
-	}
-
-	int iWinnerTeam = ( iBlueScore > iRedScore )
-		? TF_TEAM_BLUE
-		: TF_TEAM_RED;
-	SetWinningTeam( iWinnerTeam, WINREASON_SCORED );
-	return true;
+	return SetCtfWinningTeam();
 }
 
 //-----------------------------------------------------------------------------
@@ -8591,7 +8536,6 @@ bool CTFGameRules::SetPasstimeWinningTeam()
 //-----------------------------------------------------------------------------
 bool CTFGameRules::SetCtfWinningTeam()
 {
-	Assert( !IsPasstimeMode() );
 	if ( tf_flag_caps_per_round.GetInt() > 0 )
 	{
 		int iMaxCaps = -1;
@@ -8918,23 +8862,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 		}
 	}
 
-	if ( IsPasstimeMode() )
-	{
-		CTF_GameStats.m_passtimeStats.summary.nRoundEndReason = iWinReason;
-		CTF_GameStats.m_passtimeStats.summary.nRoundRemainingSec = GetActiveRoundTimer() ? (int) GetActiveRoundTimer()->GetTimeRemaining() : 0;
-		CTF_GameStats.m_passtimeStats.summary.nScoreBlue = GetGlobalTFTeam( TF_TEAM_BLUE )->GetFlagCaptures();
-		CTF_GameStats.m_passtimeStats.summary.nScoreRed = GetGlobalTFTeam( TF_TEAM_RED )->GetFlagCaptures();
-
-		// stats reporting happens as a result of BaseClass::SetWinningTeam, but we need to make sure to
-		// update ball carry data before stats are reported.
-		// FIXME: refactor this so we're not calling it just for its side effects :/
-		CPasstimeBall *pBall = g_pPasstimeLogic->GetBall();
-		if ( pBall )
-		{
-			pBall->SetStateOutOfPlay();
-		}
-	}
-
 	CTeamplayRoundBasedRules::SetWinningTeam( team, iWinReason, bForceMapReset, bSwitchTeams, bDontAddScore, bFinal );
 
 	if ( IsCompetitiveMode() )
@@ -8949,13 +8876,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 void CTFGameRules::SetStalemate( int iReason, bool bForceMapReset /* = true */, bool bSwitchTeams /* = false */ )
 {
 	DuelMiniGame_AssignWinners();
-
-	if ( IsPasstimeMode() )
-	{
-		CTF_GameStats.m_passtimeStats.summary.bStalemate = true;
-		CTF_GameStats.m_passtimeStats.summary.bSuddenDeath = mp_stalemate_enable.GetBool();
-		CTF_GameStats.m_passtimeStats.summary.bMeleeOnlySuddenDeath = mp_stalemate_meleeonly.GetBool();
-	}
 
 	BaseClass::SetStalemate( iReason, bForceMapReset, bSwitchTeams );
 }
@@ -12717,7 +12637,7 @@ void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 		winEvent->SetInt( "winreason", m_iWinReason );
 		winEvent->SetString( "cappers",  ( m_iWinReason == WINREASON_ALL_POINTS_CAPTURED || m_iWinReason == WINREASON_FLAG_CAPTURE_LIMIT ) ?
 							 m_szMostRecentCappers : "" );
-		winEvent->SetInt( "flagcaplimit", IsPasstimeMode() ? tf_passtime_scores_per_round.GetInt() : tf_flag_caps_per_round.GetInt() );
+		winEvent->SetInt( "flagcaplimit", tf_flag_caps_per_round.GetInt() );
 		winEvent->SetInt( "blue_score", iBlueScore );
 		winEvent->SetInt( "red_score", iRedScore );
 		winEvent->SetInt( "blue_score_prev", iBlueScorePrev );
@@ -12884,7 +12804,7 @@ int CTFGameRules::PlayerArenaRoundScoreSortFunc( const PlayerArenaRoundScore_t *
 //-----------------------------------------------------------------------------
 void CTFGameRules::FillOutTeamplayRoundWinEvent( IGameEvent *event )
 {
-	event->SetInt( "flagcaplimit", IsPasstimeMode() ? tf_passtime_scores_per_round.GetInt() : tf_flag_caps_per_round.GetInt() );
+	event->SetInt( "flagcaplimit", tf_flag_caps_per_round.GetInt() );
 
 	// determine the losing team
 	int iLosingTeam;
@@ -16439,7 +16359,7 @@ bool CTFGameRules::ShouldShowPreRoundDoors() const
 //-----------------------------------------------------------------------------
 int CTFGameRules::GetClassLimit( int iClass )
 {
-	if ( IsInTournamentMode() || IsPasstimeMode() )
+	if ( IsInTournamentMode() )
 	{
 		switch ( iClass )
 		{
@@ -17577,7 +17497,6 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_mm_strict", "hidden", NULL },
 	{ "tf_medieval", "medieval", NULL },
 	{ "mp_holiday_nogifts", "nogifts" },
-	{ "tf_gamemode_passtime", "passtime", NULL },
 	{ "tf_gamemode_misc", "misc", NULL }, // catch-all for matchmaking to identify sd, tc, and pd servers via sv_tags
 };
 
@@ -17873,8 +17792,7 @@ const char *GetMapDisplayName( const char *mapName, bool bTitleCase /* = false *
 	{
 		pszSrc +=  4;
 	}
-	else if ( !Q_strncmp( szTempName, "koth_", 5 ) ||
-			  !Q_strncmp( szTempName, "pass_", 5 ) )
+	else if ( !Q_strncmp( szTempName, "koth_", 5 ) )
 	{
 		pszSrc +=  5;
 	}
@@ -17993,10 +17911,6 @@ const char *GetMapType( const char *mapName )
 		else if ( !Q_strnicmp( mapName, "mvm_", 4 ) )
 		{
 			return "#Gametype_MVM";
-		}
-		else if ( !Q_strnicmp( mapName, "pass_", 5 ) )
-		{
-			return "#GameType_Passtime";
 		}
 		else if ( !Q_strnicmp( mapName, "rd_", 3 ) )
 		{
@@ -20278,7 +20192,6 @@ bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime()
 bool	ScriptGameModeUsesUpgrades()								{ return TFGameRules()->GameModeUsesUpgrades(); }
 bool	ScriptGameModeUsesCurrency()								{ return TFGameRules()->GameModeUsesCurrency(); }
 bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
-bool	ScriptIsPasstimeMode()										{ return TFGameRules()->IsPasstimeMode(); }
 bool	ScriptIsMannVsMachineRespecEnabled()						{ return TFGameRules()->IsMannVsMachineRespecEnabled(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
@@ -20333,7 +20246,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesUpgrades,						"Does the current gamemode have upgrades?" );
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesCurrency,						"Does the current gamemode have currency?" );
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsPasstimeMode,							"No ball games." );
 	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineRespecEnabled,				"Are players allowed to refund their upgrades?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );

@@ -379,7 +379,6 @@ enum EGameCategory
 	kGameCategory_RobotDestruction,
 	kGameCategory_Powerup,
 	kGameCategory_Featured,
-	kGameCategory_Passtime,
 	kGameCategory_Community_Update,
 	kGameCategory_Misc,
 	kGameCategory_Competitive_6v6,

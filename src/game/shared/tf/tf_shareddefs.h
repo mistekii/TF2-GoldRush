@@ -279,7 +279,6 @@ enum ETFGameType
 	TF_GAMETYPE_ARENA,
 	TF_GAMETYPE_MVM,
 	TF_GAMETYPE_RD,
-	TF_GAMETYPE_PASSTIME,
 	TF_GAMETYPE_PD,
 
 	//
@@ -480,7 +479,6 @@ enum ETFWeaponType
 	TF_WEAPON_HARVESTER_SAW,
 	TF_WEAPON_SPELLBOOK,
 	TF_WEAPON_SPELLBOOK_PROJECTILE,
-	TF_WEAPON_PASSTIME_GUN,
 	TF_WEAPON_BREAKABLE_SIGN,
 
 
@@ -718,28 +716,26 @@ enum ETFCond
 	TF_COND_RUNE_KNOCKOUT                    = 86,
 	TF_COND_RUNE_IMBALANCE                   = 87,
 	TF_COND_CRITBOOSTED_RUNE_TEMP            = 88,
-	TF_COND_PASSTIME_INTERCEPTION            = 89,
-	TF_COND_SWIMMING_NO_EFFECTS              = 90, // =95_DNOC_FT
-	TF_COND_PURGATORY                        = 91,
-	TF_COND_RUNE_KING                        = 92,
-	TF_COND_RUNE_PLAGUE                      = 93,
-	TF_COND_RUNE_SUPERNOVA                   = 94,
-	TF_COND_PLAGUE                           = 95,
-	TF_COND_KING_BUFFED                      = 96,
-	TF_COND_TEAM_GLOWS                       = 97, // used to show team glows to living players
-	TF_COND_KNOCKED_INTO_AIR                 = 98,
-	TF_COND_COMPETITIVE_WINNER               = 99,
-	TF_COND_COMPETITIVE_LOSER                = 100,
-	TF_COND_HEALING_DEBUFF                   = 101,
-	TF_COND_PASSTIME_PENALTY_DEBUFF          = 102, // when carrying the ball without any teammates nearby
+	TF_COND_SWIMMING_NO_EFFECTS              = 89, // =95_DNOC_FT
+	TF_COND_PURGATORY                        = 90,
+	TF_COND_RUNE_KING                        = 91,
+	TF_COND_RUNE_PLAGUE                      = 92,
+	TF_COND_RUNE_SUPERNOVA                   = 93,
+	TF_COND_PLAGUE                           = 94,
+	TF_COND_KING_BUFFED                      = 95,
+	TF_COND_TEAM_GLOWS                       = 96, // used to show team glows to living players
+	TF_COND_KNOCKED_INTO_AIR                 = 97,
+	TF_COND_COMPETITIVE_WINNER               = 98,
+	TF_COND_COMPETITIVE_LOSER                = 99,
+	TF_COND_HEALING_DEBUFF                   = 100,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 103,
+	TF_COND_LOST_FOOTING                     = 101,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 104,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 105,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 106,
+	TF_COND_AIR_CURRENT                      = 102,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 103,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 104,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//
@@ -1655,16 +1651,6 @@ enum HudNotification_t
 	HUD_NOTIFY_HOW_TO_CONTROL_GHOST,
 	HUD_NOTIFY_HOW_TO_CONTROL_KART,
 
-	HUD_NOTIFY_PASSTIME_HOWTO,
-	HUD_NOTIFY_PASSTIME_NO_TELE,
-	HUD_NOTIFY_PASSTIME_NO_CARRY,
-	HUD_NOTIFY_PASSTIME_NO_INVULN,
-	HUD_NOTIFY_PASSTIME_NO_DISGUISE, 
-	HUD_NOTIFY_PASSTIME_NO_CLOAK, 
-	HUD_NOTIFY_PASSTIME_NO_OOB, // out of bounds
-	HUD_NOTIFY_PASSTIME_NO_HOLSTER,
-	HUD_NOTIFY_PASSTIME_NO_TAUNT,
-
 	HUD_NOTIFY_COMPETITIVE_GC_DOWN,
 
 	HUD_NOTIFY_TRUCE_START,
@@ -1864,8 +1850,6 @@ enum MedicCallerType
 #define ACHIEVEMENT_TF_TAUNT_RPS_SCISSORS			(ACHIEVEMENT_TF_LAST_ORANGEBOX + 12)
 #define ACHIEVEMENT_TF_TAUNT_DOSIDO_MELLE_KILL		(ACHIEVEMENT_TF_LAST_ORANGEBOX + 13)
 #define ACHIEVEMENT_TF_TAUNT_WHILE_CAPPING			(ACHIEVEMENT_TF_LAST_ORANGEBOX + 14)
-#define ACHIEVEMENT_TF_PASS_TIME_HAT				(ACHIEVEMENT_TF_LAST_ORANGEBOX + 15)
-#define ACHIEVEMENT_TF_PASS_TIME_GRIND				(ACHIEVEMENT_TF_LAST_ORANGEBOX + 16)
 
 
 #define ACHIEVEMENT_START_CLASS_SPECIFIC			1000

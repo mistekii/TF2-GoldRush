@@ -591,8 +591,6 @@ bool IsCreepWaveMode( void ) const;
 	bool GameModeUsesMiniBosses( void ) { return IsMannVsMachineMode() || IsBountyMode(); }
 	bool GameModeUsesEscortPushLogic( void );
 
-	bool IsPasstimeMode() const { return m_nGameType == TF_GAMETYPE_PASSTIME; }
-
 	bool IsMannVsMachineRespecEnabled( void ) { return IsMannVsMachineMode() && tf_mvm_respec_enabled.GetBool(); }
 	bool CanPlayerUseRespec( CTFPlayer *pTFPlayer );
 
@@ -794,7 +792,6 @@ bool IsCreepWaveMode( void ) const;
 
 	bool CheckWinLimit( bool bAllowEnd = true, int nAddValueWhenChecking = 0 ) OVERRIDE;
 	bool SetCtfWinningTeam();
-	bool SetPasstimeWinningTeam();
 	bool CheckCapsPerRound();
 	virtual void CheckRespawnWaves();
 	virtual void PlayWinSong( int team ) OVERRIDE;
