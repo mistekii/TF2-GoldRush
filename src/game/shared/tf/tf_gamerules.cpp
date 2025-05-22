@@ -4207,16 +4207,6 @@ void CTFGameRules::Activate()
 	{
 		CreateSoldierStatue();
 	}
-
-	if ( IsCompetitiveMode() && IsCustomGameMode() )
-	{
-		m_bAwaitingReadyRestart.Set( false );
-		tf_gamemode_community.SetValue( 1 );
-		tf_gamemode_misc.SetValue( 1 );
-		mp_tournament.SetValue( false );
-		mp_tournament_readymode.SetValue( false );
-		SetAllowBetweenRounds( false );
-	}
 }
 
 //-----------------------------------------------------------------------------

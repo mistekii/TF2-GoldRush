@@ -288,7 +288,6 @@ extern ConVar bot_mimic;
 
 extern CBaseEntity *FindPickerEntity( CBasePlayer *pPlayer );
 extern bool CanScatterGunKnockBack( CTFWeaponBase *pWeapon, float flDamage, float flDistanceSq );
-extern bool IsCustomGameMode();
 
 static const char *s_pszTauntRPSParticleNames[] =
 {
@@ -7113,16 +7112,12 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			const IMatchGroupDescription *pMatchDesc = GetMatchGroupDescription( TFGameRules()->GetCurrentMatchGroup() );
 			if ( !pMatchDesc || pMatchDesc->BAllowTeamChange() )
 			{
-				bool bPreventCustomGameModeChange = ( IsCustomGameMode() && ( GetTeamNumber() >= FIRST_GAME_TEAM ) );
-				if ( !bPreventCustomGameModeChange )
-				{
-					int iTeam = GetAutoTeam();
-					ChangeTeam( iTeam, true, false );
+				int iTeam = GetAutoTeam();
+				ChangeTeam( iTeam, true, false );
 
-					if ( iTeam > LAST_SHARED_TEAM )
-					{
-						ShowViewPortPanel( ( iTeam == TF_TEAM_RED ) ? PANEL_CLASS_RED : PANEL_CLASS_BLUE );
-					}
+				if ( iTeam > LAST_SHARED_TEAM )
+				{
+					ShowViewPortPanel( ( iTeam == TF_TEAM_RED ) ? PANEL_CLASS_RED : PANEL_CLASS_BLUE );
 				}
 			}
 		}
