@@ -178,7 +178,6 @@ bool CSteamShareSystem::Init()
 	ListenForGameEvent( "object_detonated" );
 	ListenForGameEvent( "teamplay_flag_event" );
 	ListenForGameEvent( "teamplay_point_captured" );
-	ListenForGameEvent( "killed_ball_carrier" );
 	ListenForGameEvent( "localplayer_changeteam" );
 	ListenForGameEvent( "localplayer_changeclass" );
 	ListenForGameEvent( "player_death" );
