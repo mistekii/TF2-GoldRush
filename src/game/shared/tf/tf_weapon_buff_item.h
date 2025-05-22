@@ -28,18 +28,8 @@ enum EBuffItemTypes
 {
 	EBuffBanner = 1,
 	EBattalion,
-	EConcheror,
-	EParachute,
 
-	NUM_BUFF_ITEM_TYPES = EParachute
-};
-
-enum EParachuteStates
-{
-	EParachuteDeployed,
-	EParachuteDeployed_Idle,
-	EParachuteRetracted,
-	EParachuteRetracted_Idle,
+	NUM_BUFF_ITEM_TYPES = EBattalion
 };
 
 class CTFBuffItem : public CTFWeaponBaseMelee

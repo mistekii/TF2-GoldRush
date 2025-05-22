@@ -87,8 +87,6 @@ public:
 	void			ActivatePushBackAttackMode( void );
 #endif
 
-	void			RingOfFireAttack( int nDamage );
-
 	virtual int		GetCustomDamageType() const { return TF_DMG_CUSTOM_MINIGUN; }
 	int				GetMinigunType( void ) const { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, set_weapon_mode ); return iMode; };
 	bool			HasSpinSounds( void ) const { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, minigun_no_spin_sounds ); return iMode!=1; };
@@ -104,7 +102,6 @@ public:
 
 #ifdef GAME_DLL
 	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return &m_Accumulator; }
-	virtual float GetInitialAfterburnDuration() const OVERRIDE;
 #endif // GAME_DLL
 
 #ifdef CLIENT_DLL
@@ -172,10 +169,6 @@ private:
 #ifdef GAME_DLL
 	float	m_flAegisCheckTime;
 #endif
-
-	float	m_flNextRingOfFireAttackTime;
-	float	m_flAccumulatedAmmoDrain;
-	float	m_flLastAmmoDrainTime;
 
 	bool	m_bAttack3Down;
 

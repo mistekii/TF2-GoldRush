@@ -23,9 +23,7 @@
 #ifdef CLIENT_DLL
 #define CTFRocketLauncher C_TFRocketLauncher
 #define CTFRocketLauncher_DirectHit C_TFRocketLauncher_DirectHit
-#define CTFRocketLauncher_AirStrike C_TFRocketLauncher_AirStrike
 #define CTFRocketLauncher_Mortar C_TFRocketLauncher_Mortar
-#define CTFCrossbow C_TFCrossbow
 #endif // CLIENT_DLL
 
 //=============================================================================
@@ -158,40 +156,6 @@ private:
 	CUtlVector< EHANDLE > m_vecRockets;
 #endif // GAME_DLL
 
-};
-
-// ------------------------------------------------------------------------------------------------------------------------
-class CTFCrossbow : public CTFRocketLauncher
-{
-public:
-	DECLARE_CLASS( CTFCrossbow, CTFRocketLauncher );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	// Server specific.
-#ifdef GAME_DLL
-	DECLARE_DATADESC();
-#endif
-
-	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo ) OVERRIDE;
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_CROSSBOW; }
-	virtual void	SecondaryAttack( void );
-	virtual float	GetProjectileSpeed( void );
-	virtual float	GetProjectileGravity( void );
-	virtual bool	IsViewModelFlipped( void );
-
-	virtual void	ItemPostFrame( void );
-	virtual void	ModifyProjectile( CBaseEntity* pProj );
-	virtual void	WeaponRegenerate( void );
-
-	float				GetProgress( void );
-	const char*			GetEffectLabelText( void )					{ return "#TF_BOLT"; }
-
-	CNetworkVar( float, m_flRegenerateDuration );
-	CNetworkVar( float, m_flLastUsedTimestamp );
-
-private:
-	bool m_bMilkNextAttack;
 };
 
 #endif // TF_WEAPON_ROCKETLAUNCHER_H

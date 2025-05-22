@@ -20,7 +20,6 @@ enum fisttypes_t
 {
 	FISTTYPE_BASE = 0,
 	FISTTYPE_RADIAL_BUFF,
-	FISTTYPE_GRU,
 };
 
 //=============================================================================

@@ -17,12 +17,6 @@
 #define CTFSyringeGun C_TFSyringeGun
 #endif
 
-enum syringe_weapontypes_t
-{
-	SYRINGE_DEFAULT = 0,
-	SYRINGE_UBER_SCALES_SPEED,
-};
-
 //=============================================================================
 //
 // TF Weapon Syringe gun.

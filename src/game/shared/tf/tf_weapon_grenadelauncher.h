@@ -14,7 +14,6 @@
 // Client specific.
 #ifdef CLIENT_DLL
 #define CTFGrenadeLauncher	C_TFGrenadeLauncher
-#define CTFCannon			C_TFCannon
 #endif
 
 #define TF_GRENADE_LAUNCHER_XBOX_CLIP 4
@@ -23,7 +22,7 @@
 //
 // TF Weapon Grenade Launcher.
 //
-class CTFGrenadeLauncher : public CTFWeaponBaseGun, public ITFChargeUpWeapon
+class CTFGrenadeLauncher : public CTFWeaponBaseGun
 {
 public:
 
@@ -65,15 +64,7 @@ public:
 
 	virtual bool	IsBlastImpactWeapon( void ) const { return true; }
 
-	// ITFChargeUpWeapon
-	virtual bool CanCharge( void );
-	virtual float GetChargeBeginTime( void );
-	virtual float GetChargeMaxTime( void );
-
 	void LaunchGrenade( void );
-
-	void AddDonkVictim( const CBaseEntity* pVictim );
-	bool IsDoubleDonk( const CBaseEntity* pVictim ) const;
 
 private:
 
@@ -99,12 +90,6 @@ private:
 
 
 #ifdef CLIENT_DLL
-	void StartChargeEffects();
-	void StopChargeEffects();
-
-	CNewParticleEffect			*m_pCannonFuseSparkEffect;
-	CNewParticleEffect			*m_pCannonCharge;
-
 	// Barrel spinning (cribbed from Minigun)
 	virtual CStudioHdr *OnNewModel( void );
 	virtual void		StandardBlendingRules( CStudioHdr *hdr, Vector pos[], Quaternion q[], float currentTime, int boneMask );
@@ -126,17 +111,6 @@ private:
 
 	CUtlVector< Donks_t > m_vecDonkVictims;
 
-};
-
-
-class CTFCannon : public CTFGrenadeLauncher
-{
-public:
-	DECLARE_CLASS( CTFCannon, CTFGrenadeLauncher );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int		GetWeaponID( void ) const			{ return TF_WEAPON_CANNON; }
 };
 
 #endif // TF_WEAPON_GRENADELAUNCHER_H

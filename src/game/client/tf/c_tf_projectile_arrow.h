@@ -53,37 +53,4 @@ private:
 	CNetworkVar( int, m_iProjectileType );
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: Arrow projectile.
-//-----------------------------------------------------------------------------
-class C_TFProjectile_HealingBolt : public C_TFProjectile_Arrow
-{
-	DECLARE_CLASS( C_TFProjectile_HealingBolt, C_TFProjectile_Arrow );
-
-	virtual void	OnDataChanged( DataUpdateType_t updateType );
-
-public:
-
-	DECLARE_NETWORKCLASS();
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: Grappling Hook projectile.
-//-----------------------------------------------------------------------------
-class C_TFProjectile_GrapplingHook : public C_TFProjectile_Arrow
-{
-	DECLARE_CLASS( C_TFProjectile_GrapplingHook, C_TFProjectile_Arrow );
-public:
-	DECLARE_NETWORKCLASS();
-
-	virtual void	OnDataChanged( DataUpdateType_t updateType );
-	virtual void	UpdateOnRemove();
-	virtual void	ClientThink();
-private:
-	void UpdateRope();
-	void RemoveRope();
-
-	CHandle< C_RopeKeyframe > m_hRope;
-};
-
 #endif // C_TF_PROJECTILE_ARROW_H

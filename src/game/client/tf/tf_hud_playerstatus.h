@@ -103,15 +103,11 @@ private:
 
 enum BuffClass_t
 {
-	BUFF_CLASS_BULLET_RESIST,
-	BUFF_CLASS_BLAST_RESIST,
-	BUFF_CLASS_FIRE_RESIST,
 	BUFF_CLASS_SOLDIER_OFFENSE,
 	BUFF_CLASS_SOLDIER_DEFENSE,
 	BUFF_CLASS_SOLDIER_HEALTHONHIT,
 	DEBUFF_CLASS_STUNNED,
 	DEBUFF_CLASS_SPY_MARKED,
-	BUFF_CLASS_PARACHUTE,
 	RUNE_CLASS_STRENGTH,
 	RUNE_CLASS_HASTE,
 	RUNE_CLASS_REGEN,
@@ -183,7 +179,6 @@ private:
 	vgui::ImagePanel	*m_pBuildingHealthImageBG;
 	vgui::ImagePanel	*m_pBleedImage;
 	vgui::ImagePanel	*m_pHookBleedImage;
-	vgui::ImagePanel	*m_pMilkImage;
 	vgui::ImagePanel	*m_pMarkedForDeathImage;
 	vgui::ImagePanel	*m_pMarkedForDeathImageSilent;
 	vgui::ImagePanel	*m_pWheelOfDoomImage;

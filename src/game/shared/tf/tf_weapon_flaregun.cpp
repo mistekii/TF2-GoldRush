@@ -307,26 +307,6 @@ void CTFFlareGun::ClientEffectsThink( void )
 	{
 		SetContextThink( &CTFFlareGun::ClientEffectsThink, gpGlobals->curtime + 0.25f, "EFFECTS_THINK" );
 	}
-
-	if ( GetFlareGunType() == FLAREGUN_GRORDBORT && m_flNextPrimaryAttack <= gpGlobals->curtime )
-	{
-		ParticleProp()->Init( this );
-		CNewParticleEffect* pEffect = ParticleProp()->Create( "drg_bison_idle", PATTACH_POINT_FOLLOW, "muzzle" );
-		if ( pEffect )
-		{
-			pEffect->SetControlPoint( CUSTOM_COLOR_CP1, GetParticleColor( 1 ) );
-			pEffect->SetControlPoint( CUSTOM_COLOR_CP2, GetParticleColor( 2 ) );
-		}
-
-		ParticleProp()->Create( "drg_manmelter_idle", PATTACH_POINT_FOLLOW, "muzzle" );
-
-		if ( !m_bReadyToFire )
-		{
-			m_bReadyToFire = true;
-
-			EmitSound( "Weapon_SniperRailgun.NonScoped" );
-		}
-	}
 }
 
 void CTFFlareGun::StartChargeEffects()

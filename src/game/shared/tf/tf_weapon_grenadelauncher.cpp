@@ -24,8 +24,6 @@
 #include "tf_fx.h"
 #endif
 
-ConVar tf_double_donk_window( "tf_double_donk_window", "0.5", FCVAR_CHEAT | FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY, "How long after an impact from a cannonball that an explosion will count as a double-donk." );
-
 #define TF_TUBE_COUNT 6
 
 // X is time as a fraction of cProceduralBarrelRotationTime, which is in seconds.
@@ -72,8 +70,6 @@ END_PREDICTION_DATA()
 LINK_ENTITY_TO_CLASS( tf_weapon_grenadelauncher, CTFGrenadeLauncher );
 PRECACHE_WEAPON_REGISTER( tf_weapon_grenadelauncher );
 
-CREATE_SIMPLE_WEAPON_TABLE( TFCannon, tf_weapon_cannon )
-
 // Server specific.
 #ifndef CLIENT_DLL
 BEGIN_DATADESC( CTFGrenadeLauncher )
@@ -83,8 +79,6 @@ END_DATADESC()
 #define TF_GRENADE_LAUNCER_MIN_VEL 1200
 
 #define TF_DETONATE_MODE_AIR		2
-
-#define TF_WEAPON_CANNON_CHARGE_SOUND			"Weapon_LooseCannon.Charge"
 
 //=============================================================================
 //
@@ -98,11 +92,6 @@ END_DATADESC()
 CTFGrenadeLauncher::CTFGrenadeLauncher()
 {
 	m_bReloadsSingly = true;
-
-#ifdef CLIENT_DLL
-	m_pCannonFuseSparkEffect = NULL;
-	m_pCannonCharge = NULL;
-#endif // CLIENT_DLL
 }
 
 //-----------------------------------------------------------------------------
@@ -129,10 +118,6 @@ void CTFGrenadeLauncher::Spawn( void )
 //-----------------------------------------------------------------------------
 bool CTFGrenadeLauncher::Holster( CBaseCombatWeapon *pSwitchingTo )
 {
-#ifdef CLIENT_DLL
-	StopSound( TF_WEAPON_CANNON_CHARGE_SOUND );
-#endif // CLIENT_DLL
-
 	ResetDetonateTime();
 	return BaseClass::Holster( pSwitchingTo );
 }
@@ -191,27 +176,7 @@ void CTFGrenadeLauncher::PrimaryAttack( void )
 
 	m_iWeaponMode = TF_WEAPON_PRIMARY_MODE;
 
-	if ( CanCharge() )
-	{
-		if ( m_flDetonateTime == 0.f )
-		{
-			m_flDetonateTime = gpGlobals->curtime + GetMortarDetonateTimeLength();
-			SendWeaponAnim( ACT_VM_PULLBACK );
-#ifdef CLIENT_DLL
-			EmitSound( TF_WEAPON_CANNON_CHARGE_SOUND );
-#endif // CLIENT_DLL
-		}
-		else
-		{
-#ifdef CLIENT_DLL
-			StartChargeEffects();
-#endif // CLIENT_DLL
-		}
-	}
-	else
-	{
-		LaunchGrenade();
-	}
+	LaunchGrenade();
 }
 
 //-----------------------------------------------------------------------------
@@ -276,7 +241,7 @@ void CTFGrenadeLauncher::FireProjectileInternal( CTFPlayer* pTFPlayer )
 		
 		if ( m_flDetonateTime > 0.f )
 		{
-			float flDetonateTimeLength = ( gpGlobals->curtime - GetChargeBeginTime() );
+			float flDetonateTimeLength = Clamp(m_flDetonateTime - gpGlobals->curtime, 0.f, GetMortarDetonateTimeLength());
 			pProjectile->SetDetonateTimerLength( flDetonateTimeLength );
 			if ( flDetonateTimeLength == 0.f )
 			{
@@ -358,19 +323,6 @@ void CTFGrenadeLauncher::PostFire()
 	{
 		m_iReloadMode.Set( TF_RELOAD_START );
 	}
-	
-#ifndef CLIENT_DLL
-	if ( CanCharge() )
-	{
-		Vector vPosition;
-		QAngle qAngles;
-		if ( GetAttachment( "muzzle", vPosition, qAngles ) )
-		{
-			CPVSFilter filter( vPosition );
-			TE_TFParticleEffect( filter, 0.f, "loose_cannon_bang", PATTACH_POINT, this, "muzzle" );
-		}
-	}
-#endif
 
 	ResetDetonateTime();
 }
@@ -416,7 +368,6 @@ void CTFGrenadeLauncher::LaunchGrenade( void )
 
 #ifdef CLIENT_DLL
 	C_CTF_GameStats.Event_PlayerFiredWeapon( pPlayer, IsCurrentAttackACrit() );
-	StopSound( TF_WEAPON_CANNON_CHARGE_SOUND );
 #else
 	pPlayer->SpeakWeaponFire();
 	CTF_GameStats.Event_PlayerFiredWeapon( pPlayer, IsCurrentAttackACrit() );
@@ -428,42 +379,6 @@ void CTFGrenadeLauncher::LaunchGrenade( void )
 	{
 		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
 	}
-}
-
-void CTFGrenadeLauncher::AddDonkVictim( const CBaseEntity* pVictim )
-{
-	// Clear out old donk victims
-	FOR_EACH_VEC_BACK( m_vecDonkVictims, i )
-	{
-		if( m_vecDonkVictims[i].m_flExpireTime <= gpGlobals->curtime )
-		{
-			m_vecDonkVictims.Remove( i );
-		}
-	}
-
-	// Add new donk victim
-	Donks_t& donk = m_vecDonkVictims[ m_vecDonkVictims.AddToTail() ];
-	donk.m_hVictim.Set( pVictim );
-	donk.m_flExpireTime = gpGlobals->curtime + tf_double_donk_window.GetFloat();
-}
-
-
-bool CTFGrenadeLauncher::IsDoubleDonk( const CBaseEntity* pVictim ) const
-{
-	if( GetWeaponID() != TF_WEAPON_CANNON )
-		return false;
-
-	// Check each donk victim to see if we've donked them recently enough to 
-	// score a "double-donk"
-	FOR_EACH_VEC( m_vecDonkVictims, i )
-	{
-		if( gpGlobals->curtime < m_vecDonkVictims[i].m_flExpireTime && m_vecDonkVictims[i].m_hVictim.Get() == pVictim )
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 float CTFGrenadeLauncher::GetProjectileSpeed( void )
@@ -510,44 +425,9 @@ void CTFGrenadeLauncher::FireFullClipAtOnce( void )
 }
 
 
-bool CTFGrenadeLauncher::CanCharge( void )
-{
-	if ( GetWeaponID() == TF_WEAPON_CANNON )
-	{
-		return GetMortarDetonateTimeLength() > 0.f;
-	}
-
-	return false;
-}
-
-
-float CTFGrenadeLauncher::GetChargeBeginTime( void )
-{
-	// Inverse begin time logic to get charge bar to decrease from a full bar instead of increase from an empty bar
-	float flMortarDetonateTimeLength = GetMortarDetonateTimeLength();
-	float flModDetonateTimeLength = flMortarDetonateTimeLength;
-	if ( m_flDetonateTime > 0.f )
-	{
-		flModDetonateTimeLength = Clamp( m_flDetonateTime - gpGlobals->curtime, 0.f, flMortarDetonateTimeLength );
-	}
-
-	return gpGlobals->curtime - flModDetonateTimeLength;
-}
-
-
-float CTFGrenadeLauncher::GetChargeMaxTime( void )
-{
-	return GetMortarDetonateTimeLength();
-}
-
-
 void CTFGrenadeLauncher::ResetDetonateTime()
 {
 	m_flDetonateTime = 0.f;
-
-#ifdef CLIENT_DLL
-	StopChargeEffects();
-#endif // CLIENT_DLL
 }
 
 
@@ -560,33 +440,6 @@ float CTFGrenadeLauncher::GetMortarDetonateTimeLength()
 
 
 #ifdef CLIENT_DLL
-void CTFGrenadeLauncher::StartChargeEffects()
-{
-	if ( !m_pCannonFuseSparkEffect )
-	{
-		m_pCannonFuseSparkEffect = ParticleProp()->Create( "loose_cannon_sparks", PATTACH_POINT_FOLLOW, "cannon_fuse" );
-	}
-	if ( !m_pCannonCharge )
-	{
-		m_pCannonCharge = ParticleProp()->Create( "loose_cannon_buildup_smoke3", PATTACH_POINT_FOLLOW, "muzzle" );
-	}
-}
-
-
-void CTFGrenadeLauncher::StopChargeEffects()
-{
-	if ( m_pCannonFuseSparkEffect )
-	{
-		ParticleProp()->StopEmission( m_pCannonFuseSparkEffect );
-		m_pCannonFuseSparkEffect = NULL;
-	}
-	if ( m_pCannonCharge )
-	{
-		ParticleProp()->StopEmission( m_pCannonCharge );
-		m_pCannonCharge = NULL;
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------

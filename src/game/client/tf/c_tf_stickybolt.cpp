@@ -53,34 +53,6 @@ void CreateCrossbowBoltTF( const Vector &vecOrigin, const Vector &vecDirection, 
 	case TF_PROJECTILE_ARROW:
 		pszModelName = g_pszArrowModels[MODEL_ARROW_REGULAR];
 		break;
-	case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
-		pszModelName = g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR];
-		flDirOffset = -2.0f;
-		break;
-	case TF_PROJECTILE_FESTIVE_ARROW:
-		pszModelName = g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR];
-		break;
-	case TF_PROJECTILE_HEALING_BOLT:
-		pszModelName = g_pszArrowModels[MODEL_SYRINGE];
-		flDirOffset = 0.0f;
-		flScale = 3.0f;
-		break;
-	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-		pszModelName = g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT];
-		flScale = 2.5f;
-		break;
-	case TF_PROJECTILE_BREAD_MONSTER:
-	case TF_PROJECTILE_BREADMONSTER_JARATE:
-	case TF_PROJECTILE_BREADMONSTER_MADMILK:
-		pszModelName = g_pszArrowModels[MODEL_BREAD_MONSTER];
-		flLifeTime = 8.0f;
-		flScale = 2.5f;
-		break;
-	case TF_PROJECTILE_GRAPPLINGHOOK:
-		pszModelName = g_pszArrowModels[MODEL_GRAPPLINGHOOK];
-		flDirOffset = 0.0f;
-		flLifeTime = 0.1f;
-		break;
 	default:
 		// Unsupported Model
 		Assert( 0 );

@@ -36,14 +36,6 @@ enum FlameThrowerState_t
 	FT_STATE_SECONDARY,
 };
 
-enum FlameThrowerMode_t
-{
-	TF_FLAMETHROWER_MODE_NORMAL = 0,
-	TF_FLAMETHROWER_MODE_PHLOG = 1,
-	TF_FLAMETHROWER_MODE_GIANT = 2,
-	TF_FLAMETHROWER_MODE_RAINBOW = 3
-};
-
 #define MAX_PARTICLE_EFFECT_NAME_LENGTH 128
 
 //=========================================================
@@ -156,7 +148,6 @@ public:
 	virtual void	FireGameEvent( IGameEvent *event ) OVERRIDE;
 
 	void CalculateHalloweenSpell( void );
-	int GetFlameThrowerMode( void ) const { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, set_weapon_mode ); return iMode; }
 	bool IsCritFire( void ) { return m_bCritFire; }
 
 private:

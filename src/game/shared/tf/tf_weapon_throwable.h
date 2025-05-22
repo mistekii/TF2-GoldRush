@@ -23,8 +23,6 @@
 #define CTFProjectile_Throwable C_TFProjectile_Throwable
 #define CTFProjectile_ThrowableRepel C_TFProjectile_ThrowableRepel
 #define CTFProjectile_ThrowableBrick C_TFProjectile_ThrowableBrick
-#define CTFProjectile_ThrowableBreadMonster C_TFProjectile_ThrowableBreadMonster
-#define CTFProjectile_BreadMonster_Jarate C_TFProjectile_BreadMonster_Jarate
 
 #endif
 
@@ -217,61 +215,5 @@ public:
 #endif	// GAME_DLL
 
 };
-
-// *************************************************************************************************************************
-class CTFProjectile_ThrowableBreadMonster : public CTFProjectile_Throwable
-{
-public:
-	DECLARE_CLASS( CTFProjectile_ThrowableBreadMonster, CTFProjectile_Throwable );
-	DECLARE_NETWORKCLASS();
-
-	virtual void		SetCustomPipebombModel()			{ SetModel( "models/weapons/c_models/c_breadmonster/c_breadmonster.mdl" ); }
-	virtual bool		ExplodesOnHit()						{ return true; }
-
-#ifdef GAME_DLL
-	virtual int			GetProjectileType( void ) const OVERRIDE { return TF_PROJECTILE_BREAD_MONSTER; }
-
-	virtual void OnHit( CBaseEntity *pOther );
-	virtual void Detonate();		// Timer based 'Explode' Just Remove
-	virtual void Explode( trace_t *pTrace, int bitsDamageType );
-
-	virtual float		GetDamage()							{ return RemapVal( m_flChargePercent, 0, 1, 40.0f, 85.0f ); }
-	virtual float		GetDamageRadius() const				{ return 0.0f; }
-
-	virtual const char *GetExplodeEffectParticle() const	{ return "breadjar_impact"; }
-	virtual const char *GetThrowSoundEffect() const			{ return "Weapon_bm_throwable.throw"; }
-	virtual const char *GetExplodeEffectSound()	const		{ return "Weapon_bm_throwable.smash"; }
-#endif	// GAME_DLL
-
-};
-
-
-// *************************************************************************************************************************
-//class CTFProjectile_BreadMonster_Jarate : public CTFProjectile_Throwable
-//{
-//public:
-//	DECLARE_CLASS( CTFProjectile_BreadMonster_Jarate, CTFProjectile_Throwable );
-//	DECLARE_NETWORKCLASS();
-//
-//	virtual int			GetProjectileType( void )			{ return TF_PROJECTILE_BREAD_MONSTER; }
-//	virtual void		SetCustomPipebombModel()			{ SetModel( "models/weapons/c_models/c_breadmonster/c_breadmonster.mdl" ); }
-//	virtual bool		ExplodesOnHit()						{ return true; }
-////
-////#ifdef GAME_DLL
-//	virtual void OnHit( CBaseEntity *pOther );
-//	virtual void Detonate();		// Timer based 'Explode' Just Remove
-//	virtual void Explode( trace_t *pTrace, int bitsDamageType );
-////
-//	virtual float		GetDamage()							{ return 0.0f; }
-//	virtual float		GetDamageRadius() const				{ return 0.0f; }
-//
-//	virtual const char *GetExplodeEffectParticle() const	{ return "breadjar_impact"; }
-//	virtual const char *GetThrowSoundEffect() const			{ return "Weapon_bm_throwable.throw"; }
-//	virtual const char *GetExplodeEffectSound()	const		{ return "Weapon_bm_throwable.smash"; }
-//#endif	// GAME_DLL
-
-//};
-
-
 
 #endif // TF_WEAPON_THROWABLE_H

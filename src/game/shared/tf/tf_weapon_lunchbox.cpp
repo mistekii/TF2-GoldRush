@@ -63,12 +63,6 @@ END_DATADESC()
 #endif
 
 #define LUNCHBOX_DROP_MODEL  "models/items/plate.mdl"
-#define LUNCHBOX_STEAK_DROP_MODEL  "models/workshop/weapons/c_models/c_buffalo_steak/plate_buffalo_steak.mdl"
-#define LUNCHBOX_ROBOT_DROP_MODEL  "models/items/plate_robo_sandwich.mdl"
-#define LUNCHBOX_FESTIVE_DROP_MODEL  "models/items/plate_sandwich_xmas.mdl"
-#define LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL		"models/workshop/weapons/c_models/c_chocolate/plate_chocolate.mdl"
-#define LUNCHBOX_BANANA_DROP_MODEL  "models/items/banana/plate_banana.mdl"
-#define LUNCHBOX_FISHCAKE_DROP_MODEL	"models/workshop/weapons/c_models/c_fishcake/plate_fishcake.mdl"
 
 #define LUNCHBOX_DROPPED_MINS	Vector( -17, -17, -10 )
 #define LUNCHBOX_DROPPED_MAXS	Vector( 17, 17, 10 )
@@ -121,12 +115,6 @@ void CTFLunchBox::Precache( void )
 		PrecacheModel( "models/items/medkit_medium.mdl" );
 		PrecacheModel( "models/items/medkit_medium_bday.mdl" );
 		PrecacheModel( LUNCHBOX_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_STEAK_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_ROBOT_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_FESTIVE_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_BANANA_DROP_MODEL );
-		PrecacheModel( LUNCHBOX_FISHCAKE_DROP_MODEL );
 	}
 
 	BaseClass::Precache();
@@ -220,12 +208,6 @@ void CTFLunchBox::SecondaryAttack( void )
 	const char *pszHealthKit;	
 	switch ( nLunchBoxType )
 	{
-	case LUNCHBOX_CHOCOLATE_BAR:
-	case LUNCHBOX_BANANA:
-	case LUNCHBOX_FISHCAKE:
-		pszHealthKit = "item_healthkit_small";
-		break;
-
 	case LUNCHBOX_ADDS_AMMO:
 		pszHealthKit = "item_healthammokit";
 		break;
@@ -242,38 +224,7 @@ void CTFLunchBox::SecondaryAttack( void )
 		AngleVectors( angForward, &vecForward, &vecRight, &vecUp );
 		Vector vecVelocity = vecForward * 500.0;
 		
-		if ( nLunchBoxType == LUNCHBOX_ADDS_MINICRITS )
-		{
-			pMedKit->SetModel( LUNCHBOX_STEAK_DROP_MODEL );
-		}
-		else if ( nLunchBoxType == LUNCHBOX_STANDARD_ROBO )
-		{
-			pMedKit->SetModel( LUNCHBOX_ROBOT_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_STANDARD_FESTIVE )
-		{
-			pMedKit->SetModel( LUNCHBOX_FESTIVE_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR )
-		{
-			pMedKit->SetModel( LUNCHBOX_CHOCOLATE_BAR_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else if ( nLunchBoxType == LUNCHBOX_BANANA )
-		{
-			pMedKit->SetModel( LUNCHBOX_BANANA_DROP_MODEL );
-		}
-		else if ( nLunchBoxType == LUNCHBOX_FISHCAKE )
-		{
-			pMedKit->SetModel( LUNCHBOX_FISHCAKE_DROP_MODEL );
-			pMedKit->m_nSkin = ( pPlayer->GetTeamNumber() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		else
-		{
-			pMedKit->SetModel( LUNCHBOX_DROP_MODEL );
-		}
+		pMedKit->SetModel( LUNCHBOX_DROP_MODEL );
 
 		// clear out the overrides so the thrown sandvich/steak look correct in either vision mode
 		pMedKit->ClearModelIndexOverrides();
@@ -310,7 +261,7 @@ void CTFLunchBox::DrainAmmo( bool bForceCooldown )
 	// If we're damaged while eating/taunting, bForceCooldown will be true
 	if ( pOwner->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
 	{
-		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS || iLunchboxType == LUNCHBOX_CHOCOLATE_BAR || iLunchboxType == LUNCHBOX_FISHCAKE || bForceCooldown )
+		if ( pOwner->GetHealth() < pOwner->GetMaxHealth() || bForceCooldown )
 		{
 			pOwner->m_Shared.SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, 0.f );
 		}
@@ -345,28 +296,6 @@ void CTFLunchBox::DrainAmmo( bool bForceCooldown )
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void CTFLunchBox::Detach( void )
-{
-#ifdef GAME_DLL
-	// Terrible - but for now, we're the only place that adds this (custom) attribute
-	if ( GetLunchboxType() == LUNCHBOX_CHOCOLATE_BAR || GetLunchboxType() == LUNCHBOX_FISHCAKE )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
-		if ( pOwner )
-		{
-			// Prevents use-then-switch-class exploit (heavy->scout)
-			// Not a big deal in pubs, but it can mess with competitive
-			pOwner->RemoveCustomAttribute( "hidden maxhealth non buffed" );
-		}
-	}
-#endif
-
-	BaseClass::Detach();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
 bool CTFLunchBox::Holster( CBaseCombatWeapon *pSwitchingTo /* = NULL */ )
 { 
 //	SetBroken( false );
@@ -384,33 +313,9 @@ void CTFLunchBox::ApplyBiteEffects( CTFPlayer *pPlayer )
 
 	int nLunchBoxType = GetLunchboxType();
 
-	const float DALOKOHS_MAXHEALTH_BUFF = 50.f;
-
-	if ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE )
-	{
-		// add 50 health to player for 30 seconds
-		pPlayer->AddCustomAttribute( "hidden maxhealth non buffed", DALOKOHS_MAXHEALTH_BUFF, 30.f );
-	}
-	else if ( nLunchBoxType == LUNCHBOX_ADDS_MINICRITS )
-	{
-		static const float s_fSteakSandwichDuration = 16.0f;
-
-		// Steak sandvich.
-		pPlayer->m_Shared.AddCond( TF_COND_ENERGY_BUFF, s_fSteakSandwichDuration );
-		pPlayer->m_Shared.AddCond( TF_COND_CANNOT_SWITCH_FROM_MELEE, s_fSteakSandwichDuration );
-		pPlayer->m_Shared.SetBiteEffectWasApplied();
-
-		return;
-	}
-	
 	// Then heal the player
-	int iHeal = ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE ) ? 25 : 75;
+	int iHeal = 75;
 	int iHealType = DMG_GENERIC;
-	if ( ( nLunchBoxType == LUNCHBOX_CHOCOLATE_BAR || nLunchBoxType == LUNCHBOX_FISHCAKE ) && pPlayer->GetHealth() < ( 300.f + DALOKOHS_MAXHEALTH_BUFF ) )
-	{
-		iHealType = DMG_IGNORE_MAXHEALTH;
-		iHeal = Min( 25, 350 - pPlayer->GetHealth() );
-	}
 
 	float flHealScale = 1.0f;
 	CALL_ATTRIB_HOOK_FLOAT( flHealScale, lunchbox_healing_scale );
@@ -537,31 +442,6 @@ bool CTFLunchBox_Drink::Holster( CBaseCombatWeapon *pSwitchingTo )
 	}
 
 	return BaseClass::Holster( pSwitchingTo );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-const char* CTFLunchBox_Drink::ModifyEventParticles( const char* token )
-{
-	if ( GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS )
-	{
-		if ( FStrEq( token, "energydrink_splash") )
-		{
-			CEconItemView *pItem = m_AttributeManager.GetItem();
-			int iSystems = pItem->GetStaticData()->GetNumAttachedParticles( GetTeamNumber() );
-			for ( int i = 0; i < iSystems; i++ )
-			{
-				attachedparticlesystem_t *pSystem = pItem->GetStaticData()->GetAttachedParticleData( GetTeamNumber(),i );
-				if ( pSystem->iCustomType == 1 )
-				{
-					return pSystem->pszSystemName;
-				}
-			}
-		}
-	}
-
-	return BaseClass::ModifyEventParticles( token );
 }
 
 #endif // CLIENT_DLL

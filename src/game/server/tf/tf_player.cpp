@@ -104,7 +104,6 @@
 #include "tf_gc_server.h"
 #include "tf_logic_halloween_2014.h"
 #include "tf_weapon_knife.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_dropped_weapon.h"
 #include "tf_passtime_logic.h"
 #include "tf_weapon_passtime_gun.h"
@@ -125,7 +124,6 @@
 #include "tf_revive.h"
 #include "tf_logic_halloween_2014.h"
 #include "tf_logic_player_destruction.h"
-#include "tf_weapon_slap.h"
 #include "func_croc.h"
 #include "tf_weapon_bonesaw.h"
 #include "pointhurt.h"
@@ -229,7 +227,6 @@ ConVar tf_test_teleport_home_fx( "tf_test_teleport_home_fx", "0", FCVAR_CHEAT );
 
 ConVar tf_halloween_giant_health_scale( "tf_halloween_giant_health_scale", "10", FCVAR_CHEAT );
 
-ConVar tf_grapplinghook_los_force_detach_time( "tf_grapplinghook_los_force_detach_time", "1", FCVAR_CHEAT );
 ConVar tf_powerup_max_charge_time( "tf_powerup_max_charge_time", "30", FCVAR_CHEAT );
 
 extern ConVar tf_mvm_buybacks_method;
@@ -577,14 +574,11 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( ApplyAbsVelocityImpulse, "" )
 	DEFINE_SCRIPTFUNC( ApplyPunchImpulseX, "" )
 	DEFINE_SCRIPTFUNC( SetUseBossHealthBar, "" )
-	DEFINE_SCRIPTFUNC( IsFireproof, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToTaunt, "" )
 	DEFINE_SCRIPTFUNC( IsRegenerating, "" )
 	DEFINE_SCRIPTFUNC( GetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( SetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( IsUsingActionSlot, "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptGetGrapplingHookTarget, "GetGrapplingHookTarget", "What entity is the player grappling?" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptSetGrapplingHookTarget, "SetGrapplingHookTarget", "Set the player's target grapple entity" )
 	DEFINE_SCRIPTFUNC( AddCustomAttribute, "Add a custom attribute to the player" )
 	DEFINE_SCRIPTFUNC( RemoveCustomAttribute, "Remove a custom attribute to the player" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptAddCond, "AddCond", "" )
@@ -612,9 +606,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsRageDraining, "IsRageDraining", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetRageMeter, "GetRageMeter", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptSetRageMeter, "SetRageMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptGetScoutHypeMeter, "GetScoutHypeMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptSetScoutHypeMeter, "SetScoutHypeMeter", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptIsHypeBuffed, "IsHypeBuffed", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsJumping, "IsJumping", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsAirDashing, "IsAirDashing", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptIsControlStunned, "IsControlStunned", "" )
@@ -633,7 +624,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetKillAssists, "GetKillAssists", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetBonusPoints, "GetBonusPoints", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptResetScores, "ResetScores", "" )
-	DEFINE_SCRIPTFUNC_NAMED( ScriptIsParachuteEquipped, "IsParachuteEquipped", "" )
 
 	DEFINE_SCRIPTFUNC( GetCurrency, "Get player's cash for game modes with upgrades, ie. MvM" )
 	DEFINE_SCRIPTFUNC( SetCurrency, "Set player's cash for game modes with upgrades, ie. MvM" )
@@ -821,7 +811,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropFloat( SENDINFO( m_flKartNextAvailableBoost ) ),
 	SendPropInt( SENDINFO( m_iKartHealth ) ),
 	SendPropInt( SENDINFO( m_iKartState ) ),
-	SendPropEHandle( SENDINFO( m_hGrapplingHookTarget ) ),
 	SendPropEHandle( SENDINFO( m_hSecondaryLastWeapon ) ),
 	SendPropBool( SENDINFO( m_bUsingActionSlot ) ),
 	SendPropFloat( SENDINFO( m_flHelpmeButtonPressTime ) ),
@@ -1042,82 +1031,6 @@ void CTFPlayer::ForcePlayerViewAngles( const QAngle& qTeleportAngles )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::SetGrapplingHookTarget( CBaseEntity *pTarget, bool bShouldBleed /*= false*/ )
-{
-	if ( pTarget )
-	{
-		// prevent fall damage after a successful hook
-		m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_SAFEFALL );
-		m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_LATCHED );
-	}
-	else
-	{
-		m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK_LATCHED );
-	}
-
-	CBaseEntity *pPreviousTarget = m_hGrapplingHookTarget;
-	m_hGrapplingHookTarget = pTarget;
-	
-	if ( pTarget )
-	{
-		if ( pTarget->IsPlayer() )
-		{
-			CTFPlayer *pTargetPlayer = ToTFPlayer( pTarget );
-
-			m_Shared.AddCond( TF_COND_GRAPPLED_TO_PLAYER );
-
-			// make player bleed
-			if ( bShouldBleed )
-			{
-				CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-				if ( pGrapplingHook )
-					pTargetPlayer->m_Shared.MakeBleed( this, pGrapplingHook, 0, TF_BLEEDING_DMG, true );
-
-				pTargetPlayer->m_nHookAttachedPlayers++;
-			}
-
-			if ( !pTargetPlayer->m_Shared.InCond( TF_COND_GRAPPLINGHOOK_BLEEDING ) && pTargetPlayer->m_nHookAttachedPlayers > 0 )
-			{
-				pTargetPlayer->m_Shared.AddCond( TF_COND_GRAPPLINGHOOK_BLEEDING );
-			}
-			if ( !pTargetPlayer->m_Shared.InCond( TF_COND_GRAPPLED_BY_PLAYER ) && pTargetPlayer->m_nHookAttachedPlayers > 0 )
-			{
-				pTargetPlayer->m_Shared.AddCond( TF_COND_GRAPPLED_BY_PLAYER );
-			}
-		}
-
-		m_flLastSeenHookTarget = gpGlobals->curtime;
-	}
-	else
-	{
-		if ( pPreviousTarget && pPreviousTarget->IsPlayer() )
-		{
-			CTFPlayer *pPreviousTargetPlayer = ToTFPlayer( pPreviousTarget );
-
-			m_Shared.RemoveCond( TF_COND_GRAPPLED_TO_PLAYER );
-			
-			// try to remove bleeding from hook if there's one
-			if ( pPreviousTargetPlayer->m_Shared.InCond( TF_COND_BLEEDING ) )
-			{
-				CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-				if ( pGrapplingHook )
-					pPreviousTargetPlayer->m_Shared.StopBleed( this, pGrapplingHook );
-			}
-
-			pPreviousTargetPlayer->m_nHookAttachedPlayers--;
-			Assert( pPreviousTargetPlayer->m_nHookAttachedPlayers >= 0 );
-			if ( pPreviousTargetPlayer->m_nHookAttachedPlayers == 0 )
-			{
-				pPreviousTargetPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK_BLEEDING );
-				pPreviousTargetPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLED_BY_PLAYER );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFPlayer::CanBeForcedToLaugh( void )
 {
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsBot() && ( GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
@@ -1222,50 +1135,6 @@ void CTFPlayer::TFPlayerThink()
 				pGhost->ApplyGenericPushbackImpulse( tf_halloween_kart_punting_ghost_force_scale.GetFloat() * flImpactForce * vPuntDir, nullptr );
 				pGhost->EmitSound( "BumperCar.HitGhost" );
 				pGhost->m_flGhostLastHitByKartTime = gpGlobals->curtime;
-			}
-		}
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		if ( IsUsingActionSlot() && GetActiveTFWeapon() && GetActiveTFWeapon()->GetWeaponID() != TF_WEAPON_GRAPPLINGHOOK )
-		{
-			CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-			if ( pGrapplingHook )
-			{
-				Weapon_Switch( pGrapplingHook );
-			}
-		}
-
-		CBaseEntity *pHookTarget = GetGrapplingHookTarget();
-		if ( pHookTarget )
-		{
-			// detatch hook if the object's picked up
-			if ( pHookTarget->IsBaseObject() )
-			{
-				CBaseObject *pObj = assert_cast< CBaseObject* >( pHookTarget );
-				if ( pObj->IsCarried() )
-				{
-					SetGrapplingHookTarget( NULL );
-					pHookTarget = NULL;
-				}
-			}
-
-			// check if something is blocking the player from traveling to the hook target
-			if ( pHookTarget )
-			{
-				trace_t tr;
-				CTraceFilterLOS filter( this, COLLISION_GROUP_PLAYER_MOVEMENT, pHookTarget );
-				UTIL_TraceLine( WorldSpaceCenter(), pHookTarget->WorldSpaceCenter(), MASK_SOLID, &filter, &tr );
-				if ( !tr.DidHit() )
-				{
-					m_flLastSeenHookTarget = gpGlobals->curtime;
-				}
-				else if ( gpGlobals->curtime - m_flLastSeenHookTarget > tf_grapplinghook_los_force_detach_time.GetFloat() )
-				{
-					// force to detach if the hooker lost sight of the target for sometime
-					SetGrapplingHookTarget( NULL );
-				}
 			}
 		}
 	}
@@ -1455,68 +1324,6 @@ void CTFPlayer::TFPlayerThink()
 		SpeakConceptIfAllowed( MP_CONCEPT_PLAYER_HELP );
 	}
 #endif
-
-	// Wrenchmotron taunt effect
-	if ( m_bIsTeleportingUsingEurekaEffect )
-	{
-		if ( m_teleportHomeFlashTimer.HasStarted() && m_teleportHomeFlashTimer.IsElapsed() )
-		{
-			m_teleportHomeFlashTimer.Invalidate();
-
-			if ( !tf_test_teleport_home_fx.GetBool() )
-			{
-				// cover up the end of the taunt with a flash
-				color32 colorHit = { 255, 255, 255, 255 };
-				UTIL_ScreenFade( this, colorHit, 0.25f, 0.25f, FFADE_IN );
-			}
-
-			Vector origin = GetAbsOrigin();
-			CPVSFilter filter( origin );
-
-			UserMessageBegin( filter, "PlayerTeleportHomeEffect" );
-				WRITE_BYTE( entindex() );
-			MessageEnd();
-
-			// DispatchParticleEffect( "drg_wrenchmotron_teleport", PATTACH_ABSORIGIN );
-
-			switch( GetTeamNumber() )
-			{
-			case TF_TEAM_RED:
-				TE_TFParticleEffect( filter, 0.0, "teleported_red", origin, vec3_angle );
-				TE_TFParticleEffect( filter, 0.0, "player_sparkles_red", origin, vec3_angle, this, PATTACH_POINT );
-				break;
-			case TF_TEAM_BLUE:
-				TE_TFParticleEffect( filter, 0.0, "teleported_blue", origin, vec3_angle );
-				TE_TFParticleEffect( filter, 0.0, "player_sparkles_blue", origin, vec3_angle, this, PATTACH_POINT );
-				break;
-			default:
-				break;
-			}
-		}
-
-		// teleport home when taunt finishes
-		if ( !IsTaunting() )
-		{
-			// drop the intel we are carrying
-			DropFlag();
-
-			EmitSound( "Building_Teleporter.Send" );
-			m_bIsTeleportingUsingEurekaEffect = false;
-
-			CObjectTeleporter* pTeleExit = assert_cast< CObjectTeleporter* >( GetObjectOfType( OBJ_TELEPORTER, MODE_TELEPORTER_EXIT ) );
-			 
-			// Check if they wanted to go to their teleporter AND their teleporter can accept them
-			if ( m_eEurekaTeleportTarget == EUREKA_TELEPORT_TELEPORTER_EXIT && pTeleExit && ( pTeleExit->GetState() != TELEPORTER_STATE_BUILDING ) )
-			{
-				pTeleExit->RecieveTeleportingPlayer( this );
-			}
-			else
-			{
-				// Default to the spawn
-				TFGameRules()->GetPlayerSpawnSpot( this );
-			}
-		}
-	}
 
 	// Send active weapon's clip state to attached medics
 	bool bSendClipInfo = gpGlobals->curtime > m_flNextClipSendTime &&
@@ -1993,22 +1800,6 @@ void CTFPlayer::PreThink()
 		}
 	}
 
-	// Hype Decreases over time
-	if ( IsPlayerClass( TF_CLASS_SCOUT ) )
-	{
-		float flHypeDecays = 0;
-		CALL_ATTRIB_HOOK_FLOAT( flHypeDecays, hype_decays_over_time );
-
-		if ( flHypeDecays != 0 )
-		{
-			// Loose hype over time
-			float flHype = m_Shared.GetScoutHypeMeter();
-			flHype = flHype - flHypeDecays;
-			m_Shared.SetScoutHypeMeter( flHype );
-			TeamFortress_SetSpeed();
-		}
-	}
-
 }
 
 ConVar mp_idledealmethod( "mp_idledealmethod", "1", FCVAR_GAMEDLL, "Deals with Idle Players. 1 = Sends them into Spectator mode then kicks them if they're still idle, 2 = Kicks them out of the game;" );
@@ -2392,15 +2183,6 @@ void CTFPlayer::ResetKartDamage()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::CancelEurekaTeleport()
-{
-	m_bIsTeleportingUsingEurekaEffect = false;
-	m_teleportHomeFlashTimer.Invalidate();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::PostThink()
 {
 	BaseClass::PostThink();
@@ -2758,9 +2540,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheParticleSystem( "xms_ornament_smash_blue" );
 	PrecacheParticleSystem( "xms_ornament_smash_red" );
 
-	PrecacheParticleSystem( "drg_pomson_muzzleflash" );
-	PrecacheParticleSystem( "drg_pomson_impact" );
-	PrecacheParticleSystem( "drg_pomson_impact_drain" );
 	PrecacheParticleSystem( "dragons_fury_effect" );
 
 	PrecacheParticleSystem( "dxhr_arm_muzzleflash" );
@@ -2794,10 +2573,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheScriptSound( "Bombinomicon.Explode" );
 
 	PrecacheScriptSound( "Weapon_DRG_Wrench.Teleport" );
-	PrecacheScriptSound( "Weapon_Pomson.Single" );
-	PrecacheScriptSound( "Weapon_Pomson.SingleCrit" );
-	PrecacheScriptSound( "Weapon_Pomson.Reload" );
-	PrecacheScriptSound( "Weapon_Pomson.DrainedVictim" );
 
 	PrecacheScriptSound( "BlastJump.Whistle" );
 
@@ -2810,10 +2585,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheModel( "models/props_mvm/mvm_revive_tombstone.mdl" );
 
 	PrecacheScriptSound( "General.banana_slip" ); // Used for SodaPopper Hype Jumps
-
-
-	PrecacheScriptSound( "Parachute_open" );
-	PrecacheScriptSound( "Parachute_close" );
 
 
 	// precache the EOTL bomb cart replacements
@@ -3032,15 +2803,6 @@ void CTFPlayer::ApplyAbsVelocityImpulse( const Vector &vecImpulse )
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_TINY ) && !m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 	{
 		flImpulseScale *= 2.f;
-	}
-
-	// take extra force if you have a parachute deployed in x-y directions
-	if ( m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-	{
-		// don't allow parachute robot to get push in MvM
-		float flHorizontalScale = TFGameRules()->IsMannVsMachineMode() && IsBot() ? 0.f : 1.5f;
-		vecForce.x *= flHorizontalScale;
-		vecForce.y *= flHorizontalScale;
 	}
 
 	CBaseMultiplayerPlayer::ApplyAbsVelocityImpulse( vecForce * flImpulseScale );
@@ -3368,8 +3130,6 @@ void CTFPlayer::Spawn()
 
 	m_Shared.SetSpyCloakMeter( 100.0f );
 	m_Shared.SetScoutEnergyDrinkMeter( 100.0f );
-	m_Shared.SetScoutHypeMeter( 0.0f );
-	m_Shared.StopScoutHypeDrain();
 	m_Shared.SetRageMeter( 0.0f );
 	m_Shared.SetDemomanChargeMeter( 100.0f );
 
@@ -3461,15 +3221,11 @@ void CTFPlayer::Spawn()
 	m_purgatoryPainMultiplier = 1;
 	m_purgatoryPainMultiplierTimer.Invalidate();
 
-	m_bIsTeleportingUsingEurekaEffect = false;
-
 	m_playerMovementStuckTimer.Invalidate();
 
 	m_bIsMiniBoss = false;
 	m_bUseBossHealthBar = false;
 
-	m_hGrapplingHookTarget = NULL;
-	m_nHookAttachedPlayers = 0;
 	m_bUsingActionSlot = false;
 
 	m_flHelpmeButtonPressTime = 0.f;
@@ -3662,11 +3418,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 			m_Shared.RemoveCond( TF_COND_URINE );
 		}
 
-		if ( m_Shared.InCond( TF_COND_MAD_MILK ) )
-		{
-			m_Shared.RemoveCond( TF_COND_MAD_MILK );
-		}
-
 		if ( m_Shared.InCond( TF_COND_BLEEDING ) )
 		{
 			m_Shared.RemoveCond( TF_COND_BLEEDING );
@@ -3685,11 +3436,6 @@ void CTFPlayer::Regenerate( bool bRefillHealthAndAmmo /*= true*/ )
 		if ( m_Shared.InCond( TF_COND_PHASE ) )
 		{
 			m_Shared.RemoveCond( TF_COND_PHASE );
-		}
-
-		if ( m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
 		}
 
 		if ( m_Shared.InCond( TF_COND_PLAGUE ) )
@@ -4296,7 +4042,6 @@ void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 	CTFWeaponBase *pPrev = dynamic_cast<CTFWeaponBase*>( GetLastWeapon() );
 	if ( ( pCurr && pCurr->GetAttributeContainer()->GetItem()->GetEquippedPositionForClass( GetPlayerClass()->GetClassIndex() ) == LOADOUT_POSITION_ACTION )
 	  || ( pPrev && pPrev->GetAttributeContainer()->GetItem()->GetEquippedPositionForClass( GetPlayerClass()->GetClassIndex() ) == LOADOUT_POSITION_ACTION )
-	  || ( pCurr && pCurr->GetWeaponID() == TF_WEAPON_PARACHUTE )
 	) {
 		m_bRegenerating.Set( false );
 		m_iLastWeaponSlot = 0;
@@ -4603,16 +4348,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 		Weapon_Switch( pThrowable );
 		return;
 	}
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		CTFGrapplingHook *pGrapplingHook = dynamic_cast< CTFGrapplingHook* >( pActionSlotEntity );
-		if ( pGrapplingHook )
-		{
-			Weapon_Switch( pGrapplingHook );
-			return;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4621,26 +4356,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 void CTFPlayer::UseActionSlotItemReleased( void )
 {
 	m_bUsingActionSlot = false;
-
-	if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-	{
-		// if we're using the hook, switch back to the last weapon
-		if ( GetActiveTFWeapon() && GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK )
-		{
-			CBaseCombatWeapon *pLastWeapon = GetLastWeapon();
-			if ( pLastWeapon && Weapon_CanSwitchTo( pLastWeapon ) )
-			{
-				Weapon_Switch( pLastWeapon );
-			}
-			else
-			{
-				// in case we failed to switch back to last weapon for some reason, just find the next best
-				SwitchToNextBestWeapon( pLastWeapon );
-			}
-
-			return;
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4673,18 +4388,6 @@ void CTFPlayer::HelpmeButtonPressed()
 void CTFPlayer::HelpmeButtonReleased()
 {
 	m_flHelpmeButtonPressTime = 0.f;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::AddToSpyKnife( float value, bool force )
-{
-	CTFKnife *pWpn = (CTFKnife *)Weapon_OwnsThisID( TF_WEAPON_KNIFE );
-	if ( !pWpn )
-		return false;
-
-	return pWpn->DecreaseRegenerationTime( value, force );
 }
 
 //-----------------------------------------------------------------------------
@@ -7262,41 +6965,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		}
 		return true;
 	}
-	else if ( FStrEq( pcmd, "eureka_teleport" ) )
-	{
-		if ( ShouldRunRateLimitedCommand( args ) )
-		{
-			CTFWeaponBase* pWeapon = GetActiveTFWeapon();
-			if ( !pWeapon )
-				return true;
-
-			if ( m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-				return true;
-
-			if ( TFGameRules() && TFGameRules()->ArePlayersInHell() )
-				return true;
-
-			int iAltFireTeleportToSpawn = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iAltFireTeleportToSpawn, alt_fire_teleport_to_spawn );
-
-			if ( IsPlayerClass( TF_CLASS_ENGINEER ) && iAltFireTeleportToSpawn )
-			{
-				if ( args.ArgC() == 2 )
-				{
-					m_eEurekaTeleportTarget = (eEurekaTeleportTargets)atoi( args[1] );
-				}
-				else
-				{
-					m_eEurekaTeleportTarget = EUREKA_TELEPORT_HOME;
-				}
-
-				// Do the Eureka Effect teleport taunt
-				Taunt( TAUNT_SPECIAL, MP_CONCEPT_TAUNT_EUREKA_EFFECT_TELEPORT );
-			}
-		}
-
-		return true;
-	}
 	else if ( FStrEq( pcmd, "arena_changeclass" ) )
 	{
 		if ( ShouldRunRateLimitedCommand( args ) )
@@ -8453,56 +8121,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			info.SetDamage( 0.0f );
 		}
 */
-
-		// Apply an impact effect (intensity determined by velocity)
-		if ( m_Shared.InCond( TF_COND_ROCKETPACK ) )
-		{
-			int iImpactPushback = 0;
-			CALL_ATTRIB_HOOK_INT( iImpactPushback, falling_impact_radius_pushback );
-			if ( iImpactPushback )
-			{
-				float flPushAmount = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, tf_rocketpack_impact_push_min.GetFloat(), tf_rocketpack_impact_push_max.GetFloat() );
-				float flPushRadius = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, 150.f, 220.f );
-			
-				// Stun, too?
-				int iImpactStun = 0;
-				CALL_ATTRIB_HOOK_INT( iImpactStun, falling_impact_radius_stun );
-				if ( iImpactStun && flOriginalVelocity >= 100.f )
-				{
-					float flStunTime = RemapValClamped( flOriginalVelocity, 100.f, 1000.f, 1.5f, 3.f );
-					m_Shared.ApplyRocketPackStun( ( bHitEnemy ) ? 5.f : flStunTime );
-				}
-				
-				TFGameRules()->PushAllPlayersAway( GetAbsOrigin(), flPushRadius, flPushAmount, GetEnemyTeam( GetTeamNumber() ) );
-
-				m_Local.m_flFallVelocity = 0.f;
-
-				// Extinguish teammates
-				CUtlVector< CTFPlayer * > vecPlayers;
-				CollectPlayers( &vecPlayers, GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-				FOR_EACH_VEC( vecPlayers, i )
-				{
-					CTFPlayer *pPlayer = vecPlayers[i];
-					if ( !pPlayer )
-						continue;
-
-					if ( !pPlayer->m_Shared.InCond( TF_COND_BURNING ) )
-						continue;
-
-					if ( ( pPlayer->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr() > ( flPushRadius * flPushRadius ) )
-						continue;
-
-					if ( !FVisible( pPlayer, MASK_OPAQUE ) )
-						continue;
-
-					pPlayer->m_Shared.RemoveCond( TF_COND_BURNING );
-					pPlayer->EmitSound( "TFPlayer.FlameOut" );
-					CTF_GameStats.Event_PlayerAwardBonusPoints( this, pPlayer, 10 );
-				}
-			}
-
-			info.SetDamage( Max( info.GetDamage() * 0.25f, 1.f ) );
-		}
 	}
 
 	// Ignore damagers on our team, to prevent capturing rocket jumping, etc.
@@ -8939,37 +8557,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			m_rgbTimeBasedDamage[i] = 0;
 		}
 	}
-
-	const char* pzsMedigunResistEffect = NULL;
 	const char* pzsTeam = GetTeamNumber() == TF_TEAM_RED ? "red" : "blue";
-
-	// If we have one of the medigun resist buffs and get hit with the matching damage type then
-	// spawn a particle above our head to let enemies know their damage is being resisted, and tell
-	// the medic he's doing the right thing.
-
-	bool bMedicBulletResist		= m_Shared.InCond( TF_COND_MEDIGUN_UBER_BULLET_RESIST ) || m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BULLET_RESIST );
-	bool bMedicExplosiveResist	= m_Shared.InCond( TF_COND_MEDIGUN_UBER_BLAST_RESIST )	|| m_Shared.InCond( TF_COND_MEDIGUN_SMALL_BLAST_RESIST );
-	bool bMedicFireResist		= m_Shared.InCond( TF_COND_MEDIGUN_UBER_FIRE_RESIST )	|| m_Shared.InCond( TF_COND_MEDIGUN_SMALL_FIRE_RESIST );
-
-	if( ( bMedicBulletResist && ( bitsDamage & DMG_BULLET	) ) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff1_burst", pzsTeam );
-	}
-	else if( bMedicExplosiveResist	&& ( bitsDamage & DMG_BLAST	) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff2_burst", pzsTeam );
-	}
-	else if( bMedicFireResist && ( bitsDamage & DMG_BURN ) )
-	{
-		pzsMedigunResistEffect = CFmtStr( "vaccinator_%s_buff3_burst", pzsTeam );
-	}
-
-	if( pzsMedigunResistEffect != NULL )
-	{
-		const Vector& vecOrigin = GetAbsOrigin();
-		CPVSFilter filter( vecOrigin );
-		TE_TFParticleEffect( filter, 0, pzsMedigunResistEffect, vecOrigin, vec3_angle );
-	}
 
 	// Display any effect associate with this damage type
 	DamageEffect( info.GetDamage(),bitsDamage );
@@ -9116,44 +8704,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	if ( pWeapon && ( ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH ) || ( pWeapon->GetWeaponID() == TF_WEAPON_SLAP ) ) )
-	{
-		bool bDisguised = m_Shared.InCond( TF_COND_DISGUISED ) && pTFAttacker && ( m_Shared.GetDisguiseTeam() == pTFAttacker->GetTeamNumber() );
-		bool bFish = ( pWeapon->GetWeaponID() == TF_WEAPON_BAT_FISH );
-
-		if ( m_iHealth <= 0 )
-		{
-			info.SetDamageCustom( bFish ? TF_DMG_CUSTOM_FISH_KILL : TF_DMG_CUSTOM_SLAP_KILL );
-		}
-
-		if ( m_iHealth <= 0 || !bDisguised )
-		{
-			// Do you ever find yourself typing "fish damage override" into a million-lines-of-code project and
-			// wondering about the world? Because I do.
-			int iFishDamageOverride = 0;
-			if ( bFish )
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iFishDamageOverride, fish_damage_override );
-			}
-
-			TFGameRules()->DeathNotice( this, info, bFish ? ( iFishDamageOverride ? "fish_notice__arm" : "fish_notice" ) : "slap_notice" );
-		}
-	}
-
-	if ( IsPlayerClass( TF_CLASS_SCOUT) )
-	{
-		// Lose hype on take damage
-		int iHypeResetsOnTakeDamage = 0;
-		CALL_ATTRIB_HOOK_INT( iHypeResetsOnTakeDamage, lose_hype_on_take_damage );
-		if ( iHypeResetsOnTakeDamage != 0 )
-		{
-			// Loose x hype on jump
-			float flHype = m_Shared.GetScoutHypeMeter();
-			m_Shared.SetScoutHypeMeter( flHype - iHypeResetsOnTakeDamage * info.GetDamage() );
-			TeamFortress_SetSpeed();
-		}
-	}
-
 	// Add humilation Obituary here for throwable hits
 	//if ( info.GetDamageCustom() == TF_DMG_CUSTOM_THROWABLE )
 	//{
@@ -9174,40 +8724,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( pTFAttacker )
 	{
 		pTFAttacker->OnDealtDamage( this, info );
-	}
-
-	bool bIsPyroDetonateJumping = ( IsPlayerClass( TF_CLASS_PYRO ) && pAttacker == this && !(GetFlags() & FL_ONGROUND) && !(GetFlags() & FL_INWATER));
-	if ( bIsDemomanPipeJumping || bIsSoldierRocketJumping || bIsPyroDetonateJumping )
-	{
-		// Are we being healed by any QuickFix medics?
-		for ( int i = 0; i < m_Shared.m_nNumHealers; i++ )
-		{
-			CTFPlayer *pMedic = ToTFPlayer( m_Shared.m_aHealers[i].pHealer );
-			if ( !pMedic )
-				continue;
-
-			// Share blast jump with them
-			CWeaponMedigun *pMedigun = dynamic_cast< CWeaponMedigun* >( pMedic->GetActiveTFWeapon() );
-			if ( pMedigun && pMedigun->GetMedigunType() == MEDIGUN_QUICKFIX )
-			{
-// 				Vector vecDir = vec3_origin;
-// 				if ( info.GetInflictor() )
-// 				{
-// 					vecDir = info.GetInflictor()->WorldSpaceCenter() - Vector ( 0.0f, 0.0f, 10.0f ) - WorldSpaceCenter();
-// 					info.GetInflictor()->AdjustDamageDirection( info, vecDir, this );
-// 					VectorNormalize( vecDir );
-// 				}
-// 				pMedic->RemoveFlag( FL_ONGROUND );
-// 				pMedic->ApplyPushFromDamage( info, vecDir );
-
-				float flForce = GetAbsVelocity().Length();
-				flForce = MIN( flForce, 900.f );
-				Vector vecNewVelocity = GetAbsVelocity();
-				VectorNormalize( vecNewVelocity );
-				pMedic->RemoveFlag( FL_ONGROUND );
-				pMedic->ApplyAbsVelocityImpulse( vecNewVelocity * flForce );
-			}
-		}
 	}
 
 	if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_SOLDIER ) )
@@ -9949,7 +9465,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	if ( pTFWeapon && WeaponID_IsSniperRifle( pTFWeapon->GetWeaponID() ) )
 	{
 		CTFSniperRifle *pSniper = dynamic_cast<CTFSniperRifle*>( pTFWeapon );
-		if ( pSniper && ( pSniper->IsZoomed() || ( pSniper->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) ) )
+		if ( pSniper && pSniper->IsZoomed() )
 		{
 			float flJarateTime = pSniper->GetJarateTime();
 			if ( flJarateTime >= 1.f )
@@ -10021,10 +9537,7 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			CTFLunchBox *pLunchBox = dynamic_cast <CTFLunchBox *> ( m_Shared.GetActiveTFWeapon() );
 			if ( pLunchBox )
 			{
-				if ( ( pLunchBox->GetLunchboxType() != LUNCHBOX_CHOCOLATE_BAR ) && ( pLunchBox->GetLunchboxType() != LUNCHBOX_FISHCAKE ) )
-				{
-					pLunchBox->DrainAmmo( true );
-				}
+				pLunchBox->DrainAmmo( true );
 			}
 		}
 	}
@@ -10997,8 +10510,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	m_bIsTeleportingUsingEurekaEffect = false;
-
 	for ( int i=0; i<GetNumWearables(); ++i )
 	{
 		CTFWearableLevelableItem *pItem = dynamic_cast< CTFWearableLevelableItem* >( GetWearable(i) );
@@ -11135,17 +10646,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 				{
 					pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_KILL_RJER );
 				}
-
-				if ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC )
-				{
-					if ( ( info.GetDamageCustom() == TF_DMG_CUSTOM_HEADSHOT ) && ( info.GetDamageType() & DMG_CRITICAL ) )
-					{
-						if ( pPlayerAttacker->m_Shared.IsAiming() == false )
-						{
-							pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_CLASSIC_RIFLE_HEADSHOT_JUMPER );
-						}
-					}
-				}
 			}
 		}
 	}
@@ -11178,19 +10678,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			}
 		}
 	}
-	else if ( IsPlayerClass( TF_CLASS_SNIPER ) )
-	{
-		if ( pPlayerAttacker )
-		{
-			if ( GetActiveTFWeapon() && ( GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-			{
-				if ( pKillerWeapon && ( pKillerWeapon->GetTFWpnData().m_iWeaponType == TF_WPN_TYPE_MELEE ) )
-				{
-					pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_MELEE_KILL_CLASSIC_RIFLE_SNIPER );
-				}
-			}
-		}
-	}
 
 	if ( pPlayerAttacker )
 	{
@@ -11213,17 +10700,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			if ( pKillerWeapon && WeaponID_IsSniperRifle( pKillerWeapon->GetWeaponID() ) && pPlayerAttacker->m_Shared.IsAiming() == false )
 			{
 				pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_KILL_UNSCOPED );
-			}
-
-			if ( pKillerWeapon && ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-			{
-				if ( ( info.GetDamageCustom() == TF_DMG_CUSTOM_HEADSHOT ) && ( info.GetDamageType() & DMG_CRITICAL ) )
-				{
-					if ( pPlayerAttacker->m_Shared.IsAiming() == false )
-					{
-						pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_CLASSIC_RIFLE_NOSCOPE_HEADSHOT );
-					}
-				}
 			}
 		}
 		else if ( pPlayerAttacker->IsPlayerClass( TF_CLASS_SPY ) )
@@ -11303,8 +10779,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// note that we don't check to see if the sentry is still alive
 			if ( pKillerWeapon &&
 				( pKillerWeapon->GetWeaponID() == TF_WEAPON_SENTRY_REVENGE ||
-				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_PRIMARY ||
-				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_BUILDING_RESCUE ) )
+				  pKillerWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_PRIMARY ) )
 			{
 				if ( m_AchievementData.IsSentryDamagerInHistory( pPlayerAttacker, 5.0 ) )
 				{
@@ -11977,14 +11452,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	// Create the ragdoll entity.
 	if ( bGib || bRagdoll )
 	{
-// 		if ( !bBurning && pKillerWeapon && ( pKillerWeapon->GetWeaponID() == TF_WEAPON_SLAP ) )
-// 		{
-// 			CTFSlap *pSlap = dynamic_cast< CTFSlap* >( pKillerWeapon );
-// 			if ( pSlap )
-// 			{
-// 				bBurning = ( pSlap->GetNumKills() > 1 ); // first kill doesn't burn
-// 			}
-// 		}
 
 		CreateRagdollEntity( bGib, bBurning, bElectrocuted, bOnGround, bCloakedCorpse, iGoldRagdoll != 0, iIceRagdoll != 0, iRagdollsBecomeAsh != 0, iCustomDamage, ( iCritOnHardHit != 0 ) );
 	}
@@ -16898,7 +16365,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 					// Pyro needs high defense while he's taunting
 					//m_Shared.AddCond( TF_COND_DEFENSEBUFF_HIGH, 3.0f );
 					m_Shared.AddCond( TF_COND_INVULNERABLE_USER_BUFF, 2.60f );
-					m_Shared.AddCond( TF_COND_MEGAHEAL, 2.60f );
 				}
 			}
 		}
@@ -16922,39 +16388,10 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 
 				// Only count sandviches for "eat 100 sandviches" achievement
 				CTFLunchBox *pLunchbox = (CTFLunchBox*)pActiveWeapon;
-				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_ROBO ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_FESTIVE ) )
+				if ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD )
 				{
 					AwardAchievement( ACHIEVEMENT_TF_HEAVY_EAT_SANDWICHES );
 				}
-			}
-		}
-	}
-	else if ( iTauntIndex == TAUNT_SPECIAL )
-	{
-		if ( IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			// Wrenchmotron taunt teleport home effect
-			if ( !Q_stricmp( szResponse, "scenes/player/engineer/low/taunt_drg_melee.vcd" ) )
-			{
-				m_bIsTeleportingUsingEurekaEffect = true;
-
-				m_teleportHomeFlashTimer.Start( 1.9f );
-
-				// play teleport sound at location we are leaving
-				Vector soundOrigin = WorldSpaceCenter();
-				CPASAttenuationFilter filter( soundOrigin );
-
-				EmitSound_t ep;
-				ep.m_nChannel = CHAN_STATIC;
-				ep.m_pSoundName = "Weapon_DRG_Wrench.Teleport";
-				ep.m_flVolume = 1.0f;
-				ep.m_SoundLevel = SNDLVL_150dB;
-				ep.m_nFlags = 0;
-				ep.m_nPitch = PITCH_NORM;
-				ep.m_pOrigin = &soundOrigin;
-
-				int worldEntIndex = 0;
-				EmitSound( filter, worldEntIndex, ep );
 			}
 		}
 	}
@@ -17088,11 +16525,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 			m_flTauntAttackTime = gpGlobals->curtime + 3.695f;
 			m_iTauntAttack = TAUNTATK_ENGINEER_GUITAR_SMASH;
 		}
-		else if ( !V_stricmp( szResponse, "scenes/player/engineer/low/taunt09.vcd" ) )
-		{
-			m_flTauntAttackTime = gpGlobals->curtime + 3.2f;
-			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_IMPALE;
-		}
 	}
 }
 
@@ -17101,9 +16533,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 //-----------------------------------------------------------------------------
 void CTFPlayer::CancelTaunt( void )
 {
-	m_bIsTeleportingUsingEurekaEffect = false;
-	m_teleportHomeFlashTimer.Reset();
-
 	StopTaunt();
 }
 
@@ -17458,8 +16887,7 @@ void CTFPlayer::DoTauntAttack( void )
 			TFGameRules()->RadiusDamage( radiusinfo );
 		}
 	}
-	else if ( iTauntAttack == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntAttack == TAUNTATK_SNIPER_ARROW_STAB_KILL ||
-			  iTauntAttack == TAUNTATK_ENGINEER_ARM_IMPALE || iTauntAttack == TAUNTATK_ENGINEER_ARM_KILL || iTauntAttack == TAUNTATK_ENGINEER_ARM_BLEND )
+	else if ( iTauntAttack == TAUNTATK_SNIPER_ARROW_STAB_IMPALE || iTauntAttack == TAUNTATK_SNIPER_ARROW_STAB_KILL )
 	{
 		Vector vecForward;
 		AngleVectors( EyeAngles(), &vecForward );
@@ -17479,7 +16907,6 @@ void CTFPlayer::DoTauntAttack( void )
 				switch ( iTauntAttack )
 				{
 				case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
-				case TAUNTATK_ENGINEER_ARM_IMPALE:
 					if ( pVictim )
 					{
 						// don't stun giants
@@ -17487,16 +16914,7 @@ void CTFPlayer::DoTauntAttack( void )
 						{
 							pVictim->m_Shared.StunPlayer( 3.0f, 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS, this );
 						}
-
-						if ( iTauntAttack == TAUNTATK_ENGINEER_ARM_IMPALE )
-						{
-							pEnt->TakeDamage( CTakeDamageInfo( this, this, GetActiveTFWeapon(), vecForward, pEnt->WorldSpaceCenter(), 1, DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL ) );
-						}
 					}
-					break;
-
-				case TAUNTATK_ENGINEER_ARM_BLEND:
-					pEnt->TakeDamage( CTakeDamageInfo( this, this, GetActiveTFWeapon(), vecForward, pEnt->WorldSpaceCenter(), 1, DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL ) );
 					break;
 
 				case TAUNTATK_SNIPER_ARROW_STAB_KILL:
@@ -17504,10 +16922,6 @@ void CTFPlayer::DoTauntAttack( void )
 					vecForward = (WorldSpaceCenter() - pEnt->WorldSpaceCenter());
 					VectorNormalize( vecForward );
 					pEnt->TakeDamage( CTakeDamageInfo( this, this, GetActiveTFWeapon(), vecForward * 12000, pEnt->WorldSpaceCenter(), 500.0f, DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_TAUNTATK_ARROW_STAB ) );
-					break;
-
-				case TAUNTATK_ENGINEER_ARM_KILL:
-					pEnt->TakeDamage( CTakeDamageInfo( this, this, GetActiveTFWeapon(), vecForward * 12000, pEnt->WorldSpaceCenter(), 500.0f, DMG_BLAST, TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL ) );
 					break;
 				}
 			}
@@ -17517,22 +16931,6 @@ void CTFPlayer::DoTauntAttack( void )
 		{
 			m_iTauntAttack = TAUNTATK_SNIPER_ARROW_STAB_KILL;
 			m_flTauntAttackTime = gpGlobals->curtime + 1.30;
-		}
-		else if ( iTauntAttack == TAUNTATK_ENGINEER_ARM_IMPALE )
-		{
-			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_BLEND;
-			m_flTauntAttackTime = gpGlobals->curtime + 0.05;
-			m_iTauntAttackCount = 0;
-		}
-		else if ( iTauntAttack == TAUNTATK_ENGINEER_ARM_BLEND )
-		{
-			m_iTauntAttack = TAUNTATK_ENGINEER_ARM_BLEND;
-			m_flTauntAttackTime = gpGlobals->curtime + 0.05;
-			m_iTauntAttackCount++;
-			if ( m_iTauntAttackCount == 13 )
-			{
-				m_iTauntAttack = TAUNTATK_ENGINEER_ARM_KILL;
-			}
 		}
 	}
 	else if ( iTauntAttack == TAUNTATK_HEAVY_EAT )
@@ -17626,29 +17024,22 @@ void CTFPlayer::DoTauntAttack( void )
 			{
 				float flDropDeadTime = ( 100.f / tf_scout_energydrink_consume_rate.GetFloat() ) + 1.f;	// Just in case.  Normally over in 8 seconds.
 
-				CTFLunchBox *pLunchbox = static_cast< CTFLunchBox* >( pActiveWeapon );
-				if ( pLunchbox && pLunchbox->GetLunchboxType() == LUNCHBOX_ADDS_MINICRITS )
-				{
-					m_Shared.AddCond( TF_COND_ENERGY_BUFF, flDropDeadTime );
-				}
-				else
-				{
-					m_Shared.AddCond( TF_COND_PHASE, flDropDeadTime );
 
-					if ( HasTheFlag() )
+				m_Shared.AddCond( TF_COND_PHASE, flDropDeadTime );
+
+				if ( HasTheFlag() )
+				{
+					bool bShouldDrop = true;
+
+					// Always allow teams to hear each other in TD mode
+					if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
 					{
-						bool bShouldDrop = true;
+						bShouldDrop = false;
+					}
 
-						// Always allow teams to hear each other in TD mode
-						if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-						{
-							bShouldDrop = false;
-						}
-
-						if ( bShouldDrop )
-						{
-							DropFlag();
-						}
+					if ( bShouldDrop )
+					{
+						DropFlag();
 					}
 				}
 

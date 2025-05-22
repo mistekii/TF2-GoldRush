@@ -134,11 +134,6 @@ CTFGrenadePipebombProjectile::~CTFGrenadePipebombProjectile()
 //-----------------------------------------------------------------------------
 int CTFGrenadePipebombProjectile::GetWeaponID( void ) const
 {
-	if ( m_iType == TF_GL_MODE_CANNONBALL )
-	{
-		return TF_WEAPON_CANNON;
-	}
-
 	return ( HasStickyEffects() ? TF_WEAPON_GRENADE_PIPEBOMB : TF_WEAPON_GRENADE_DEMOMAN );
 }
 
@@ -391,12 +386,10 @@ int CTFGrenadePipebombProjectile::DrawModel( int flags )
 // TF Pipebomb Grenade Projectile functions (Server specific).
 //
 #define TF_WEAPON_PIPEGRENADE_MODEL		"models/weapons/w_models/w_grenade_grenadelauncher.mdl"
-#define TF_WEAPON_CANNONBALL_MODEL		"models/weapons/w_models/w_cannonball.mdl"
 #define TF_WEAPON_PIPEBOMB_MODEL		"models/weapons/w_models/w_stickybomb.mdl"
 #define TF_WEAPON_PIPEBOMB2_MODEL		"models/weapons/w_models/w_stickybomb2.mdl"
 #define TF_WEAPON_PIPEBOMBD_MODEL		"models/weapons/w_models/w_stickybomb_d.mdl"
 #define TF_WEAPON_PIPEBOMB_BOUNCE_SOUND	"Weapon_Grenade_Pipebomb.Bounce"
-#define TF_WEAPON_CANNON_IMPACT_SOUND	"Weapon_LooseCannon.BallImpact"
 #define TF_WEAPON_GRENADE_DETONATE_TIME		2.0f
 #define TF_WEAPON_GRENADE_XBOX_DAMAGE 112
 
@@ -419,7 +412,6 @@ const char* CTFGrenadePipebombProjectile::GetPipebombClass( int iPipeBombType )
 	case TF_GL_MODE_REGULAR:
 		return "tf_projectile_pipe";
 	case TF_GL_MODE_REMOTE_DETONATE:
-	case TF_GL_MODE_REMOTE_DETONATE_PRACTICE:
 		return "tf_projectile_pipe_remote";
 	default:
 		return "tf_projectile_pipe";
@@ -441,16 +433,6 @@ CTFGrenadePipebombProjectile* CTFGrenadePipebombProjectile::Create( const Vector
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
 		{
 			iPipeBombDetonateType = TF_GL_MODE_REMOTE_DETONATE;
-		}
-		break;
-	case TF_PROJECTILE_PIPEBOMB_PRACTICE:
-		{
-			iPipeBombDetonateType = TF_GL_MODE_REMOTE_DETONATE_PRACTICE;
-		}
-		break;
-	case TF_PROJECTILE_CANNONBALL:
-		{
-			iPipeBombDetonateType = TF_GL_MODE_CANNONBALL;
 		}
 		break;
 	default:
@@ -496,28 +478,14 @@ void CTFGrenadePipebombProjectile::Spawn()
 	{
 		// Set this to max, so effectively they do not self-implode.
 
-		if ( m_iType == TF_GL_MODE_REMOTE_DETONATE_PRACTICE )
-		{
-			SetModel( TF_WEAPON_PIPEBOMB2_MODEL );
-		}
-		else
-		{
-			SetModel( TF_WEAPON_PIPEBOMB_MODEL );
-		}
+		SetModel( TF_WEAPON_PIPEBOMB_MODEL );
 		SetDetonateTimerLength( FLT_MAX );
 		SetContextThink( &CTFGrenadePipebombProjectile::PreArmThink, gpGlobals->curtime + 0.001f, "PRE_ARM_THINK" ); // Next frame.
 		SetTouch( &CTFGrenadePipebombProjectile::StickybombTouch );
 	}
 	else
 	{
-		if ( m_iType == TF_GL_MODE_CANNONBALL )
-		{
-			SetModel( TF_WEAPON_CANNONBALL_MODEL );
-		}
-		else
-		{
-			SetModel( TF_WEAPON_PIPEGRENADE_MODEL );
-		}
+		SetModel( TF_WEAPON_PIPEGRENADE_MODEL );
 		SetDetonateTimerLength( TF_WEAPON_GRENADE_DETONATE_TIME );
 		SetTouch( &CTFGrenadePipebombProjectile::PipebombTouch );
 	}
@@ -553,9 +521,6 @@ void CTFGrenadePipebombProjectile::Precache()
 	iModel = PrecacheModel( TF_WEAPON_PIPEGRENADE_MODEL );
 	PrecacheGibsForModel( iModel );
 
-	iModel = PrecacheModel( TF_WEAPON_CANNONBALL_MODEL );
-	PrecacheGibsForModel( iModel );
-
 	// Must add All custom Models here
 	iModel = PrecacheModel( "models/workshop/weapons/c_models/c_kingmaker_sticky/w_kingmaker_stickybomb.mdl" );
 	iModel = PrecacheModel( "models/workshop/weapons/c_models/c_quadball/w_quadball_grenade.mdl" );
@@ -564,7 +529,6 @@ void CTFGrenadePipebombProjectile::Precache()
 	PrecacheParticleSystem( "stickybombtrail_red" );
 
 	PrecacheScriptSound( TF_WEAPON_PIPEBOMB_BOUNCE_SOUND );
-	PrecacheScriptSound( TF_WEAPON_CANNON_IMPACT_SOUND );
 
 	BaseClass::Precache();
 }
@@ -768,54 +732,6 @@ void CTFGrenadePipebombProjectile::PipebombTouch( CBaseEntity *pOther )
 					return;
 			}
 		}
-		
-		if ( m_iType == TF_GL_MODE_CANNONBALL )
-		{
-			// Damage the player to push them back
-			CBaseEntity *pAttacker = GetThrower();
-			if ( pAttacker && ( pOther->IsPlayer() || pOther->IsBaseObject() ) )
-			{
-				// check if we already penetrate through this victim
-				if ( !m_penetratedEntities.HasElement( pOther ) )
-				{
-					// Impact damage scales with distance
-					float flDistanceSq = (pOther->GetAbsOrigin() - pAttacker->GetAbsOrigin()).LengthSqr();
-					float flImpactDamage = RemapValClamped( flDistanceSq, 512 * 512, 1024 * 1024, 50, 25 );
-
-					CTakeDamageInfo info( this, pAttacker, m_hLauncher, vec3_origin, vOrigin, flImpactDamage, GetDamageType(), TF_DMG_CUSTOM_CANNONBALL_PUSH );
-					pOther->TakeDamage( info );
-
-					CTFPlayer *pVictim = ToTFPlayer( pOther );
-					if ( pVictim )
-					{
-						// apply airblast - Apply stun if they are effectively grounded so we can knock them up
-						if ( !pVictim->m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) )
-						{
-							pVictim->m_Shared.StunPlayer( 0.5, 1.f, TF_STUN_MOVEMENT, ToTFPlayer( pAttacker ) );
-						}
-
-						Vector vecToTarget = pVictim->WorldSpaceCenter() - pAttacker->WorldSpaceCenter();
-						VectorNormalize( vecToTarget );
-						vecToTarget *= 400;
-						vecToTarget.z += 350;	// Mimic Flamethrower AirBlast
-						pVictim->ApplyGenericPushbackImpulse( vecToTarget, ToTFPlayer( pAttacker ) );
-					}
-
-					m_penetratedEntities.AddToTail( pOther );
-
-					EmitSound( TF_WEAPON_CANNON_IMPACT_SOUND );
-
-					// Add this guy to our donk list.  If this grenade explodes and hits anyone on our launcher's
-					// donk list, they get minicrit
-					CTFGrenadeLauncher* pLauncher =  dynamic_cast<CTFGrenadeLauncher*>( GetLauncher() );
-					if( pLauncher )
-					{
-						pLauncher->AddDonkVictim( pOther );
-					}
-				}
-				return;
-			}
-		}
 
 		// Save this entity as enemy, they will take 100% damage.
 		m_hEnemy = pOther;	
@@ -861,7 +777,7 @@ void CTFGrenadePipebombProjectile::VPhysicsCollision( int index, gamevcollisione
 		return;
 	}
 
-	if ( m_iType == TF_GL_MODE_REGULAR || m_iType == TF_GL_MODE_CANNONBALL )
+	if ( m_iType == TF_GL_MODE_REGULAR )
 	{
 		// Blow up if we hit an enemy we can damage
 		if ( pHitEntity->GetTeamNumber() && pHitEntity->GetTeamNumber() != GetTeamNumber() && pHitEntity->m_takedamage != DAMAGE_NO )
@@ -1337,10 +1253,6 @@ int CTFGrenadePipebombProjectile::GetDamageCustom()
 		{
 			return TF_DMG_CUSTOM_STANDARD_STICKY;
 		}
-	}
-	else if ( m_iType == TF_GL_MODE_REMOTE_DETONATE_PRACTICE )
-	{
-		return TF_DMG_CUSTOM_PRACTICE_STICKY;
 	}
 
 	return BaseClass::GetDamageCustom();

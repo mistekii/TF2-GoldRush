@@ -165,16 +165,6 @@ void CTFFists::DoViewModelAnimation( void )
 	}
 
 	SendWeaponAnim( act );
-
-	// Send WeaponAnim actually sets all anims and we want an override for the world model
-	//int iIsBreadgloves = 0;
-	//CALL_ATTRIB_HOOK_INT( iIsBreadgloves, breadgloves_properties );
-	//if ( iIsBreadgloves )
-	//{
-	//	ResetSequence( SelectWeightedSequence( ACT_BREADMONSTER_GLOVES_HITRIGHT ) );
-	//	SetPlaybackRate( 0.0f );
-	//	ResetClientsideFrame();
-	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -247,16 +237,5 @@ void CTFFists::SetWeaponVisible( bool visible )
 //-----------------------------------------------------------------------------
 bool CTFFists::Deploy( void )
 {
-// #ifdef GAME_DLL
-// 	if ( GetFistType() == FISTTYPE_GRU )
-// 	{
-// 		CTFPlayer *pTFOwner = GetTFPlayerOwner();
-// 		if ( pTFOwner )
-// 		{
-			// TODO: Penalty for spam-equipping gloves
-// 		}
-// 	}
-// #endif
-
 	return BaseClass::Deploy();
 }

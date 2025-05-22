@@ -15,8 +15,6 @@
 #include "tf_weapon_shotgun.h"
 #include "tf_weapon_sniperrifle.h"
 #include "tf_weapon_rocketlauncher.h"
-#include "tf_weapon_particle_cannon.h"
-#include "tf_weapon_raygun.h"
 #include "tf_weapon_flaregun.h"
 #include "tf_weapon_revolver.h"
 #include "tf_weapon_flamethrower.h"
@@ -31,9 +29,7 @@
 #include "halloween/tf_weapon_spellbook.h"
 #include "tf_logic_halloween_2014.h"
 #include <game/client/iviewport.h>
-#include "tf_weapon_rocketpack.h"
 #include "tf_weapon_bonesaw.h"
-#include "tf_weapon_slap.h"
 
 #include <vgui_controls/ImagePanel.h>
 
@@ -271,12 +267,7 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	{
 	case TF_CLASS_SCOUT:
 		DECLARE_ITEM_EFFECT_METER( CTFBat_Wood, TF_WEAPON_BAT_WOOD, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFBat_Giftwrap, TF_WEAPON_BAT_GIFTWRAP, true, NULL );
 		DECLARE_ITEM_EFFECT_METER( CTFLunchBox_Drink, TF_WEAPON_LUNCHBOX, true, "resource/UI/HudItemEffectMeter_Scout.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFJarMilk, TF_WEAPON_JAR_MILK, true, "resource/UI/HudItemEffectMeter_Scout.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFSodaPopper, TF_WEAPON_SODA_POPPER, true, "resource/UI/HudItemEffectMeter_SodaPopper.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFPEPBrawlerBlaster, TF_WEAPON_PEP_BRAWLER_BLASTER, true, "resource/UI/HudItemEffectMeter_SodaPopper.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFCleaver, TF_WEAPON_CLEAVER, true, "resource/UI/HudItemEffectMeter_Cleaver.res" );
 		break;
 
 	case TF_CLASS_HEAVYWEAPONS:
@@ -289,9 +280,7 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	case TF_CLASS_SNIPER:
 	{
 		DECLARE_ITEM_EFFECT_METER( CTFJar, TF_WEAPON_JAR, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFSniperRifleDecap, TF_WEAPON_SNIPERRIFLE_DECAP, false, "resource/UI/HudItemEffectMeter_Sniper.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFSniperRifle, TF_WEAPON_SNIPERRIFLE, true, "resource/UI/HudItemEffectMeter_SniperFocus.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFChargedSMG, TF_WEAPON_CHARGED_SMG, false, NULL );
 		lambdaAddItemEffectMeter( "tf_wearable_razorback", true );
 		break;
 	}
@@ -301,14 +290,9 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 
 	case TF_CLASS_SOLDIER:
 		DECLARE_ITEM_EFFECT_METER( CTFBuffItem, TF_WEAPON_BUFF_ITEM, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFParticleCannon, TF_WEAPON_PARTICLE_CANNON, false, "resource/UI/HUDItemEffectMeter_ParticleCannon.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFRaygun, TF_WEAPON_RAYGUN, false, "resource/UI/HUDItemEffectMeter_Raygun.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFRocketLauncher_AirStrike, TF_WEAPON_ROCKETLAUNCHER, false, "resource/UI/HudItemEffectMeter_Demoman.res" );
 		break;
 
 	case TF_CLASS_SPY:
-		DECLARE_ITEM_EFFECT_METER( CTFKnife, TF_WEAPON_KNIFE, true, "resource/UI/HUDItemEffectMeter_SpyKnife.res" );
-
 		hNewMeter = new CHudItemEffectMeter( pszElementName, pPlayer );
 		if ( hNewMeter )
 		{
@@ -324,7 +308,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 
 	case TF_CLASS_ENGINEER:
 		DECLARE_ITEM_EFFECT_METER( CTFShotgun_Revenge, TF_WEAPON_SENTRY_REVENGE, false, "resource/UI/HUDItemEffectMeter_Engineer.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFDRGPomson, TF_WEAPON_DRG_POMSON, false, "resource/UI/HUDItemEffectMeter_Pomson.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFRevolver, TF_WEAPON_REVOLVER, false, "resource/UI/HUDItemEffectMeter_Spy.res" );
 		break;
 
@@ -332,7 +315,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	{
 		DECLARE_ITEM_EFFECT_METER( CTFFlameThrower, TF_WEAPON_FLAMETHROWER, true, "resource/UI/HudItemEffectMeter_Pyro.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFFlareGun_Revenge, TF_WEAPON_FLAREGUN_REVENGE, false, "resource/UI/HUDItemEffectMeter_Engineer.res" );
-		DECLARE_ITEM_EFFECT_METER( CTFRocketPack, TF_WEAPON_ROCKETPACK, false, "resource/UI/HudRocketPack.res" );
 		lambdaAddItemEffectMeter( "tf_weapon_rocketlauncher_fireball", false );
 		break;
 	}
@@ -821,10 +803,6 @@ bool CHudItemEffectMeter_Weapon<CTFBuffItem>::ShouldDraw()
 	CTFBuffItem *pWeapon = GetWeapon();
 	if ( !pWeapon )
 		return false;
-
-	// do not draw for the parachute
-	if ( pWeapon->GetBuffType() == EParachute )
-		return false;
 	
 	return CHudItemEffectMeter::ShouldDraw();
 }
@@ -858,34 +836,6 @@ bool CHudItemEffectMeter_Weapon<CTFFlameThrower>::ShouldFlash( void )
 	{
 		return false;
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Soda Popper Flash
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFSodaPopper>::ShouldFlash( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	return m_pPlayer->m_Shared.GetScoutHypeMeter() >= 100.0f;
-}
-
-//-----------------------------------------------------------------------------
-// Charged SMG Flash
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFChargedSMG>::ShouldFlash( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	CTFChargedSMG* pWeapon = GetWeapon();
-	if ( !pWeapon )
-		return false;
-
-	return pWeapon->ShouldFlashChargeBar();
 }
 
 //-----------------------------------------------------------------------------
@@ -1034,140 +984,6 @@ int CHudItemEffectMeter_Weapon<CTFFlareGun_Revenge>::GetCount( void )
 	}
 }
 
-template <>
-const char *CHudItemEffectMeter_Weapon<CTFRocketPack>::GetLabelText( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		return pRocketpack->IsEnabled() ? "#TF_RocketPack_Charges" : "#TF_RocketPack_Disabled";
-	}
-
-	return CHudItemEffectMeter::GetLabelText();
-}
-
-template <>
-const char *CHudItemEffectMeter_Weapon<CTFRocketPack>::GetIconName( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack && pRocketpack->IsEnabled() )
-	{
-
-		// enabled
-		return "../hud/pyro_jetpack";
-	}
-
-	// disabled
-	return "../hud/pyro_jetpack_off2";
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketPack>::GetNumProgressBar( void ) const
-{
-	return 2;
-}
-
-template <>
-Color CHudItemEffectMeter_Weapon<CTFRocketPack>::GetProgressBarColor( void )
-{	
-	if ( m_pPlayer )
-	{
-		if ( !m_pPlayer->m_Shared.IsRocketPackReady() )
-		{
-			return Color( 255, 0, 0, 255 );
-		}
-		else
-		{
-			return Color( 255, 255, 255, 255 );
-		}
-	}
-
-	return CHudItemEffectMeter::GetProgressBarColor();
-}
-
-template <>
-float CHudItemEffectMeter_Weapon<CTFRocketPack>::GetProgress( void )
-{
-	if ( m_pPlayer )
-		return m_pPlayer->m_Shared.GetRocketPackCharge() / 100.0f;
-	return 0;
-}
-
-template <>
-Color CHudItemEffectMeter_Weapon<CTFRocketPack>::GetLabelTextColor( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		return pRocketpack->IsEnabled() ? Color( 235, 235, 235, 255 ) : Color( 178, 178, 178, 255 );
-	}
-
-	return CHudItemEffectMeter::GetLabelTextColor();
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketPack>::GetState( void )
-{
-	CTFRocketPack *pRocketpack = GetWeapon();
-	if ( pRocketpack )
-	{
-		enum
-		{
-			ROCKETPACK_DISABLED = 0,
-			ROCKETPACK_ENABLED,
-			ROCKETPACK_WAITFORPASSENGER,
-			ROCKETPACK_HASPASSENGER
-		};
-
-		if ( pRocketpack && pRocketpack->IsEnabled() )
-		{
-
-			return ROCKETPACK_ENABLED;
-		}
-
-		return ROCKETPACK_DISABLED;
-	}
-
-	return CHudItemEffectMeter::GetState();
-}
-
-template <>
-bool CHudItemEffectMeter_Weapon<CTFRocketPack>::ShouldAutoAdjustPosition( void ) const
-{
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-int CHudItemEffectMeter_Weapon<CTFSniperRifleDecap>::GetCount( void )
-{
-	CTFSniperRifleDecap *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetCount();
-	}
-	else
-	{
-		return 0.f;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------		    
-template <>
-Color CHudItemEffectMeter_Weapon<CTFParticleCannon>::GetProgressBarColor( void )
-{
-	CTFParticleCannon *pWeapon = GetWeapon();
-	
-	if ( pWeapon && pWeapon->CanChargeFire() )
-		return Color( 255, 255, 255, 255 );
-	else
-		return Color( 255, 0, 0, 255 );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
@@ -1196,7 +1012,7 @@ bool CHudItemEffectMeter_Weapon<CTFRevolver>::IsEnabled( void )
 	{
 		int iExtraDamageOnHit = 0;
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iExtraDamageOnHit, extra_damage_on_hit );
-		return pWeapon->SapperKillsCollectCrits() || iExtraDamageOnHit;
+		return iExtraDamageOnHit;
 	}
 	else
 	{
@@ -1217,23 +1033,6 @@ bool CHudItemEffectMeter_Weapon<CTFRevolver>::ShowPercentSymbol( void )
 	}
 	
 	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFKnife>::IsEnabled( void )
-{
-	CTFKnife *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetKnifeType() == KNIFE_ICICLE;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1496,23 +1295,6 @@ int CHudItemEffectMeter_Weapon< CTFBonesaw >::GetCount( void )
 	return m_pPlayer->m_Shared.GetDecapitations();
 }
 
-
-//-----------------------------------------------------------------------------
-// Rocket Launcher AirStrike Headcounter
-//-----------------------------------------------------------------------------
-template <>
-int CHudItemEffectMeter_Weapon<CTFRocketLauncher_AirStrike>::GetCount( void )
-{
-	CTFRocketLauncher_AirStrike *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->GetCount();
-	}
-	else
-	{
-		return 0;
-	}
-}
 
 //-----------------------------------------------------------------------------
 template <>

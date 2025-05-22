@@ -167,8 +167,6 @@ float MinionModifyDamage( const CTakeDamageInfo &info )
 		switch( pWeapon->GetWeaponID() )
 		{
 		case TF_WEAPON_SNIPERRIFLE:
-		case TF_WEAPON_SNIPERRIFLE_DECAP:
-		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 			return info.GetDamage() * tf_bot_npc_minion_dmg_mult_sniper.GetFloat();
 
 		case TF_WEAPON_COMPOUND_BOW:

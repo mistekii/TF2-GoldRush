@@ -594,8 +594,8 @@ public:
 	void InputRollRareSpell( inputdata_t &inputdata );
 	void InputRoundSpawn( inputdata_t &inputdata );
 
-	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) || m_Shared.InCond( TF_COND_ROCKETPACK ) ); }
-	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) || m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) || m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) || m_Shared.InCond( TF_COND_GRAPPLINGHOOK_SAFEFALL ) ) ); }
+	bool InAirDueToExplosion( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) ) ); }
+	bool InAirDueToKnockback( void ) { return (!(GetFlags() & FL_ONGROUND) && (GetWaterLevel() == WL_NotInWater) && ( (m_iBlastJumpState != 0) || m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) ) ); }
 
 	void DoNoiseMaker(); // Halloween event item support.
 
@@ -696,7 +696,6 @@ public:
 	void				UseActionSlotItemPressed( void );
 	void				UseActionSlotItemReleased( void );
 
-	bool				IsFireproof( void ) const;
 	bool				AddToSpyKnife( float value, bool force );
 
 private:
@@ -786,9 +785,6 @@ public:
 	bool				ScriptIsRageDraining()						{ return m_Shared.IsRageDraining(); }
 	float				ScriptGetRageMeter()						{ return m_Shared.GetRageMeter(); }
 	void				ScriptSetRageMeter( float flValue )			{ return m_Shared.SetRageMeter( flValue ); }
-	float				ScriptGetScoutHypeMeter()					{ return m_Shared.GetScoutHypeMeter(); }
-	void				ScriptSetScoutHypeMeter( float flValue )	{ return m_Shared.SetScoutHypeMeter( flValue ); }
-	bool				ScriptIsHypeBuffed()						{ return m_Shared.IsHypeBuffed(); }
 	bool				ScriptIsJumping()							{ return m_Shared.IsJumping(); }
 	bool				ScriptIsAirDashing()						{ return m_Shared.IsAirDashing(); }
 	bool				ScriptIsControlStunned()					{ return m_Shared.IsControlStunned(); }
@@ -807,7 +803,6 @@ public:
 	int					ScriptGetKillAssists() const				{ return m_Shared.GetKillAssists( 0 ); }
 	int					ScriptGetBonusPoints() const				{ return m_Shared.GetBonusPoints( 0 ); }
 	void				ScriptResetScores()							{ m_Shared.ResetScores(); }
-	bool				ScriptIsParachuteEquipped()					{ return m_Shared.IsParachuteEquipped(); }
 
 	int					ScriptGetPlayerClass()
 	{
@@ -1368,15 +1363,10 @@ public:
 	void				AddHalloweenKartPushEvent( CTFPlayer *pOther, CBaseEntity *pInflictor, CBaseEntity *pWeapon, Vector vForce, int iDamage, int iDamageType = 0 );
 	QAngle				GetAnimRenderAngles( void ) { return m_PlayerAnimState->GetRenderAngles(); }
 
-	void				CancelEurekaTeleport();
-
 	
 	CNetworkVar( int,	m_iKartState );
 	CNetworkVar( float, m_flKartNextAvailableBoost );
 	float				m_flHHHKartAttackTime;
-
-	// Wrenchmotron teleport
-	bool				m_bIsTeleportingUsingEurekaEffect;
 
 private:
 	void				UpdateHalloween( void );
@@ -1400,10 +1390,6 @@ private:
 	CNetworkVar( float, m_flHandScale );
 
 	//CountdownTimer		m_fireproofTimer;		// if active, we're fireproof
-
-	// Wrenchmotron teleport
-	CountdownTimer		m_teleportHomeFlashTimer;
-	eEurekaTeleportTargets	m_eEurekaTeleportTarget;
 
 	float				m_accumulatedSentryGunDamageDealt;	// for Sentry Buster missions in MvM
 	int					m_accumulatedSentryGunKillCount;	// for Sentry Buster missions in MvM
@@ -1445,11 +1431,6 @@ public:
 	// Send ForcePlayerViewAngles user message. Handled in __MsgFunc_ForcePlayerViewAngles in
 	// clientmode_tf.cpp. Sets Local and Abs angles, along with TauntYaw and VehicleMovingAngles.
 	void ForcePlayerViewAngles( const QAngle& qTeleportAngles );
-
-	CBaseEntity *GetGrapplingHookTarget() const { return m_hGrapplingHookTarget; }
-	void SetGrapplingHookTarget( CBaseEntity *pTarget, bool bShouldBleed = false );
-	HSCRIPT ScriptGetGrapplingHookTarget() const { return ToHScript( m_hGrapplingHookTarget.Get() ); }
-	void ScriptSetGrapplingHookTarget( HSCRIPT pTarget, bool bShouldBleed ) { return SetGrapplingHookTarget( ToEnt( pTarget ), bShouldBleed ); }
 
 	void AddHudHideFlags(int flags) { m_Local.m_iHideHUD |= flags; }
 	void RemoveHudHideFlags(int flags) { m_Local.m_iHideHUD &= ~flags; }
@@ -1498,10 +1479,6 @@ private:
 	float m_flSendPickupWeaponMessageTime;
 
 	void ModifyDamageInfo( CTakeDamageInfo *pInfo, const CBaseEntity *pTarget );
-
-	CNetworkHandle( CBaseEntity, m_hGrapplingHookTarget );
-	float m_flLastSeenHookTarget;
-	int m_nHookAttachedPlayers;
 
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );
 	CNetworkVar( bool, m_bUsingActionSlot );
@@ -1562,11 +1539,6 @@ inline CTFPlayer *ToTFPlayer( CBaseEntity *pEntity )
 
 	Assert( dynamic_cast<CTFPlayer*>( pEntity ) != 0 );
 	return static_cast< CTFPlayer* >( pEntity );
-}
-
-inline bool CTFPlayer::IsFireproof( void ) const
-{
-	return m_Shared.InCond( TF_COND_FIRE_IMMUNE );
 }
 
 inline bool CTFPlayer::HasPurgatoryBuff( void ) const

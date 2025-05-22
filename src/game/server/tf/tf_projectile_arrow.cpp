@@ -41,14 +41,6 @@
 #define ARROW_GRAVITY				0.3f
 
 #define ARROW_THINK_CONTEXT			"CTFProjectile_ArrowThink"
-
-#define CLAW_TRAIL_RED				"effects/repair_claw_trail_red.vmt"
-#define CLAW_TRAIL_BLU				"effects/repair_claw_trail_blue.vmt"
-#define CLAW_GIB1					"models/weapons/w_models/w_repair_claw_gib1.mdl"
-#define CLAW_GIB2					"models/weapons/w_models/w_repair_claw_gib2.mdl"
-
-#define CLAW_REPAIR_EFFECT_BLU		"repair_claw_heal_blue"
-#define CLAW_REPAIR_EFFECT_RED		"repair_claw_heal_red"
 //-----------------------------------------------------------------------------
 LINK_ENTITY_TO_CLASS( tf_projectile_arrow, CTFProjectile_Arrow );
 PRECACHE_WEAPON_REGISTER( tf_projectile_arrow );
@@ -63,30 +55,6 @@ END_NETWORK_TABLE()
 
 BEGIN_DATADESC( CTFProjectile_Arrow )
 DEFINE_THINKFUNC( ImpactThink ),
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( tf_projectile_healing_bolt, CTFProjectile_HealingBolt );
-PRECACHE_WEAPON_REGISTER( tf_projectile_healing_bolt );
-
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-
-BEGIN_NETWORK_TABLE( CTFProjectile_HealingBolt, DT_TFProjectile_HealingBolt )
-END_NETWORK_TABLE()
-
-BEGIN_DATADESC( CTFProjectile_HealingBolt )
-END_DATADESC()
-
-//-----------------------------------------------------------------------------
-LINK_ENTITY_TO_CLASS( tf_projectile_grapplinghook, CTFProjectile_GrapplingHook );
-PRECACHE_WEAPON_REGISTER( tf_projectile_grapplinghook );
-
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_GrapplingHook, DT_TFProjectile_GrapplingHook )
-
-BEGIN_NETWORK_TABLE( CTFProjectile_GrapplingHook, DT_TFProjectile_GrapplingHook )
-END_NETWORK_TABLE()
-
-BEGIN_DATADESC( CTFProjectile_GrapplingHook )
 END_DATADESC()
 
 //-----------------------------------------------------------------------------
@@ -117,17 +85,7 @@ CTFProjectile_Arrow::~CTFProjectile_Arrow()
 
 static const char* GetArrowEntityName( ProjectileType_t projectileType )
 {
-	switch ( projectileType )
-	{
-	case TF_PROJECTILE_HEALING_BOLT:
-	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-		return "tf_projectile_healing_bolt";
-	case TF_PROJECTILE_GRAPPLINGHOOK:
-		return "tf_projectile_grapplinghook";
-	
-	default:
-		return "tf_projectile_arrow";
-	}
+	return "tf_projectile_arrow";
 }
 
 //-----------------------------------------------------------------------------
@@ -201,33 +159,7 @@ void CTFProjectile_Arrow::InitArrow( const QAngle &vecAngles, const float fSpeed
 //-----------------------------------------------------------------------------
 void CTFProjectile_Arrow::Spawn()
 {
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT )
-	{
-		SetModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
-		m_iWeaponId = TF_WEAPON_SHOTGUN_BUILDING_RESCUE;
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_ARROW )
-	{
-		SetModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
-	) {
-		SetModel( g_pszArrowModels[MODEL_SYRINGE] );
-		SetModelScale( 3.0f );
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
-	{
-		SetModel( g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT] );
-		SetModelScale( 3.0f );
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_GRAPPLINGHOOK )
-	{
-		SetModel( g_pszArrowModels[MODEL_GRAPPLINGHOOK] );
-	}
-	else
-	{
-		SetModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
-	}
+	SetModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
 
 	SetMoveType( MOVETYPE_FLYGRAVITY, MOVECOLLIDE_FLY_CUSTOM );
 	UTIL_SetSize( this, Vector( -1.0f, -1.0f, -1.0f ), Vector( 1.0f, 1.0f, 1.0f ) );
@@ -249,28 +181,15 @@ void CTFProjectile_Arrow::Spawn()
 void CTFProjectile_Arrow::Precache()
 {
 	int arrow_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_REGULAR] );
-	int claw_model = PrecacheModel( g_pszArrowModels[MODEL_ARROW_BUILDING_REPAIR] );
-	int festive_arrow_model = PrecacheModel( g_pszArrowModels[MODEL_FESTIVE_ARROW_REGULAR] );
-	PrecacheModel( g_pszArrowModels[MODEL_FESTIVE_HEALING_BOLT] );
 
 	PrecacheGibsForModel( arrow_model );
-	PrecacheGibsForModel( claw_model );
-	PrecacheGibsForModel( festive_arrow_model );
-	//PrecacheGibsForModel( festive_healing_arrow_model );
 	PrecacheModel( "effects/arrowtrail_red.vmt" );
 	PrecacheModel( "effects/arrowtrail_blu.vmt" );
-	PrecacheModel( "effects/healingtrail_red.vmt" );
-	PrecacheModel( "effects/healingtrail_blu.vmt" );
-	PrecacheModel( CLAW_TRAIL_RED );
-	PrecacheModel( CLAW_TRAIL_BLU );
-	PrecacheParticleSystem( CLAW_REPAIR_EFFECT_BLU );
-	PrecacheParticleSystem( CLAW_REPAIR_EFFECT_RED );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactFlesh" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactMetal" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactWood" );
 	PrecacheScriptSound( "Weapon_Arrow.ImpactConcrete" );
 	PrecacheScriptSound( "Weapon_Arrow.Nearmiss" );
-	PrecacheScriptSound( "Weapon_Arrow.ImpactFleshCrossbowHeal" );
 
 	BaseClass::Precache();
 }
@@ -298,13 +217,6 @@ bool CTFProjectile_Arrow::CanHeadshot()
 	if ( pOwner == NULL )
 		return false;
 
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT 
-		|| m_iProjectileType == TF_PROJECTILE_HEALING_BOLT 
-		|| m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT 
-	) {
-		return false;
-	}
-
 
 	return true; 
 }
@@ -314,12 +226,6 @@ bool CTFProjectile_Arrow::CanHeadshot()
 //-----------------------------------------------------------------------------
 float CTFProjectile_Arrow::GetDamage()
 {
-	if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT
-		|| m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT
-	) {
-		float lifeTimeScale = RemapValClamped( gpGlobals->curtime - m_flInitTime, 0.0f, 0.6f, 0.5f, 1.0f );	
-		return m_flDamage * lifeTimeScale;
-	}
 	return BaseClass::GetDamage();
 }
 
@@ -514,20 +420,6 @@ bool CTFProjectile_Arrow::StrikeTarget( mstudiobbox_t *pBox, CBaseEntity *pOther
 			// Damage
 			if ( bApplyEffect )
 			{
-				// Apply Milk First so we can get health from this
-				if ( m_bApplyMilkOnHit && pOther->IsPlayer() )
-				{
-					CTFPlayer *pVictim = ToTFPlayer( pOther );
-					if ( pVictim && pVictim->m_Shared.CanBeDebuffed() && pVictim->CanGetWet() )
-					{
-						// duration is based on damage
-						float flDuration = RemapValClamped( GetDamage(), 25.0f, 75.0f, 6.0f, 10.0f );
-						pVictim->m_Shared.AddCond( TF_COND_MAD_MILK, flDuration, pAttacker );
-						pVictim->m_Shared.SetPeeAttacker( ToTFPlayer( pAttacker ) );
-						pVictim->SpeakConceptIfAllowed( MP_CONCEPT_JARATE_HIT );
-					}
-				}
-
 				CTakeDamageInfo info( this, pAttacker, m_hLauncher, vecVelocity, vecOrigin, GetDamage(), nDamageType, nDamageCustom );
 				pOther->TakeDamage( info );
 
@@ -632,10 +524,6 @@ void CTFProjectile_Arrow::OnArrowImpact( mstudiobbox_t *pBox, CBaseEntity *pOthe
 //-----------------------------------------------------------------------------
 bool CTFProjectile_Arrow::OnArrowImpactObject( CBaseEntity *pOther )
 {
-	if ( InSameTeam( pOther ) )
-	{
-		BuildingHealingArrow( pOther );
-	}
 	return false;
 }
 
@@ -646,47 +534,6 @@ bool CTFProjectile_Arrow::OnArrowImpactObject( CBaseEntity *pOther )
 void CTFProjectile_Arrow::ImpactThink( void )
 {
 }
-
-//-----------------------------------------------------------------------------
-void CTFProjectile_Arrow::BuildingHealingArrow( CBaseEntity *pOther )
-{
-	// This arrow impacted a building
-	// If its a building on our team, heal it
-	if ( !pOther->IsBaseObject() )
-		return;
-
-	CTFPlayer *pTFAttacker = ToTFPlayer( GetScorer() );
-	if ( !pTFAttacker )
-		return;
-
-	// if not on our team, forget about it
-	if ( GetTeamNumber() != pOther->GetTeamNumber() )
-		return;
-
-	int iArrowHealAmount = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iArrowHealAmount, arrow_heals_buildings );
-	if ( iArrowHealAmount == 0 )
-		return;
-
-	CBaseObject *pBuilding = dynamic_cast< CBaseObject * >( pOther );
-	if ( !pBuilding || pBuilding->HasSapper() || pBuilding->IsPlasmaDisabled() || pBuilding->IsBuilding() || pBuilding->IsPlacing() )
-		return;
-
-	// if building is shielded, reduce health gain
-	if ( pBuilding->GetShieldLevel() == SHIELD_NORMAL )
-	{
-		iArrowHealAmount *= SHIELD_NORMAL_VALUE;
-	}
-
-	int nHealed = pBuilding->Command_Repair( pTFAttacker, iArrowHealAmount, 1.f, 4.f, true );
-	if ( nHealed > 0 )
-	{
-		const char *pParticleName = GetTeamNumber() == TF_TEAM_BLUE ? CLAW_REPAIR_EFFECT_BLU : CLAW_REPAIR_EFFECT_RED;
-		CPVSFilter filter( GetAbsOrigin() );
-		TE_TFParticleEffect( filter, 0.0, pParticleName, GetAbsOrigin(), vec3_angle );
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1033,15 +880,6 @@ void CTFProjectile_Arrow::RemoveThink( void )
 //-----------------------------------------------------------------------------
 const char *CTFProjectile_Arrow::GetTrailParticleName( void )
 {
-	if ( m_iProjectileType == TF_PROJECTILE_BUILDING_REPAIR_BOLT )
-	{	
-		return ( GetTeamNumber() == TF_TEAM_RED ) ? CLAW_TRAIL_RED : CLAW_TRAIL_BLU;
-	}
-	else if ( m_iProjectileType == TF_PROJECTILE_HEALING_BOLT || m_iProjectileType == TF_PROJECTILE_FESTIVE_HEALING_BOLT )
-	{
-		return ( GetTeamNumber() == TF_TEAM_RED ) ? "effects/healingtrail_red.vmt" : "effects/healingtrail_blu.vmt";
-	}
-
 	return ( GetTeamNumber() == TF_TEAM_RED ) ? "effects/arrowtrail_red.vmt" : "effects/arrowtrail_blu.vmt";
 }
 
@@ -1056,16 +894,6 @@ void CTFProjectile_Arrow::CreateTrail( void )
 	if ( !m_pTrail )
 	{
 		int width = 3;
-		switch ( m_iProjectileType )
-		{
-			case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
-				width = 5;
-				break;
-			case TF_PROJECTILE_HEALING_BOLT:
-			case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-			case TF_PROJECTILE_GRAPPLINGHOOK:
-				return; // do not create arrow trail for healing bolt, use particle instead (client only)
-		}
 		
 		const char *pTrailTeamName = GetTrailParticleName();
 		CSpriteTrail *pTempTrail = NULL;
@@ -1177,318 +1005,4 @@ void CTFProjectile_Arrow::Deflected( CBaseEntity *pDeflectedBy, Vector &vecDir )
 	m_HitEntities.Purge();
 	// Add ourselves so we dont hit ourselves
 	m_HitEntities.AddToTail( pTFDeflector->entindex() );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Setup function.
-//-----------------------------------------------------------------------------
-void CTFProjectile_HealingBolt::InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner, CBaseEntity *pScorer )
-{
-	BaseClass::InitArrow( vecAngles, fSpeed, fGravity, projectileType, pOwner, pScorer );
-
-	//SetNextThink( gpGlobals->curtime );
-}
-
-// ConVar healingbolt_uber_scale( "healingbolt_uber_scale", "1.0", FCVAR_REPLICATED, "" );
-
-//-----------------------------------------------------------------------------
-// Purpose: Healing bolt heal.
-//-----------------------------------------------------------------------------
-void CTFProjectile_HealingBolt::ImpactTeamPlayer( CTFPlayer *pOther )
-{
-	if ( !pOther )
-		return;
-
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( !pOwner )
-		return;
-
-	// Don't heal players using a weapon that blocks healing
-	CTFWeaponBase *pWeapon = pOther->GetActiveTFWeapon();
-	if ( pWeapon )
-	{
-		int iBlockHealing = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iBlockHealing, weapon_blocks_healing );
-		if ( iBlockHealing )
-			return;
-	}
-
-	float flHealth = GetDamage() * 2.0f;
-
-
-	// Scale this if needed
-	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pOther, flHealth, mult_healing_from_medics );
-
-	CTFWeaponBase *pActiveWeapon = pOther->GetActiveTFWeapon();
-	if ( pActiveWeapon )
-	{
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pActiveWeapon, flHealth, mult_health_fromhealers_penalty_active );
-	}
-	
-	int iActualHealed = pOther->TakeHealth( flHealth, DMG_GENERIC );
-	if ( iActualHealed <= 0 )
-		return;
-
-	// Play an impact sound.
-	ImpactSound( "Weapon_Arrow.ImpactFleshCrossbowHeal" );
-
-	CTF_GameStats.Event_PlayerHealedOther( pOwner, flHealth );
-
-	IGameEvent * event = gameeventmanager->CreateEvent( "player_healed" );
-	if ( event )
-	{
-		// HLTV event priority, not transmitted
-		event->SetInt( "priority", 1 );	
-
-		// Healed by another player.
-		event->SetInt( "patient", pOther->GetUserID() );
-		event->SetInt( "healer", pOwner->GetUserID() );
-		event->SetInt( "amount", flHealth );
-		gameeventmanager->FireEvent( event );
-	}
-
-	event = gameeventmanager->CreateEvent( "player_healonhit" );
-	if ( event )
-	{
-		event->SetInt( "amount", flHealth );
-		event->SetInt( "entindex", pOther->entindex() );
-		item_definition_index_t healingItemDef = INVALID_ITEM_DEF_INDEX;
-		if ( pWeapon && pWeapon->GetAttributeContainer() && pWeapon->GetAttributeContainer()->GetItem() )
-		{
-			healingItemDef = pWeapon->GetAttributeContainer()->GetItem()->GetItemDefIndex();
-		}
-		event->SetInt( "weapon_def_index", healingItemDef );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	event = gameeventmanager->CreateEvent( "crossbow_heal" );
-	if ( event )
-	{
-		event->SetInt( "healer", pOwner->GetUserID() );
-		event->SetInt( "target", pOther->GetUserID() );
-		event->SetInt( "amount", flHealth );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	// Add ubercharge based on amount healed
-	CWeaponMedigun *pMedigun = static_cast<CWeaponMedigun *>( pOwner->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-	if ( pMedigun )
-	{
-		float flTimeSinceDamage = gpGlobals->curtime - pOther->GetLastDamageReceivedTime();
-		float flScale = RemapValClamped( flTimeSinceDamage, 10.f, 15.f, 3.f, 1.f ); /*healingbolt_uber_scale.GetFloat()*/
-		const float flGainRate = 24.f * flScale;
-
-		// Ubercharge rate is based on the medigun's heal rate, then scaled based on last combat time (same rule as the medigun's heal rate)
-		pMedigun->AddCharge( ( iActualHealed / flGainRate ) * gpGlobals->frametime );
-	}
-	pOther->m_Shared.AddCond( TF_COND_HEALTH_OVERHEALED, 1.2f );
-
-	EconEntity_OnOwnerKillEaterEvent_Batched( dynamic_cast<CEconEntity *>( GetLauncher() ), pOwner, pOther, kKillEaterEvent_AllyHealingDone, flHealth );
-}
-
-
-CTFProjectile_GrapplingHook::CTFProjectile_GrapplingHook()
-	: m_pImpactFleshSoundLoop( NULL )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::Spawn()
-{
-	BaseClass::Spawn();
-
-	SetMoveType( MOVETYPE_FLY, MOVECOLLIDE_FLY_CUSTOM );
-}
-
-
-void CTFProjectile_GrapplingHook::Precache()
-{
-	BaseClass::Precache();
-
-	PrecacheModel( "models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactFlesh" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactDefault" );
-	PrecacheScriptSound( "WeaponGrapplingHook.ImpactFleshLoop" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Spawn
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::UpdateOnRemove()
-{
-	// clear hook target
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->SetGrapplingHookTarget( NULL );
-		pTFPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK );
-	}
-
-	StopImpactFleshSoundLoop();
-
-	BaseClass::UpdateOnRemove();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Setup function.
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner, CBaseEntity *pScorer )
-{
-	BaseClass::InitArrow( vecAngles, fSpeed, fGravity, projectileType, pOwner, pScorer );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.AddCond( TF_COND_GRAPPLINGHOOK );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: OnArrowImpact
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::OnArrowImpact( mstudiobbox_t *pBox, CBaseEntity *pOther, CBaseEntity *pAttacker )
-{
-	HookTarget( pOther );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: OnArrowImpactObject
-//-----------------------------------------------------------------------------
-bool CTFProjectile_GrapplingHook::OnArrowImpactObject( CBaseEntity *pOther )
-{
-	HookTarget( pOther );
-	return true;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: CheckSkyboxImpact
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::CheckSkyboxImpact( CBaseEntity *pOther )
-{
-	trace_t tr;
-	Vector velDir = GetAbsVelocity();
-	VectorNormalize( velDir );
-	Vector vecSpot = GetAbsOrigin() - velDir * 32;
-	UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID, this, COLLISION_GROUP_DEBRIS, &tr );
-	if ( tr.fraction < 1.0 && tr.surface.flags & SURF_SKY )
-	{
-		// We hit the skybox, go away soon.
-		FadeOut( 1.f );
-		return;
-	}
-
-	if ( !pOther->IsWorld() )
-	{
-		HookTarget( pOther );
-	}
-	else
-	{
-		HookTarget( pOther );
-
-		// rotate the hook model to be perpendicular to the world surface
-		Vector vUp;
-		AngleVectors( GetAbsAngles(), NULL, NULL, &vUp );
-		QAngle qNewAngles;
-		VectorAngles( -tr.plane.normal, vUp, qNewAngles );
-		SetAbsAngles( qNewAngles );
-		SetAbsOrigin( GetAbsOrigin() + 3.f * tr.plane.normal );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: HookTarget
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::HookTarget( CBaseEntity *pOther )
-{
-	if ( !GetOwnerEntity() || !pOther )
-		return;
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( !pTFPlayer || pTFPlayer->GetGrapplingHookTarget() )
-		return;
-
-	CBaseEntity *pTarget = pOther->IsWorld() ? this : pOther;
-	const char *pszSoundName = NULL;
-	if ( pTarget->IsPlayer() )
-	{
-		pszSoundName = "WeaponGrapplingHook.ImpactFlesh";
-	}
-	else
-	{
-		pszSoundName = "WeaponGrapplingHook.ImpactDefault";
-	}
-	ImpactSound( pszSoundName );
-
-	pTFPlayer->SetGrapplingHookTarget( pTarget, true );
-
-	// Stop moving!
-	if ( pOther->IsPlayer() )
-	{
-		FollowEntity( pOther, false );
-		StartImpactFleshSoundLoop();
-	}
-	else
-		SetMoveType( MOVETYPE_NONE );
-
-	SetContextThink( &CTFProjectile_GrapplingHook::HookLatchedThink, gpGlobals->curtime + 0.1f, "HookLatchedThink" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: HookLatchedThink
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::HookLatchedThink()
-{
-	// if owner is dead, remove the hook
-	CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-	if ( !pTFPlayer || !pTFPlayer->IsAlive() )
-	{
-		UTIL_Remove( this );
-		return;
-	}
-
-	// if the target nolonger exist or target player is dead, remove the hook
-	CBaseEntity *pHookTarget = pTFPlayer->GetGrapplingHookTarget();
-	if ( !pHookTarget || ( pHookTarget->IsPlayer() && !pHookTarget->IsAlive() ) )
-	{
-		UTIL_Remove( this );
-		return;
-	}
-	
-	SetContextThink( &CTFProjectile_GrapplingHook::HookLatchedThink, gpGlobals->curtime + 0.1f, "HookLatchedThink" );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::StartImpactFleshSoundLoop()
-{
-	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-	CPASAttenuationFilter filter( this );
-	m_pImpactFleshSoundLoop = controller.SoundCreate( filter, entindex(), "WeaponGrapplingHook.ImpactFleshLoop" );
-	controller.Play( m_pImpactFleshSoundLoop, 1.0, 100 );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFProjectile_GrapplingHook::StopImpactFleshSoundLoop()
-{
-	if ( m_pImpactFleshSoundLoop )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundDestroy( m_pImpactFleshSoundLoop );
-		m_pImpactFleshSoundLoop = NULL;
-	}
 }

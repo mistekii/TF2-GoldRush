@@ -50,24 +50,10 @@ ConVar  tf_clamp_airducks( "tf_clamp_airducks", "1", FCVAR_REPLICATED );
 ConVar  tf_resolve_stuck_players( "tf_resolve_stuck_players", "1", FCVAR_REPLICATED );
 ConVar  tf_scout_hype_mod( "tf_scout_hype_mod", "55", FCVAR_REPLICATED | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
 ConVar	tf_max_charge_speed( "tf_max_charge_speed", "750", FCVAR_NOTIFY | FCVAR_REPLICATED | FCVAR_CHEAT  | FCVAR_DEVELOPMENTONLY );
-ConVar  tf_parachute_gravity( "tf_parachute_gravity", "0.2f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Gravity while parachute is deployed" );
-ConVar  tf_parachute_maxspeed_xy( "tf_parachute_maxspeed_xy", "300.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max XY Speed while Parachute is deployed" );
-ConVar  tf_parachute_maxspeed_z( "tf_parachute_maxspeed_z", "-100.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max Z Speed while Parachute is deployed" );
-ConVar  tf_parachute_maxspeed_onfire_z( "tf_parachute_maxspeed_onfire_z", "-100.0f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Max Z Speed when on Fire and Parachute is deployed" );
-ConVar  tf_parachute_aircontrol( "tf_parachute_aircontrol", "2.5f", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED, "Multiplier for how much air control players have when Parachute is deployed" );
-ConVar	tf_parachute_deploy_toggle_allowed( "tf_parachute_deploy_toggle_allowed", "0", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
 
 ConVar  tf_halloween_kart_aircontrol( "tf_halloween_kart_aircontrol", "1.2f", FCVAR_CHEAT | FCVAR_REPLICATED, "Multiplier for how much air control players have when in Kart Mode" );
 ConVar	tf_ghost_up_speed( "tf_ghost_up_speed", "300.f", FCVAR_CHEAT | FCVAR_REPLICATED, "Speed that ghost go upward while holding jump key" );
 ConVar	tf_ghost_xy_speed( "tf_ghost_xy_speed", "300.f", FCVAR_CHEAT | FCVAR_REPLICATED );
-ConVar	tf_grapplinghook_move_speed( "tf_grapplinghook_move_speed", "750", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_use_acceleration( "tf_grapplinghook_use_acceleration", "0", FCVAR_REPLICATED, "Use full acceleration calculation for grappling hook movement" );
-ConVar	tf_grapplinghook_acceleration( "tf_grapplinghook_acceleration", "3500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_dampening( "tf_grapplinghook_dampening", "500", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_follow_distance( "tf_grapplinghook_follow_distance", "64", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_jump_up_speed( "tf_grapplinghook_jump_up_speed", "375", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_prevent_fall_damage( "tf_grapplinghook_prevent_fall_damage", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
-ConVar	tf_grapplinghook_medic_latch_speed_scale( "tf_grapplinghook_medic_latch_speed_scale", "0.65", FCVAR_REPLICATED | FCVAR_CHEAT );
 ConVar tf_movement_aircurrent_friction_mult( "tf_movement_aircurrent_friction_mult", "0.75", FCVAR_REPLICATED | FCVAR_CHEAT,
                                              "Friction multiplier when sliding against surfaces while trapped in an air current" );
 ConVar tf_movement_aircurrent_aircontrol_mult( "tf_movement_aircurrent_aircontrol_mult", "0.25", FCVAR_REPLICATED | FCVAR_CHEAT,
@@ -119,7 +105,6 @@ public:
 	virtual void CheckFalling( void );
 	virtual void Duck( void );
 	virtual Vector GetPlayerViewOffset( bool ducked ) const;
-	bool			GrapplingHookMove( void );
 	bool			ChargeMove( void );
 	bool			StunMove( void );
 	bool			TauntMove( void );
@@ -145,7 +130,6 @@ private:
 	bool		CheckWaterJumpButton( void );
 	void		AirDash( void );
 	void		PreventBunnyJumping();
-	void		ToggleParachute( void );
 	void		CheckKartWallBumping();
 
 	// Ducking.
@@ -319,9 +303,6 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 	// Handle player taunt move
 	TauntMove();
 
-	// Handle grappling hook move
-	GrapplingHookMove();
-
 	// Handle scouts that can move really fast with buffs
 	HighMaxSpeedMove();
 
@@ -339,156 +320,11 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameMovement::GrapplingHookMove()
-{
-	CBaseEntity *pHookTarget = m_pTFPlayer->GetGrapplingHookTarget();
-
-	if ( !pHookTarget )
-		return false;
-
-	// check if player can be moved
-	if ( !m_pTFPlayer->CanPlayerMove() || m_pTFPlayer->m_Shared.IsControlStunned() )
-	{
-		mv->m_flForwardMove = 0.f;
-		mv->m_flSideMove = 0.f;
-		mv->m_flUpMove = 0.f;
-		mv->m_nButtons = 0;
-		m_pTFPlayer->m_nButtons = mv->m_nButtons;
-		return false;
-	}
-
-	m_pTFPlayer->SetGroundEntity( NULL );
-
-	Vector vDesiredMove = pHookTarget->WorldSpaceCenter() - m_pTFPlayer->WorldSpaceCenter();
-
-	CTFPlayer *pPlayerToCheck = m_pTFPlayer;
-	if ( pHookTarget->IsPlayer() )
-	{
-		CTFPlayer *pHookedPlayer = ToTFPlayer( pHookTarget );
-		// If our target is grappling, adjust aim to behind them
-		CBaseEntity *pHookedPlayerTarget = pHookedPlayer->GetGrapplingHookTarget();
-		if ( pHookedPlayerTarget )
-		{
-			Vector vTargetGrapple = pHookedPlayerTarget->WorldSpaceCenter() - pHookedPlayer->WorldSpaceCenter();
-			vTargetGrapple.NormalizeInPlace();
-			vDesiredMove += vTargetGrapple * ( -1 * tf_grapplinghook_follow_distance.GetFloat() );
-		}
-		else
-		{
-			// Otherwise, aim short of their center.
-			vDesiredMove += vDesiredMove.Normalized() * ( -1 * tf_grapplinghook_follow_distance.GetFloat() );
-		}
-	}
-
-	mv->m_flMaxSpeed = tf_grapplinghook_move_speed.GetFloat();
-
-	ETFFlagType ignoreTypes[] = { TF_FLAGTYPE_PLAYER_DESTRUCTION };
-	bool bHasTheFlag = pPlayerToCheck->HasTheFlag( ignoreTypes, ARRAYSIZE( ignoreTypes ) );
-	bool bIsTeamLeader = false;
-
-	if ( TFGameRules() && ( TFGameRules()->GetGameType() == TF_GAMETYPE_PD ) )
-	{
-		CTFPlayerDestructionLogic *pPlayerDestructionLogic = CTFPlayerDestructionLogic::GetPlayerDestructionLogic();
-		if ( pPlayerDestructionLogic && ( pPlayerDestructionLogic->GetTeamLeader( pPlayerToCheck->GetTeamNumber() ) == pPlayerToCheck ) )
-		{
-			bIsTeamLeader = true;
-		}
-	}
-
-	// Heavies get a grapple speed reduction across the board, even if they have Agility
-	if ( pPlayerToCheck->GetPlayerClass()->GetClassIndex() == TF_CLASS_HEAVYWEAPONS && !bHasTheFlag )
-	{
-		mv->m_flMaxSpeed *= 0.7f;
-	}
-	// Grapple movement speed penalty if player is carrying the flag. Scout and Agility get smaller penalties
-	else if ( bHasTheFlag || bIsTeamLeader )
-	{
-		if ( pPlayerToCheck->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT )
-		{
-			mv->m_flMaxSpeed *= 0.65f;
-		}
-		else
-		{
-			mv->m_flMaxSpeed *= 0.50f;
-		}
-	}
-	// Pyros that are hooked into enemy players travel slower because of their advantage in close quarters
-	else if ( pPlayerToCheck->GetPlayerClass()->GetClassIndex() == TF_CLASS_PYRO && pPlayerToCheck->m_Shared.InCond( TF_COND_GRAPPLED_TO_PLAYER ) )
-	{
-		mv->m_flMaxSpeed *= 0.7f;
-	}
-
-	if ( tf_grapplinghook_use_acceleration.GetBool() )
-	{
-		// Use acceleration with dampening
-		float flSpeed = mv->m_vecVelocity.Length();
-		if ( flSpeed > 0.f ) {
-			float flDampen = Min( tf_grapplinghook_dampening.GetFloat() * gpGlobals->frametime, flSpeed );
-			mv->m_vecVelocity *= ( flSpeed - flDampen ) / flSpeed;
-		}
-
-		mv->m_vecVelocity += vDesiredMove.Normalized() * ( tf_grapplinghook_acceleration.GetFloat() * gpGlobals->frametime );
-
-		flSpeed = mv->m_vecVelocity.Length();
-		if ( flSpeed > mv->m_flMaxSpeed )
-		{
-			mv->m_vecVelocity *= mv->m_flMaxSpeed / flSpeed;
-		}
-	}
-	else
-	{
-		// Simple velocity calculation
-		float vDist = vDesiredMove.Length();
-		if ( vDist > mv->m_flMaxSpeed * gpGlobals->frametime )
-		{
-			mv->m_vecVelocity = vDesiredMove * ( mv->m_flMaxSpeed / vDist );
-		}
-		else
-		{
-			mv->m_vecVelocity = vDesiredMove / gpGlobals->frametime;
-		}
-	}
-
-	// slow down when player is close to the hook target to prevent yoyo effect 
-	float flDistSqrToTarget = m_pTFPlayer->GetAbsOrigin().DistToSqr( pHookTarget->GetAbsOrigin() );
-	if ( flDistSqrToTarget < 10000 )
-	{
-		// remap the speed between 80-100 unit distance
-		mv->m_vecVelocity = mv->m_vecVelocity.Normalized() * RemapValClamped( flDistSqrToTarget, 6400, 10000, 0.f, mv->m_flMaxSpeed );
-	}
-
-	mv->m_flForwardMove = 0.f;
-	mv->m_flSideMove = 0.f;
-	mv->m_flUpMove = 0.f;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFGameMovement::ChargeMove()
 {
 	if ( !m_pTFPlayer->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
 	{
-		// Check for Quick Fix Medic healing a charging player
-		if ( !m_pTFPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
-			return false;
-
-		CTFWeaponBase *pTFWeapon = m_pTFPlayer->GetActiveTFWeapon();
-		if ( !pTFWeapon )
-			return false;
-
-		if ( pTFWeapon->GetWeaponID() != TF_WEAPON_MEDIGUN )
-			return false;
-
-		CWeaponMedigun *pMedigun = static_cast< CWeaponMedigun* >( pTFWeapon );
-		if ( !pMedigun || pMedigun->GetMedigunType() != MEDIGUN_QUICKFIX )
-			return false;
-
-		CTFPlayer *pHealTarget = ToTFPlayer( pMedigun->GetHealTarget() );
-		if ( !pHealTarget || !pHealTarget->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
-			return false;
+		return false;
 	}
 
 	mv->m_flMaxSpeed = tf_max_charge_speed.GetFloat();
@@ -990,17 +826,6 @@ void CTFGameMovement::AirDash( void )
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWpn, flJumpMod, mod_jump_height_from_weapon );
 	}
 
-	// Lose hype on airdash
-	int iHypeResetsOnJump = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iHypeResetsOnJump, hype_resets_on_jump );
-	if ( iHypeResetsOnJump != 0 )
-	{
-		// Loose x hype on jump
-		float flHype = m_pTFPlayer->m_Shared.GetScoutHypeMeter();
-		m_pTFPlayer->m_Shared.SetScoutHypeMeter( flHype - iHypeResetsOnJump );
-		m_pTFPlayer->TeamFortress_SetSpeed();
-	}
-
   	float flDashZ = 268.3281572999747f * flJumpMod;
 
 	// Get the wish direction.
@@ -1095,49 +920,6 @@ void CTFGameMovement::PreventBunnyJumping()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameMovement::ToggleParachute()
-{
-	if ( mv->m_nOldButtons & IN_JUMP )
-		return;
-
-	// Can not add if in kart (Kart code does it for spell) but players can manually undeploy
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_pTFPlayer->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-		return;
-	}
-
-	// Check for Parachute and deploy / undeploy
-	int iParachute = 0;
-	// Passive version
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iParachute, parachute_attribute );
-	if ( iParachute )
-	{
-		// Toggle between the conditions
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			m_pTFPlayer->m_Shared.RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		}
-		else
-		{
-			bool bOnGround = ( m_pTFPlayer->GetFlags() & FL_ONGROUND );
-			int iParachuteDisabled = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pTFPlayer, iParachuteDisabled, parachute_disabled );
-			if ( !bOnGround && !iParachuteDisabled && ( tf_parachute_deploy_toggle_allowed.GetBool() || !m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_DEPLOYED ) ) )
-			{
-				m_pTFPlayer->m_Shared.AddCond( TF_COND_PARACHUTE_ACTIVE );
-				m_pTFPlayer->m_Shared.AddCond( TF_COND_PARACHUTE_DEPLOYED );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFGameMovement::CheckJumpButton()
 {
 	// Are we dead?  Then we cannot jump.
@@ -1147,24 +929,6 @@ bool CTFGameMovement::CheckJumpButton()
 	// Check to see if we are in water.
 	if ( !CheckWaterJumpButton() )
 		return false;
-
-	if ( m_pTFPlayer->GetGrapplingHookTarget() && m_pTFPlayer->GetPlayerClass()->GetClassIndex() != TF_CLASS_HEAVYWEAPONS )
-	{
-		float flStartZ = mv->m_vecVelocity[2];
-		mv->m_vecVelocity[2] += tf_grapplinghook_jump_up_speed.GetFloat();
-
-		if ( mv->m_vecVelocity[2] > GetAirSpeedCap() )
-			mv->m_vecVelocity[2] = GetAirSpeedCap();
-
-		// Apply gravity.
-		FinishGravity();
-
-		mv->m_outJumpVel.z = mv->m_vecVelocity[2] - flStartZ;
-		mv->m_outStepHeight += 0.15f;
-		mv->m_nOldButtons |= IN_JUMP;
-
-		return true;
-	}
 
 	// holding jump key will make ghost fly
 	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_GHOST_MODE ) )
@@ -1190,8 +954,6 @@ bool CTFGameMovement::CheckJumpButton()
 	bool bAirDash = false;
 	bool bOnGround = ( player->GetGroundEntity() != NULL );
 
-	ToggleParachute();
-
 	// Cannot jump will ducked.
 	if ( player->GetFlags() & FL_DUCKING )
 	{
@@ -1211,7 +973,7 @@ bool CTFGameMovement::CheckJumpButton()
 		return false;
 
 	// In air, so ignore jumps 
-	// (unless you are a scout or ghost or parachute
+	// (unless you are a scout or ghost
 	if ( !bOnGround )
 	{
 		if ( m_pTFPlayer->CanAirDash() )
@@ -2003,11 +1765,7 @@ void CTFGameMovement::CheckKartWallBumping()
 //-----------------------------------------------------------------------------
 float CTFGameMovement::GetAirSpeedCap( void )
 {
-	if ( m_pTFPlayer->GetGrapplingHookTarget() )
-	{
-		return tf_grapplinghook_move_speed.GetFloat();
-	}
-	else if ( m_pTFPlayer->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
+	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) )
 	{
 		return tf_max_charge_speed.GetFloat();
 	}
@@ -2023,11 +1781,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 		}
 #endif
 */
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			flCap *= tf_parachute_aircontrol.GetFloat();
-		}
-
 		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 		{
 			if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART_DASH ) )
@@ -2045,11 +1798,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pTFPlayer, flIncreasedAirControl, mod_air_control_blast_jump );
 		}
 
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_ROCKETPACK ) )
-		{
-			flCap *= 0.5f;
-		}
-
 		return ( flCap * flIncreasedAirControl );
 	}
 }
@@ -2059,20 +1807,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 //-----------------------------------------------------------------------------
 void CTFGameMovement::AirMove( void )
 {
-	// check if grappling move should do step move
-	if ( m_pTFPlayer->GetGrapplingHookTarget() )
-	{
-		// Try moving to the destination.
-		Vector vecDestination = mv->GetAbsOrigin() + ( mv->m_vecVelocity * gpGlobals->frametime );
-		trace_t trace;
-		TracePlayerBBox( mv->GetAbsOrigin(), vecDestination, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, trace );
-		if ( trace.fraction != 1.f )
-		{
-			StepMove( vecDestination, trace );
-			return;
-		}
-	}
-
 	int			i;
 	Vector		wishvel;
 	float		fmove, smove;
@@ -2582,21 +2316,6 @@ void CTFGameMovement::FullWalkMove()
 {
 	if ( !InWater() ) 
 	{
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) && mv->m_vecVelocity[2] < 0 )
-		{
-			mv->m_vecVelocity[2] = Max( mv->m_vecVelocity[2], m_pTFPlayer->m_Shared.InCond( TF_COND_BURNING ) ? tf_parachute_maxspeed_onfire_z.GetFloat() : tf_parachute_maxspeed_z.GetFloat() );
-
-			float flDrag = tf_parachute_maxspeed_xy.GetFloat();
-			// Instead of clamping, we'll dampen
-			float flSpeedX = abs( mv->m_vecVelocity[0] );
-			float flSpeedY = abs( mv->m_vecVelocity[1] );
-			float flReductionX = flSpeedX > flDrag ? ( flSpeedX - flDrag ) / 3.0f - 10.0f : 0;
-			float flReductionY = flSpeedY > flDrag ? ( flSpeedY - flDrag ) / 3.0f - 10.0f : 0;
-
-			mv->m_vecVelocity[0] = Clamp( mv->m_vecVelocity[0], -flDrag - flReductionX, flDrag + flReductionX );
-			mv->m_vecVelocity[1] = Clamp( mv->m_vecVelocity[1], -flDrag - flReductionY, flDrag + flReductionY );
-		}
-
 		StartGravity();
 	}
 
@@ -2662,22 +2381,6 @@ void CTFGameMovement::FullWalkMove()
 
 	// Make sure velocity is valid.
 	CheckVelocity();
-
-// #ifdef GAME_DLL
-// 	if ( m_pTFPlayer->IsPlayerClass( TF_CLASS_SCOUT ) )
-// 	{
-// 		CTFWeaponBase* pWeapon = m_pTFPlayer->GetActiveTFWeapon();
-// 		if ( pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_SODA_POPPER )
-// 		{
-// 			float speed = VectorLength( mv->m_vecVelocity );
-// 			float fDist = speed*gpGlobals->frametime;
-// 			float fHype = m_pTFPlayer->m_Shared.GetScoutHypeMeter() + (fDist / tf_scout_hype_mod.GetFloat());
-// 			if ( fHype > 100.f )
-// 				fHype = 100.f;
-// 			m_pTFPlayer->m_Shared.SetScoutHypeMeter( fHype );
-// 		}
-// 	}
-// #endif
 
 }
 
@@ -2916,15 +2619,6 @@ void CTFGameMovement::SetGroundEntity( trace_t *pm )
 		m_pTFPlayer->m_Shared.m_bScattergunJump = false;
 		m_pTFPlayer->m_Shared.SetAirDash( 0 );
 		m_pTFPlayer->m_Shared.SetAirDucked( 0 );
-
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_GRAPPLINGHOOK_SAFEFALL ) )
-		{
-			// CheckFalling happens after this. reset the fall velocity to prevent fall damage
-			if ( tf_grapplinghook_prevent_fall_damage.GetBool() )
-				player->m_Local.m_flFallVelocity = 0;
-
-			m_pTFPlayer->m_Shared.RemoveCond( TF_COND_GRAPPLINGHOOK_SAFEFALL );
-		}
 	}
 }
 
@@ -2944,12 +2638,6 @@ void CTFGameMovement::PlayerRoughLandingEffects( float fvol )
 		}
 #endif // STAGING_ONLY
 */
-  		// don't play landing sound when grappling hook into a surface
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) )
-		{
-			return;
-		}
-
 		if ( m_pTFPlayer->IsPlayerClass(TF_CLASS_SCOUT) )
 		{
 			// Scouts don't play rumble unless they take damage.

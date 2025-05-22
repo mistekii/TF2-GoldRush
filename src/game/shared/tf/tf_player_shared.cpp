@@ -31,7 +31,6 @@
 #include "tf_mapinfo.h"
 #include "tf_dropped_weapon.h"
 #include "tf_weapon_passtime_gun.h"
-#include "tf_weapon_rocketpack.h"
 #include <functional>
 
 // Client specific.
@@ -92,9 +91,7 @@
 #include "tf_weapon_passtime_gun.h"
 #include "entity_healthkit.h"
 #include "halloween/merasmus/merasmus.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_wearable_levelable_item.h"
-#include "tf_weapon_rocketpack.h"
 #include "tf_obj_sentrygun.h"
 #include "func_respawnroom.h"
 #endif
@@ -214,8 +211,6 @@ extern ConVar mp_developer;
 #define TF_SPY_STEALTH_BLINKSCALE  0.85f
 
 #define TF_BUILDING_PICKUP_RANGE 150
-#define TF_BUILDING_RESCUE_MIN_RANGE_SQ 62500  //250 * 250
-#define TF_BUILDING_RESCUE_MAX_RANGE 5500
 
 #define TF_PLAYER_CONDITION_CONTEXT	"TFPlayerConditionContext"
 
@@ -223,7 +218,6 @@ extern ConVar mp_developer;
 #define TF_SCREEN_OVERLAY_MATERIAL_INVULN_RED	"effects/invuln_overlay_red" 
 #define TF_SCREEN_OVERLAY_MATERIAL_INVULN_BLUE	"effects/invuln_overlay_blue" 
 
-#define TF_SCREEN_OVERLAY_MATERIAL_MILK				"effects/milk_screen" 
 #define TF_SCREEN_OVERLAY_MATERIAL_URINE			"effects/jarate_overlay" 
 #define TF_SCREEN_OVERLAY_MATERIAL_BLEED			"effects/bleed_overlay" 
 #define TF_SCREEN_OVERLAY_MATERIAL_STEALTH			"effects/stealth_overlay"
@@ -374,7 +368,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropBool( RECVINFO( m_bLoadoutUnavailable ) ),
 	RecvPropInt( RECVINFO( m_iItemFindBonus ) ),
 	RecvPropBool( RECVINFO( m_bShieldEquipped ) ),
-	RecvPropBool( RECVINFO( m_bParachuteEquipped ) ),
 	RecvPropInt( RECVINFO( m_iNextMeleeCrit ) ),
 	RecvPropInt( RECVINFO( m_iDecapitations ) ),
 	RecvPropInt( RECVINFO( m_iRevengeCrits ) ),
@@ -548,7 +541,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropBool( SENDINFO( m_bLoadoutUnavailable ) ),
 	SendPropInt( SENDINFO( m_iItemFindBonus ) ),
 	SendPropBool( SENDINFO( m_bShieldEquipped ) ),
-	SendPropBool( SENDINFO( m_bParachuteEquipped ) ),
 	SendPropInt( SENDINFO( m_iNextMeleeCrit ) ),
 	SendPropInt( SENDINFO( m_iDecapitations ), 8, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iRevengeCrits ), 7, SPROP_UNSIGNED ),
@@ -696,10 +688,6 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 	if ( m_Shared.IsCarryingObject() )
 		return false;
 
-	// Can't taunt if hooked into a player
-	if ( m_Shared.InCond( TF_COND_GRAPPLED_TO_PLAYER ) )
-		return false;
-
 	if ( IsPlayerClass( TF_CLASS_SCOUT ) )
 	{
 		if ( pActiveWeapon && pActiveWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX )
@@ -718,7 +706,7 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 			{
 				CTFLunchBox *pLunchbox = (CTFLunchBox*)pActiveWeapon;
 
-				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) || ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD_ROBO ) )
+				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) )
 				{
 					if ( !TFGameRules()->IsMannVsMachineMode() && HasItem() )
 						return false;
@@ -806,8 +794,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_bShieldEquipped = false;
 	m_bPostShieldCharge = false;
 	m_iNextMeleeCrit = 0;
-
-	m_bParachuteEquipped = false;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
 	m_iOldKillStreak = 0;
@@ -911,8 +897,6 @@ void CTFPlayerShared::Init( CTFPlayer *pPlayer )
 	m_bPostShieldCharge = false;
 	m_iNextMeleeCrit = 0;
 
-	m_bParachuteEquipped = false;
-
 	m_iDecapitations = m_iOldDecapitations = 0;
 	m_iOldKillStreak = 0;
 	m_iOldKillStreakWepSlot = 0;
@@ -995,7 +979,7 @@ void CTFPlayerShared::Spawn( void )
 	m_bKingRuneBuffActive = false;
 
 	// Reset our assist here incase something happens before we get killed
-	// again that checks this (getting slapped with a fish)
+	// again that checks this
 	SetAssist( NULL );
 }
 
@@ -1251,7 +1235,6 @@ CBaseEntity *CTFPlayerShared::GetConditionAssistFromVictim( void )
 	static const ETFCond nTrackedConditions[] = 
 	{
 		TF_COND_URINE,
-		TF_COND_MAD_MILK,
 		TF_COND_MARKEDFORDEATH,
 	};
 
@@ -1580,10 +1563,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddCritBoost();
 		break;
 
-	case TF_COND_SODAPOPPER_HYPE:
-		OnAddSodaPopperHype();
-		break;
-
 	case TF_COND_DISGUISING:
 		OnAddDisguising();
 		break;
@@ -1650,14 +1629,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddRadiusHeal();
 		break;
 
-	case TF_COND_MEGAHEAL:
-		OnAddMegaHeal();
-		break;
-
-	case TF_COND_MAD_MILK:
-		OnAddMadMilk();
-		break;
-
 	case TF_COND_SPEED_BOOST:				OnAddSpeedBoost( false );		break;
 
 	case TF_COND_SAPPED:
@@ -1688,45 +1659,9 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	case TF_COND_RADIUSHEAL_ON_DAMAGE:
 		OnAddRadiusHealOnDamage();
 		break;
-
-	case TF_COND_MEDIGUN_UBER_BULLET_RESIST:
-		OnAddMedEffectUberBulletResist();
-		break;
-
-	case TF_COND_MEDIGUN_UBER_BLAST_RESIST:
-		OnAddMedEffectUberBlastResist();
-		break;
-
-	case TF_COND_MEDIGUN_UBER_FIRE_RESIST:
-		OnAddMedEffectUberFireResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_BULLET_RESIST:
-		OnAddMedEffectSmallBulletResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_BLAST_RESIST:
-		OnAddMedEffectSmallBlastResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_FIRE_RESIST:
-		OnAddMedEffectSmallFireResist();
-		break;
 	
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnAddStealthedUserBuffFade();
-		break;
-
-	case TF_COND_BULLET_IMMUNE:
-		OnAddBulletImmune();
-		break;
-
-	case TF_COND_BLAST_IMMUNE:
-		OnAddBlastImmune();
-		break;
-
-	case TF_COND_FIRE_IMMUNE:
-		OnAddFireImmune();
 		break;
 
 	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
@@ -1753,10 +1688,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddHalloweenGhostMode();
 		break;
 
-	case TF_COND_PARACHUTE_ACTIVE:
-		OnAddCondParachute();
-		break;
-
 	case TF_COND_HALLOWEEN_KART_DASH:
 		OnAddHalloweenKartDash();
 		break;
@@ -1781,10 +1712,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddHalloweenKartCage();
 		break;
 
-	case TF_COND_GRAPPLINGHOOK_LATCHED:
-		OnAddGrapplingHookLatched();
-		break;
-
 	case TF_COND_PASSTIME_INTERCEPTION:
 		OnAddPasstimeInterception();
 		break;
@@ -1799,10 +1726,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 
 	case TF_COND_COMPETITIVE_LOSER:
 		OnAddCompetitiveLoser();
-		break;
-
-	case TF_COND_ROCKETPACK:
-		OnAddRocketPack();
 		break;
 
 	case TF_COND_HALLOWEEN_HELL_HEAL:
@@ -1852,10 +1775,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
 	case TF_COND_CRITBOOSTED_RUNE_TEMP:
 		OnRemoveCritBoost();
-		break;
-
-	case TF_COND_SODAPOPPER_HYPE:
-		OnRemoveSodaPopperHype();
 		break;
 
 	case TF_COND_TMPDAMAGEBONUS:
@@ -1958,14 +1877,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveRadiusHeal();
 		break;
 
-	case TF_COND_MEGAHEAL:
-		OnRemoveMegaHeal();
-		break;
-
-	case TF_COND_MAD_MILK:
-		OnRemoveMadMilk();
-		break;
-
 	case TF_COND_TAUNTING:
 		OnRemoveTaunting();
 		break;
@@ -2002,44 +1913,8 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveRadiusHealOnDamage();
 		break;
 
-	case TF_COND_MEDIGUN_UBER_BULLET_RESIST:
-		OnRemoveMedEffectUberBulletResist();
-		break;
-
-	case TF_COND_MEDIGUN_UBER_BLAST_RESIST:
-		OnRemoveMedEffectUberBlastResist();
-		break;
-
-	case TF_COND_MEDIGUN_UBER_FIRE_RESIST:
-		OnRemoveMedEffectUberFireResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_BULLET_RESIST:
-		OnRemoveMedEffectSmallBulletResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_BLAST_RESIST:
-		OnRemoveMedEffectSmallBlastResist();
-		break;
-
-	case TF_COND_MEDIGUN_SMALL_FIRE_RESIST:
-		OnRemoveMedEffectSmallFireResist();
-		break;
-
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnRemoveStealthedUserBuffFade();
-		break;
-
-	case TF_COND_BULLET_IMMUNE:
-		OnRemoveBulletImmune();
-		break;
-
-	case TF_COND_BLAST_IMMUNE:
-		OnRemoveBlastImmune();
-		break;
-
-	case TF_COND_FIRE_IMMUNE:
-		OnRemoveFireImmune();
 		break;
 
 	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
@@ -2066,10 +1941,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveHalloweenGhostMode();
 		break;
 
-	case TF_COND_PARACHUTE_ACTIVE:
-		OnRemoveCondParachute();
-		break;
-
 	case TF_COND_HALLOWEEN_KART_DASH:
 		OnRemoveHalloweenKartDash();
 		break;
@@ -2093,10 +1964,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveHalloweenKartCage();
 		break;
 
-	case TF_COND_GRAPPLINGHOOK_LATCHED:
-		OnRemoveGrapplingHookLatched();
-		break;
-
 	case TF_COND_PASSTIME_INTERCEPTION:
 		OnRemovePasstimeInterception();
 		break;
@@ -2111,10 +1978,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_COMPETITIVE_LOSER:
 		OnRemoveCompetitiveLoser();
-		break;
-
-	case TF_COND_ROCKETPACK:
-		OnRemoveRocketPack();
 		break;
 
 	case TF_COND_HALLOWEEN_HELL_HEAL:
@@ -2343,17 +2206,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 			CTFPlayer *pTFHealer = ToTFPlayer( m_aHealers[i].pHealer );
 			if ( !bHealActual && !bHealDisguise )
 			{
-				if ( pTFHealer )
-				{
-					// Quick fix never lets health decay, even when they're at or above max overheal
-					CWeaponMedigun *pMedigun = dynamic_cast< CWeaponMedigun* >( pTFHealer->GetActiveTFWeapon() );
-					if ( pMedigun && pMedigun->GetMedigunType() == MEDIGUN_QUICKFIX )
-					{
-						bDecayHealth = false;
-						bDecayDisguiseHealth = false;
-					}
-				}
-
 				continue;
 			}
 
@@ -2370,12 +2222,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 
 			// What we multiply the heal amount by (can be changed by conditions or items).
 			float flHealAmountMult = 1.0f;
-
-			// Quick-Fix uber
-			if ( InCond( TF_COND_MEGAHEAL ) )
-			{
-				flHealAmountMult = 3.0f;
-			}
 
 			flScale *= flHealAmountMult;
 
@@ -2844,10 +2690,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 
 	TestAndExpireChargeEffect( MEDIGUN_CHARGE_INVULN );
 	TestAndExpireChargeEffect( MEDIGUN_CHARGE_CRITICALBOOST );
-	TestAndExpireChargeEffect( MEDIGUN_CHARGE_MEGAHEAL );
-	//TestAndExpireChargeEffect( MEDIGUN_CHARGE_BULLET_RESIST );
-	//TestAndExpireChargeEffect( MEDIGUN_CHARGE_BLAST_RESIST );
-	//TestAndExpireChargeEffect( MEDIGUN_CHARGE_FIRE_RESIST );
 
 	if ( InCond( TF_COND_STEALTHED_BLINK ) )
 	{
@@ -2873,12 +2715,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		{
 			// If we're underwater, wash off the urine.
 			RemoveCond( TF_COND_URINE );
-		}
-
-		if ( InCond( TF_COND_MAD_MILK ) )
-		{
-			// If we're underwater, wash off the Mad Milk.
-			RemoveCond( TF_COND_MAD_MILK );
 		}
 	}
 
@@ -2981,41 +2817,6 @@ void CTFPlayerShared::ConditionThink( void )
 		// Airborne conditions end on ground contact
 		RemoveCond( TF_COND_KNOCKED_INTO_AIR );
 		RemoveCond( TF_COND_AIR_CURRENT );
-
-		RemoveCond( TF_COND_PARACHUTE_ACTIVE );
-		RemoveCond( TF_COND_PARACHUTE_DEPLOYED );
-
-		if ( InCond( TF_COND_ROCKETPACK ) )
-		{
-			// Make sure we're still not dealing with launch, where it's possible
-			// to hit your head and fall to the ground before the second stage.
-			CTFWeaponBase *pRocketPack = m_pOuter->Weapon_OwnsThisID( TF_WEAPON_ROCKETPACK );
-			if ( pRocketPack )
-			{
-				if ( gpGlobals->curtime > ( static_cast< CTFRocketPack* >( pRocketPack )->GetRefireTime() ) )
-				{
-#ifdef CLIENT_DLL
-					if ( prediction->IsFirstTimePredicted() )
-#endif
-					{
-						CPASAttenuationFilter filter( m_pOuter );
-						filter.UsePredictionRules();
-						m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Weapon_RocketPack.BoostersShutdown" );
-						m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Weapon_RocketPack.Land" );
-					}
-					RemoveCond( TF_COND_ROCKETPACK );
-
-#ifdef GAME_DLL
-					IGameEvent *pEvent = gameeventmanager->CreateEvent( "rocketpack_landed" );
-					if ( pEvent )
-					{
-						pEvent->SetInt( "userid", m_pOuter->GetUserID() );
-						gameeventmanager->FireEvent( pEvent );
-					}
-#endif
-				}
-			}
-		}
 	}
 
 	// See if we should be pulsing our radius heal
@@ -3336,11 +3137,6 @@ void CTFPlayerShared::OnAddInvulnerable( void )
 		RemoveCond( TF_COND_BLEEDING );
 	}
 
-	if ( InCond( TF_COND_MAD_MILK ) )
-	{
-		RemoveCond( TF_COND_MAD_MILK );
-	}
-
 	if ( InCond( TF_COND_PLAGUE ) )
 	{
 		RemoveCond( TF_COND_PLAGUE );
@@ -3561,78 +3357,6 @@ void CTFPlayerShared::OnRemoveMarkedForDeath( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: PARACHUTE
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddCondParachute( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->GetPredictable() && ( prediction->IsFirstTimePredicted() && !m_bSyncingConditions ) )
-	{
-		m_pOuter->EmitSound( "Parachute_open" );
-	}
-
-	if ( InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		if ( !m_hKartParachuteEntity )
-		{
-			C_BaseAnimating* pBanner = new C_BaseAnimating;
-			//if ( pBanner )
-			//	return;
-
-			pBanner->m_nSkin = 0;
-			pBanner->InitializeAsClientEntity( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_parachute.mdl", RENDER_GROUP_OPAQUE_ENTITY );
-			pBanner->ForceClientSideAnimationOn();
-			int iSpine = m_pOuter->LookupBone( "bip_spine_3" );
-			Assert( iSpine != -1 );
-			if ( iSpine != -1 )
-			{
-				pBanner->AttachEntityToBone( m_pOuter, iSpine );
-			}
-
-			int sequence = pBanner->SelectWeightedSequence( ACT_PARACHUTE_DEPLOY_IDLE );
-			pBanner->ResetSequence( sequence );
-			m_hKartParachuteEntity.Set( pBanner );
-		}
-	}
-	else
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "parachute_deploy" );
-		if ( event )
-		{
-			event->SetInt( "index", m_pOuter->entindex() );
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-#endif
-}
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveCondParachute( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->GetPredictable() && ( prediction->IsFirstTimePredicted() && !m_bSyncingConditions ) )
-	{
-		m_pOuter->EmitSound( "Parachute_close" );
-	}
-
-	if ( m_hKartParachuteEntity )
-	{
-		m_hKartParachuteEntity->Release();
-		m_hKartParachuteEntity = NULL;
-	}
-
-	if ( !InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "parachute_holster" );
-		if ( event )
-		{
-			event->SetInt( "index", m_pOuter->entindex() );
-			gameeventmanager->FireEventClientSide( event );
-		}
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddHalloweenHellHeal( void )
@@ -3647,72 +3371,6 @@ void CTFPlayerShared::OnRemoveHalloweenHellHeal( void )
 #ifdef GAME_DLL
 	StopHealing( m_pOuter );
 #endif // SERVER_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMadMilk( void )
-{
-#ifdef GAME_DLL
-	Assert( InCond( TF_COND_MAD_MILK ) );
-
-	// Check for the attribute that extends duration on successive hits
-	if ( m_ConditionData[TF_COND_MAD_MILK].m_bPrevActive )
-	{
-		CBaseEntity *pProvider = GetConditionProvider( TF_COND_MAD_MILK );
-		if ( pProvider )
-		{
-			int iMadMilkSyringes = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pProvider, iMadMilkSyringes, mad_milk_syringes );
-			if ( iMadMilkSyringes )
-			{
-				float flDuration = GetConditionDuration( TF_COND_MAD_MILK ) + 0.5f;
-				SetConditionDuration( TF_COND_MAD_MILK, Min( flDuration , 4.f ) );
-			}
-		}
-	}
-#else
-	if ( !m_pOuter->m_pMilkEffect )
-	{
-		m_pOuter->m_pMilkEffect = m_pOuter->ParticleProp()->Create( "peejar_drips_milk", PATTACH_ABSORIGIN_FOLLOW );
-	}
-
-	m_pOuter->ParticleProp()->AddControlPoint( m_pOuter->m_pMilkEffect, 1, m_pOuter, PATTACH_ABSORIGIN_FOLLOW );
-
-// 	if ( m_pOuter->IsLocalPlayer() )
-// 	{
-// 		IMaterial *pMaterial = materials->FindMaterial( TF_SCREEN_OVERLAY_MATERIAL_MILK, TEXTURE_GROUP_CLIENT_EFFECTS, false );
-// 		if ( !IsErrorMaterial( pMaterial ) )
-// 		{
-// 			view->SetScreenOverlayMaterial( pMaterial );
-// 		}
-// 	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMadMilk( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pMilkEffect )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pMilkEffect );
-		m_pOuter->m_pMilkEffect = NULL;
-	}
-
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-//		IMaterial *pMaterial = view->GetScreenOverlayMaterial();
-
-//		if ( pMaterial && FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_MILK ) )
-//		{
-//			view->SetScreenOverlayMaterial( NULL );
-//		}
-	}
-#endif
 }
 
 #ifdef CLIENT_DLL
@@ -4419,62 +4077,6 @@ void CTFPlayerShared::OnRemoveDisguisedAsDispenser( void )
 	m_pOuter->TeamFortress_SetSpeed();
 }
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddRocketPack( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveRocketPack( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::ApplyRocketPackStun( float flStunDuration )
-{
-	if ( flStunDuration < 0.1f )
-		return;
-
-#ifdef GAME_DLL
-	int nStunFlags = TF_STUN_CONTROLS;
-	float flStunAmount = 0.85f;
-	const int nMaxEnts = 24;
-	CBaseEntity	*pObjects[ nMaxEnts ];
-	int nCount = UTIL_EntitiesInSphere( pObjects, nMaxEnts, m_pOuter->GetAbsOrigin(), 192.f, FL_CLIENT );
-	for ( int i = 0; i < nCount; i++ )
-	{
-		if ( !pObjects[i] )
-			continue;
-
-		if ( !pObjects[i]->IsAlive() )
-			continue;
-
-		if ( m_pOuter->InSameTeam( pObjects[i] ) )
-			continue;
-
-		if ( !m_pOuter->FVisible( pObjects[i], MASK_OPAQUE ) )
-			continue;
-
-		CTFPlayer *pTFPlayer = ToTFPlayer( pObjects[i] );
-		if ( !pTFPlayer )
-			continue;
-
-		if ( pTFPlayer->IsMiniBoss() )
-		{
-			nStunFlags = TF_STUN_MOVEMENT | TF_STUN_NO_EFFECTS;
-		}
-
-		pTFPlayer->m_Shared.StunPlayer( flStunDuration, flStunAmount, nStunFlags );
-	}
-#endif // GAME_DLL
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Central place to handle specific effects/events when a player attacks
@@ -4560,422 +4162,7 @@ static void RemoveUberScreenEffect( const CTFPlayer* pPlayer )
 		}
 	}
 }
-
-static const char* s_pszRedResistOverheadEffectName[] =
-{
-	"vaccinator_red_buff1",
-	"vaccinator_red_buff2",
-	"vaccinator_red_buff3",
-};
-static const char* s_pszBlueResistOverheadEffectName[] =
-{
-	"vaccinator_blue_buff1",
-	"vaccinator_blue_buff2",
-	"vaccinator_blue_buff3",
-};
-COMPILE_TIME_ASSERT( ARRAYSIZE( s_pszRedResistOverheadEffectName ) == MEDIGUN_NUM_RESISTS && ARRAYSIZE( s_pszBlueResistOverheadEffectName ) == MEDIGUN_NUM_RESISTS );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void AddResistParticle( CTFPlayer* pPlayer, medigun_resist_types_t nResistType, ETFCond eYeildToCond = TF_COND_LAST )
-{
-	// Don't spawn it over the local player's head
-	if ( !pPlayer || pPlayer->IsLocalPlayer() )
-		return;
-
-	// do not add if stealthed
-	if ( pPlayer->m_Shared.IsStealthed() )
-		return;
-
-	// Don't add this effect if the yield effect is passed in
-	if( eYeildToCond != TF_COND_LAST && pPlayer->m_Shared.InCond( eYeildToCond ) )
-		return;
-
-	if ( pPlayer->m_Shared.GetDisplayedTeam() == TF_TEAM_RED )
-	{
-		pPlayer->AddOverheadEffect( s_pszRedResistOverheadEffectName[ nResistType ] );
-	}
-	else
-	{
-		pPlayer->AddOverheadEffect( s_pszBlueResistOverheadEffectName[ nResistType ] );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void RemoveResistParticle( CTFPlayer* pPlayer, medigun_resist_types_t nResistType )
-{
-	if ( !pPlayer || pPlayer->IsLocalPlayer() )
-		return;
-
-	bool bKeep = false;
-	switch ( nResistType )
-	{
-		case MEDIGUN_BULLET_RESIST:
-			bKeep = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BULLET_RESIST );
-			break;
-		case MEDIGUN_BLAST_RESIST:
-			bKeep = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BLAST_RESIST );
-			break;
-		case MEDIGUN_FIRE_RESIST:
-			bKeep = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_FIRE_RESIST );
-			break;
-		default:
-			AssertMsg( 0, "Invalid medigun resist type" );
-			break;
-	}
-
-	// don't remove overhead effect if the uber's still active
-	if ( bKeep )
-		return;
-	
-	if ( pPlayer->m_Shared.GetDisplayedTeam() == TF_TEAM_RED )
-	{
-		pPlayer->RemoveOverheadEffect( s_pszRedResistOverheadEffectName[ nResistType ], true );
-	}
-	else
-	{
-		pPlayer->RemoveOverheadEffect( s_pszBlueResistOverheadEffectName[ nResistType ], true );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static int GetResistShieldSkinForResistType( ETFCond eCond )
-{
-	switch( eCond )
-	{
-		case TF_COND_MEDIGUN_UBER_BULLET_RESIST:
-			return 2;
-
-		case TF_COND_MEDIGUN_UBER_BLAST_RESIST:
-			return 3;
-
-		case TF_COND_MEDIGUN_UBER_FIRE_RESIST:
-			return 4;
-
-		default:
-			AssertMsg( 0, "Invalid condition passed into AddResistShield" );
-			return 0;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void AddResistShield( C_LocalTempEntity** pShield, CTFPlayer* pPlayer, ETFCond eCond  )
-{
-	if( CBasePlayer::GetLocalPlayer() == pPlayer )
-		return;
-
-	// do not add if stealthed
-	if ( pPlayer->m_Shared.IsStealthed() )
-		return;
-
-	// Don't create a new shield if we already have one
-	if( *pShield )
-		return;
-
-	model_t *pModel = (model_t*) engine->LoadModel( "models/effects/resist_shield/resist_shield.mdl" );
-	(*pShield) = tempents->SpawnTempModel( pModel, pPlayer->GetAbsOrigin(), pPlayer->GetAbsAngles(), Vector(0, 0, 0), 1, FTENT_NEVERDIE | FTENT_PLYRATTACHMENT );
-	if ( *pShield )
-	{
-		(*pShield)->ChangeTeam( pPlayer->m_Shared.GetDisplayedTeam() );
-		if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			(*pShield)->m_nSkin = GetResistShieldSkinForResistType( eCond );
-		}
-		else
-		{
-			(*pShield)->m_nSkin = ( pPlayer->m_Shared.GetDisplayedTeam() == TF_TEAM_RED ) ? 0 : 1;
-		}
-		(*pShield)->clientIndex = pPlayer->entindex();
-		(*pShield)->SetModelScale( pPlayer->GetModelScale() );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void RemoveResistShield( C_LocalTempEntity** pShield, CTFPlayer* pPlayer )
-{
-	if ( *pShield )
-	{
-		ETFCond eCond = TF_COND_INVALID;
-		// Check if we still have one of the other resist types on us
-		eCond = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BULLET_RESIST ) ? TF_COND_MEDIGUN_UBER_BULLET_RESIST : eCond;
-		eCond = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_BLAST_RESIST ) ? TF_COND_MEDIGUN_UBER_BLAST_RESIST : eCond;
-		eCond = pPlayer->m_Shared.InCond( TF_COND_MEDIGUN_UBER_FIRE_RESIST ) ? TF_COND_MEDIGUN_UBER_FIRE_RESIST : eCond;
-		eCond = ( pPlayer->m_Shared.InCond( TF_COND_RUNE_RESIST ) && !pPlayer->m_Shared.IsStealthed() ) ? TF_COND_RUNE_RESIST : eCond;
-
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			eCond = ( pPlayer->IsEnemyPlayer() && pPlayer->m_Shared.InCond( TF_COND_RUNE_PLAGUE ) && pLocalPlayer->m_Shared.InCond( TF_COND_PLAGUE ) ) ? TF_COND_RUNE_PLAGUE : eCond;
-		}
-
-		// Still have one, don't remove the shield
-		if( eCond != TF_COND_INVALID )
-		{
-			// If we're in MvM, and we're one of the bots, change the shield color
-			if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
-			{
-				(*pShield)->m_nSkin = GetResistShieldSkinForResistType( eCond );
-			}
-
-			return;
-		}
-		else	// No more bubble
-		{
-			(*pShield)->flags = FTENT_FADEOUT | FTENT_PLYRATTACHMENT;
-			(*pShield)->die = gpGlobals->curtime;
-			(*pShield)->fadeSpeed = 1.0f;
-			(*pShield) = NULL;
-		}
-	}
-}
 #endif // CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectUberBulletResist( void )
-{
-#ifdef CLIENT_DLL
-	AddResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST );
-	AddUberScreenEffect( m_pOuter );
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_BULLET_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectUberBulletResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST );
-	RemoveUberScreenEffect( m_pOuter );
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-	OnAddMedEffectSmallBulletResist();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectUberBlastResist( void )
-{
-#ifdef CLIENT_DLL
-	AddResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST );
-	AddUberScreenEffect( m_pOuter );
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_BLAST_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectUberBlastResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST );
-	RemoveUberScreenEffect( m_pOuter );
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-	OnAddMedEffectSmallBlastResist();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectUberFireResist( void )
-{
-#ifdef CLIENT_DLL
-	AddResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
-	AddUberScreenEffect( m_pOuter );
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_FIRE_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectUberFireResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
-	RemoveUberScreenEffect( m_pOuter );
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-	OnAddMedEffectSmallFireResist();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectSmallBulletResist( void )
-{
-#ifdef CLIENT_DLL
-	if( InCond( TF_COND_MEDIGUN_SMALL_BULLET_RESIST ) )
-	{
-		AddResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST, TF_COND_MEDIGUN_UBER_BULLET_RESIST );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectSmallBulletResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectSmallBlastResist( void )
-{
-#ifdef CLIENT_DLL
-	if( InCond( TF_COND_MEDIGUN_SMALL_BLAST_RESIST ) )
-	{
-		AddResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST, TF_COND_MEDIGUN_UBER_BLAST_RESIST );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectSmallBlastResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMedEffectSmallFireResist( void )
-{
-#ifdef CLIENT_DLL
-	if( InCond( TF_COND_MEDIGUN_SMALL_FIRE_RESIST ) )
-	{
-		AddResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST, TF_COND_MEDIGUN_UBER_FIRE_RESIST );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMedEffectSmallFireResist( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddGrapplingHookLatched( void )
-{
-	m_pOuter->DoAnimationEvent( PLAYERANIMEVENT_CUSTOM_GESTURE, ACT_GRAPPLE_PULL_START );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveGrapplingHookLatched( void )
-{
-	// DO NOTHING
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddBulletImmune( void )
-{
-#ifdef CLIENT_DLL
-	AddResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST );
-	AddUberScreenEffect( m_pOuter );
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_BULLET_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveBulletImmune( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BULLET_RESIST );
-	RemoveUberScreenEffect( m_pOuter );
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddBlastImmune( void )
-{
-#ifdef CLIENT_DLL
-	AddResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST );
-	AddUberScreenEffect( m_pOuter );
-	AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_BLAST_RESIST );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveBlastImmune( void )
-{
-#ifdef CLIENT_DLL
-	RemoveResistParticle( m_pOuter, MEDIGUN_BLAST_RESIST );
-	RemoveUberScreenEffect( m_pOuter );
-	RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddFireImmune( void )
-{
-#ifdef CLIENT_DLL
-	AddUberScreenEffect( m_pOuter );
-	if ( !m_pOuter->IsPlayerClass( TF_CLASS_SPY ) )
-	{
-		AddResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
-		AddResistShield( &m_pOuter->m_pTempShield, m_pOuter, TF_COND_MEDIGUN_UBER_FIRE_RESIST );
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveFireImmune( void )
-{
-#ifdef CLIENT_DLL
-	RemoveUberScreenEffect( m_pOuter );
-	if ( !m_pOuter->IsPlayerClass( TF_CLASS_SPY ) )
-	{
-		RemoveResistParticle( m_pOuter, MEDIGUN_FIRE_RESIST );
-		RemoveResistShield( &m_pOuter->m_pTempShield, m_pOuter );
-	}
-#endif
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -5047,10 +4234,6 @@ void CTFPlayerShared::OnRemoveHalloweenSpeedBoost( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnAddHalloweenQuickHeal( void )
 {
-#ifdef GAME_DLL
-	AddCond( TF_COND_MEGAHEAL );
-	Heal( m_pOuter, 30.0f, 2.0f, 1.0f );
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -5058,10 +4241,6 @@ void CTFPlayerShared::OnAddHalloweenQuickHeal( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::OnRemoveHalloweenQuickHeal( void )
 {
-#ifdef GAME_DLL
-	RemoveCond( TF_COND_MEGAHEAL );
-	StopHealing( m_pOuter );
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -6072,78 +5251,6 @@ void CTFPlayerShared::OnRemoveRadiusHeal( void )
 {
 #ifdef CLIENT_DLL
 	EndRadiusHealEffect();
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMegaHeal( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		const char *pEffectName = NULL;
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_RED )
-		{
-			pEffectName = TF_SCREEN_OVERLAY_MATERIAL_INVULN_RED;
-		}
-		else
-		{
-			pEffectName = TF_SCREEN_OVERLAY_MATERIAL_INVULN_BLUE;
-		}
-
-		IMaterial *pMaterial = materials->FindMaterial( pEffectName, TEXTURE_GROUP_CLIENT_EFFECTS, false );
-		if ( !IsErrorMaterial( pMaterial ) )
-		{
-			view->SetScreenOverlayMaterial( pMaterial );
-		}
-	}
-
-	if ( InCond( TF_COND_MEGAHEAL ) )
-	{
-		const char *pszMegaHealEffectName;
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_RED )
-		{
-			pszMegaHealEffectName = "medic_megaheal_red";
-		}
-		else
-		{
-			pszMegaHealEffectName = "medic_megaheal_blue";
-		}
-
-		if ( !m_pOuter->m_pMegaHealEffect )
-		{
-			m_pOuter->m_pMegaHealEffect = m_pOuter->ParticleProp()->Create( pszMegaHealEffectName, PATTACH_ABSORIGIN_FOLLOW );
-		}
-	}
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMegaHeal( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->m_pMegaHealEffect )
-	{
-		m_pOuter->m_pMegaHealEffect->StopEmission();
-		m_pOuter->m_pMegaHealEffect = NULL;
-	}
-
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		// only remove the overlay if it is an invuln material 
-		IMaterial *pMaterial = view->GetScreenOverlayMaterial();
-
-		if ( pMaterial &&
-			( FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_INVULN_BLUE ) || 
-			FStrEq( pMaterial->GetName(), TF_SCREEN_OVERLAY_MATERIAL_INVULN_RED ) ) )
-		{
-			view->SetScreenOverlayMaterial( NULL );
-		}
-	}
 #endif
 }
 
@@ -7242,29 +6349,6 @@ void CTFPlayerShared::UpdateCritBoostEffect( ECritBoostUpdateType eUpdateType )
 #endif
 
 //-----------------------------------------------------------------------------
-// Soda Popper Condition
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddSodaPopperHype( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		m_pOuter->EmitSound( "DisciplineDevice.PowerUp" );
-	}
-#endif // CLIENT_DLL
-}
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveSodaPopperHype( void )
-{
-#ifdef CLIENT_DLL
-	if ( m_pOuter->IsLocalPlayer() )
-	{
-		m_pOuter->EmitSound( "DisciplineDevice.PowerDown" );
-	}
-#endif // CLIENT_DLL
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 float CTFPlayerShared::GetStealthNoAttackExpireTime( void )
@@ -7476,9 +6560,6 @@ void CTFPlayerShared::UpdateItemChargeMeters()
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::CanFallStomp( void )
 {
-	if ( InCond( TF_COND_ROCKETPACK ) )
-		return true;
-
 	int iHeadStomp = 0;
 	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pOuter, iHeadStomp, boots_falling_stomp );
 
@@ -7702,9 +6783,6 @@ bool CTFPlayerShared::CanBeDebuffed( void ) const
 //-----------------------------------------------------------------------------
 bool CTFPlayerShared::IsImmuneToPushback( void ) const
 {
-	if ( InCond( TF_COND_MEGAHEAL ) )
-		return true;
-
 	if ( InCond( TF_COND_IMMUNE_TO_PUSHBACK ) )
 		return true;
 
@@ -8265,14 +7343,6 @@ bool CTFPlayerShared::CanRecieveMedigunChargeEffect( medigun_charge_types eType 
 			// allow bot flag carriers to be ubered
 			bCanRecieve = true;
 		}
-
-		if ( ( eType == MEDIGUN_CHARGE_MEGAHEAL ) 
-		  || ( eType == MEDIGUN_CHARGE_BULLET_RESIST )
-		  || ( eType == MEDIGUN_CHARGE_BLAST_RESIST )
-		  || ( eType == MEDIGUN_CHARGE_FIRE_RESIST ) )
-		{
-			bCanRecieve = true;
-		}
 	}
 
 	
@@ -8421,10 +7491,6 @@ void CTFPlayerShared::RecalculateChargeEffects( bool bInstantRemove )
 
 	SetChargeEffect( MEDIGUN_CHARGE_INVULN,			aCharges[MEDIGUN_CHARGE_INVULN].bActive,		bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_INVULN ],			tf_invuln_time.GetFloat(),	aCharges[MEDIGUN_CHARGE_INVULN].pProvider );
 	SetChargeEffect( MEDIGUN_CHARGE_CRITICALBOOST,	aCharges[MEDIGUN_CHARGE_CRITICALBOOST].bActive, bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_CRITICALBOOST ],	0.0f,						aCharges[MEDIGUN_CHARGE_CRITICALBOOST].pProvider );
-	SetChargeEffect( MEDIGUN_CHARGE_MEGAHEAL,		aCharges[MEDIGUN_CHARGE_MEGAHEAL].bActive,		bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_MEGAHEAL ],		0.0f,						aCharges[MEDIGUN_CHARGE_MEGAHEAL].pProvider );
-	SetChargeEffect( MEDIGUN_CHARGE_BULLET_RESIST,	aCharges[MEDIGUN_CHARGE_BULLET_RESIST].bActive,	bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_BULLET_RESIST ],	0.0f,						aCharges[MEDIGUN_CHARGE_BULLET_RESIST].pProvider );
-	SetChargeEffect( MEDIGUN_CHARGE_BLAST_RESIST,	aCharges[MEDIGUN_CHARGE_BLAST_RESIST].bActive,	bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_BLAST_RESIST ],	0.0f,						aCharges[MEDIGUN_CHARGE_BLAST_RESIST].pProvider );
-	SetChargeEffect( MEDIGUN_CHARGE_FIRE_RESIST,	aCharges[MEDIGUN_CHARGE_FIRE_RESIST].bActive,	bInstantRemove, g_MedigunEffects[ MEDIGUN_CHARGE_FIRE_RESIST ],		0.0f,						aCharges[MEDIGUN_CHARGE_FIRE_RESIST].pProvider );
 }
 
 //-----------------------------------------------------------------------------
@@ -9251,9 +8317,6 @@ void CTFPlayerShared::StunPlayer( float flTime, float flReductionAmount, int iSt
 	if ( InCond( TF_COND_PHASE ) || InCond( TF_COND_PASSTIME_INTERCEPTION ) )
 		return;
 
-	if ( InCond( TF_COND_MEGAHEAL ) )
-		return;
-
 	if ( InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && !InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
 		return;
 
@@ -9594,11 +8657,6 @@ void CTFPlayer::MaybeDrawRailgunBeam( IRecipientFilter *pFilter, CTFWeaponBase *
 	if ( iShouldFireTracer )
 	{
 		const char *pParticleSystemName = pWeapon->GetTeamNumber() == TF_TEAM_BLUE ? "dxhr_sniper_rail_blue" : "dxhr_sniper_rail_red";
-		CTFSniperRifle *pRifle = dynamic_cast< CTFSniperRifle* >( pWeapon );
-		if ( pRifle && ( pRifle->GetRifleType() == RIFLE_CLASSIC ) )
-		{
-			pParticleSystemName = "tfc_sniper_distortion_trail";
-		}
 
 #ifdef GAME_DLL
 		te_tf_particle_effects_control_point_t controlPoint = { PATTACH_WORLDORIGIN, vEndPos };
@@ -10475,24 +9533,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 
 	if ( playerclass == TF_CLASS_MEDIC )
 	{
-		if ( pWeapon )
-		{
-			CWeaponMedigun *pMedigun = dynamic_cast< CWeaponMedigun* >( pWeapon );
-			if ( pMedigun )
-			{
-				// Medics match faster classes when healing them
-				CTFPlayer *pHealTarget = ToTFPlayer( pMedigun->GetHealTarget() );
-				if ( pHealTarget )
-				{
-					// The Quick-Fix attaches to charging demos
-					bool bCharge = ( pMedigun->GetMedigunType() == MEDIGUN_QUICKFIX && pHealTarget->m_Shared.InCond( TF_COND_SHIELD_CHARGE ) );
-
-					const float flHealTargetMaxSpeed = ( bCharge ) ? tf_max_charge_speed.GetFloat() : pHealTarget->TeamFortress_CalculateMaxSpeed( true );
-					maxfbspeed = Max( maxfbspeed, flHealTargetMaxSpeed );
-				}
-			}
-		}
-
 		// Special bone saw
 		int iTakeHeads = 0;
 		CALL_ATTRIB_HOOK_INT( iTakeHeads, add_head_on_hit );
@@ -10541,20 +9581,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 				maxfbspeed = heavy_max_speed;
 			}
 		}
-	}
-
-	if ( playerclass == TF_CLASS_SCOUT )
-	{
-		if ( Weapon_OwnsThisID( TF_WEAPON_PEP_BRAWLER_BLASTER ) )
-		{
-			// Make this change based on attrs, hardcode right now
-			maxfbspeed *= RemapValClamped( m_Shared.GetScoutHypeMeter(), 0.0f, 100.0f, 1.0f, 1.45f );
-		}
-		// Atomic Punch gives a move bonus while active
-// 		if ( m_Shared.InCond( TF_COND_PHASE ) )
-// 		{
-// 			maxfbspeed *= 1.25f;
-// 		}
 	}
 
 	// Mann Vs Machine mode has a speed penalty for carrying the flag
@@ -10868,10 +9894,6 @@ bool CTFPlayerShared::IsAiming( void )
 		return false;
 
 	bool bAiming = InCond( TF_COND_AIMING ) && !m_pOuter->IsPlayerClass( TF_CLASS_SOLDIER );
-	if ( m_pOuter->IsPlayerClass( TF_CLASS_SNIPER ) && m_pOuter->GetActiveTFWeapon() && ( m_pOuter->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC ) )
-	{
-		bAiming = InCond( TF_COND_ZOOMED );
-	}
 
 	return bAiming;
 }
@@ -11577,17 +10599,6 @@ bool CTFPlayer::CanAttack( int iCanAttackFlags )
 		return true;
 	}
 
-	if ( ( m_Shared.GetStealthNoAttackExpireTime() > gpGlobals->curtime && !m_Shared.InCond( TF_COND_STEALTHED_USER_BUFF ) ) || m_Shared.InCond( TF_COND_STEALTHED ) )
-	{
-		if ( !( iCanAttackFlags & TF_CAN_ATTACK_FLAG_GRAPPLINGHOOK ) )
-		{
-#ifdef CLIENT_DLL
-			HintMessage( HINT_CANNOT_ATTACK_WHILE_CLOAKED, true, true );
-#endif
-			return false;
-		}
-	}
-
 	if ( m_Shared.IsFeignDeathReady() )
 	{
 #ifdef CLIENT_DLL
@@ -11792,10 +10803,6 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 	if ( TFGameRules()->State_Get() != GR_STATE_RND_RUNNING && TFGameRules()->State_Get() != GR_STATE_STALEMATE && TFGameRules()->State_Get() != GR_STATE_BETWEEN_RNDS )
 		return false;
 
-	// don't allow to pick up building while grappling hook
-	if ( m_Shared.InCond( TF_COND_GRAPPLINGHOOK ) )
-		return false;
-
 	// There's ammo in the clip... no switching away!
 	if ( GetActiveTFWeapon() && GetActiveTFWeapon()->AutoFiresFullClip() && GetActiveTFWeapon()->Clip1() > 0 )
 		return false;
@@ -11806,19 +10813,7 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 	int iIncreasedRangeCost = 0;
 	int nSqrDist = (EyePosition() - pPickupObject->GetAbsOrigin()).LengthSqr();
 
-	// Extra range only works with primary weapon
-	CTFWeaponBase * pWeapon = GetActiveTFWeapon();
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iIncreasedRangeCost, building_teleporting_pickup );
-	if ( iIncreasedRangeCost != 0 )
-	{
-		// False on deadzone
-		if ( nSqrDist > nPickUpRangeSq && nSqrDist < TF_BUILDING_RESCUE_MIN_RANGE_SQ )
-			return false;
-		if ( nSqrDist >= TF_BUILDING_RESCUE_MIN_RANGE_SQ && GetAmmoCount( TF_AMMO_METAL ) < iIncreasedRangeCost )
-			return false;
-		return true;
-	}
-	else if ( nSqrDist > nPickUpRangeSq )
+	if ( nSqrDist > nPickUpRangeSq )
 		return false;
 
 	return true;
@@ -11845,8 +10840,6 @@ bool CTFPlayer::TryToPickupBuilding()
 		return false;
 
 #ifdef GAME_DLL
-	if ( m_bIsTeleportingUsingEurekaEffect )
-		return false;
 
 	int iCannotPickUpBuildings = 0;
 	CALL_ATTRIB_HOOK_INT( iCannotPickUpBuildings, cannot_pick_up_buildings );
@@ -11861,13 +10854,6 @@ bool CTFPlayer::TryToPickupBuilding()
 	AngleVectors( EyeAngles(), &vecForward, NULL, NULL );
 
 	int iPickUpRange = TF_BUILDING_PICKUP_RANGE;
-	int iIncreasedRangeCost = 0;
-	CTFWeaponBase * pWeapon = GetActiveTFWeapon();
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pWeapon, iIncreasedRangeCost, building_teleporting_pickup );
-	if ( iIncreasedRangeCost != 0 )
-	{
-		iPickUpRange = TF_BUILDING_RESCUE_MAX_RANGE;
-	}
 	
 	const Vector vecStart = EyePosition();
 	const Vector vecEnd   = vecStart + vecForward * iPickUpRange;
@@ -11932,33 +10918,6 @@ bool CTFPlayer::TryToPickupBuilding()
 
 	if ( pPickupObject )
 	{
-		// remove rage for long range
-		if ( iIncreasedRangeCost )
-		{
-			int nSqrDist = (EyePosition() - pPickupObject->GetAbsOrigin()).LengthSqr();
-			if ( nSqrDist > TF_BUILDING_RESCUE_MIN_RANGE_SQ )
-			{
-				RemoveAmmo( iIncreasedRangeCost, TF_AMMO_METAL );
-
-				// Particles
-				// Spawn a railgun
-				Vector origin = pPickupObject->GetAbsOrigin();
-				CPVSFilter filter( origin );
-
-				const char *pRailParticleName = GetTeamNumber() == TF_TEAM_BLUE ? "dxhr_sniper_rail_blue" : "dxhr_sniper_rail_red";
-				const char *pTeleParticleName = GetTeamNumber() == TF_TEAM_BLUE ? "teleported_blue" : "teleported_red";
-
-				TE_TFParticleEffect( filter, 0.0, pTeleParticleName, origin, vec3_angle );
-
-				te_tf_particle_effects_control_point_t controlPoint = { PATTACH_WORLDORIGIN, pPickupObject->GetAbsOrigin() + Vector(0,0,32) };
-				TE_TFParticleEffectComplex( filter, 0.0f, pRailParticleName, GetAbsOrigin() + Vector(0,0,32), QAngle( 0, 0, 0 ), NULL, &controlPoint );
-
-				// Play Sounds
-				pPickupObject->EmitSound( "Building_Teleporter.Send" );
-				EmitSound( "Building_Teleporter.Receive" );
-			}
-		}
-
 		pPickupObject->MakeCarriedObject( this );
 
 		CTFWeaponBuilder *pBuilder = dynamic_cast<CTFWeaponBuilder*>(Weapon_OwnsThisID( TF_WEAPON_BUILDER ));
@@ -12151,14 +11110,6 @@ bool CTFPlayer::CanAirDash( void ) const
 	bool bScout = GetPlayerClass()->IsClass( TF_CLASS_SCOUT );
 	if ( !bScout )
 		return false;
-
-	if ( m_Shared.InCond( TF_COND_SODAPOPPER_HYPE ) )
-	{
-		if ( m_Shared.GetAirDash() < 5 )
-			return true;
-		else
- 			return false;
-	}
 
 	CTFWeaponBase *pTFActiveWeapon = GetActiveTFWeapon();
 	int iDashCount = tf_scout_air_dash_count.GetInt();
@@ -13362,15 +12313,6 @@ void CTFPlayerShared::UpdateEnergyDrinkMeter( void )
 
 	if ( bIsLocalPlayer )
 	{
-		if ( IsHypeBuffed() )
-		{
-			m_flHypeMeter -= gpGlobals->frametime * (m_fEnergyDrinkConsumeRate*0.75f);
-			if ( m_flHypeMeter <= 0.0f )
-			{
-				RemoveCond( TF_COND_SODAPOPPER_HYPE );
-			}
-		}
-
 		if ( InCond( TF_COND_PHASE ) || InCond( TF_COND_ENERGY_BUFF ) )
 		{
 			// Drain the meter
@@ -13413,25 +12355,6 @@ void CTFPlayerShared::UpdateEnergyDrinkMeter( void )
 			}
 		}
 	}
-}
-
-void CTFPlayerShared::SetScoutHypeMeter( float val )
-{
-	if ( IsHypeBuffed() )
-		return;
-
-	m_flHypeMeter = Clamp(val, 0.0f, 100.0f);
-	//if ( m_flHypeMeter >= 100.f )
-	//{
-	//	if ( m_pOuter->IsPlayerClass( TF_CLASS_SCOUT ) )
-	//	{
-	//		CTFWeaponBase* pWeapon = m_pOuter->GetActiveTFWeapon();
-	//		if ( pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_SODA_POPPER )
-	//		{
-	//			AddCond( TF_COND_CRITBOOSTED_HYPE );
-	//		}
-	//	}
-	//}
 }
 
 //-----------------------------------------------------------------------------

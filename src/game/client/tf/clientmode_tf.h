@@ -21,7 +21,6 @@ class CHudMenuEngyDestroy;
 class CHudMenuSpyDisguise;
 class CTFFreezePanel;
 class CItemQuickSwitchPanel;
-class CHudEurekaEffectTeleportMenu;
 class CHudMenuTauntSelection;
 class CHudInspectPanel;
 class CHudUpgradePanel;
@@ -88,7 +87,6 @@ public:
 
 	bool IsEngyBuildVisible() const;
 	bool IsEngyDestroyVisible() const;
-	bool IsEngyEurekaTeleportVisible() const;
 	bool IsSpyDisguiseVisible() const;
 	bool IsUpgradePanelVisible() const;
 	bool IsTauntSelectPanelVisible() const;
@@ -125,7 +123,6 @@ private:
 	CHudMenuTauntSelection	*m_pMenuTauntSelection;
 	CHudUpgradePanel		*m_pMenuUpgradePanel;
 	CHudSpellMenu			*m_pMenuSpell;
-	CHudEurekaEffectTeleportMenu *m_pEurekaTeleportMenu;
 	CHudTeamGoalTournament	*m_pTeamGoalTournament;
 
 	CTFFreezePanel			*m_pFreezePanel;

@@ -625,9 +625,6 @@ bool IsCommunityMap( const char *pMapName )
 extern ConVar mp_capstyle;
 extern ConVar sv_turbophysics;
 
-extern ConVar tf_vaccinator_small_resist;
-extern ConVar tf_vaccinator_uber_resist;
-
 extern ConVar tf_teleporter_fov_time;
 extern ConVar tf_teleporter_fov_start;
 
@@ -887,7 +884,6 @@ extern ConVar mp_tournament_post_match_period;
 
 extern ConVar tf_flag_return_on_touch;
 extern ConVar tf_flag_return_time_credit_factor;
-ConVar tf_grapplinghook_enable( "tf_grapplinghook_enable", "0", FCVAR_REPLICATED );
 
 #ifdef GAME_DLL
 CUtlString s_strNextMvMPopFile;
@@ -3558,12 +3554,6 @@ bool CTFGameRules::IsUsingSpells( void ) const
 }
 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::IsUsingGrapplingHook( void ) const
-{
-	return tf_grapplinghook_enable.GetBool();
-}
-
-//-----------------------------------------------------------------------------
 bool CTFGameRules::IsTruceActive( void ) const
 {
 	return m_bTruceActive;
@@ -4037,7 +4027,6 @@ static const char *s_PreserveEnts[] =
 	"tf_mann_vs_machine_stats",
 	"tf_wearable",
 	"tf_wearable_demoshield",
-	"tf_wearable_robot_arm",
 	"tf_wearable_vm",
 	"tf_logic_bonusround",
 	"vote_controller",
@@ -5573,7 +5562,6 @@ int CTFRadiusDamageInfo::ApplyToEntity( CBaseEntity *pEntity )
 		{
 			case TF_WEAPON_PIPEBOMBLAUNCHER :
 			case TF_WEAPON_GRENADELAUNCHER :
-			case TF_WEAPON_CANNON :
 			case TF_WEAPON_STICKBOMB :
 				flAdjustedDamage *= 0.75f;
 				break;
@@ -5747,7 +5735,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			float flWaterExitTime = pVictim->GetWaterExitTime();
 
 			if ( pVictim->m_Shared.InCond( TF_COND_URINE ) ||
-				 pVictim->m_Shared.InCond( TF_COND_MAD_MILK ) ||
 			   ( pVictim->GetWaterLevel() > WL_NotInWater ) ||
 			   ( ( flWaterExitTime > 0 ) && ( gpGlobals->curtime - flWaterExitTime < 5.0f ) ) ) // or they exited the water in the last few seconds
 			{
@@ -5916,12 +5903,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
 				eBonusEffect = kBonusEffect_MiniCrit;
 			}
-			else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_CLEAVER_CRIT )
-			{
-				// Long range cleaver hit
-				info.SetCritType( CTakeDamageInfo::CRIT_MINI );
-				eBonusEffect = kBonusEffect_MiniCrit;
-			}
 			else if ( pTFAttacker && ( pTFAttacker->m_Shared.InCond( TF_COND_ENERGY_BUFF ) ) )
 			{
 				// Scouts using crit drink do mini-crits, as well as receive them
@@ -5931,7 +5912,7 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			else if ( ( info.GetDamageType() & DMG_IGNITE ) && pVictim && pVictim->m_Shared.InCond( TF_COND_BURNING ) && info.GetDamageCustom() == TF_DMG_CUSTOM_BURNING_FLARE )
 			{
 				CTFFlareGun *pFlareGun = dynamic_cast< CTFFlareGun* >( pWeapon );
-				if ( pFlareGun && pFlareGun->GetFlareGunType() != FLAREGUN_GRORDBORT )
+				if ( pFlareGun )
 				{
 					info.SetCritType( CTakeDamageInfo::CRIT_MINI );
 					eBonusEffect = kBonusEffect_MiniCrit;
@@ -5945,17 +5926,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				{
 					// Taunt crits fired from the scorch shot at short range are super powerful!
 					flDamage += Max( 400.f, flDamage );
-				}
-			}
-			else if( pTFAttacker && pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_CANNON && ( info.GetDamageType() & DMG_BLAST ) )
-			{
-				CTFGrenadeLauncher* pGrenadeLauncher = static_cast<CTFGrenadeLauncher*>( pWeapon );
-				if( pGrenadeLauncher->IsDoubleDonk( pVictim ) )
-				{
-					info.SetCritType( CTakeDamageInfo::CRIT_MINI );
-					eBonusEffect = kBonusEffect_DoubleDonk;
-					flDamage = Max( flDamage, info.GetMaxDamage() ); // Double donk victims score max damage
-					EconEntity_OnOwnerKillEaterEvent( pGrenadeLauncher, pTFAttacker, pVictim, kKillEaterEvent_DoubleDonks );
 				}
 			}
 			else if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_SCOUT ) && !( pTFAttacker->GetFlags() & FL_ONGROUND ) )
@@ -6345,7 +6315,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 			// Rocket Launchers
 			case TF_WEAPON_ROCKETLAUNCHER :
 			case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT :
-			case TF_WEAPON_PARTICLE_CANNON :
 				if ( flRandomRangeVal > 0.5 )
 				{
 					flRandomDamage *= 0.5f;
@@ -6353,7 +6322,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				break;
 			case TF_WEAPON_PIPEBOMBLAUNCHER :	// Stickies
 			case TF_WEAPON_GRENADELAUNCHER :
-			case TF_WEAPON_CANNON :
 			case TF_WEAPON_STICKBOMB:
 				if ( !( bitsDamage & DMG_NOCLOSEDISTANCEMOD ) )
 				{
@@ -6361,9 +6329,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 				}
 				break;
 			case TF_WEAPON_SCATTERGUN :
-			case TF_WEAPON_SODA_POPPER :
-			case TF_WEAPON_PEP_BRAWLER_BLASTER :
-			//case TF_WEAPON_HANDGUN_SCOUT_PRIMARY :		// Shortstop
 				// Scattergun gets 50% bonus at short range
 				if ( flRandomRangeVal > 0.5 )
 				{
@@ -6630,180 +6595,6 @@ bool CTFGameRules::ApplyOnDamageModifyRules( CTakeDamageInfo &info, CBaseEntity 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-static bool CheckForDamageTypeImmunity( int nDamageType, CTFPlayer* pVictim, float &flDamageBase, float &flCritBonusDamage )
-{
-	bool bImmune = false;
-	if( nDamageType & (DMG_BURN|DMG_IGNITE) )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_FIRE_IMMUNE );
-	}
-	else if( nDamageType & (DMG_BULLET|DMG_BUCKSHOT) )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_BULLET_IMMUNE );
-	}
-	else if( nDamageType & DMG_BLAST )
-	{
-		bImmune = pVictim->m_Shared.InCond( TF_COND_BLAST_IMMUNE );
-	}
-
-	if( bImmune )
-	{
-		flDamageBase = flCritBonusDamage = 0.f;
-
-		IGameEvent* event = gameeventmanager->CreateEvent( "damage_resisted" );
-		if ( event )
-		{
-			event->SetInt( "entindex", pVictim->entindex() );
-			gameeventmanager->FireEvent( event ); 
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static bool CheckMedicResist( ETFCond ePassiveCond, ETFCond eDeployedCond, CTFPlayer* pVictim, float flRawDamage, float& flDamageBase, bool bCrit, float& flCritBonusDamage )
-{
-	// Might be a tank or some other object that's getting shot
-	if( !pVictim || !pVictim->IsPlayer() )
-		return false;
-
-	ETFCond eActiveCond;
-	// Be in the condition!
-	if( pVictim->m_Shared.InCond( eDeployedCond ) )
-	{
-		eActiveCond = eDeployedCond;
-	}
-	else if( pVictim->m_Shared.InCond( ePassiveCond ) )
-	{
-		eActiveCond = ePassiveCond;
-	}
-	else
-	{
-		return false;
-	}
-
-	// Get our condition provider
-	CBaseEntity* pProvider = pVictim->m_Shared.GetConditionProvider( eActiveCond );
-	CTFPlayer* pTFProvider = ToTFPlayer( pProvider );
-	Assert( pTFProvider );
-	
-	float flDamageScale = 0.f;
-	//float flCritBarDeplete = 0.f;
-	bool bUberResist = false;
-
-	if( pTFProvider )
-	{
-		switch( eActiveCond )
-		{
-		case TF_COND_MEDIGUN_UBER_BULLET_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_bullet_resist_deployed );
-			bUberResist = true;
-//			if ( bCrit )
-//			{
-//				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_bullet_percent_bar_deplete );
-//			}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_BULLET_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_bullet_resist_passive );
-			break;
-
-		case TF_COND_MEDIGUN_UBER_BLAST_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_blast_resist_deployed );
-			bUberResist = true;
-			//if( bCrit )
-			//{
-			//	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_blast_percent_bar_deplete );
-			//}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_BLAST_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_blast_resist_passive );
-			break;
-
-		case TF_COND_MEDIGUN_UBER_FIRE_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_fire_resist_deployed );
-			bUberResist = true;
-//			if( bCrit )
-//			{
-//				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flCritBarDeplete, medigun_crit_fire_percent_bar_deplete );
-//			}
-			break;
-
-		case TF_COND_MEDIGUN_SMALL_FIRE_RESIST:
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFProvider, flDamageScale, medigun_fire_resist_passive );
-			break;
-		}
-	}
-
-	if ( bUberResist && pVictim->m_Shared.InCond( TF_COND_HEALING_DEBUFF ) )
-	{
-		flDamageScale *= ( 1.f - PYRO_AFTERBURN_HEALING_REDUCTION );
-	}
-
-	flDamageScale = 1.f - flDamageScale;
-	if( flDamageScale < 0.f ) 
-		flDamageScale = 0.f;
-
-	//// Dont let the medic heal themselves when they take damage
-	//if( pTFProvider && pTFProvider != pVictim )
-	//{
-	//	// Heal the medic for 10% of the incoming damage
-	//	int nHeal = flRawDamage * 0.10f;
-	//	// Heal!
-	//	int iHealed = pTFProvider->TakeHealth( nHeal, DMG_GENERIC );
-
-	//	// Tell them about it!
-	//	if ( iHealed )
-	//	{
-	//		CTF_GameStats.Event_PlayerHealedOther( pTFProvider, iHealed );
-	//	}
-
-	//	IGameEvent *event = gameeventmanager->CreateEvent( "player_healonhit" );
-	//	if ( event )
-	//	{
-	//		event->SetInt( "amount", nHeal );
-	//		event->SetInt( "entindex", pTFProvider->entindex() );
-	//		gameeventmanager->FireEvent( event ); 
-	//	}
-	//}
-
-	IGameEvent* event = gameeventmanager->CreateEvent( "damage_resisted" );
-	if ( event )
-	{
-		event->SetInt( "entindex", pVictim->entindex() );
-		gameeventmanager->FireEvent( event ); 
-	}
-
-	if ( bCrit && pTFProvider && bUberResist )
-	{
-		flCritBonusDamage = ( pVictim->m_Shared.InCond( TF_COND_HEALING_DEBUFF ) ) ? flCritBonusDamage * PYRO_AFTERBURN_HEALING_REDUCTION : 0.f;
-
-		//CWeaponMedigun* pMedigun = dynamic_cast<CWeaponMedigun*>( pTFProvider->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-		//if( pMedigun )
-		//{
-		//	if( pMedigun->GetChargeLevel() > 0.f && pMedigun->IsReleasingCharge() )
-		//	{
-		//		flCritBonusDamage = 0;
-		//	}
-		//	pMedigun->SubtractCharge( flCritBarDeplete );
-		//}
-	}
-
-	// Scale the damage!
-	flDamageBase = flDamageBase * flDamageScale;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 static void PotentiallyDamageMitigatedEvent( const CTFPlayer* pMitigator, const CTFPlayer* pDamaged, const CEconEntity* pMitigationProvidingEconItem, float flBeforeDamage, float flAfterDamage )
 {
 	int nAmount = flBeforeDamage - flAfterDamage;
@@ -6874,12 +6665,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 					return -1;
 				}
 			}
-
-			if ( pVictim->m_Shared.InCond( TF_COND_FIRE_IMMUNE ) )
-			{
-				// Do a hard out in the caller
-				return -1;
-			}
 		}
 
 		// When obscured by smoke, attacks have a chance to miss
@@ -6933,9 +6718,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 		// This raw damage wont get scaled.  Used for determining how much health to give resist medics.
 		float flRawDamage = flDamageBase;
 		
-		// Check if we're immune
-		outParams.bPlayDamageReductionSound = CheckForDamageTypeImmunity( info.GetDamageType(), pVictim, flDamageBase, flDamageBonus );
-
 		if ( !iPierceResists )
 		{
 			// Reduce only the crit portion of the damage with crit resist
@@ -6951,9 +6733,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			{
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_fire );
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim->GetActiveWeapon(), flDamageBase, mult_dmgtaken_from_fire_active );
-
-				// Check for medic resist
-				outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_FIRE_RESIST, TF_COND_MEDIGUN_UBER_FIRE_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 			}
 
 			if ( pTFAttacker && pVictim && pVictim->m_Shared.InCond( TF_COND_BURNING ) )
@@ -6974,18 +6753,12 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 				if ( bReduceBlast )
 				{
 					CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_explosions );
-
-					// Check for medic resist
-					outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_BLAST_RESIST, TF_COND_MEDIGUN_UBER_BLAST_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 				}
 			}
 
 			if ( info.GetDamageType() & (DMG_BULLET|DMG_BUCKSHOT) )
 			{
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flDamageBase, mult_dmgtaken_from_bullets );
-
-				// Check for medic resist
-				outParams.bPlayDamageReductionSound = CheckMedicResist( TF_COND_MEDIGUN_SMALL_BULLET_RESIST, TF_COND_MEDIGUN_UBER_BULLET_RESIST, pVictim, flRawDamage, flDamageBase, bCrit, flDamageBonus );
 			}
 
 			if ( info.GetDamageType() & DMG_MELEE )
@@ -7160,25 +6933,13 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 				int iNoSelfBlastDamage = 0;
 				CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iNoSelfBlastDamage, no_self_blast_dmg );
 
-				const bool bIgnoreThisSelfDamage = ( iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromAllWeapons )
-					|| ( (iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromThisWeapon) && (info.GetDamageCustom() == TF_DMG_CUSTOM_PRACTICE_STICKY) );
+				const bool bIgnoreThisSelfDamage = ( iNoSelfBlastDamage == kSelfBlastResponse_IgnoreProjectilesFromAllWeapons );
 				if ( bIgnoreThisSelfDamage )
 				{
 					flRealDamage = 0;
 				}
 
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( info.GetWeapon(), flRealDamage, blast_dmg_to_self );
-			}
-		}
-
-		if ( pTFAttacker && ( pTFAttacker != pVictim ) )
-		{
-			int iHypeOnDamage = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iHypeOnDamage, hype_on_damage );
-			if ( iHypeOnDamage )
-			{
-				float flHype = RemapValClamped( flRealDamage, 1.f, 200.f, 1.f, 50.f );
-				pTFAttacker->m_Shared.SetScoutHypeMeter( Min( 100.f, flHype + pTFAttacker->m_Shared.GetScoutHypeMeter() ) );
 			}
 		}
 	}
@@ -11616,10 +11377,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	{
 		killer_weapon_name = "tf_weapon_taunt_guitar_riff_kill";
 	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL )
-	{
-		killer_weapon_name = "robot_arm_blender_kill";
-	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_TELEFRAG )
 	{
 		killer_weapon_name = "telefrag";
@@ -11642,15 +11399,11 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BOOTS_STOMP )
 	{
-		killer_weapon_name = ( pTFKiller && pTFKiller->m_Shared.InCond( TF_COND_ROCKETPACK ) ) ? "rocketpack_stomp" : "mantreads";
+		killer_weapon_name = "mantreads";
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BASEBALL )
 	{
 		killer_weapon_name = "ball";
-	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_COMBO_PUNCH )
-	{
-		killer_weapon_name = "robot_arm_combo_kill";
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BLEEDING )
 	{
@@ -11712,10 +11465,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_MERASMUS_PLAYER_BOMB )
 	{
 		killer_weapon_name = "merasmus_player_bomb";
-	}
-	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_CANNONBALL_PUSH )
-	{
-		killer_weapon_name = "loose_cannon_impact";
 	}
 	else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_SPELL_TELEPORT )
 	{
@@ -11846,10 +11595,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 							killer_weapon_name = "deflect_arrow";
 						}
 					}
-					else if ( *iWeaponID == TF_WEAPON_SHOTGUN_BUILDING_RESCUE )
-					{
-						killer_weapon_name = "rescue_ranger_reflect";
-					}
 				}
 				else if ( *iWeaponID == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT )
 				{
@@ -11876,10 +11621,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 						else if ( *iWeaponID == TF_WEAPON_BAT_WOOD )
 						{
 							killer_weapon_name = "deflect_ball";
-						}
-						else if ( *iWeaponID == TF_WEAPON_CANNON )
-						{
-							killer_weapon_name = "loose_cannon_reflect";
 						}
 					}
 				}
@@ -11941,10 +11682,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 			}
 		}
 	}
-	else if ( 0 == Q_strcmp( killer_weapon_name, "tf_projectile_healing_bolt" ) )
-	{
-		killer_weapon_name = "crusaders_crossbow";
-	}
 	else if ( 0 == Q_strcmp( killer_weapon_name, "tf_projectile_pipe" ) )
 	{
 		// let's look-up the primary weapon to see what type of grenade launcher it is
@@ -11966,19 +11703,6 @@ const char *CTFGameRules::GetKillingWeaponName( const CTakeDamageInfo &info, CTF
 						}
 					}
 				}
-			}
-		}
-	}
-	else if ( 0 == Q_strcmp( killer_weapon_name, "tf_projectile_energy_ring" ) )
-	{
-		CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase *>( info.GetWeapon() );
-		if ( pWeapon )
-		{
-			CEconItemView *pItem = pWeapon->GetAttributeContainer()->GetItem();
-			if ( pItem && pItem->GetStaticData() && pItem->GetStaticData()->GetIconClassname() )
-			{
-				killer_weapon_name = pItem->GetStaticData()->GetIconClassname();
-				*iWeaponID = TF_WEAPON_NONE;
 			}
 		}
 	}
@@ -12282,7 +12006,7 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 	{
 		if ( pScorer && pVictim && pScorer != pVictim )
 		{
-			if ( !FStrEq( eventName, "fish_notice" ) && !FStrEq( eventName, "fish_notice__arm" ) && !FStrEq( eventName, "slap_notice" ) && !FStrEq( eventName, "throwable_hit" ) )
+			if ( !FStrEq( eventName, "throwable_hit" ) )
 			{
 #ifndef _DEBUG
 				if ( GetGlobalTeam( pVictim->GetTeamNumber() ) && GetGlobalTeam( pVictim->GetTeamNumber() )->GetNumPlayers() > 1 )
@@ -12724,12 +12448,6 @@ float CTFGameRules::FlPlayerFallDamage( CBasePlayer *pPlayer )
 
 	// Karts don't take fall damage
 	if ( pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		return 0;
-	}
-
-	// grappling hook don't take fall damage
-	if ( pTFPlayer->GetGrapplingHookTarget() )
 	{
 		return 0;
 	}
@@ -16015,7 +15733,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-	if ( ( pTFPlayer->m_Shared.IsInvulnerable() || pTFPlayer->m_Shared.InCond( TF_COND_MEGAHEAL ) ) && !IsMannVsMachineMode() )
+	if ( ( pTFPlayer->m_Shared.IsInvulnerable() ) && !IsMannVsMachineMode() )
 	{
 		if ( pszReason )
 		{
@@ -16268,10 +15986,6 @@ void CTFGameRules::SetUpVisionFilterKeyValues( void )
 	pKVFlag->SetString( "flaregun_trail_crit_blue", "pyrovision_flaregun_trail_crit_blue" );
 	pKVFlag->SetString( "flaregun_trail_crit_red", "pyrovision_flaregun_trail_crit_red" );
 	pKVFlag->SetString( "flaregun_destroyed", "pyrovision_flaregun_destroyed" );
-	pKVFlag->SetString( "scorchshot_trail_blue", "pyrovision_scorchshot_trail_blue" );
-	pKVFlag->SetString( "scorchshot_trail_red", "pyrovision_scorchshot_trail_red" );
-	pKVFlag->SetString( "scorchshot_trail_crit_blue", "pyrovision_scorchshot_trail_crit_blue" );
-	pKVFlag->SetString( "scorchshot_trail_crit_red", "pyrovision_scorchshot_trail_crit_red" );
 	pKVFlag->SetString( "ExplosionCore_MidAir_Flare", "pyrovision_flaregun_destroyed" );
 	pKVFlag->SetString( "pyrotaunt_rainbow_norainbow", "pyrotaunt_rainbow" );
 	pKVFlag->SetString( "pyrotaunt_rainbow_bubbles_flame", "pyrotaunt_rainbow_bubbles" );
@@ -20042,10 +19756,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	int iWeaponID = ( pWeapon ) ? pWeapon->GetWeaponID() : TF_WEAPON_NONE;
 	CTFWearableDemoShield *pShield = ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) ) ? dynamic_cast< CTFWearableDemoShield* >( pEntity ) : NULL;
 	bool bShield = ( pShield ) ? true : false;
-	bool bRocketPack = ( iWeaponID == TF_WEAPON_ROCKETPACK );
-
-	if ( iWeaponID == TF_WEAPON_PARACHUTE )
-		return false;
 
 	// Hack to simplify excluding non-weapons from damage upgrades
 	bool bHideDmgUpgrades = iWeaponID == TF_WEAPON_NONE || 
@@ -20056,8 +19766,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 							iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD ||
 							iWeaponID == TF_WEAPON_INVIS ||
 							iWeaponID == TF_WEAPON_SPELLBOOK ||
-							iWeaponID == TF_WEAPON_LUNCHBOX ||
-							bRocketPack;
+							iWeaponID == TF_WEAPON_LUNCHBOX;
 
 	// What tier upgrade is it?
 	int nQuality = pUpgrade->nQuality;
@@ -20204,7 +19913,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 				if ( !( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY ) )
 				{
 					int iProjectile = pWeaponGun->GetWeaponProjectileType();
-					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET || iProjectile == TF_PROJECTILE_HEALING_BOLT || iProjectile == TF_PROJECTILE_FESTIVE_ARROW || iProjectile == TF_PROJECTILE_FESTIVE_HEALING_BOLT );
+					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET );
 				}
 			}
 
@@ -20228,22 +19937,12 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 279:	// "maxammo grenades1 increased"
 		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD || iWeaponID == TF_WEAPON_BAT_GIFTWRAP );
+			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
 		}
 		break;
 	case 313:	// "applies snare effect"
 		{
-// 			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-// 			{
-// 				if ( iWeaponID == TF_WEAPON_SNIPERRIFLE )
-// 				{
-// 					CTFSniperRifle *pRifle = static_cast< CTFSniperRifle* >( pEntity );
-// 					return ( pRifle->GetRifleType() == RIFLE_JARATE );
-// 				}
-// 				return false;
-// 			}
-
-			return ( iWeaponID == TF_WEAPON_JAR || iWeaponID == TF_WEAPON_JAR_MILK );
+			return ( iWeaponID == TF_WEAPON_JAR );
 		}
 		break;
 	case 318:	// "faster reload rate"
@@ -20287,8 +19986,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		break;
 	case 396:		// "melee attack rate bonus"
 		{
-			bool bAllowed = ( !bRocketPack && 
-							iWeaponID != TF_WEAPON_BAT_WOOD &&
+			bool bAllowed = ( iWeaponID != TF_WEAPON_BAT_WOOD &&
 							iWeaponID != TF_WEAPON_BUFF_ITEM && 
 							!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
 							dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) );
@@ -20320,7 +20018,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	case 488:	// "rocket specialist"
 		if ( pWeaponGun )
 		{
-			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET || pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ENERGY_BALL );
+			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET );
 		}
 	case 499:	// generate rage on heal (shield)
 	case 554:	// revive
@@ -20329,9 +20027,8 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 			return ( iWeaponID == TF_WEAPON_MEDIGUN );
 		}
 	case 871:	// falling_impact_radius_stun
-	case 872:	// thermal_thruster_air_launch
 		{
-			return bRocketPack;
+			return false;
 		}
 	}
 
@@ -20347,7 +20044,7 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 		if ( pMelee )
 		{
 			// All melee weapons except buff banners
-			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades && !bRocketPack );
+			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades );
 		}
 
 		return false;
@@ -20602,7 +20299,6 @@ void	ScriptSetPlayersInHell( bool bInHell )						{ return TFGameRules()->SetPlay
 bool	ScriptArePlayersInHell()									{ return TFGameRules()->ArePlayersInHell(); }
 void	ScriptSetUsingSpells( bool bUsingSpells )					{ return TFGameRules()->SetUsingSpells( bUsingSpells ); }
 bool	ScriptIsUsingSpells()										{ return TFGameRules()->IsUsingSpells(); }
-bool	ScriptIsUsingGrapplingHook()								{ return TFGameRules()->IsUsingGrapplingHook(); }
 bool	ScriptIsTruceActive()										{ return TFGameRules()->IsTruceActive(); }
 bool	ScriptMapHasMatchSummaryStage()								{ return TFGameRules()->MapHasMatchSummaryStage(); }
 bool	ScriptPlayersAreOnMatchSummaryStage()						{ return TFGameRules()->PlayersAreOnMatchSummaryStage(); }
@@ -20658,7 +20354,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( ArePlayersInHell,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetUsingSpells,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsUsingSpells,							"" );
-	TF_GAMERULES_SCRIPT_FUNC( IsUsingGrapplingHook,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsTruceActive,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( MapHasMatchSummaryStage,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayersAreOnMatchSummaryStage,			"" );

@@ -39,7 +39,6 @@ public:
 	void			GetBoneAttachmentInfo( mstudiobbox_t *pBox, CBaseAnimating *pOtherAnim, Vector &bonePosition, QAngle &boneAngles, int &boneIndexAttached, int &physicsBoneIndex );
 
 	void			ImpactThink( void );
-	void			BuildingHealingArrow( CBaseEntity *pOther );
 
 	int				GetArrowSkin() const;
 
@@ -111,60 +110,6 @@ protected:
 	float			m_flInitTime;
 
 	bool			m_bApplyMilkOnHit;		// For Apothacary's Arrow which can sometimes be special
-};
-
-class CTFProjectile_HealingBolt : public CTFProjectile_Arrow
-{
-public:
-
-	DECLARE_CLASS( CTFProjectile_HealingBolt, CTFProjectile_Arrow );
-	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC();
-
-	virtual void	InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner = NULL, CBaseEntity *pScorer = NULL ) OVERRIDE;
-
-	virtual bool CanHeadshot() { return false; }
-	virtual void ImpactTeamPlayer( CTFPlayer *pOther );
-	
-	virtual float GetCollideWithTeammatesDelay() const { return 0.f; }
-};
-
-class CTFProjectile_GrapplingHook : public CTFProjectile_Arrow
-{
-public:
-
-	DECLARE_CLASS( CTFProjectile_GrapplingHook, CTFProjectile_Arrow );
-	DECLARE_NETWORKCLASS();
-	DECLARE_DATADESC();
-
-	CTFProjectile_GrapplingHook();
-
-	virtual void	Spawn() OVERRIDE;
-	virtual void	Precache() OVERRIDE;
-	virtual void	UpdateOnRemove() OVERRIDE;
-	virtual void	InitArrow( const QAngle &vecAngles, const float fSpeed, const float fGravity, ProjectileType_t projectileType, CBaseEntity *pOwner = NULL, CBaseEntity *pScorer = NULL ) OVERRIDE;
-	virtual void	OnArrowImpact( mstudiobbox_t *pBox, CBaseEntity *pOther, CBaseEntity *pAttacker ) OVERRIDE;
-	virtual bool	OnArrowImpactObject( CBaseEntity *pOther ) OVERRIDE;
-	virtual void	OnArrowMissAllPlayers( void ) OVERRIDE {}
-	virtual void	CheckSkyboxImpact( CBaseEntity *pOther ) OVERRIDE;
-	
-	virtual void	BreakArrow() { /*DO NOTHING*/ }
-
-	virtual bool	IsDeflectable() OVERRIDE { return false; }
-	virtual bool	IsBreakable( void ) const OVERRIDE { return false; }
-
-	virtual float GetDamage() OVERRIDE { return 1.f; }
-	virtual bool CanHeadshot() OVERRIDE { return false; }
-	virtual bool CanCollideWithTeammates() const OVERRIDE { return false; }
-
-	void HookTarget( CBaseEntity *pOther );
-	void HookLatchedThink();
-
-private:
-	void StartImpactFleshSoundLoop();
-	void StopImpactFleshSoundLoop();
-
-	CSoundPatch *m_pImpactFleshSoundLoop;
 };
 
 #endif	//TF_PROJECTILE_ARROW_H

@@ -469,26 +469,6 @@ int CTFWearable::GetWorldModelIndex( void )
 	}
 
 	//*********************************************************************************
-	// Parachute states
-	static CSchemaItemDefHandle pItemDef_BaseJumper( "The B.A.S.E. Jumper" );
-	const int iParachuteOpen = modelinfo->GetModelIndex( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack_open.mdl" );
-	const int iParachuteClosed = modelinfo->GetModelIndex( "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack.mdl" );
-	if ( m_nModelIndex == iParachuteOpen || m_nModelIndex == iParachuteClosed )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( GetOwnerEntity() );
-		if ( pTFPlayer )
-		{
-			if ( pTFPlayer->m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-			{
-				return iParachuteOpen;
-			}
-			else
-			{
-				return iParachuteClosed;
-			}
-		}
-	}
-
 	if ( GameRules() )
 	{
 		const char *pBaseName = modelinfo->GetModelName( modelinfo->GetModel( m_nWorldModelIndex ) );

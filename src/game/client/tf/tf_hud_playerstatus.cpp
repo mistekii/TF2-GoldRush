@@ -473,7 +473,6 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_pHookBleedImage = new ImagePanel( this, "PlayerStatusHookBleedImage" );
 	m_pMarkedForDeathImage = new ImagePanel( this, "PlayerStatusMarkedForDeathImage" );
 	m_pMarkedForDeathImageSilent = new ImagePanel( this, "PlayerStatusMarkedForDeathSilentImage" );
-	m_pMilkImage = new ImagePanel( this, "PlayerStatusMilkImage" );
 	m_pSlowedImage = new ImagePanel( this, "PlayerStatusSlowed" );
 
 	m_pWheelOfDoomImage = new ImagePanel( this, "PlayerStatus_WheelOfDoom" );
@@ -485,20 +484,10 @@ CTFHudPlayerHealth::CTFHudPlayerHealth( Panel *parent, const char *name ) : Edit
 	m_nBonusHealthOrigW = -1;
 	m_nBonusHealthOrigH = -1;
 
-	// Vaccinator
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_BULLET_RESIST, BUFF_CLASS_BULLET_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberBulletResistImage" ),	"../HUD/defense_buff_bullet_blue",		"../HUD/defense_buff_bullet_red"  ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_BLAST_RESIST, BUFF_CLASS_BLAST_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberBlastResistImage" ),		"../HUD/defense_buff_explosion_blue",	"../HUD/defense_buff_explosion_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_UBER_FIRE_RESIST, BUFF_CLASS_FIRE_RESIST, new ImagePanel( this, "PlayerStatus_MedicUberFireResistImage" ),		"../HUD/defense_buff_fire_blue",		"../HUD/defense_buff_fire_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_BULLET_RESIST, BUFF_CLASS_BULLET_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallBulletResistImage" ),	"../HUD/defense_buff_bullet_blue",		"../HUD/defense_buff_bullet_red"  ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_BLAST_RESIST, BUFF_CLASS_BLAST_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallBlastResistImage" ),	"../HUD/defense_buff_explosion_blue",	"../HUD/defense_buff_explosion_red" ) );
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_MEDIGUN_SMALL_FIRE_RESIST, BUFF_CLASS_FIRE_RESIST, new ImagePanel( this, "PlayerStatus_MedicSmallFireResistImage" ),		"../HUD/defense_buff_fire_blue",		"../HUD/defense_buff_fire_red" ) );
 	// Soldier buffs
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_OFFENSEBUFF, BUFF_CLASS_SOLDIER_OFFENSE, new ImagePanel( this, "PlayerStatus_SoldierOffenseBuff" ),						"../Effects/soldier_buff_offense_blue",		"../Effects/soldier_buff_offense_red" ) );
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_DEFENSEBUFF, BUFF_CLASS_SOLDIER_DEFENSE, new ImagePanel( this, "PlayerStatus_SoldierDefenseBuff" ),						"../Effects/soldier_buff_defense_blue",		"../Effects/soldier_buff_defense_red" ) );
 	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_REGENONDAMAGEBUFF, BUFF_CLASS_SOLDIER_HEALTHONHIT, new ImagePanel( this, "PlayerStatus_SoldierHealOnHitBuff" ),			"../Effects/soldier_buff_healonhit_blue",	"../Effects/soldier_buff_healonhit_red" ) );
-
-	// Parachute
-	m_vecBuffInfo.AddToTail( new CTFBuffInfo( TF_COND_PARACHUTE_ACTIVE, BUFF_CLASS_PARACHUTE, new ImagePanel( this, "PlayerStatus_Parachute" ), "../HUD/hud_parachute_active", "../HUD/hud_parachute_active" ) );
 
 	m_iAnimState = HUD_HEALTH_NO_ANIM;
 	m_bAnimate = true;
@@ -798,7 +787,6 @@ void CTFHudPlayerHealth::OnThink()
 			// Turn all the panels off, and below conditionally turn them on
 			m_pBleedImage->SetVisible( false );
 			m_pHookBleedImage->SetVisible( false );
-			m_pMilkImage->SetVisible( false );
 			m_pMarkedForDeathImage->SetVisible( false );
 			m_pMarkedForDeathImageSilent->SetVisible( false );
 			m_pSlowedImage->SetVisible( false );
@@ -806,8 +794,6 @@ void CTFHudPlayerHealth::OnThink()
 			// Old method for goofy color manipulation
 			int nBloodX = nXOffset;
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_BLEEDING,					m_pBleedImage,					nXOffset,	Color( color_fade, 0, 0, 255 ) );
-			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_GRAPPLINGHOOK_BLEEDING,	m_pHookBleedImage,				nBloodX,	Color( 255, 255, 255, 255 ) ); // draw this on top of bleeding
-			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MAD_MILK,					m_pMilkImage,					nXOffset,	Color( color_fade, color_fade, color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH,			m_pMarkedForDeathImage,			nXOffset,	Color( 255 - color_fade, 245 - color_fade, 245 - color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH_SILENT,	m_pMarkedForDeathImageSilent,	nXOffset,	Color( 125 - color_fade, 255 - color_fade, 255 - color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_PASSTIME_PENALTY_DEBUFF,	m_pMarkedForDeathImageSilent,	nXOffset,	Color( 125 - color_fade, 255 - color_fade, 255 - color_fade, 255 ) );

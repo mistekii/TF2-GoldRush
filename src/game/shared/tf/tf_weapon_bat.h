@@ -19,10 +19,7 @@
 #ifdef CLIENT_DLL
 #define CTFBat C_TFBat
 #define CTFBat_Wood C_TFBat_Wood
-#define CTFBat_Fish C_TFBat_Fish
 #define CTFStunBall C_TFStunBall
-#define CTFBat_Giftwrap C_TFBat_Giftwrap
-#define CTFBall_Ornament C_TFBall_Ornament
 #endif
 
 
@@ -47,21 +44,6 @@ public:
 private:
 
 	CTFBat( const CTFBat & ) {}
-};
-
-
-//=============================================================================
-//
-// CTFBat_Fish class.
-//
-class CTFBat_Fish : public CTFBat
-{
-public:
-	DECLARE_CLASS( CTFBat_Fish, CTFBat );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_BAT_FISH; }
 };
 
 //=============================================================================
@@ -178,64 +160,6 @@ private:
 
 #endif
 
-};
-
-
-//=============================================================================
-//
-// Winter Holiday 2011 wrapping paper tube and glass ornament ball
-//
-class CTFBat_Giftwrap : public CTFBat_Wood
-{
-public:
-	DECLARE_CLASS( CTFBat_Giftwrap, CTFBat_Wood );
-	DECLARE_NETWORKCLASS(); 
-	DECLARE_PREDICTABLE();
-
-	virtual void		Spawn( void );
-
-	virtual int			GetWeaponID( void ) const				{ return TF_WEAPON_BAT_GIFTWRAP; }
-
-	virtual const char *GetEffectLabelText( void )				{ return "#TF_BALL"; }
-	virtual const char *GetBallViewModelName( void ) const		{ return "models/weapons/c_models/c_xms_festive_ornament.mdl"; }
-
-#ifdef GAME_DLL
-	virtual CBaseEntity* CreateBall( void );
-#endif
-};
-
-
-//=============================================================================
-//
-// Winter Holiday 2011 wrapping paper tube and glass ornament ball
-//
-class CTFBall_Ornament : public CTFStunBall
-{
-public:
-	DECLARE_CLASS( CTFBall_Ornament, CTFStunBall );
-	DECLARE_NETWORKCLASS();
-
-#ifdef GAME_DLL
-	static CTFBall_Ornament* Create( const Vector &vecOrigin, const QAngle &vecAngles, CBaseEntity *pOwner );
-
-	virtual void		Precache( void );
-
-	virtual int			GetWeaponID( void ) const			{ return TF_WEAPON_GRENADE_ORNAMENT_BALL; }
-	virtual const char *GetBallModelName( void ) const;
-	virtual const char *GetBallViewModelName( void ) const;
-
-	virtual bool		IsAllowedToExplode( void ) OVERRIDE { return true; }
-	virtual void		Explode( trace_t *pTrace, int bitsDamageType ) OVERRIDE;
-
-	virtual void		PipebombTouch( CBaseEntity *pOther ) OVERRIDE;
-	virtual void		VPhysicsCollision( int index, gamevcollisionevent_t *pEvent ) OVERRIDE;
-	void				VPhysicsCollisionThink( void );
-
-	virtual void		ApplyBallImpactEffectOnVictim( CBaseEntity *pOther );
-
-protected:
-		Vector		m_vCollisionVelocity;
-#endif
 };
 
 

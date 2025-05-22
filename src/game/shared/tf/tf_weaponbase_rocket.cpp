@@ -25,9 +25,6 @@ extern void SendProxy_Angles( const SendProp *pProp, const void *pStruct, const 
 #include "usermessages.h"
 #endif
 
-//w_rocket_airstrike\w_rocket_airstrike.mdl
-#define MINI_ROCKETS_MODEL					"models/weapons/w_models/w_rocket_airstrike/w_rocket_airstrike.mdl"
-
 //=============================================================================
 //
 // TF Base Rocket tables.
@@ -114,7 +111,6 @@ void CTFBaseRocket::Precache( void )
 	BaseClass::Precache();
 	PrecacheParticleSystem( "Explosion_ShockWave_01" );
 	PrecacheParticleSystem( "ExplosionCore_Wall_Jumper" );
-	PrecacheModel( MINI_ROCKETS_MODEL );
 }
 
 //-----------------------------------------------------------------------------
@@ -127,16 +123,6 @@ void CTFBaseRocket::Spawn( void )
 	// Precache.
 	Precache();
 	UseClientSideAnimation();
-	
-	if ( GetLauncher() )
-	{
-		int iMiniRocket = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetLauncher(), iMiniRocket, mini_rockets );
-		if ( iMiniRocket )
-		{
-			SetModel( MINI_ROCKETS_MODEL );
-		}
-	}
 
 // Client specific.
 #ifdef CLIENT_DLL
@@ -591,19 +577,6 @@ float CTFBaseRocket::GetRadius()
 				// Increased blast radius
 				flRadius *= RemapValClamped( iRocketSpecialist, 1.f, 4.f, 1.15f, 1.6f );
 				m_bStunOnImpact = true;
-			}
-		}
-
-		CTFPlayer *pTFPlayer = ToTFPlayer( pAttacker );
-		// Airstrike gets a small blast radius penalty while Rjing
-		if ( pTFPlayer && pTFPlayer->m_Shared.InCond( TF_COND_BLASTJUMPING ) )
-		{
-			// Using this attr to key in the AirStrike
-			float flRocketJumpAttackBonus = 1.0f;
-			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pAttacker, flRocketJumpAttackBonus, rocketjump_attackrate_bonus );
-			if ( flRocketJumpAttackBonus != 1.0f )
-			{
-				flRadius *= 0.80;
 			}
 		}
 	}

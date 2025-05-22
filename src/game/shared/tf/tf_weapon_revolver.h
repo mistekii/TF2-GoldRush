@@ -48,8 +48,6 @@ public:
 
 	bool			CanHeadshot( void ) const { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, set_weapon_mode ); return (iMode == 1); };
 
-	bool			SapperKillsCollectCrits( void ) const { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, sapper_kills_collect_crits ); return (iMode == 1); };
-
 	virtual bool		Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 	virtual bool		Deploy( void );
 	
@@ -60,7 +58,6 @@ public:
 #ifdef CLIENT_DLL
 	virtual void	GetWeaponCrosshairScale( float &flScale );
 #else
-	virtual void	Detach();
 	virtual float	GetProjectileDamage( void );
 #endif
 

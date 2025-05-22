@@ -9,7 +9,6 @@
 #include "in_buttons.h"
 #include "ammodef.h"
 #include "tf_gamerules.h"
-#include "tf_weapon_rocketpack.h"
 #include "debugoverlay_shared.h"
 #include "soundenvelope.h"
 
@@ -2305,18 +2304,6 @@ void CTFFlameThrower::SetDormant( bool bDormant )
 //-----------------------------------------------------------------------------
 int CTFFlameThrower::GetWorldModelIndex( void )
 {
-	// Pyro bubble wand support.
-	if ( GetFlameThrowerMode() == TF_FLAMETHROWER_MODE_RAINBOW )
-	{
-		CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
-		if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && pPlayer->m_Shared.GetTauntIndex() == TAUNT_BASE_WEAPON )
-		{
-			// While we are taunting, replace our normal world model with the bubble wand.
-			m_iWorldModelIndex = modelinfo->GetModelIndex( TF_WEAPON_BUBBLE_WAND_MODEL );
-			return m_iWorldModelIndex;
-		}
-	}
-
 	return BaseClass::GetWorldModelIndex();
 }
 
@@ -2404,11 +2391,6 @@ void CTFFlameThrower::StartFlame()
 		else
 		{
 			char *pchFireHitSound = "Weapon_FlameThrower.FireHit";
-
-			if ( GetFlameThrowerMode() == TF_FLAMETHROWER_MODE_RAINBOW )
-			{
-				pchFireHitSound = "Weapon_Rainblower.FireHit";
-			}
 
 			CLocalPlayerFilter filter;
 			m_pFiringHitLoop = controller.SoundCreate( filter, entindex(), pchFireHitSound );	
@@ -2553,16 +2535,7 @@ const char* CTFFlameThrower::FlameEffectName( bool bIsFirstPersonView )
 		return "flamethrower_halloween_new_flame";
 	}
 
-	switch ( GetFlameThrowerMode() )
-	{
-	case TF_FLAMETHROWER_MODE_PHLOG:	return "drg_phlo_stream_new_flame";
-	case TF_FLAMETHROWER_MODE_GIANT:	return "flamethrower_giant_mvm_new_flame";
-	case TF_FLAMETHROWER_MODE_RAINBOW:	return "flamethrower_rainbow_new_flame";
-	default:							
-		{
-			return GetNewFlameEffectInternal( pOwner->GetTeamNumber(), false );
-		}
-	}
+	return GetNewFlameEffectInternal( pOwner->GetTeamNumber(), false );
 }
 
 //-----------------------------------------------------------------------------
@@ -2580,16 +2553,7 @@ const char* CTFFlameThrower::FlameCritEffectName( bool bIsFirstPersonView )
 		return ( pOwner->GetTeamNumber() == TF_TEAM_BLUE ? "flamethrower_halloween_crit_blue_new_flame" : "flamethrower_halloween_crit_red_new_flame" );
 	}
 
-	switch ( GetFlameThrowerMode() )
-	{
-	case TF_FLAMETHROWER_MODE_PHLOG:	return "drg_phlo_stream_crit_new_flame";
-	case TF_FLAMETHROWER_MODE_GIANT:	return "flamethrower_crit_giant_mvm_new_flame";
-	case TF_FLAMETHROWER_MODE_RAINBOW:	return "flamethrower_rainbow_new_flame";
-	default:
-		{
-			return GetNewFlameEffectInternal( pOwner->GetTeamNumber(), true );
-		}
-	}
+	return GetNewFlameEffectInternal( pOwner->GetTeamNumber(), true );
 }
 
 //-----------------------------------------------------------------------------

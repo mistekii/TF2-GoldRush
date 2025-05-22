@@ -20,17 +20,10 @@
 enum lunchbox_weapontypes_t
 {
 	LUNCHBOX_STANDARD = 0,		// Careful, can be the Scout BONK drink, or the Heavy sandvich.
-	LUNCHBOX_CHOCOLATE_BAR,
-	LUNCHBOX_ADDS_MINICRITS,
-	LUNCHBOX_STANDARD_ROBO,
-	LUNCHBOX_STANDARD_FESTIVE,
 	LUNCHBOX_ADDS_AMMO,
-	LUNCHBOX_BANANA,
-	LUNCHBOX_FISHCAKE,
 };
 
 #define TF_SANDWICH_REGENTIME	30
-#define TF_CHOCOLATE_BAR_REGENTIME	10
 
 //=============================================================================
 //
@@ -64,7 +57,6 @@ public:
 
 	void			DrainAmmo( bool bForceCooldown = false );
 
-	virtual void	Detach( void ) OVERRIDE;
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo = NULL ) OVERRIDE;
 
 #ifdef GAME_DLL
@@ -113,7 +105,6 @@ public:
 	virtual float		InternalGetEffectBarRechargeTime( void ) { return TF_SANDWICH_REGENTIME; }
 
 #ifdef CLIENT_DLL
-	virtual const char* ModifyEventParticles( const char* token );
 	virtual bool		Holster( CBaseCombatWeapon *pSwitchingTo = NULL );
 #endif
 };

@@ -891,12 +891,6 @@ bool CTFPasstimeLogic::BCanPlayerPickUpBall( CTFPlayer *pPlayer, HudNotification
 		return false;
 	}
 
-	if ( pPlayer->m_bIsTeleportingUsingEurekaEffect )
-	{
-		if ( pReason ) *pReason = HUD_NOTIFY_PASSTIME_NO_TELE;
-		return false;
-	}
-
 	CTFWeaponBase *pActiveWeapon = pPlayer->GetActiveTFWeapon();
 	if ( pActiveWeapon )
 	{

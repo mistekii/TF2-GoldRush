@@ -223,79 +223,6 @@ void CTFProjectile_Flare::Explode( trace_t *pTrace, CBaseEntity *pOther )
 	CTFPlayer *pTFVictim = ToTFPlayer( pOther );
 
 	CTFFlareGun *pFlareGun = dynamic_cast< CTFFlareGun* >( GetLauncher() );
-	if ( pFlareGun )
-	{
-		if ( pFlareGun->GetFlareGunType() == FLAREGUN_SCORCHSHOT )
-		{
-			// When the scorch shot hits a player...
-			if ( pTFVictim )
-			{
-				// Now it only collides with the world
-				SetCollisionGroup( COLLISION_GROUP_DEBRIS );
-
-				Vector vVelocity = GetAbsVelocity();
-
-				// Check if burning before damage
-				bool bIsBurningVictim = pTFVictim->m_Shared.InCond( TF_COND_BURNING );
-				int iDamageType = GetDamageType();
-				
-				// Prevent the normal push force cause we are going to add it
-				iDamageType |= DMG_PREVENT_PHYSICS_FORCE;
-
-				// Damage the player to push them back
-				CTakeDamageInfo info( this, pAttacker, m_hLauncher, vec3_origin, vecOrigin, GetDamage(), iDamageType, m_bIsFromTaunt ? TF_DMG_CUSTOM_FLARE_PELLET : 0 );
-				pTFVictim->TakeDamage( info );
-
-				bool bIsEnemy = pAttacker && pTFVictim->GetTeamNumber() != pAttacker->GetTeamNumber();
-				
-				if ( !pTFVictim->m_Shared.IsImmuneToPushback() && bIsEnemy )
-				{
-					Vector vecToTarget;
-					vecToTarget = vVelocity;
-					VectorNormalize( vecToTarget );
-					vecToTarget.z = 1.0;
-
-					// apply airblast - Apply stun if they are effectively grounded so we can knock them up
-					if ( !pTFVictim->m_Shared.InCond( TF_COND_KNOCKED_INTO_AIR ) )
-					{
-						pTFVictim->m_Shared.StunPlayer( 0.5, 1.f, TF_STUN_MOVEMENT, ToTFPlayer( pAttacker ) );
-					}
-					
-					float flForce = bIsBurningVictim ? 400.0f : 100.0f;
-					pTFVictim->ApplyGenericPushbackImpulse( vecToTarget * flForce, ToTFPlayer( pAttacker ) );
-				}
-
-				// It loses almost all of its speed and pops into the air
-				vVelocity.x *= 0.07f;
-				vVelocity.y *= 0.07f;
-				vVelocity.z = 100.0f;
-				SetAbsVelocity( vVelocity + RandomVector( -2.0f, 2.0f ) );
-
-				// Point the new direction and randomly flip
-				QAngle angForward;
-				VectorAngles( vVelocity, angForward );
-				SetAbsAngles( angForward );
-
-				QAngle angRotation = RandomAngle( 180.0f, 720.0f );
-				angRotation.x *= ( RandomInt( 0, 1 ) == 0 ? 1 : -1 );
-				angRotation.y *= ( RandomInt( 0, 1 ) == 0 ? 1 : -1 );
-				angRotation.z *= ( RandomInt( 0, 1 ) == 0 ? 1 : -1 );
-
-				SetLocalAngularVelocity( angRotation );
-
-				CPVSFilter filter( vecOrigin );
-				EmitSound( filter, entindex(), "Rubber.BulletImpact" );
-
-				// Save this entity as enemy, they will take 100% damage.
-				if ( m_hEnemy.Get() == NULL )
-				{
-					m_hEnemy = pTFVictim;
-				}
-
-				return;
-			}
-		}
-	}
 
 	// If we've already got an impact time, don't impact again.
 	if ( m_flImpactTime > 0.0 )
@@ -325,15 +252,6 @@ void CTFProjectile_Flare::Explode( trace_t *pTrace, CBaseEntity *pOther )
 		case FLAREGUN_DETONATE:
 			bDetonate = true;
 			break;
-
-		case FLAREGUN_GRORDBORT:
-			bNoRandomCrit = true;
-			break;
-
-		case FLAREGUN_SCORCHSHOT:
-			bDetonate = true;
-			bNoRandomCrit = true;
-			break;
 		}
 	}
 
@@ -362,7 +280,7 @@ void CTFProjectile_Flare::Explode( trace_t *pTrace, CBaseEntity *pOther )
 		if ( bDetonate )
 		{
 			// Scorch Shot can still light others in this case
-			Detonate( pFlareGun->GetFlareGunType() != FLAREGUN_SCORCHSHOT );
+			Detonate( true );
 		}
 	}
 	else

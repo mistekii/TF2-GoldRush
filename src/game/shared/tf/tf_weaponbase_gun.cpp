@@ -12,7 +12,6 @@
 #include "tf_projectile_nail.h"
 #include "tf_weapon_jar.h"
 #include "tf_weapon_flaregun.h"
-#include "tf_projectile_energy_ring.h"
 
 #if !defined( CLIENT_DLL )	// Server specific.
 
@@ -24,7 +23,6 @@
 	#include "tf_projectile_flare.h"
 	#include "tf_projectile_rocket.h"
 	#include "tf_projectile_arrow.h"
-	#include "tf_projectile_energy_ball.h"
 	#include "tf_weapon_grenade_pipebomb.h"
 	#include "te.h"
 
@@ -294,28 +292,16 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 
 	case TF_PROJECTILE_PIPEBOMB:
 	case TF_PROJECTILE_PIPEBOMB_REMOTE:
-	case TF_PROJECTILE_PIPEBOMB_PRACTICE:
-	case TF_PROJECTILE_CANNONBALL:
 		pProjectile = FirePipeBomb( pPlayer, iProjectile );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 
 	case TF_PROJECTILE_JAR:
-	case TF_PROJECTILE_JAR_MILK:
-	case TF_PROJECTILE_CLEAVER:
 	case TF_PROJECTILE_THROWABLE:
-	case TF_PROJECTILE_FESTIVE_JAR:
-	case TF_PROJECTILE_BREADMONSTER_JARATE:
-	case TF_PROJECTILE_BREADMONSTER_MADMILK:
 		pProjectile = FireJar( pPlayer );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
 	case TF_PROJECTILE_ARROW:
-	case TF_PROJECTILE_HEALING_BOLT:
-	case TF_PROJECTILE_BUILDING_REPAIR_BOLT:
-	case TF_PROJECTILE_FESTIVE_ARROW:
-	case TF_PROJECTILE_FESTIVE_HEALING_BOLT:
-	case TF_PROJECTILE_GRAPPLINGHOOK:
 		pProjectile = FireArrow( pPlayer, ProjectileType_t( iProjectile ) );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
 		break;
@@ -323,22 +309,6 @@ CBaseEntity *CTFWeaponBaseGun::FireProjectile( CTFPlayer *pPlayer )
 	case TF_PROJECTILE_FLAME_ROCKET:
 		pProjectile = FireFlameRocket( pPlayer );
 		pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_SECONDARY );
-		break;
-
-	case TF_PROJECTILE_ENERGY_BALL:
-		pProjectile = FireEnergyBall( pPlayer );
-		if ( ShouldPlayFireAnim() )
-		{
-			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-		}
-		break;
-
-	case TF_PROJECTILE_ENERGY_RING:
-		pProjectile = FireEnergyBall( pPlayer, true );
-		if ( ShouldPlayFireAnim() )
-		{
-			pPlayer->DoAnimationEvent( PLAYERANIMEVENT_ATTACK_PRIMARY );
-		}
 		break;
 
 	case TF_PROJECTILE_NONE:
@@ -540,59 +510,6 @@ CBaseEntity *CTFWeaponBaseGun::FireRocket( CTFPlayer *pPlayer, int iRocketType )
 	return pProjectile;
 
 #endif
-
-	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Fire an energy ball
-//-----------------------------------------------------------------------------
-CBaseEntity *CTFWeaponBaseGun::FireEnergyBall( CTFPlayer *pPlayer, bool bRing )
-{
-	PlayWeaponShootSound();
-
-	Vector vecSrc;
-	QAngle angForward;
-	Vector vecOffset( 23.5f, -8.0f, -3.0f );
-	if ( pPlayer->GetFlags() & FL_DUCKING )
-	{
-		vecOffset.z = 8.0f;
-	}
-	GetProjectileFireSetup( pPlayer, vecOffset, &vecSrc, &angForward, false );
-
-	trace_t trace;
-	Vector vecEye = pPlayer->EyePosition();
-	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
-	UTIL_TraceLine( vecEye, vecSrc, MASK_SOLID_BRUSHONLY, &traceFilter, &trace );
-
-	if ( bRing )
-	{
-		CTFProjectile_EnergyRing* pProjectile = CTFProjectile_EnergyRing::Create( this, trace.endpos, angForward, 
-			GetProjectileSpeed(), GetProjectileGravity(), pPlayer, pPlayer, GetParticleColor(1), GetParticleColor(2), IsCurrentAttackACrit() );
-		if ( pProjectile )
-		{
-			pProjectile->SetWeaponID( GetWeaponID() );
-			pProjectile->SetCritical( IsCurrentAttackACrit() );
-#ifdef GAME_DLL
-			pProjectile->SetDamage( GetProjectileDamage() );
-#endif
-		}
-		return pProjectile;
-	}
-	else
-	{
-#ifdef GAME_DLL
-		CTFProjectile_EnergyBall* pProjectile = CTFProjectile_EnergyBall::Create( trace.endpos, angForward, GetProjectileSpeed(), GetProjectileGravity(), pPlayer, pPlayer );
-		if ( pProjectile )
-		{
-			pProjectile->SetLauncher( this );
-			pProjectile->SetCritical( IsCurrentAttackACrit() );
-			pProjectile->SetDamage( GetProjectileDamage() );
-		}
-		return pProjectile;
-#endif
-	}
-
 
 	return NULL;
 }

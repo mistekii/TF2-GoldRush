@@ -247,7 +247,6 @@ protected:
 private:
 	int m_iScopeTexture[4];
 	int m_iScopeTextureAlt[4];
-	bool m_bAltScopeMode;
 };
 
 DECLARE_HUDELEMENT_DEPTH( CHudScope, 100 );
@@ -273,8 +272,6 @@ CHudScope::CHudScope( const char *pElementName ) : CHudElement(pElementName), Ba
 	{
 		m_iScopeTextureAlt[i] = -1;
 	}
-
-	m_bAltScopeMode = false;
 }
 
 CHudScope::~CHudScope( void )
@@ -381,11 +378,6 @@ bool CHudScope::ShouldDraw( void )
 	if ( !pPlayer || !pPlayer->m_Shared.InCond( TF_COND_ZOOMED ) )
 		return false;
 
-	if ( pPlayer->GetActiveTFWeapon() )
-	{
-		m_bAltScopeMode = ( pPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_SNIPERRIFLE_CLASSIC );
-	}
-
 	return CHudElement::ShouldDraw();
 }
 
@@ -458,7 +450,7 @@ void CHudScope::Paint( void )
 		g_pMatSystemSurface->DisableClipping( true );
 
 	//upper left
-	vgui::surface()->DrawSetTexture( m_bAltScopeMode ? m_iScopeTextureAlt[0] : m_iScopeTexture[0] );
+	vgui::surface()->DrawSetTexture( m_iScopeTexture[0] );
 	vert[0].Init( Vector2D( xLeft, yTop ), uv11 );
 	vert[1].Init( Vector2D( xMid,  yTop ), uv21 );
 	vert[2].Init( Vector2D( xMid,  yMid ), uv22 );
@@ -466,27 +458,15 @@ void CHudScope::Paint( void )
 	vgui::surface()->DrawTexturedPolygon( 4, vert );
 
 	// top right
-	if ( m_bAltScopeMode )
-	{
-		vgui::surface()->DrawSetTexture( m_iScopeTextureAlt[1] );
-		vert[0].Init( Vector2D( xMid, yTop ), uv11 );
-		vert[1].Init( Vector2D( xRight, yTop ), uv21 );
-		vert[2].Init( Vector2D( xRight, yMid ), uv22 );
-		vert[3].Init( Vector2D( xMid, yMid ), uv12 );
-		vgui::surface()->DrawTexturedPolygon( 4, vert );
-	}
-	else
-	{
-		vgui::surface()->DrawSetTexture( m_iScopeTexture[1] );
-		vert[0].Init( Vector2D( xMid - 1, yTop ), uv11 );
-		vert[1].Init( Vector2D( xRight,   yTop ), uv21 );
-		vert[2].Init( Vector2D( xRight,   yMid + 1 ), uv22 );
-		vert[3].Init( Vector2D( xMid - 1, yMid + 1 ), uv12 );
-		vgui::surface()->DrawTexturedPolygon( 4, vert );
-	}
+	vgui::surface()->DrawSetTexture( m_iScopeTexture[1] );
+	vert[0].Init( Vector2D( xMid - 1, yTop ), uv11 );
+	vert[1].Init( Vector2D( xRight,   yTop ), uv21 );
+	vert[2].Init( Vector2D( xRight,   yMid + 1 ), uv22 );
+	vert[3].Init( Vector2D( xMid - 1, yMid + 1 ), uv12 );
+	vgui::surface()->DrawTexturedPolygon( 4, vert );
 
 	// bottom right
-	vgui::surface()->DrawSetTexture( m_bAltScopeMode ? m_iScopeTextureAlt[2] : m_iScopeTexture[2] );
+	vgui::surface()->DrawSetTexture( m_iScopeTexture[2] );
 	vert[0].Init( Vector2D( xMid,   yMid ), uv11 );
 	vert[1].Init( Vector2D( xRight, yMid ), uv21 );
 	vert[2].Init( Vector2D( xRight, yBottom ), uv22 );
@@ -494,7 +474,7 @@ void CHudScope::Paint( void )
 	vgui::surface()->DrawTexturedPolygon( 4, vert );
 
 	// bottom left
-	vgui::surface()->DrawSetTexture( m_bAltScopeMode ? m_iScopeTextureAlt[3] : m_iScopeTexture[3] );
+	vgui::surface()->DrawSetTexture( m_iScopeTexture[3] );
 	vert[0].Init( Vector2D( xLeft, yMid ), uv11 );
 	vert[1].Init( Vector2D( xMid,  yMid ), uv21 );
 	vert[2].Init( Vector2D( xMid,  yBottom ), uv22 );

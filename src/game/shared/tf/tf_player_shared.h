@@ -456,10 +456,6 @@ public:
 
 	bool	IsEnteringOrExitingFullyInvisible( void );
 
-	bool	IsRocketPackReady( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ) >= 50.f; }
-	float	GetRocketPackCharge( void ) { return GetItemChargeMeter( LOADOUT_POSITION_SECONDARY ); }
-	void	SetRocketPackCharge( float flValue ) { SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, flValue ); }
-
 	// generic meter per wpn slot
 	// lets assume the value goes from 0.f->100.f for now
 	void	UpdateItemChargeMeters();
@@ -502,11 +498,6 @@ public:
 	float	GetScoutEnergyDrinkMeter() const{ return m_flEnergyDrinkMeter; }
 	void	SetScoutEnergyDrinkMeter( float val ) { m_flEnergyDrinkMeter = val; }
 	void	UpdateEnergyDrinkMeter( void );
-
-	float	GetScoutHypeMeter() const		{ return m_flHypeMeter; }
-	void	SetScoutHypeMeter( float val );
-	void	StopScoutHypeDrain( void )		{ RemoveCond( TF_COND_SODAPOPPER_HYPE ); }
-	bool	IsHypeBuffed( void ) const		{ return InCond( TF_COND_SODAPOPPER_HYPE ); }
 
 	void	DemoShieldChargeThink( void );
 	void	UpdateChargeMeter( void );
@@ -617,9 +608,6 @@ public:
 	void SetShieldEquipped( bool bVal ) { m_bShieldEquipped = bVal; }
 	bool IsShieldEquipped() const		{ return m_bShieldEquipped; }
 
-	void SetParachuteEquipped( bool bVal ) { m_bParachuteEquipped = bVal; }
-	bool IsParachuteEquipped() const	{ return m_bParachuteEquipped; }
-
 	void SetNextMeleeCrit( int iVal )	{ m_iNextMeleeCrit = iVal; }
 	int	GetNextMeleeCrit( void ) const	{ return m_iNextMeleeCrit; }
 
@@ -702,8 +690,6 @@ public:
 
 	void GetConditionsBits( CBitVec< TF_COND_LAST >& vbConditions ) const;
 
-	void ApplyRocketPackStun( float flStunDuration );
-
 
 	void OnAttack( void );
 
@@ -734,7 +720,6 @@ private:
 	void OnAddDisguised( void );
 	void OnAddDemoCharge( void );
 	void OnAddCritBoost( void );
-	void OnAddSodaPopperHype( void );
 	void OnAddOverhealed( void );
 	void OnAddFeignDeath( void );
 	void OnAddStunned( void );
@@ -754,8 +739,6 @@ private:
 	void OnAddDemoBuff( void );
 	void OnAddEnergyDrinkBuff( void	);
 	void OnAddRadiusHeal( void );
-	void OnAddMegaHeal( void );
-	void OnAddMadMilk( void );
 	void OnAddTaunting( void );
 	void OnAddNoHealingDamageBuff( void );
 	void OnAddSpeedBoost( bool IsNonCombat );
@@ -766,16 +749,7 @@ private:
 	void OnAddHalloweenBombHead( void );
 	void OnAddHalloweenThriller( void );
 	void OnAddRadiusHealOnDamage( void );
-	void OnAddMedEffectUberBulletResist( void );
-	void OnAddMedEffectUberBlastResist( void );
-	void OnAddMedEffectUberFireResist( void );
-	void OnAddMedEffectSmallBulletResist( void );
-	void OnAddMedEffectSmallBlastResist( void );
-	void OnAddMedEffectSmallFireResist( void );
 	void OnAddStealthedUserBuffFade( void );
-	void OnAddBulletImmune( void );
-	void OnAddBlastImmune( void );
-	void OnAddFireImmune( void );
 	void OnAddMVMBotRadiowave( void );
 	void OnAddHalloweenSpeedBoost( void );
 	void OnAddHalloweenQuickHeal( void );
@@ -788,12 +762,10 @@ private:
 	void OnAddMeleeOnly( void );
 	void OnAddSwimmingCurse( void );
 	void OnAddHalloweenKartCage( void );
-	void OnAddGrapplingHookLatched( void );
 	void OnAddPasstimeInterception( void );
 	void OnAddInPurgatory( void );
 	void OnAddCompetitiveWinner( void );
 	void OnAddCompetitiveLoser( void );
-	void OnAddRocketPack( void );
 
 
 	void OnRemoveZoomed( void );
@@ -805,7 +777,6 @@ private:
 	void OnRemoveTeleported( void );
 	void OnRemoveDemoCharge( void );
 	void OnRemoveCritBoost( void );
-	void OnRemoveSodaPopperHype( void );
 	void OnRemoveTmpDamageBonus( void );
 	void OnRemoveOverhealed( void );
 	void OnRemoveFeignDeath( void );
@@ -826,8 +797,6 @@ private:
 	void OnRemoveDemoBuff( void );
 	void OnRemoveEnergyDrinkBuff( void );
 	void OnRemoveRadiusHeal( void );
-	void OnRemoveMegaHeal( void );
-	void OnRemoveMadMilk( void );
 	void OnRemoveTaunting( void );
 	void OnRemoveNoHealingDamageBuff( void );
 	void OnRemoveSpeedBoost( bool IsNonCombat );
@@ -838,16 +807,7 @@ private:
 	void OnRemoveHalloweenBombHead( void );
 	void OnRemoveHalloweenThriller( void );
 	void OnRemoveRadiusHealOnDamage( void );
-	void OnRemoveMedEffectUberBulletResist( void );
-	void OnRemoveMedEffectUberBlastResist( void );
-	void OnRemoveMedEffectUberFireResist( void );
-	void OnRemoveMedEffectSmallBulletResist( void );
-	void OnRemoveMedEffectSmallBlastResist( void );
-	void OnRemoveMedEffectSmallFireResist( void );
 	void OnRemoveStealthedUserBuffFade( void );
-	void OnRemoveBulletImmune( void );
-	void OnRemoveBlastImmune( void );
-	void OnRemoveFireImmune( void );
 	void OnRemoveMVMBotRadiowave( void );
 	void OnRemoveHalloweenSpeedBoost( void );
 	void OnRemoveHalloweenQuickHeal( void );
@@ -860,18 +820,13 @@ private:
 	void OnRemoveMeleeOnly( void );
 	void OnRemoveSwimmingCurse( void );
 	void OnRemoveHalloweenKartCage( void );
-	void OnRemoveGrapplingHookLatched( void );
 	void OnRemovePasstimeInterception( void );
 	void OnRemoveInPurgatory( void );
 	void OnRemoveCompetitiveWinner( void );
 	void OnRemoveCompetitiveLoser( void );
-	void OnRemoveRocketPack( void );
 	
 
 	// Starting a new trend, putting Add and Remove next to each other
-	void OnAddCondParachute( void );
-	void OnRemoveCondParachute( void );
-
 	void OnAddHalloweenHellHeal( void );
 	void OnRemoveHalloweenHellHeal( void );
 
@@ -1115,8 +1070,6 @@ private:
 	CNetworkVar( int,	m_iItemFindBonus );
 
 	CNetworkVar( bool, m_bShieldEquipped );
-
-	CNetworkVar( bool, m_bParachuteEquipped );
 
 	CNetworkVar( int, m_iDecapitations );
 	int m_iOldDecapitations;

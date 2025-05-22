@@ -93,7 +93,6 @@
 #include "baseanimatedtextureproxy.h"
 #include "econ_entity.h"
 #include "halloween/tf_weapon_spellbook.h"
-#include "tf_weapon_grapplinghook.h"
 #include "tf_logic_robot_destruction.h"
 #include "econ_notifications.h"
 #include "tf_weapon_buff_item.h"
@@ -110,7 +109,6 @@
 #include "tf_hud_chat.h"
 #include "tf_item_powerup_bottle.h"
 #include <vgui_controls/AnimationController.h>
-#include "tf_weapon_rocketpack.h"
 #include "econ_paintkit.h"
 #include "soundstartparams.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -2036,11 +2034,6 @@ public:
 				}
 				pPlayer->m_Shared.m_bChargeGlowing = false;
 			}
-			else if ( pPlayer->m_Shared.IsHypeBuffed() )
-			{
-				vResult = Vector( 50, 2, 48 );
-				pPlayer->m_Shared.m_bChargeGlowing = false;
-			}
 			else if ( pPlayer->m_Shared.InCond( TF_COND_OFFENSEBUFF ) || pPlayer->m_Shared.InCond( TF_COND_ENERGY_BUFF ) )
 			{
 				// Temporarily hijacking this proxy for buff FX.
@@ -3742,7 +3735,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropFloat( RECVINFO( m_flKartNextAvailableBoost ) ),
 	RecvPropInt( RECVINFO( m_iKartHealth ) ),
 	RecvPropInt( RECVINFO( m_iKartState ) ),
-	RecvPropEHandle( RECVINFO( m_hGrapplingHookTarget ) ),
 	RecvPropEHandle( RECVINFO( m_hSecondaryLastWeapon ) ),
 	RecvPropBool( RECVINFO( m_bUsingActionSlot ) ),
 	RecvPropFloat( RECVINFO( m_flHelpmeButtonPressTime ) ),
@@ -3804,8 +3796,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_pBurningSound = NULL;
 	m_pBurningEffect = NULL;
 	m_pUrineEffect = NULL;
-	m_pMilkEffect = NULL;
-	m_pGasEffect = NULL;
 	m_pSoldierOffensiveBuffEffect = NULL;
 	m_pSoldierDefensiveBuffEffect = NULL;
 	m_pSoldierOffensiveHealthRegenBuffEffect = NULL;
@@ -10787,28 +10777,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 				{
 					NotificationQueue_Remove( &CEquipSpellbookNotification::IsNotificationType );
 				}
-			}
-			// ADD EconNotification to equip grapplinghook here
-			else if ( TFGameRules() && TFGameRules()->IsUsingGrapplingHook() )
-			{
-				int iCount = NotificationQueue_Count( &CEquipGrapplingHookNotification::IsNotificationType );
-				CEconItemView *pItem = TFInventoryManager()->GetItemInLoadoutForClass( event->GetInt( "class"), LOADOUT_POSITION_ACTION );
-				// no spell book
-				if ( !pItem || !pItem->GetStaticData()->GetItemClass() || !FStrEq( pItem->GetStaticData()->GetItemClass(), "tf_weapon_grapplinghook" ) )
-				{
-					if ( iCount == 0 )
-					{
-						CEquipGrapplingHookNotification *pNotification = new CEquipGrapplingHookNotification();
-						pNotification->SetText( "#TF_GrapplingHook_EquipAction" );
-						pNotification->SetLifetime( 10.0f );
-						NotificationQueue_Add( pNotification );
-					}
-				}
-				else
-				{
-					NotificationQueue_Remove( &CEquipGrapplingHookNotification::IsNotificationType );
-				}
-				
 			}
 			// Add EconNotification to equip Canteen here
 			else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )

@@ -155,20 +155,6 @@ void CTFRevolver::PrimaryAttack( void )
 	}
 
 	m_flLastAccuracyCheck = gpGlobals->curtime;
-
-	if ( SapperKillsCollectCrits() )
-	{
-		// Do this after the attack, so that we know if we are doing custom damage
-		CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
-		if ( pOwner )
-		{
-			int iRevengeCrits = pOwner->m_Shared.GetRevengeCrits();
-			if ( iRevengeCrits > 0 )
-			{
-				pOwner->m_Shared.SetRevengeCrits( iRevengeCrits-1 );
-			}
-		}
-	}
 #ifdef GAME_DLL
 	// Lower bonus for each attack
 	int iExtraDamageOnHitPenalty = 0;
@@ -232,11 +218,6 @@ int CTFRevolver::GetCount( void )
 	if ( !pOwner )
 		return 0;
 
-	if ( SapperKillsCollectCrits() )
-	{
-		return pOwner->m_Shared.GetRevengeCrits();
-	}
-
 	int iExtraDamageOnHit = 0;
 	CALL_ATTRIB_HOOK_INT( iExtraDamageOnHit, extra_damage_on_hit );
 	if ( iExtraDamageOnHit )
@@ -267,14 +248,6 @@ bool CTFRevolver::Holster( CBaseCombatWeapon *pSwitchingTo )
 	CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
 	if ( pOwner )
 	{
-		if ( SapperKillsCollectCrits() )
-		{	
-			if ( pOwner->m_Shared.GetRevengeCrits() )
-			{
-				pOwner->m_Shared.RemoveCond( TF_COND_CRITBOOSTED );
-			}
-		}
-
 		if ( HasLastShotCritical() )
 		{
 			pOwner->m_Shared.RemoveCond( TF_COND_CRITBOOSTED );
@@ -294,14 +267,6 @@ bool CTFRevolver::Deploy( void )
 	CTFPlayer *pOwner = ToTFPlayer( GetPlayerOwner() );
 	if ( pOwner )
 	{
-		if ( SapperKillsCollectCrits() )
-		{
-			if ( pOwner->m_Shared.GetRevengeCrits() )
-			{
-				pOwner->m_Shared.AddCond( TF_COND_CRITBOOSTED );
-			}
-		}
-
 		if ( HasLastShotCritical() )
 		{
 			pOwner->m_Shared.AddCond( TF_COND_CRITBOOSTED );
@@ -313,24 +278,6 @@ bool CTFRevolver::Deploy( void )
 }
 
 #ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: Reset revenge crits when the revolver is changed
-//-----------------------------------------------------------------------------
-void CTFRevolver::Detach( void )
-{
-	if ( SapperKillsCollectCrits() )
-	{
-		CTFPlayer *pPlayer = GetTFPlayerOwner();
-		if ( pPlayer )
-		{
-			pPlayer->m_Shared.SetRevengeCrits( 0 );
-			pPlayer->m_Shared.RemoveCond( TF_COND_CRITBOOSTED );
-		}
-	}
-
-	BaseClass::Detach();
-}
-
 //-----------------------------------------------------------------------------
 float CTFRevolver::GetProjectileDamage( void )
 {

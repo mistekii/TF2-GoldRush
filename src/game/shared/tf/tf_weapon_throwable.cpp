@@ -67,14 +67,6 @@ END_NETWORK_TABLE()
 LINK_ENTITY_TO_CLASS( tf_projectile_throwable_brick, CTFProjectile_ThrowableBrick );
 PRECACHE_WEAPON_REGISTER( tf_projectile_throwable_brick );
 
-// Projectile Bread Monster
-IMPLEMENT_NETWORKCLASS_ALIASED( TFProjectile_ThrowableBreadMonster, DT_TFProjectile_ThrowableBreadMonster )
-BEGIN_NETWORK_TABLE( CTFProjectile_ThrowableBreadMonster, DT_TFProjectile_ThrowableBreadMonster )
-END_NETWORK_TABLE()
-
-LINK_ENTITY_TO_CLASS( tf_projectile_throwable_breadmonster, CTFProjectile_ThrowableBreadMonster );
-PRECACHE_WEAPON_REGISTER( tf_projectile_throwable_breadmonster );
-
 
 #define TF_GRENADE_TIMER			"Weapon_Grenade.Timer"
 #define TF_GRENADE_CHARGE			"Weapon_LooseCannon.Charge"
@@ -92,7 +84,6 @@ void CTFThrowable::Precache()
 {
 	BaseClass::Precache();
 
-	PrecacheModel( g_pszArrowModels[MODEL_BREAD_MONSTER] );
 	PrecacheModel( g_pszArrowModels[MODEL_THROWING_KNIFE] );
 	PrecacheScriptSound( TF_GRENADE_CHARGE );
 	
@@ -546,111 +537,6 @@ void CTFProjectile_ThrowableBrick::OnHit( CBaseEntity *pOther )
 	}
 
 	BaseClass::OnHit( pOther );
-}
-//-----------------------------------------------------------------------------
-// THROWABLE BREADMONSTER
-//-----------------------------------------------------------------------------
-void CTFProjectile_ThrowableBreadMonster::OnHit( CBaseEntity *pOther ) 
-{ 
-	if ( m_bHit )
-		return;
-
-	CTFPlayer *pVictim = dynamic_cast< CTFPlayer*>( pOther );
-	CTFPlayer *pOwner = dynamic_cast< CTFPlayer*>( GetThrower() );
-
-	if ( pVictim && pOwner && !pVictim->InSameTeam( pOwner ) )
-	{
-		m_bHit = true;
-		CTraceFilterIgnoreTeammates tracefilter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-		trace_t trace;
-		Vector vEndPos = pVictim->WorldSpaceCenter();
-		vEndPos.z = WorldSpaceCenter().z + 1.0f;
-		UTIL_TraceLine( WorldSpaceCenter(), vEndPos, CONTENTS_HITBOX|CONTENTS_MONSTER|CONTENTS_SOLID, &tracefilter, &trace );
-
-		Vector vecToTarget;
-		vecToTarget = pVictim->WorldSpaceCenter() - this->WorldSpaceCenter();
-		VectorNormalize( vecToTarget );
-
-		// Apply Damage to Victim
-		CTakeDamageInfo info;
-		info.SetAttacker( GetThrower() );
-		info.SetInflictor( this );
-		info.SetWeapon( GetLauncher() );
-		info.SetDamage( GetDamage() );
-		info.SetDamageCustom( GetCustomDamageType() );
-		info.SetDamagePosition( GetAbsOrigin() );
-		
-		int iDamageType = DMG_CLUB;
-		if ( IsCritical() )
-		{
-			iDamageType |= DMG_CRITICAL;
-		}
-		info.SetDamageType( iDamageType );
-
-		pVictim->DispatchTraceAttack( info, vecToTarget, &trace );
-		pVictim->ApplyPunchImpulseX( RandomInt( 15, 20 ) );
-		pVictim->m_Shared.MakeBleed( pOwner, dynamic_cast< CTFWeaponBase * >( GetLauncher() ), 5.0f, 1.0f );
-		ApplyMultiDamage();
-
-		// Bread Particle
-		CPVSFilter filter( vEndPos );
-		TE_TFParticleEffect( filter, 0.0, "blood_bread_biting", vEndPos, vec3_angle );
-
-		// Attach Breadmonster to Victim
-		CreateStickyAttachmentToTarget( pOwner, pVictim, &trace );
-
-		BaseClass::Explode();
-		return;
-	}
-	else // its a dud
-	{
-		BaseClass::Explode();
-		return;
-	}
-	BaseClass::OnHit( pOther );
-}
-
-//-----------------------------------------------------------------------------
-void CTFProjectile_ThrowableBreadMonster::Detonate() 
-{
-	SetContextThink( &CBaseGrenade::SUB_Remove, gpGlobals->curtime, "RemoveThink" );
-	SetTouch( NULL );
-
-	AddEffects( EF_NODRAW );
-	SetAbsVelocity( vec3_origin );
-}
-
-//-----------------------------------------------------------------------------
-void CTFProjectile_ThrowableBreadMonster::Explode( trace_t *pTrace, int bitsDamageType )
-{
-	if ( !m_bHit )
-	{
-		// TODO, Spawn Debris / Flopping BreadInstead
-		trace_t tr;
-		Vector velDir = m_vCollisionVelocity;
-		VectorNormalize( velDir );
-		Vector vecSpot = GetAbsOrigin() - velDir * 32;
-		UTIL_TraceLine( vecSpot, vecSpot + velDir * 64, MASK_SOLID, this, COLLISION_GROUP_DEBRIS, &tr );
-		if ( tr.fraction < 1.0 && tr.surface.flags & SURF_SKY )
-		{
-			// We hit the skybox, go away soon.
-			return;
-		}
-
-		// Create a breadmonster in the world
-		CEffectData	data;
-		data.m_vOrigin = tr.endpos;
-		data.m_vNormal = velDir;
-		data.m_nEntIndex = 0;
-		data.m_nAttachmentIndex = 0;
-		data.m_nMaterial = 0;
-		data.m_fFlags = TF_PROJECTILE_BREAD_MONSTER;
-		data.m_nColor = ( GetTeamNumber() == TF_TEAM_BLUE ) ? 1 : 0;
-
-		DispatchEffect( "TFBoltImpact", data );
-	}
-
-	BaseClass::Explode( pTrace, bitsDamageType );
 }
 
 #endif // GAME_DLL

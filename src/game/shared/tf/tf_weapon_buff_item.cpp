@@ -40,13 +40,8 @@ PRECACHE_WEAPON_REGISTER( tf_weapon_buff_item );
 const char* BannerModels[] =
 {
 	"models/weapons/c_models/c_buffbanner/c_buffbanner.mdl",
-	"models/workshop/weapons/c_models/c_battalion_buffbanner/c_battalion_buffbanner.mdl",
-	"models/workshop_partner/weapons/c_models/c_shogun_warbanner/c_shogun_warbanner.mdl",
-	"models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_parachute.mdl"
+	"models/workshop/weapons/c_models/c_battalion_buffbanner/c_battalion_buffbanner.mdl"
 };
-
-#define CLOSED_PARACHUTE_MDL "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack.mdl"
-#define OPEN_PARACHUTE_MDL "models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack_open.mdl"
 
 COMPILE_TIME_ASSERT( ARRAYSIZE( BannerModels ) == NUM_BUFF_ITEM_TYPES );
 //=============================================================================
@@ -96,16 +91,12 @@ void CTFBuffItem::Precache()
 
 	PrecacheModel( "models/weapons/c_models/c_buffpack/c_buffpack.mdl" );
 	PrecacheModel( "models/workshop/weapons/c_models/c_battalion_buffpack/c_battalion_buffpack.mdl" );
-	PrecacheModel( "models/workshop_partner/weapons/c_models/c_shogun_warpack/c_shogun_warpack.mdl" );
-	PrecacheModel( OPEN_PARACHUTE_MDL );
-	PrecacheModel( CLOSED_PARACHUTE_MDL );
 
 	PrecacheScriptSound( "Weapon_BuffBanner.HornRed" );
 	PrecacheScriptSound( "Weapon_BuffBanner.HornBlue" );
 	PrecacheScriptSound( "Weapon_BattalionsBackup.HornRed" );
 	PrecacheScriptSound( "Weapon_BattalionsBackup.HornBlue" );
 	PrecacheScriptSound( "Weapon_BuffBanner.Flag" );
-	PrecacheScriptSound( "Samurai.Conch" );
 
 	BaseClass::Precache();
 }
@@ -141,12 +132,6 @@ void CTFBuffItem::PrimaryAttack()
 void CTFBuffItem::Equip( CBaseCombatCharacter* pOwner )
 {
 	BaseClass::Equip( pOwner );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.SetParachuteEquipped( true );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -154,12 +139,6 @@ void CTFBuffItem::Equip( CBaseCombatCharacter* pOwner )
 //-----------------------------------------------------------------------------
 void CTFBuffItem::Detach( void )
 {
-	CTFPlayer *pTFPlayer = GetTFPlayerOwner();
-	if ( pTFPlayer )
-	{
-		pTFPlayer->m_Shared.SetParachuteEquipped( false );
-	}
-
 	BaseClass::Detach();
 }
 
@@ -182,13 +161,8 @@ void CTFBuffItem::BlowHorn( void )
 	int iBuffType = 0;
 	CALL_ATTRIB_HOOK_INT( iBuffType, set_buff_type );
 
-	// Samurai conch shell.
-	if ( iBuffType == EConcheror )
-	{
-		pPlayer->EmitSound( "Samurai.Conch" );
-	}
 	// Bugle.
-	else if ( iBuffType == EBuffBanner )
+	if ( iBuffType == EBuffBanner )
 	{
 		if ( pPlayer->GetTeamNumber() == TF_TEAM_BLUE )
 		{
@@ -360,11 +334,6 @@ void CTFBuffItem::ClientThink( void )
 	if ( m_iBuffType == -1 || m_iBuffType == 0 )
 	{
 		m_iBuffType = GetBuffType();
-
-		if ( m_iBuffType != EParachute )
-		{
-			SetNextClientThink( CLIENT_THINK_NEVER );
-		}
 	}
 }
 

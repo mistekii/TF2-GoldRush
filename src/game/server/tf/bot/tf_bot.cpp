@@ -3473,19 +3473,13 @@ bool CTFBot::IsHitScanWeapon( CTFWeaponBase *weapon ) const
 		case TF_WEAPON_SNIPERRIFLE:
 		case TF_WEAPON_MINIGUN:
 		case TF_WEAPON_SMG:
-		case TF_WEAPON_CHARGED_SMG:
 		case TF_WEAPON_PISTOL:
 		case TF_WEAPON_PISTOL_SCOUT:
 		case TF_WEAPON_REVOLVER:
 		case TF_WEAPON_SENTRY_BULLET:
 		case TF_WEAPON_SENTRY_ROCKET:
 		case TF_WEAPON_SENTRY_REVENGE:
-		case TF_WEAPON_HANDGUN_SCOUT_PRIMARY:
 		case TF_WEAPON_HANDGUN_SCOUT_SECONDARY:
-		case TF_WEAPON_SODA_POPPER:
-		case TF_WEAPON_SNIPERRIFLE_DECAP:
-		case TF_WEAPON_PEP_BRAWLER_BLASTER:
-		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 			return true;
 		};
 	}
@@ -3608,7 +3602,6 @@ bool CTFBot::IsQuietWeapon( CTFWeaponBase *weapon ) const
 		case TF_WEAPON_JAR:
 		case TF_WEAPON_COMPOUND_BOW:
 		case TF_WEAPON_SWORD:
-		case TF_WEAPON_CROSSBOW:
 			return true;
 		};
 	}
@@ -4464,33 +4457,6 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 		if ( bShouldCharge )
 		{
 			PressAltFireButton();
-		}
-	}
-	// if I'm wearing parachute, check if I should activate my parachute
-	else if ( m_Shared.IsParachuteEquipped() )
-	{
-		bool bIsBurning = m_Shared.InCond( TF_COND_BURNING );
-		float flHealthPercent = (float)GetHealth() / GetMaxHealth();
-		const float flHealthThreshold = 0.5f;
-		// should I activate parachute?
-		if ( !m_Shared.InCond( TF_COND_PARACHUTE_ACTIVE ) )
-		{
-			float flMinParachuteGroundDistance = 300.f;
-			// check if I'm falling, high enough off the ground to deploy parachute, and not burning
-			if ( flHealthPercent >= flHealthThreshold && !bIsBurning && GetAbsVelocity().z < 0 && GetLocomotionInterface()->IsPotentiallyTraversable( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, -flMinParachuteGroundDistance ), ILocomotion::IMMEDIATELY ) )
-			{
-				PressJumpButton();
-			}
-		}
-		// should I deactivate parachute?
-		else
-		{
-			float flCancelParachuteDistance = 150.f;
-			// if I'm burning or close enough to landing, deactivate the parachute or health less than some threshold
-			if ( flHealthPercent < flHealthThreshold || bIsBurning || !GetLocomotionInterface()->IsPotentiallyTraversable( GetAbsOrigin(), GetAbsOrigin() + Vector( 0, 0, -flCancelParachuteDistance ), ILocomotion::IMMEDIATELY ) )
-			{
-				PressJumpButton();
-			}
 		}
 	}
 

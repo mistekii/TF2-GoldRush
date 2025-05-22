@@ -265,7 +265,6 @@ ETFCond g_aDebuffConditions[] =
 	TF_COND_BURNING,
 	TF_COND_URINE,
 	TF_COND_BLEEDING,
-	TF_COND_MAD_MILK,
 	TF_COND_LAST
 };
 
@@ -273,8 +272,7 @@ bool ConditionExpiresFast( ETFCond eCond )
 {
 	return eCond == TF_COND_BURNING
 		|| eCond == TF_COND_URINE
-		|| eCond == TF_COND_BLEEDING
-		|| eCond == TF_COND_MAD_MILK;
+		|| eCond == TF_COND_BLEEDING;
 }
 
 static const char *g_aConditionNames[] =
@@ -306,8 +304,6 @@ static const char *g_aConditionNames[] =
 	"TF_COND_URINE",                            // = 24
 	"TF_COND_BLEEDING",                         // = 25
 	"TF_COND_DEFENSEBUFF",                      // = 26 - 35% defense! No crit damage.
-	"TF_COND_MAD_MILK",                         // = 27
-	"TF_COND_MEGAHEAL",                         // = 28
 	"TF_COND_REGENONDAMAGEBUFF",                // = 29
 	"TF_COND_MARKEDFORDEATH",                   // = 30
 	"TF_COND_NOHEALINGDAMAGEBUFF",              // = 31
@@ -315,98 +311,79 @@ static const char *g_aConditionNames[] =
 	"TF_COND_CRITBOOSTED_PUMPKIN",              // = 33 - Brandon hates bits
 	"TF_COND_CRITBOOSTED_USER_BUFF",            // = 34
 	"TF_COND_CRITBOOSTED_DEMO_CHARGE",          // = 35
-	"TF_COND_SODAPOPPER_HYPE",                  // = 36
-	"TF_COND_CRITBOOSTED_FIRST_BLOOD",          // = 37 - arena mode first blood
-	"TF_COND_CRITBOOSTED_BONUS_TIME",           // = 38
-	"TF_COND_CRITBOOSTED_CTF_CAPTURE",          // = 39
-	"TF_COND_CRITBOOSTED_ON_KILL",              // = 40 - KGB, etc.
-	"TF_COND_CANNOT_SWITCH_FROM_MELEE",         // = 41
-	"TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK",        // = 42 - 35% defense! Still damaged by crits.
-	"TF_COND_REPROGRAMMED",                     // = 43 - Bots only
-	"TF_COND_CRITBOOSTED_RAGE_BUFF",            // = 44
-	"TF_COND_DEFENSEBUFF_HIGH",                 // = 45 - 75% defense! Still damaged by crits.
-	"TF_COND_SNIPERCHARGE_RAGE_BUFF",           // = 46 - Sniper Rage - Charge time speed up
-	"TF_COND_DISGUISE_WEARINGOFF",              // = 47 - Applied for half-second post-disguise
-	"TF_COND_MARKEDFORDEATH_SILENT",            // = 48 - Sans sound
-	"TF_COND_DISGUISED_AS_DISPENSER",           // = 49
-	"TF_COND_SAPPED",                           // = 50 - Bots only
-	"TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED", // = 51
-	"TF_COND_INVULNERABLE_USER_BUFF",           // = 52
-	"TF_COND_HALLOWEEN_BOMB_HEAD",              // = 53
-	"TF_COND_HALLOWEEN_THRILLER",               // = 54
-	"TF_COND_RADIUSHEAL_ON_DAMAGE",             // = 55
-	"TF_COND_CRITBOOSTED_CARD_EFFECT",          // = 56
-	"TF_COND_INVULNERABLE_CARD_EFFECT",         // = 57
-	"TF_COND_MEDIGUN_UBER_BULLET_RESIST",       // = 58
-	"TF_COND_MEDIGUN_UBER_BLAST_RESIST",        // = 59
-	"TF_COND_MEDIGUN_UBER_FIRE_RESIST",         // = 60
-	"TF_COND_MEDIGUN_SMALL_BULLET_RESIST",      // = 61
-	"TF_COND_MEDIGUN_SMALL_BLAST_RESIST",       // = 62
-	"TF_COND_MEDIGUN_SMALL_FIRE_RESIST",        // = 63
-	"TF_COND_STEALTHED_USER_BUFF",              // = 64 - Any class can have this
-	"TF_COND_MEDIGUN_DEBUFF",                   // = 65
-	"TF_COND_STEALTHED_USER_BUFF_FADING",       // = 66
-	"TF_COND_BULLET_IMMUNE",                    // = 67
-	"TF_COND_BLAST_IMMUNE",                     // = 68
-	"TF_COND_FIRE_IMMUNE",                      // = 69
-	"TF_COND_PREVENT_DEATH",                    // = 70
-	"TF_COND_MVM_BOT_STUN_RADIOWAVE",           // = 71 - Bots only
-	"TF_COND_HALLOWEEN_SPEED_BOOST",            // = 72
-	"TF_COND_HALLOWEEN_QUICK_HEAL",             // = 73
-	"TF_COND_HALLOWEEN_GIANT",                  // = 74
-	"TF_COND_HALLOWEEN_TINY",                   // = 75
-	"TF_COND_HALLOWEEN_IN_HELL",                // = 76
-	"TF_COND_HALLOWEEN_GHOST_MODE",             // = 77
-	"TF_COND_MINICRITBOOSTED_ON_KILL",          // = 78
-	"TF_COND_OBSCURED_SMOKE",                   // = 79
-	"TF_COND_PARACHUTE_ACTIVE",                 // = 80
-	"TF_COND_BLASTJUMPING",                     // = 81
-	"TF_COND_HALLOWEEN_KART",                   // = 82
-	"TF_COND_HALLOWEEN_KART_DASH",              // = 83
-	"TF_COND_BALLOON_HEAD",                     // = 84 - larger head, lower-gravity-feeling jumps
-	"TF_COND_MELEE_ONLY",                       // = 85 - melee only
-	"TF_COND_SWIMMING_CURSE",                   // = 86 - player movement become swimming movement
-	"TF_COND_FREEZE_INPUT",                     // = 87 - freezes player input
-	"TF_COND_HALLOWEEN_KART_CAGE",              // = 88 - attach cage model to player while in kart
-	"TF_COND_DONOTUSE_0",                       // = 89
-	"TF_COND_RUNE_STRENGTH",                    // = 90
-	"TF_COND_RUNE_HASTE",                       // = 91
-	"TF_COND_RUNE_REGEN",                       // = 92
-	"TF_COND_RUNE_RESIST",                      // = 93
-	"TF_COND_RUNE_VAMPIRE",                     // = 94
-	"TF_COND_RUNE_REFLECT",                     // = 95
-	"TF_COND_RUNE_PRECISION",                   // = 96
-	"TF_COND_RUNE_AGILITY",                     // = 97
-	"TF_COND_GRAPPLINGHOOK",                    // = 98
-	"TF_COND_GRAPPLINGHOOK_SAFEFALL",           // = 99
-	"TF_COND_GRAPPLINGHOOK_LATCHED",            // = 100
-	"TF_COND_GRAPPLINGHOOK_BLEEDING",           // = 101
-	"TF_COND_AFTERBURN_IMMUNE",                 // = 102
-	"TF_COND_RUNE_KNOCKOUT",                    // = 103
-	"TF_COND_RUNE_IMBALANCE",                   // = 104
-	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 105
-	"TF_COND_PASSTIME_INTERCEPTION",            // = 106
-	"TF_COND_SWIMMING_NO_EFFECTS",              // = 107 - =107_DNOC_FT
-	"TF_COND_PURGATORY",                        // = 108
-	"TF_COND_RUNE_KING",                        // = 109
-	"TF_COND_RUNE_PLAGUE",                      // = 110
-	"TF_COND_RUNE_SUPERNOVA",                   // = 111
-	"TF_COND_PLAGUE",                           // = 112
-	"TF_COND_KING_BUFFED",                      // = 113
-	"TF_COND_TEAM_GLOWS",                       // = 114 - used to show team glows to living players
-	"TF_COND_KNOCKED_INTO_AIR",                 // = 115
-	"TF_COND_COMPETITIVE_WINNER",               // = 116
-	"TF_COND_COMPETITIVE_LOSER",                // = 117
-	"TF_COND_HEALING_DEBUFF",                   // = 118
-	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 119
-	"TF_COND_GRAPPLED_TO_PLAYER",               // = 120
-	"TF_COND_GRAPPLED_BY_PLAYER",               // = 121
-	"TF_COND_PARACHUTE_DEPLOYED",               // = 122
-	"TF_COND_ROCKETPACK",                       // = 123
-	"TF_COND_LOST_FOOTING",                     // = 124
-	"TF_COND_AIR_CURRENT",                      // = 125
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 126
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 127
+	"TF_COND_CRITBOOSTED_FIRST_BLOOD",          // = 36 - arena mode first blood
+	"TF_COND_CRITBOOSTED_BONUS_TIME",           // = 37
+	"TF_COND_CRITBOOSTED_CTF_CAPTURE",          // = 38
+	"TF_COND_CRITBOOSTED_ON_KILL",              // = 39 - KGB, etc.
+	"TF_COND_CANNOT_SWITCH_FROM_MELEE",         // = 40
+	"TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK",        // = 41 - 35% defense! Still damaged by crits.
+	"TF_COND_REPROGRAMMED",                     // = 42 - Bots only
+	"TF_COND_CRITBOOSTED_RAGE_BUFF",            // = 43
+	"TF_COND_DEFENSEBUFF_HIGH",                 // = 44 - 75% defense! Still damaged by crits.
+	"TF_COND_SNIPERCHARGE_RAGE_BUFF",           // = 45 - Sniper Rage - Charge time speed up
+	"TF_COND_DISGUISE_WEARINGOFF",              // = 46 - Applied for half-second post-disguise
+	"TF_COND_MARKEDFORDEATH_SILENT",            // = 47 - Sans sound
+	"TF_COND_DISGUISED_AS_DISPENSER",           // = 48
+	"TF_COND_SAPPED",                           // = 49 - Bots only
+	"TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED", // = 50
+	"TF_COND_INVULNERABLE_USER_BUFF",           // = 51
+	"TF_COND_HALLOWEEN_BOMB_HEAD",              // = 52
+	"TF_COND_HALLOWEEN_THRILLER",               // = 53
+	"TF_COND_RADIUSHEAL_ON_DAMAGE",             // = 54
+	"TF_COND_CRITBOOSTED_CARD_EFFECT",          // = 55
+	"TF_COND_INVULNERABLE_CARD_EFFECT",         // = 56
+	"TF_COND_STEALTHED_USER_BUFF",              // = 57 - Any class can have this
+	"TF_COND_MEDIGUN_DEBUFF",                   // = 58
+	"TF_COND_STEALTHED_USER_BUFF_FADING",       // = 59
+	"TF_COND_PREVENT_DEATH",                    // = 60
+	"TF_COND_MVM_BOT_STUN_RADIOWAVE",           // = 61 - Bots only
+	"TF_COND_HALLOWEEN_SPEED_BOOST",            // = 62
+	"TF_COND_HALLOWEEN_QUICK_HEAL",             // = 63
+	"TF_COND_HALLOWEEN_GIANT",                  // = 64
+	"TF_COND_HALLOWEEN_TINY",                   // = 65
+	"TF_COND_HALLOWEEN_IN_HELL",                // = 66
+	"TF_COND_HALLOWEEN_GHOST_MODE",             // = 67
+	"TF_COND_MINICRITBOOSTED_ON_KILL",          // = 68
+	"TF_COND_OBSCURED_SMOKE",                   // = 69
+	"TF_COND_BLASTJUMPING",                     // = 70
+	"TF_COND_HALLOWEEN_KART",                   // = 71
+	"TF_COND_HALLOWEEN_KART_DASH",              // = 72
+	"TF_COND_BALLOON_HEAD",                     // = 73 - larger head, lower-gravity-feeling jumps
+	"TF_COND_MELEE_ONLY",                       // = 74 - melee only
+	"TF_COND_SWIMMING_CURSE",                   // = 75 - player movement become swimming movement
+	"TF_COND_FREEZE_INPUT",                     // = 76 - freezes player input
+	"TF_COND_HALLOWEEN_KART_CAGE",              // = 77 - attach cage model to player while in kart
+	"TF_COND_DONOTUSE_0",                       // = 78
+	"TF_COND_RUNE_STRENGTH",                    // = 79
+	"TF_COND_RUNE_HASTE",                       // = 80
+	"TF_COND_RUNE_REGEN",                       // = 81
+	"TF_COND_RUNE_RESIST",                      // = 82
+	"TF_COND_RUNE_VAMPIRE",                     // = 83
+	"TF_COND_RUNE_REFLECT",                     // = 84
+	"TF_COND_RUNE_PRECISION",                   // = 85
+	"TF_COND_RUNE_AGILITY",                     // = 86
+	"TF_COND_AFTERBURN_IMMUNE",                 // = 87
+	"TF_COND_RUNE_KNOCKOUT",                    // = 88
+	"TF_COND_RUNE_IMBALANCE",                   // = 89
+	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 90
+	"TF_COND_PASSTIME_INTERCEPTION",            // = 91
+	"TF_COND_SWIMMING_NO_EFFECTS",              // = 92 - =102_DNOC_FT
+	"TF_COND_PURGATORY",                        // = 93
+	"TF_COND_RUNE_KING",                        // = 94
+	"TF_COND_RUNE_PLAGUE",                      // = 95
+	"TF_COND_RUNE_SUPERNOVA",                   // = 96
+	"TF_COND_PLAGUE",                           // = 97
+	"TF_COND_KING_BUFFED",                      // = 98
+	"TF_COND_TEAM_GLOWS",                       // = 99 - used to show team glows to living players
+	"TF_COND_KNOCKED_INTO_AIR",                 // = 100
+	"TF_COND_COMPETITIVE_WINNER",               // = 101
+	"TF_COND_COMPETITIVE_LOSER",                // = 102
+	"TF_COND_HEALING_DEBUFF",                   // = 103
+	"TF_COND_PASSTIME_PENALTY_DEBUFF",          // = 104
+	"TF_COND_LOST_FOOTING",                     // = 105
+	"TF_COND_AIR_CURRENT",                      // = 106
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 107
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 108
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -620,7 +597,6 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_GRENADE_HEAL",
 	"TF_WEAPON_GRENADE_STUNBALL",
 	"TF_WEAPON_GRENADE_JAR",
-	"TF_WEAPON_GRENADE_JAR_MILK",
 	"TF_WEAPON_PISTOL",
 	"TF_WEAPON_PISTOL_SCOUT",
 	"TF_WEAPON_REVOLVER",
@@ -650,28 +626,11 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_LASER_POINTER",
 	"TF_WEAPON_DISPENSER_GUN",
 	"TF_WEAPON_SENTRY_REVENGE",
-	"TF_WEAPON_JAR_MILK",
-	"TF_WEAPON_HANDGUN_SCOUT_PRIMARY",
-	"TF_WEAPON_BAT_FISH",
-	"TF_WEAPON_CROSSBOW",
 	"TF_WEAPON_STICKBOMB",
 	"TF_WEAPON_HANDGUN_SCOUT_SECONDARY",
-	"TF_WEAPON_SODA_POPPER",
-	"TF_WEAPON_SNIPERRIFLE_DECAP",
-	"TF_WEAPON_RAYGUN",
-	"TF_WEAPON_PARTICLE_CANNON",
-	"TF_WEAPON_MECHANICAL_ARM",
-	"TF_WEAPON_DRG_POMSON",
-	"TF_WEAPON_BAT_GIFTWRAP",
-	"TF_WEAPON_GRENADE_ORNAMENT_BALL",
 	"TF_WEAPON_FLAREGUN_REVENGE",
-	"TF_WEAPON_PEP_BRAWLER_BLASTER",
-	"TF_WEAPON_CLEAVER",
-	"TF_WEAPON_GRENADE_CLEAVER",
 	"TF_WEAPON_STICKY_BALL_LAUNCHER",
 	"TF_WEAPON_GRENADE_STICKY_BALL",
-	"TF_WEAPON_SHOTGUN_BUILDING_RESCUE",
-	"TF_WEAPON_CANNON",
 	"TF_WEAPON_THROWABLE",
 	"TF_WEAPON_GRENADE_THROWABLE",
 	"TF_WEAPON_PDA_SPY_BUILD",
@@ -679,14 +638,8 @@ const char *g_aWeaponNames[] =
 	"TF_WEAPON_HARVESTER_SAW",
 	"TF_WEAPON_SPELLBOOK",
 	"TF_WEAPON_SPELLBOOK_PROJECTILE",
-	"TF_WEAPON_SNIPERRIFLE_CLASSIC",
-	"TF_WEAPON_PARACHUTE",
-	"TF_WEAPON_GRAPPLINGHOOK",
 	"TF_WEAPON_PASSTIME_GUN",
-	"TF_WEAPON_CHARGED_SMG",
 	"TF_WEAPON_BREAKABLE_SIGN",
-	"TF_WEAPON_ROCKETPACK",
-	"TF_WEAPON_SLAP",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_aWeaponNames ) == TF_WEAPON_COUNT );
@@ -733,7 +686,6 @@ int g_aWeaponDamageTypes[] =
 	DMG_GENERIC,	// TF_WEAPON_GRENADE_HEAL
 	DMG_CLUB,		// TF_WEAPON_GRENADE_STUNBALL
 	DMG_CLUB,		// TF_WEAPON_GRENADE_JAR
-	DMG_CLUB,		// TF_WEAPON_GRENADE_JAR_MILK
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_PISTOL,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_PISTOL_SCOUT,
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_REVOLVER,
@@ -763,28 +715,11 @@ int g_aWeaponDamageTypes[] =
 	DMG_CLUB,		// TF_WEAPON_LASER_POINTER
 	DMG_BULLET,		// TF_WEAPON_DISPENSER_GUN
 	DMG_BUCKSHOT | DMG_USEDISTANCEMOD, // TF_WEAPON_SENTRY_REVENGE
-	DMG_GENERIC,	// TF_WEAPON_JAR_MILK
-	DMG_BUCKSHOT | DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_HANDGUN_SCOUT_PRIMARY
-	DMG_CLUB,		// TF_WEAPON_BAT_FISH
-	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_CROSSBOW
 	DMG_CLUB, // TF_WEAPON_STICKBOMB
 	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_HANDGUN_SCOUT_SECONDARY
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_SODA_POPPER,
-	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE_DECAP,
-	DMG_BULLET | DMG_USEDISTANCEMOD | DMG_NOCLOSEDISTANCEMOD | DMG_PREVENT_PHYSICS_FORCE,	// TF_WEAPON_RAYGUN,
-	DMG_BLAST | DMG_HALF_FALLOFF | DMG_USEDISTANCEMOD,		// TF_WEAPON_PARTICLE_CANNON,
-	DMG_BULLET | DMG_USEDISTANCEMOD,	// TF_WEAPON_MECHANICAL_ARM,
-	DMG_BULLET | DMG_USEDISTANCEMOD | DMG_NOCLOSEDISTANCEMOD | DMG_PREVENT_PHYSICS_FORCE,	// TF_WEAPON_DRG_POMSON,
-	DMG_CLUB,		// TF_WEAPON_BAT_GIFTWRAP,
-	DMG_CLUB,		// TF_WEAPON_GRENADE_ORNAMENT_BALL
 	DMG_BULLET | DMG_IGNITE,	// TF_WEAPON_FLAREGUN_REVENGE,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,  // TF_WEAPON_PEP_BRAWLER_BLASTER,
-	DMG_GENERIC,	// TF_WEAPON_CLEAVER
-	DMG_SLASH,		// TF_WEAPON_GRENADE_CLEAVER
 	DMG_GENERIC,	// TF_WEAPON_STICKY_BALL_LAUNCHER,
 	DMG_GENERIC,	// TF_WEAPON_GRENADE_STICKY_BALL,
-	DMG_BUCKSHOT | DMG_USEDISTANCEMOD,	// TF_WEAPON_SHOTGUN_BUILDING_RESCUE,
-	DMG_BLAST | DMG_HALF_FALLOFF,	// TF_WEAPON_CANNON
 	DMG_BULLET,		// TF_WEAPON_THROWABLE
 	DMG_BULLET,		// TF_WEAPON_GRENADE_THROWABLE
 	DMG_BULLET,		// TF_WEAPON_PDA_SPY_BUILD
@@ -792,14 +727,8 @@ int g_aWeaponDamageTypes[] =
 	DMG_SLASH,		// TF_WEAPON_HARVESTER_SAW
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK
 	DMG_GENERIC,	// TF_WEAPON_SPELLBOOK_PROJECTILE
-	DMG_BULLET | DMG_USE_HITLOCATIONS,	// TF_WEAPON_SNIPERRIFLE_CLASSIC,
-	DMG_GENERIC, // TF_WEAPON_PARACHUTE,
-	DMG_GENERIC, // TF_WEAPON_GRAPPLINGHOOK,
 	DMG_GENERIC, // TF_WEAPON_PASSTIME_GUN
-	DMG_BULLET | DMG_USEDISTANCEMOD,		// TF_WEAPON_CHARGED_SMG,
 	DMG_CLUB,		// TF_WEAPON_BREAKABLE_SIGN,
-	DMG_GENERIC, // TF_WEAPON_ROCKETPACK,
-	DMG_CLUB, // TF_WEAPON_SLAP,
 
 };
 
@@ -842,9 +771,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_BLEEDING",
 	"TF_DMG_CUSTOM_GOLD_WRENCH",
 	"TF_DMG_CUSTOM_CARRIED_BUILDING",
-	"TF_DMG_CUSTOM_COMBO_PUNCH",
-	"TF_DMG_CUSTOM_TAUNTATK_ENGINEER_ARM_KILL",
-	"TF_DMG_CUSTOM_FISH_KILL",
 	"TF_DMG_CUSTOM_TRIGGER_HURT",
 	"TF_DMG_CUSTOM_DECAPITATION_BOSS",
 	"TF_DMG_CUSTOM_STICKBOMB_EXPLOSION",
@@ -854,19 +780,15 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_PLASMA",
 	"TF_DMG_CUSTOM_PLASMA_CHARGED",
 	"TF_DMG_CUSTOM_PLASMA_GIB",
-	"TF_DMG_CUSTOM_PRACTICE_STICKY",
 	"TF_DMG_CUSTOM_EYEBALL_ROCKET",
 	"TF_DMG_CUSTOM_HEADSHOT_DECAPITATION",
 	"TF_DMG_CUSTOM_TAUNTATK_ARMAGEDDON",
 	"TF_DMG_CUSTOM_FLARE_PELLET",
-	"TF_DMG_CUSTOM_CLEAVER",
-	"TF_DMG_CUSTOM_CLEAVER_CRIT",
 	"TF_DMG_CUSTOM_SAPPER_RECORDER_DEATH",
 	"TF_DMG_CUSTOM_MERASMUS_PLAYER_BOMB",
 	"TF_DMG_CUSTOM_MERASMUS_GRENADE",
 	"TF_DMG_CUSTOM_MERASMUS_ZAP",
 	"TF_DMG_CUSTOM_MERASMUS_DECAPITATION",
-	"TF_DMG_CUSTOM_CANNONBALL_PUSH",
 	"TF_DMG_CUSTOM_TAUNTATK_ALLCLASS_GUITAR_RIFF",
 	"TF_DMG_CUSTOM_THROWABLE",
 	"TF_DMG_CUSTOM_THROWABLE_KILL",
@@ -883,7 +805,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_KART",
 	"TF_DMG_CUSTOM_GIANT_HAMMER",
 	"TF_DMG_CUSTOM_RUNE_REFLECT",
-	"TF_DMG_CUSTOM_SLAP_KILL",
 	"TF_DMG_CUSTOM_CROC",
 	"TF_DMG_CUSTOM_TAUNTATK_GASBLAST",
 	"TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED",
@@ -925,25 +846,10 @@ const char *g_szProjectileNames[] =
 	"projectile_jar",
 	"projectile_arrow",
 	"projectile_flame_rocket",
-	"projectile_jar_milk",
-	"projectile_healing_bolt",
-	"projectile_energy_ball",
-	"projectile_energy_ring",
-	"projectile_pipe_remote_practice",
-	"projectile_cleaver",
 	"projectile_sticky_ball",
-	"projectile_cannonball",
-	"projectile_building_repair_bolt",
-	"projectile_festive_arrow",
 	"projectile_throwable",
 	"projectile_spellfireball",
-	"projectile_festive_urine",
-	"projectile_festive_healing_bolt",
-	"projectfile_breadmonster_jarate",
-	"projectfile_breadmonster_madmilk",
-	"projectile_grapplinghook",
 	"projectile_sentry_rocket",
-	"projectile_bread_monster",
 
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_szProjectileNames ) == TF_NUM_PROJECTILES );
@@ -961,25 +867,10 @@ int g_iProjectileWeapons[] =
 	TF_WEAPON_JAR,
 	TF_WEAPON_COMPOUND_BOW,
 	TF_PROJECTILE_FLAME_ROCKET,
-	TF_WEAPON_JAR_MILK,
-	TF_WEAPON_CROSSBOW,
-	TF_WEAPON_PARTICLE_CANNON,
-	TF_WEAPON_RAYGUN,
-	TF_WEAPON_GRENADELAUNCHER,			// practice pipes should never kill anyone anyway
-	TF_WEAPON_CLEAVER,
 	TF_WEAPON_STICKY_BALL_LAUNCHER,
-	TF_WEAPON_CANNON,
-	TF_WEAPON_SHOTGUN_BUILDING_RESCUE,
-	TF_WEAPON_COMPOUND_BOW,
 	TF_WEAPON_THROWABLE,
 	TF_WEAPON_SPELLBOOK,
-	TF_WEAPON_JAR,
-	TF_WEAPON_CROSSBOW,
-	TF_WEAPON_JAR,
-	TF_WEAPON_JAR,
-	TF_PROJECTILE_GRAPPLINGHOOK,
 	TF_WEAPON_SENTRY_ROCKET,
-	TF_WEAPON_THROWABLE,
 
 };
 
@@ -1012,9 +903,6 @@ static const char* taunt_attack_name[] =
 	"TAUNTATK_RPS_PARTICLE",
 	"TAUNTATK_HIGHFIVE_PARTICLE",
 	"TAUNTATK_ENGINEER_GUITAR_SMASH",
-	"TAUNTATK_ENGINEER_ARM_IMPALE",
-	"TAUNTATK_ENGINEER_ARM_KILL",
-	"TAUNTATK_ENGINEER_ARM_BLEND",
 	"TAUNTATK_SOLDIER_GRENADE_KILL_WORMSIGN",
 	"TAUNTATK_SHOW_ITEM",
 	"TAUNTATK_MEDIC_RELEASE_DOVES",
@@ -1110,13 +998,8 @@ const char *g_pszHintMessages[] =
 const char *g_pszArrowModels[] = 
 {
 	"models/weapons/w_models/w_arrow.mdl",
-	"models/weapons/w_models/w_repair_claw.mdl",
 	"models/weapons/w_models/w_baseball.mdl",
-	"models/weapons/w_models/w_arrow_xmas.mdl",
 	"models/weapons/w_models/w_syringe_proj.mdl",
-	"models/workshop/weapons/c_models/c_crusaders_crossbow/c_crusaders_crossbow_xmas_proj.mdl",
-	"models/weapons/w_models/w_breadmonster/w_breadmonster.mdl",
-	"models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl",
 	"models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_pszArrowModels ) == TF_ARROW_MODEL_COUNT );
@@ -1685,21 +1568,6 @@ wpntranslation_class_weapons_t pszWpnEntTranslationList[] =
 			"tf_weapon_throwable_secondary",			// TF_CLASS_PYRO,
 			"tf_weapon_throwable_secondary",			// TF_CLASS_SPY,
 			"tf_weapon_throwable_secondary",			// TF_CLASS_ENGINEER,		
-		}
-	},
-	{
-		"tf_weapon_parachute",
-		{
-			"",											// TF_CLASS_UNDEFINED = 0,
-			"",			// TF_CLASS_SCOUT,
-			"",			// TF_CLASS_SNIPER,
-			"tf_weapon_parachute_secondary",			// TF_CLASS_SOLDIER,
-			"tf_weapon_parachute_primary",				// TF_CLASS_DEMOMAN,
-			"",			// TF_CLASS_MEDIC,
-			"",			// TF_CLASS_HEAVYWEAPONS
-			"",			// TF_CLASS_PYRO,
-			""			// TF_CLASS_SPY,
-			"",			// TF_CLASS_ENGINEER,		
 		}
 	},
 	{

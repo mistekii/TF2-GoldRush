@@ -24,16 +24,6 @@ enum medigun_weapontypes_t
 {
 	MEDIGUN_STANDARD = 0,
 	MEDIGUN_UBER,
-	MEDIGUN_QUICKFIX,
-	MEDIGUN_RESIST,
-};
-
-enum medigun_resist_types_t
-{
-	MEDIGUN_BULLET_RESIST = 0,
-	MEDIGUN_BLAST_RESIST,
-	MEDIGUN_FIRE_RESIST,
-	MEDIGUN_NUM_RESISTS
 };
 
 struct MedigunEffects_t
@@ -91,9 +81,6 @@ public:
 
 	bool			IsReleasingCharge( void ) const;
 	medigun_charge_types GetChargeType( void ) const;
-
-	void			CycleResistType();
-	medigun_resist_types_t GetResistType() const;
 
 	CBaseEntity		*GetHealTarget( void ) { return IsAttachedToBuilding() ? NULL : m_hHealingTarget.Get(); }
 
@@ -158,8 +145,6 @@ private:
 
 #ifdef CLIENT_DLL
 	const char				*GetHealSound() const;
-#else
-	void					UberchargeChunkDeployed();
 #endif
 
 	void					CreateMedigunShield( void );
@@ -185,14 +170,12 @@ protected:
 	CNetworkVar( bool,		m_bHolstered );
 	CNetworkVar( bool,		m_bChargeRelease );
 	CNetworkVar( float,		m_flChargeLevel );
-	CNetworkVar( int,		m_nChargeResistType );
 
 	float					m_flNextTargetCheckTime;
 	bool					m_bCanChangeTarget; // used to track the PrimaryAttack key being released for AutoHeal mode
 	bool					m_bAttack2Down;
 	bool					m_bAttack3Down;
 	bool					m_bReloadDown;
-	float					m_flEndResistCharge;
 	
 	struct targetdetachtimes_t
 	{
@@ -227,7 +210,6 @@ protected:
 
 	float					m_flDenySecondary;
 	bool					m_bOldChargeRelease;
-	int						m_nOldChargeResistType;
 
 	C_BaseEntity		*m_pChargeEffectOwner;
 	CNewParticleEffect	*m_pChargeEffect;

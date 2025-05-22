@@ -107,9 +107,6 @@ bool CTFWearableDemoShield::CanCharge( CTFPlayer *pPlayer )
 	if ( pPlayer->IsTaunting() )
 		return false;
 
-	if ( pPlayer->GetGrapplingHookTarget() )
-		return false;
-
 	if ( pPlayer->m_Shared.GetDemomanChargeMeter() == 100.f )
 		return true;
 

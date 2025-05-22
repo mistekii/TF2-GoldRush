@@ -124,10 +124,6 @@ void CTFMinigun::WeaponReset( void )
 		pPlayer->ClearWeaponFireScene();
 		m_flAegisCheckTime = 0.0f;
 #endif
-
-		m_flNextRingOfFireAttackTime = 0.0f;
-		m_flLastAmmoDrainTime = gpGlobals->curtime;
-		m_flAccumulatedAmmoDrain = 0.0f;
 	}
 
 	SetWeaponState( AC_STATE_IDLE );
@@ -431,50 +427,12 @@ void CTFMinigun::SharedAttack()
 			break;
 		}
 	}
-
-	if ( pPlayer->GetAmmoCount( m_iPrimaryAmmoType ) > 0 )
-	{
-		if ( m_iWeaponState > AC_STATE_STARTFIRING )
-		{
-			int nRingOfFireWhileAiming = 0;
-			CALL_ATTRIB_HOOK_INT( nRingOfFireWhileAiming, ring_of_fire_while_aiming );
-			if ( nRingOfFireWhileAiming != 0 )
-			{
-				RingOfFireAttack( nRingOfFireWhileAiming );
-			}
-		}
-
-		if ( m_iWeaponState == AC_STATE_SPINNING || m_iWeaponState == AC_STATE_FIRING )
-		{
-			int nUsesAmmoWhileAiming = 0;
-			CALL_ATTRIB_HOOK_INT( nUsesAmmoWhileAiming, uses_ammo_while_aiming );
-			if ( nUsesAmmoWhileAiming > 0 )
-			{
-				m_flAccumulatedAmmoDrain += nUsesAmmoWhileAiming * ( gpGlobals->curtime - m_flLastAmmoDrainTime );
-				m_flLastAmmoDrainTime = gpGlobals->curtime;
-
-				if ( m_flAccumulatedAmmoDrain > 1.0f )
-				{
-					int nAmmoRemoved = m_flAccumulatedAmmoDrain;
-					pPlayer->RemoveAmmo( nAmmoRemoved, m_iPrimaryAmmoType );
-
-					m_flAccumulatedAmmoDrain -= nAmmoRemoved;
-				}
-			}
-		}
-	}
 }
 
 void CTFMinigun::SetWeaponState( MinigunState_t nState )
 {
 	if ( m_iWeaponState != nState )
 	{
-		if ( m_iWeaponState == AC_STATE_IDLE || m_iWeaponState == AC_STATE_STARTFIRING || m_iWeaponState == AC_STATE_DRYFIRE )
-		{
-			// Transitioning from non firing or non fully spinning states resets when our drain start point and when the ring of fire can start
-			m_flLastAmmoDrainTime = gpGlobals->curtime;
-			m_flNextRingOfFireAttackTime = gpGlobals->curtime + 0.5f;
-		}
 		
 		m_iWeaponState = nState;
 	}
@@ -492,67 +450,6 @@ void CTFMinigun::SecondaryAttack( void )
 	SharedAttack();
 }
 
-void CTFMinigun::RingOfFireAttack( int nDamage )
-{
-	if ( m_flNextRingOfFireAttackTime == 0.0f || m_flNextRingOfFireAttackTime > gpGlobals->curtime )
-		return;
-
-	CTFPlayer *pPlayer = ToTFPlayer( GetPlayerOwner() );
-	if ( !pPlayer )
-		return;
-
-#ifdef GAME_DLL
-
-	Vector vOrigin = pPlayer->GetAbsOrigin();
-	const float flFireRadius = 135.0f;
-	const float flFireRadiusSqr = flFireRadius * flFireRadius;
-
-	CBaseEntity *pEntity = NULL;
-	for ( CEntitySphereQuery sphere( vOrigin, flFireRadius ); (pEntity = sphere.GetCurrentEntity()) != NULL; sphere.NextEntity() )
-	{
-		// Skip players on the same team or who are invuln
-		CTFPlayer *pVictim = ToTFPlayer( pEntity );
-		if ( !pVictim || InSameTeam( pVictim ) || pVictim->m_Shared.InCond( TF_COND_INVULNERABLE ) )
-			continue;
-
-		// Make sure their bounding box is near our ground plane
-		Vector vMins = pVictim->GetPlayerMins();
-		Vector vMaxs = pVictim->GetPlayerMaxs();
-		if ( !( vOrigin.z > pVictim->GetAbsOrigin().z + vMins.z - 32.0f && vOrigin.z < pVictim->GetAbsOrigin().z + vMaxs.z ) )
-		{
-			continue;
-		}
-
-		// CEntitySphereQuery actually does a box test. So we need to make sure the distance is less than the radius first.
-		Vector vecPos;
-		pEntity->CollisionProp()->CalcNearestPoint( vOrigin, &vecPos );
-		if ( ( vOrigin - vecPos ).LengthSqr() > flFireRadiusSqr )
-			continue;
-
-		// Finally LOS test
-		trace_t	tr;
-		Vector vecSrc = WorldSpaceCenter();
-		Vector vecSpot = pEntity->WorldSpaceCenter();
-		CTraceFilterSimple filter( this, COLLISION_GROUP_PROJECTILE );
-		UTIL_TraceLine( vecSrc, vecSpot, MASK_SOLID_BRUSHONLY, &filter, &tr );
-
-		// If we don't trace the whole way to the target, and we didn't hit the target entity, we're blocked
-		if ( tr.fraction != 1.0 && tr.m_pEnt != pEntity )
-			continue;
-
-		pVictim->TakeDamage( CTakeDamageInfo( pPlayer, pPlayer, this, vec3_origin, vOrigin, nDamage, DMG_PLASMA, 0, &vOrigin ) );
-	}
-
-	DispatchParticleEffect( "heavy_ring_of_fire", pPlayer->GetAbsOrigin(), vec3_angle );
-
-#else
-
-	DispatchParticleEffect( "heavy_ring_of_fire_fp", pPlayer->GetAbsOrigin(), vec3_angle );
-
-#endif // #ifdef GAME_DLL
-
-	m_flNextRingOfFireAttackTime = gpGlobals->curtime + 0.5f;
-}
 
 #ifdef GAME_DLL
 //-----------------------------------------------------------------------------
@@ -675,21 +572,6 @@ void CTFMinigun::ActivatePushBackAttackMode( void )
 
 	pOwner->m_Shared.StartRageDrain();
 	EmitSound( "Heavy.Battlecry03" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFMinigun::GetInitialAfterburnDuration() const
-{
-	int nRingOfFireWhileAiming = 0;
-	CALL_ATTRIB_HOOK_INT( nRingOfFireWhileAiming, ring_of_fire_while_aiming );
-	if ( nRingOfFireWhileAiming != 0 )
-	{
-		return 8.f;
-	}
-
-	return BaseClass::GetInitialAfterburnDuration();
 }
 #endif // GAME_DLL
 

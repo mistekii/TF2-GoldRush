@@ -423,11 +423,6 @@ void CTFWeaponBase::Activate( void )
 void CTFWeaponBase::GiveDefaultAmmo( void )
 {
 	BaseClass::GiveDefaultAmmo();
-
-	if ( IsEnergyWeapon() )
-	{
-		m_flEnergy = Energy_GetMaxEnergy();
-	}
 }
 
 // -----------------------------------------------------------------------------
@@ -1198,7 +1193,7 @@ bool CTFWeaponBase::Deploy( void )
 		// don't apply mult_switch_from_wep_deploy_time attribute if the last weapon hasn't been deployed for more than 0.67 second to match to weapon script switch time
 		// unless the player latched to a hook target, then allow switching right away
 		CTFWeaponBase *pLastWeapon = dynamic_cast< CTFWeaponBase* >( pPlayer->GetLastWeapon() );
-		if ( pPlayer->GetGrapplingHookTarget() != NULL || ( pLastWeapon && gpGlobals->curtime - pLastWeapon->m_flLastDeployTime > flWeaponSwitchTime ) )
+		if ( pLastWeapon && gpGlobals->curtime - pLastWeapon->m_flLastDeployTime > flWeaponSwitchTime )
 		{
 			CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pLastWeapon, flDeployTimeMultiplier, mult_switch_from_wep_deploy_time );
 		}
@@ -4772,47 +4767,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 		pAttacker->m_Shared.AddCond( TF_COND_SPEED_BOOST, iSpeedBoostOnHit );
 	}
 
-	if ( pVictim )
-	{
-		if ( pVictim->m_Shared.InCond( TF_COND_MAD_MILK ) )
-		{
-			int nAmount = info.GetDamage() * 0.6f;
-			iModHealthOnHit += nAmount;
-
-			CTFPlayer *pProvider = ToTFPlayer( pVictim->m_Shared.GetConditionProvider( TF_COND_MAD_MILK ) );
-			if ( pProvider )
-			{
-				// Only give points for the portion they're responsible for
-				if ( pProvider != pAttacker )
-				{
-					CTF_GameStats.Event_PlayerHealedOtherAssist( pProvider, nAmount );
-				}
-
-				// Show in the medic's UI as primary healing
-				IGameEvent *event = gameeventmanager->CreateEvent( "player_healed" );
-				if ( event )
-				{
-					event->SetInt( "priority", 1 );	// HLTV event priority
-					event->SetInt( "patient", pAttacker->GetUserID() );
-					event->SetInt( "healer", pProvider->GetUserID() );
-					event->SetInt( "amount", iModHealthOnHit );
-					gameeventmanager->FireEvent( event );
-				}
-
-				// Give them a little bit of Uber
-				CWeaponMedigun *pMedigun = static_cast<CWeaponMedigun *>( pProvider->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN ) );
-				if ( pMedigun )
-				{
-					int iHealedAmount = Max( Min( (int)pAttacker->GetMaxHealth() - (int)pAttacker->GetHealth(), nAmount ), 0 );
-
-					// On Mediguns, per frame, the amount of uber added is based on 
-					// Default heal rate is 24per second, we scale based on that and frametime
-					pMedigun->AddCharge( (iHealedAmount / 24.0f ) * gpGlobals->frametime );
-				}
-			}
-		}
-	}
-
 	if ( pAttacker->m_Shared.InCond( TF_COND_REGENONDAMAGEBUFF ) )
 	{
 		int nAmount = info.GetDamage() * tf_dev_health_on_damage_recover_percentage.GetFloat();
@@ -4880,17 +4834,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 		int iRageOnHit = 0;
 		CALL_ATTRIB_HOOK_INT( iRageOnHit, rage_on_hit );
 		pAttacker->m_Shared.ModifyRage( iRageOnHit );
-	}
-
-	// Increase Boost on hit
-	int iBoostOnDamage = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pAttacker, iBoostOnDamage, boost_on_damage );
-
-	if ( iBoostOnDamage != 0 )
-	{
-		float fHype = MIN( tf_scout_hype_pep_max.GetFloat(), pAttacker->m_Shared.GetScoutHypeMeter() + ( MAX( tf_scout_hype_pep_min_damage.GetFloat(), info.GetDamage() ) / tf_scout_hype_pep_mod.GetFloat() ) );
-		pAttacker->m_Shared.SetScoutHypeMeter( fHype );
-		pAttacker->TeamFortress_SetSpeed();
 	}
 
 	// Procs!
@@ -5113,23 +5056,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::ApplyOnInjuredAttributes( CTFPlayer *pVictim, CTFPlayer *pAttacker, const CTakeDamageInfo &info )
 {
-	if ( CanDeploy() )
-	{
-		int iBecomeFireproofOnHitByFire = 0;
-		CALL_ATTRIB_HOOK_INT( iBecomeFireproofOnHitByFire, become_fireproof_on_hit_by_fire );
-		if ( iBecomeFireproofOnHitByFire > 0 && ( ( info.GetDamageType() & DMG_BURN ) || ( info.GetDamageType() & DMG_IGNITE ) ) )
-		{
-			pVictim->m_Shared.AddCond( TF_COND_FIRE_IMMUNE, 1.f );
-
-			if ( pVictim->m_Shared.InCond( TF_COND_BURNING ) )
-			{
-				pVictim->EmitSound( "TFPlayer.FlameOut" );
-				pVictim->m_Shared.RemoveCond( TF_COND_BURNING );
-			}
-			// STAGING_SPY
-			pVictim->m_Shared.AddCond( TF_COND_AFTERBURN_IMMUNE, iBecomeFireproofOnHitByFire );
-		}
-	}
+	return;
 }
 
 
@@ -5138,94 +5065,7 @@ void CTFWeaponBase::ApplyOnInjuredAttributes( CTFPlayer *pVictim, CTFPlayer *pAt
 //-----------------------------------------------------------------------------
 void CTFWeaponBase::ApplyPostHitEffects( const CTakeDamageInfo &info, CTFPlayer *pVictim )
 {
-	bool bDidDrain = false;
-
-	CTFPlayer *pAttacker = ToTFPlayer( info.GetAttacker() );
-	if ( !pAttacker || !pVictim )
-		return;
-
-	// only drain a victim once per shot, even with penetrating weapons
-	if ( pVictim != m_hLastDrainVictim || m_lastDrainVictimTimer.IsElapsed() )
-	{
-		// Subtract victim's Medigun charge on hit
-		if ( pVictim->IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			int iSubtractVictimMedigunChargeOnHit = 0;
-			CALL_ATTRIB_HOOK_INT( iSubtractVictimMedigunChargeOnHit, subtract_victim_medigun_charge_onhit );
-			if ( iSubtractVictimMedigunChargeOnHit > 0 )
-			{
-				CWeaponMedigun *pMedigun = (CWeaponMedigun *)pVictim->Weapon_OwnsThisID( TF_WEAPON_MEDIGUN );
-				if ( pMedigun && !pMedigun->IsReleasingCharge() )
-				{
-					// STAGING_ENGY
-					// Scale drain after 512 Hu to 1536Hu ( 50% drain at 1024, 0 drain at 1536 units )
-					Vector toEnt = pVictim->GetAbsOrigin() - pAttacker->GetAbsOrigin();
-					if ( toEnt.LengthSqr() > Square( 512.0f ) )
-					{
-						iSubtractVictimMedigunChargeOnHit *= RemapValClamped( toEnt.LengthSqr(), (512.0f * 512.0f), (1536.0f * 1536.0f), 1.0f, 0.0f );
-					}	
-
-					pMedigun->SubtractCharge( iSubtractVictimMedigunChargeOnHit / 100.0f );
-					bDidDrain = true;
-				}
-			}
-		}
-
-		// Subtract victim's cloak on hit
-		if ( pVictim->IsPlayerClass( TF_CLASS_SPY ) )
-		{
-			int iSubtractVictimCloakOnHit = 0;
-			CALL_ATTRIB_HOOK_INT( iSubtractVictimCloakOnHit, subtract_victim_cloak_on_hit );
-			if ( iSubtractVictimCloakOnHit > 0 )
-			{
-				// STAGING_ENGY
-				// Scale drain after 512 Hu to 1536Hu ( 50% drain at 1024, 0 drain at 1536 units )
-				Vector toEnt = pVictim->GetAbsOrigin() - pAttacker->GetAbsOrigin();
-				if ( toEnt.LengthSqr() > Square( 512.0f ) )
-				{
-					iSubtractVictimCloakOnHit *= RemapValClamped( toEnt.LengthSqr(), (512.0f * 512.0f), (1536.0f * 1536.0f), 1.0f, 0.0f );
-				}
-
-				float flCloak = pVictim->m_Shared.GetSpyCloakMeter();
-				flCloak -= iSubtractVictimCloakOnHit;
-				if ( flCloak < 0.0f )
-				{
-					flCloak = 0.0f;
-				}
-
-				pVictim->m_Shared.SetSpyCloakMeter( flCloak );
-				bDidDrain = true;
-			}
-		}
-
-		// don't play effects to attacker if he hit a disguised/cloaked spy
-		if ( !pVictim->m_Shared.InCond( TF_COND_DISGUISED ) &&
-			 !pVictim->m_Shared.IsStealthed() )
-		{
-			if ( bDidDrain )
-			{
-				DispatchParticleEffect( "drg_pomson_impact_drain", PATTACH_POINT, pVictim, "head", GetParticleColor( 1 ), GetParticleColor( 2 ) );
-				if ( pAttacker )
-				{
-					// play drain sound effect, louder for the attacker
-					EmitSound_t params;
-					params.m_flSoundTime = 0;
-					params.m_pSoundName = "Weapon_Pomson.DrainedVictim";
-					params.m_pflSoundDuration = 0;
-
-					CPASFilter filter( pVictim->GetAbsOrigin() );
-					filter.RemoveRecipient( pAttacker );
-					EmitSound( filter, pVictim->entindex(), params );
-
-					CSingleUserRecipientFilter attackerFilter( pAttacker );
-					EmitSound( attackerFilter, pAttacker->entindex(), params );
-				}
-
-				m_hLastDrainVictim = pVictim;
-				m_lastDrainVictimTimer.Start( 0.3f );
-			}
-		}
-	}
+	return;
 }
 
 
@@ -5910,12 +5750,7 @@ GC_REG_JOB( GCSDK::CGCClient, CGCPlayerKilledResponse, "CGCPlayerKilledResponse"
 
 bool WeaponID_IsSniperRifle( int iWeaponID )
 {
-	if ( iWeaponID == TF_WEAPON_SNIPERRIFLE ||
-		iWeaponID == TF_WEAPON_SNIPERRIFLE_DECAP || 
-		iWeaponID == TF_WEAPON_SNIPERRIFLE_CLASSIC )
-		return true;
-	else
-		return false;
+	return iWeaponID == TF_WEAPON_SNIPERRIFLE;
 }
 
 bool WeaponID_IsSniperRifleOrBow( int iWeaponID )

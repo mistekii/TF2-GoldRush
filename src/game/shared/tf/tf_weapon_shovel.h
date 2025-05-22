@@ -20,7 +20,6 @@ enum shovel_weapontypes_t
 {
 	SHOVEL_STANDARD = 0,
 	SHOVEL_DAMAGE_BOOST,
-	SHOVEL_SPEED_BOOST,
 };
 
 //=============================================================================
@@ -41,14 +40,9 @@ public:
 
 	int				GetShovelType( void ) { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, set_weapon_mode ); return iMode; };
 	virtual bool	HasDamageBoost( void ) { return (GetShovelType() == SHOVEL_DAMAGE_BOOST); }
-	virtual bool	HasSpeedBoost( void ) { return (GetShovelType() == SHOVEL_SPEED_BOOST); }
 	virtual void	ItemPreFrame( void ) OVERRIDE;
 	virtual float	GetMeleeDamage( CBaseEntity *pTarget, int* piDamageType, int* piCustomDamage );
-	virtual float	GetSpeedMod( void );
 
-	void			MoveSpeedThink( void );
-
-	virtual bool	Deploy( void );
 	virtual bool	Holster( CBaseCombatWeapon *pSwitchingTo );
 
 #ifndef CLIENT_DLL
