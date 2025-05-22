@@ -983,8 +983,6 @@ ConVar tf_gamemode_arena ( "tf_gamemode_arena", "0", FCVAR_REPLICATED | FCVAR_NO
 ConVar tf_gamemode_cp ( "tf_gamemode_cp", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_ctf ( "tf_gamemode_ctf", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_sd ( "tf_gamemode_sd", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_rd ( "tf_gamemode_rd", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_pd ( "tf_gamemode_pd", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_tc ( "tf_gamemode_tc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_beta_content ( "tf_beta_content", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_payload ( "tf_gamemode_payload", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
@@ -3973,8 +3971,6 @@ void CTFGameRules::Activate()
 	tf_gamemode_sd.SetValue( 0 );
 	tf_gamemode_payload.SetValue( 0 );
 	tf_gamemode_mvm.SetValue( 0 );
-	tf_gamemode_rd.SetValue( 0 );
-	tf_gamemode_pd.SetValue( 0 );
 	tf_gamemode_tc.SetValue( 0 );
 	tf_beta_content.SetValue( 0 );
 	tf_gamemode_misc.SetValue( 0 );
@@ -4184,7 +4180,7 @@ void CTFGameRules::Activate()
 		(CPopulationManager *)CreateEntityByName( "info_populator" );
 	}
 
-	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || tf_gamemode_pd.GetBool() || m_bPlayingMedieval )
+	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || m_bPlayingMedieval )
 	{
 		tf_gamemode_misc.SetValue( 1 );
 	}
@@ -17381,8 +17377,6 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_gamemode_sd", "sd", NULL },
 	{ "tf_gamemode_mvm", "mvm", NULL },
 	{ "tf_gamemode_payload", "payload", NULL },
-	{ "tf_gamemode_rd",	"rd", NULL },
-	{ "tf_gamemode_pd",	"pd", NULL },
 	{ "tf_gamemode_tc",	"tc", NULL },
 	{ "tf_beta_content", "beta", NULL },
 	{ "tf_damage_disablespread", "dmgspread", NULL },
