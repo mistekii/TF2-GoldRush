@@ -93,7 +93,6 @@
 #include "baseanimatedtextureproxy.h"
 #include "econ_entity.h"
 #include "halloween/tf_weapon_spellbook.h"
-#include "tf_logic_robot_destruction.h"
 #include "econ_notifications.h"
 #include "tf_weapon_buff_item.h"
 #include "tf_dropped_weapon.h"

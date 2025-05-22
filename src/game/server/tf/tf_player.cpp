@@ -121,7 +121,6 @@
 #include "player_vs_environment/tf_population_manager.h"
 #include "tf_revive.h"
 #include "tf_logic_halloween_2014.h"
-#include "tf_logic_player_destruction.h"
 #include "func_croc.h"
 #include "tf_weapon_bonesaw.h"
 #include "pointhurt.h"
@@ -10441,24 +10440,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			// I was IT - transfer to my killer
 			TFGameRules()->SetIT( pPlayerAttacker );
 		}
-
-		if ( pPlayerAttacker != this )
-		{
-			if ( CTFPlayerDestructionLogic::GetRobotDestructionLogic() && ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetType() == CTFPlayerDestructionLogic::TYPE_PLAYER_DESTRUCTION ) )
-			{
-				// was this the team leader?
-				if ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetTeamLeader( GetTeamNumber() ) == this )
-				{
-					IGameEvent * event = gameeventmanager->CreateEvent( "team_leader_killed" );
-					if ( event )
-					{
-						event->SetInt( "killer", pPlayerAttacker->entindex() );
-						event->SetInt( "victim", entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-				}
-			}
-		}
 	}
 
 	for ( int i=0; i<GetNumWearables(); ++i )
@@ -11032,22 +11013,19 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 			}
 			CTF_GameStats.Event_PlayerDefendedPoint( pPlayerAttacker );
 
-			if ( !CTFPlayerDestructionLogic::GetRobotDestructionLogic() || ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetType() != CTFPlayerDestructionLogic::TYPE_PLAYER_DESTRUCTION ) )
+			if ( pPlayerAttacker && pPlayerAttacker->IsPlayerClass( TF_CLASS_SNIPER ) )
 			{
-				if ( pPlayerAttacker && pPlayerAttacker->IsPlayerClass( TF_CLASS_SNIPER ) )
+				CTFWeaponBase *pKillerWeapon = dynamic_cast < CTFWeaponBase * > ( info.GetWeapon() );
+
+				if ( pKillerWeapon && pKillerWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
 				{
-					CTFWeaponBase *pKillerWeapon = dynamic_cast < CTFWeaponBase * > ( info.GetWeapon() );
-
-					if ( pKillerWeapon && pKillerWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW )
-					{
-						pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_BOW_KILL_FLAGCARRIER );
-					}
+					pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_SNIPER_BOW_KILL_FLAGCARRIER );
 				}
-
-				// Handle the "you killed someone with the flag" event. We can't handle this with the usual block
-				// in PlayerKilled() because by that point we've forgotten that we had the flag.
-				EconEntity_OnOwnerKillEaterEvent( dynamic_cast<CEconEntity *>( pKillerWeapon ), pPlayerAttacker, this, kKillEaterEvent_DefenderKill );
 			}
+
+			// Handle the "you killed someone with the flag" event. We can't handle this with the usual block
+			// in PlayerKilled() because by that point we've forgotten that we had the flag.
+			EconEntity_OnOwnerKillEaterEvent( dynamic_cast<CEconEntity *>( pKillerWeapon ), pPlayerAttacker, this, kKillEaterEvent_DefenderKill );
 		}
 	}
 
@@ -11247,37 +11225,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		if ( TFGameRules() && TFGameRules()->IsHalloweenScenario( CTFGameRules::HALLOWEEN_SCENARIO_DOOMSDAY ) )
 		{
 			pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_HALLOWEEN_DOOMSDAY_TINY_SMASHER );
-		}
-	}
-
-	// in PD, player death adds points to the flag drop
-	if ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()
-		&& CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetType() == CTFPlayerDestructionLogic::TYPE_PLAYER_DESTRUCTION )
-	{
-		CTFPlayer *pRecentDamager = TFGameRules()->GetRecentDamager( this, 0, 5.0 );
-		int pointsOnDeath = ( !bSuicide || pRecentDamager ) ? CTFPlayerDestructionLogic::GetPlayerDestructionLogic()->GetPointsOnPlayerDeath() : 0;
-
-		CCaptureFlag *pFlag = NULL;
-		if ( HasItem() )
-		{
-			pFlag = dynamic_cast<CCaptureFlag*>( GetItem() );
-		}
-		else
-		{
-			if ( pointsOnDeath && !PointInRespawnRoom( this, WorldSpaceCenter() ) )
-			{
-				pFlag = CCaptureFlag::Create( GetAbsOrigin(), CTFPlayerDestructionLogic::GetPlayerDestructionLogic()->GetPropModelName(), TF_FLAGTYPE_PLAYER_DESTRUCTION );
-			}
-		}
-
-		if ( pFlag )
-		{
-			// don't add more point to the dropping flag if the player suicided
-			if ( pointsOnDeath )
-			{
-				pFlag->AddPointValue( pointsOnDeath );
-			}
-			pFlag->Drop( this, true, true, true );
 		}
 	}
 

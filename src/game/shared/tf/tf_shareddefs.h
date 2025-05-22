@@ -255,9 +255,7 @@ enum ETFFlagType
 	TF_FLAGTYPE_ATTACK_DEFEND,
 	TF_FLAGTYPE_TERRITORY_CONTROL,
 	TF_FLAGTYPE_INVADE,
-	TF_FLAGTYPE_RESOURCE_CONTROL,
-	TF_FLAGTYPE_ROBOT_DESTRUCTION,
-	TF_FLAGTYPE_PLAYER_DESTRUCTION
+	TF_FLAGTYPE_RESOURCE_CONTROL
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -278,8 +276,6 @@ enum ETFGameType
 	TF_GAMETYPE_ESCORT,
 	TF_GAMETYPE_ARENA,
 	TF_GAMETYPE_MVM,
-	TF_GAMETYPE_RD,
-	TF_GAMETYPE_PD,
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -806,23 +802,6 @@ enum ETFFlagEventTypes
 
 const char *GetCTFEventName( ETFFlagEventTypes iEventType );
 ETFFlagEventTypes GetCTFEventTypeFromName( const char *pszName );
-
-//-----------------------------------------------------------------------------
-// TF Robot Destruction Score Methods
-//-----------------------------------------------------------------------------
-enum RDScoreMethod_t
-{
-	SCORE_UNDEFINED = -1,
-	SCORE_REACTOR_CAPTURED,
-	SCORE_CORES_COLLECTED,
-	SCORE_REACTOR_RETURNED,
-	SCORE_REACTOR_STEAL,
-		
-	NUM_SCORE_TYPES
-};
-
-const char *GetRDScoreMethodName( RDScoreMethod_t iScoreMethod );
-RDScoreMethod_t GetRDScoreMethodFromName( const char *pszName );
 
 //-----------------------------------------------------------------------------
 // Class data
@@ -1424,7 +1403,6 @@ enum
 	OF_ALLOW_REPEAT_PLACEMENT				= 0x01,
 	OF_MUST_BE_BUILT_ON_ATTACHMENT			= 0x02,
 	OF_DOESNT_HAVE_A_MODEL					= 0x04,
-	OF_PLAYER_DESTRUCTION					= 0x08,
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -1646,8 +1624,6 @@ enum HudNotification_t
 
 	HUD_NOTIFY_GOLDEN_WRENCH,
 
-	HUD_NOTIFY_RD_ROBOT_UNDER_ATTACK,
-
 	HUD_NOTIFY_HOW_TO_CONTROL_GHOST,
 	HUD_NOTIFY_HOW_TO_CONTROL_KART,
 
@@ -1789,8 +1765,6 @@ enum mvm_announcement_t
 
 	TF_MVM_ANNOUNCEMENT_TOTAL
 };
-
-#define RD_MAX_ROBOT_GROUPS_PER_TEAM 6
 
 #define MAX_RAIDMODE_UPGRADES		60
 

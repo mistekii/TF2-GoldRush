@@ -663,7 +663,6 @@ bool IsCreepWaveMode( void ) const;
 	
 	bool IsPlayingHybrid_CTF_CP( void ) const { return m_bPlayingHybrid_CTF_CP; }
 	bool IsPlayingSpecialDeliveryMode( void ) const { return m_bPlayingSpecialDeliveryMode; }
-	bool IsPlayingRobotDestructionMode( void ) const { return m_bPlayingRobotDestructionMode; }
 
 	virtual bool AllowThirdPersonCamera( void ) { return ( IsInMedievalMode() || ShowMatchSummary() ); }
 
@@ -1110,7 +1109,6 @@ private:
 	CNetworkHandle( CBonusRoundLogic, m_hBonusLogic );
 
 	CNetworkVar( bool, m_bPlayingKoth );
-	CNetworkVar( bool, m_bPlayingRobotDestructionMode );
 	CNetworkVar( bool, m_bPlayingMedieval );
 	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
 	CNetworkVar( bool, m_bPlayingSpecialDeliveryMode );

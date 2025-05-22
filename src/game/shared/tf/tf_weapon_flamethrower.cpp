@@ -36,7 +36,6 @@
 	#include "tf_projectile_arrow.h"
 	#include "NextBot/NextBotManager.h"
 	#include "halloween/merasmus/merasmus_trick_or_treat_prop.h"
-	#include "tf_logic_robot_destruction.h"
 
 	ConVar  tf_flamethrower_velocity( "tf_flamethrower_velocity", "2300.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Initial velocity of flame damage entities." );
 	ConVar	tf_flamethrower_drag("tf_flamethrower_drag", "0.87", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Air drag of flame damage entities." );

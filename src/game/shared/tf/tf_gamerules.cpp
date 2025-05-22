@@ -15,8 +15,6 @@
 #include "convar_serverbounded.h"
 #include "econ_item_system.h"
 #include "tf_weapon_grenadelauncher.h"
-#include "tf_logic_robot_destruction.h"
-#include "tf_logic_player_destruction.h"
 #include "tf_matchmaking_shared.h"
 #include "tf_progression_description.h"
 
@@ -283,7 +281,6 @@ static MapInfo_t s_ValveMaps[] = {
 	{ "koth_king",	"Kong King",	"#Gametype_Koth" },
 	{ "koth_lakeside_event",	"Ghost Fort",	"#Gametype_Koth" },
 	{ "plr_hightower_event",	"Helltower",	"#Gametype_EscortRace" },
-	{ "rd_asteroid",	"Asteroid",	"#Gametype_RobotDestruction" },
 	{ "pl_cactuscanyon",	"Cactus Canyon",	"#Gametype_Escort" },
 	{ "sd_doomsday",	"Doomsday",	"#Gametype_SD" },
 	{ "sd_doomsday_event",	"Carnival of Carnage",	"#Gametype_SD" },
@@ -295,7 +292,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "koth_suijin", "Suijin", "#Gametype_Koth" },
 	{ "cp_snowplow", "Snowplow", "#TF_AttackDefend" },
 	{ "koth_probed", "Probed", "#Gametype_Koth" },
-	{ "pd_watergate", "Watergate", "#Gametype_PlayerDestruction" },
 	{ "arena_byre", "Byre", "#Gametype_Arena" },
 	{ "ctf_2fort_invasion", "2Fort Invasion", "#Gametype_CTF" },
 	{ "cp_sunshine_event", "Sinshine", "#Gametype_CP" },
@@ -308,7 +304,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "koth_highpass", "Highpass", "#Gametype_Koth" },
 	{ "koth_maple_ridge_event", "Maple Ridge Event", "#Gametype_Koth" },
 	{ "pl_fifthcurve_event", "Brimstone", "#Gametype_Escort" },
-	{ "pd_pit_of_death_event", "Pit of Death", "#Gametype_PlayerDestruction" },
 	{ "cp_mossrock", "Mossrock", "#TF_AttackDefend" },
 	{ "koth_lazarus", "Lazarus", "#Gametype_Koth" },
 	{ "plr_bananabay", "Banana Bay", "#Gametype_EscortRace" },
@@ -317,8 +312,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "koth_bagel_event", "Cauldron", "#Gametype_Koth" },
 	{ "pl_rumble_event", "Gravestone", "#Gametype_Escort" },
 	{ "koth_slasher", "Slasher", "#Gametype_Koth" },
-	{ "pd_cursed_cove_event", "Cursed Cove", "#Gametype_PlayerDestruction" },
-	{ "pd_monster_bash", "Monster Bash", "#Gametype_PlayerDestruction" },
 	{ "koth_slaughter_event", "Laughter", "#Gametype_Koth" },
 	{ "pl_precipice_event_final", "Precipice", "#Gametype_Escort" },
 	{ "koth_megalo", "Megalo", "#Gametype_Koth" },
@@ -326,10 +319,8 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "pl_bloodwater", "Bloodwater", "#Gametype_Escort" },
 	{ "koth_undergrove_event", "Moldergrove", "#Gametype_Koth" },
 	{ "pl_pier", "Pier", "#Gametype_Escort" },
-	{ "pd_snowville_event", "SnowVille", "#Gametype_PlayerDestruction" },
 	{ "ctf_snowfall_final", "Snowfall", "#Gametype_CTF" },
 	{ "pl_wutville_event", "Wutville", "#Gametype_Escort" },
-	{ "pd_farmageddon", "Farmageddon", "#Gametype_PlayerDestruction" },
 	{ "koth_los_muertos", "Los Muertos", "#Gametype_Koth" },
 	{ "cp_ambush_event", "Erebus", "#TF_AttackDefend" },
 	{ "pl_terror_event", "Terror", "#Gametype_Escort" },
@@ -361,7 +352,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "cp_sulfur", "Sulfur", "#TF_AttackDefend" },
 	{ "cp_hardwood_final", "Hardwood", "#TF_AttackDefend" },
 	{ "ctf_pelican_peak", "Pelican Peak", "#Gametype_CTF" },
-	{ "pd_selbyen", "Selbyen", "#Gametype_PlayerDestruction" },
 	{ "vsh_tinyrock", "Tiny Rock", "#GameType_VSH" },
 	{ "vsh_distillery", "Distillery", "#GameType_VSH" },
 	{ "vsh_skirmish", "Skirmish", "#GameType_VSH" },
@@ -369,7 +359,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "arena_perks", "Perks", "#Gametype_Arena" },
 	{ "koth_slime", "Slime", "#Gametype_Koth" },
 	{ "cp_lavapit_final", "Lava Pit", "#TF_AttackDefend" },
-	{ "pd_mannsylvania", "Mannsylvania", "#Gametype_PlayerDestruction" },
 	{ "cp_degrootkeep_rats", "Sandcastle", "#TF_MedievalAttackDefend" },
 	{ "pl_spineyard", "Spineyard", "#Gametype_Escort" },
 	{ "pl_corruption", "Corruption", "#Gametype_Escort" },
@@ -385,7 +374,6 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "plr_hacksaw", "Hacksaw", "#Gametype_EscortRace" },
 	{ "ctf_turbine_winter", "Turbine Event", "#Gametype_CTF" },
 	{ "cp_carrier", "Carrier", "#TF_AttackDefend" },
-	{ "pd_galleria", "Galleria", "#Gametype_PlayerDestruction" },
 	{ "pl_emerge", "Emerge", "#Gametype_Escort" },
 	{ "pl_camber", "Camber", "#Gametype_Escort" },
 	{ "pl_embargo", "Embargo", "#Gametype_Escort" },
@@ -395,14 +383,12 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "cp_overgrown", "Overgrown", "#TF_AttackDefend" },
 	{ "cp_hadal", "Hadal", "#TF_AttackDefend" },
 	{ "ctf_applejack", "Applejack", "#Gametype_CTF" },
-	{ "pd_atom_smash", "Atom Smash", "#Gametype_PlayerDestruction" },
 	{ "cp_canaveral_5cp", "Canaveral", "#Gametype_CP" },
 	{ "cp_burghausen", "Burghausen", "#TF_MedievalAttackDefend" },
 	{ "koth_toxic", "Toxic", "#Gametype_Koth" },
 	{ "cp_darkmarsh", "Darkmarsh", "#TF_AttackDefend" },
 	{ "cp_freaky_fair", "Freaky Fair", "#Gametype_CP" },
 	{ "tow_dynamite", "Dynamite", "#GameType_TOW" },
-	{ "pd_circus", "Circus", "#Gametype_PlayerDestruction" },
 	{ "vsh_outburst", "Outburst", "#GameType_VSH" },
 	{ "zi_blazehattan", "Blazehattan", "#GameType_ZI" },
 	{ "koth_overcast_final", "Overcast", "#Gametype_Koth" },
@@ -438,7 +424,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 
 	// September 2015 Invasion Community Update
 	{ "koth_probed",           454139808 },
-	{ "pd_watergate",          456016898 },
 	{ "arena_byre",            454142123 },
 	{ "ctf_2fort_invasion",    FIXME     }, // No public workshop entry yet
 
@@ -457,7 +442,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	// Halloween 2016
 	{ "koth_maple_ridge_event",	537540619 },
 	{ "pl_fifthcurve_event",	764966851 },
-	{ "pd_pit_of_death_event",	537319626 },
 
 	// Campaign 3
 	{ "cp_mossrock",			956975347 },
@@ -470,8 +454,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "koth_bagel_event",		1159639999 },
 	{ "pl_rumble_event",		1142333364 },
 	{ "koth_slasher",			782407483 },
-	{ "pd_cursed_cove_event",	1498584149 },
-	{ "pd_monster_bash",		1171267245 },
 
 	// Halloween 2019
 	{ "koth_slaughter_event", 		1872236402 },
@@ -485,12 +467,10 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 
 	// Smissmas 2020
 	{ "pl_pier", 				454117739 },
-	{ "pd_snowville_event", 	567055331 },
 	{ "ctf_snowfall_final", 	1915450727 },
 	{ "pl_wutville_event", 		816887895 },
 
 	// Halloween 2021
-	{ "pd_farmageddon", 		2237224308 },
 	{ "koth_los_muertos", 		2588447761 },
 	{ "cp_ambush_event", 		2140326607 },
 	{ "pl_terror_event", 		2237031915 },
@@ -530,7 +510,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_sulfur", 				619869471 },
 	{ "cp_hardwood_final", 		2944867157 },
 	{ "ctf_pelican_peak", 		2886563496 },
-	{ "pd_selbyen", 			2889125525 },
 	{ "vsh_tinyrock", 			2959976540 },
 	{ "vsh_distillery", 		2967856987 },
 	{ "vsh_skirmish", 			2965961179 },
@@ -540,7 +519,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "arena_perks", 			3029918524 },
 	{ "koth_slime", 			3028227103 },
 	{ "cp_lavapit_final", 		2612605992 },
-	{ "pd_mannsylvania", 		3029652598 },
 	{ "cp_degrootkeep_rats", 	3031036719 },
 	{ "pl_spineyard", 			3028181847 },
 	{ "pl_corruption", 			2858934869 },
@@ -558,7 +536,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "plr_hacksaw",			2885653656 },
 	{ "ctf_turbine_winter",		2887605754 },
 	{ "cp_carrier",				2888176898 },
-	{ "pd_galleria",			3080331323 },
 	{ "pl_emerge",				888027758 },
 	{ "pl_camber",				1375766014 },
 
@@ -570,7 +547,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_overgrown",			503939302 },
 	{ "cp_hadal",				804251853 },
 	{ "ctf_applejack",			3219571335 },
-	{ "pd_atom_smash",			2890208830 },
 	{ "cp_canaveral_5cp",		2966121685 },
 	{ "cp_burghausen",			454268748 },
 
@@ -579,7 +555,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_darkmarsh",			2860559688 },
 	{ "cp_freaky_fair",			3326591381 },
 	{ "tow_dynamite",			3320549037 },
-	{ "pd_circus",				3025095795 },
 	{ "vsh_outburst",			3028713660 },
 	{ "zi_blazehattan",			3031862054 },
 
@@ -1336,7 +1311,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropBool( RECVINFO( m_bPlayingMedieval ) ),
 	RecvPropBool( RECVINFO( m_bPlayingHybrid_CTF_CP ) ),
 	RecvPropBool( RECVINFO( m_bPlayingSpecialDeliveryMode ) ),
-	RecvPropBool( RECVINFO( m_bPlayingRobotDestructionMode ) ),
 	RecvPropEHandle( RECVINFO( m_hRedKothTimer ) ),
 	RecvPropEHandle( RECVINFO( m_hBlueKothTimer ) ),
 	RecvPropInt( RECVINFO( m_nMapHolidayType ) ),
@@ -1401,7 +1375,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropBool( SENDINFO( m_bPlayingMedieval ) ),
 	SendPropBool( SENDINFO( m_bPlayingHybrid_CTF_CP ) ),
 	SendPropBool( SENDINFO( m_bPlayingSpecialDeliveryMode ) ),
-	SendPropBool( SENDINFO( m_bPlayingRobotDestructionMode ) ),
 	SendPropEHandle( SENDINFO( m_hRedKothTimer ) ),
 	SendPropEHandle( SENDINFO( m_hBlueKothTimer ) ),
 	SendPropInt( SENDINFO( m_nMapHolidayType ), 3, SPROP_UNSIGNED ),
@@ -2474,13 +2447,6 @@ bool CTFGameRules::ReportMatchResultsToGC( CMsgGC_Match_Result_Status nCode )
 
 		flBlueScoreRatio = RemapValClamped( flBlueTimeCapped, 0.f, flBlueTimeCapped + flRedTiemCapped, 0.f, 1.f );
 	}
-	else if ( tf_gamemode_rd.GetInt() || tf_gamemode_pd.GetInt() )
-	{
-		CTFRobotDestructionLogic* pRDLogic = CTFRobotDestructionLogic::GetRobotDestructionLogic();
-
-		// Count bottles/cores scored by each team
-		flBlueScoreRatio = RemapValClamped( pRDLogic->GetScore( TF_TEAM_BLUE ), 0.f, pRDLogic->GetScore( TF_TEAM_BLUE ) + pRDLogic->GetScore( TF_TEAM_RED ), 0.f, 1.f );
-	}
 	else if ( tf_gamemode_tc.GetInt() )
 	{
 		CTeamControlPointMaster *pMaster = g_hControlPointMasters.Count() ? g_hControlPointMasters[0] : NULL;
@@ -3241,7 +3207,6 @@ CTFGameRules::CTFGameRules()
 	m_bPlayingMedieval.Set( false );
 	m_bPlayingHybrid_CTF_CP.Set( false );
 	m_bPlayingSpecialDeliveryMode.Set( false );
-	m_bPlayingRobotDestructionMode.Set( false );
 
 	m_bHelltowerPlayersInHell.Set( false );
 	m_bIsUsingSpells.Set( false );
@@ -3474,12 +3439,6 @@ float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayer
 	}
 
 	float flTime = BaseClass::GetRespawnWaveMaxLength( iTeam, bScale );
-
-	CTFRobotDestructionLogic* pRoboLogic = CTFRobotDestructionLogic::GetRobotDestructionLogic();
-	if ( pRoboLogic )
-	{
-		flTime *= ( 1.f - pRoboLogic->GetRespawnScaleForTeam( iTeam ) );
-	}
 
 	return flTime;
 }
@@ -4071,7 +4030,6 @@ void CTFGameRules::Activate()
 	m_bPlayingMedieval.Set( false );
 	m_bPlayingHybrid_CTF_CP.Set( false );
 	m_bPlayingSpecialDeliveryMode.Set( false );
-	m_bPlayingRobotDestructionMode.Set( false );
 
 	m_redPayloadToPush = NULL;
 	m_bluePayloadToPush = NULL;
@@ -4139,22 +4097,7 @@ void CTFGameRules::Activate()
 	CMannVsMachineLogic *pMannVsMachineLogic = dynamic_cast< CMannVsMachineLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_mann_vs_machine" ) );
 	CTeamTrainWatcher *pTrainWatch = dynamic_cast<CTeamTrainWatcher*> ( gEntList.FindEntityByClassname( NULL, "team_train_watcher" ) );
 	bool bFlag = ICaptureFlagAutoList::AutoList().Count() > 0;
-	if ( CTFRobotDestructionLogic::GetRobotDestructionLogic() )
-	{
-		m_bPlayingRobotDestructionMode.Set( true );
-		if ( CTFRobotDestructionLogic::GetRobotDestructionLogic()->GetType() == CTFRobotDestructionLogic::TYPE_ROBOT_DESTRUCTION )
-		{
-			tf_gamemode_rd.SetValue( 1 );
-			m_nGameType.Set( TF_GAMETYPE_RD );
-			tf_beta_content.SetValue( 1 );
-		}
-		else
-		{
-			tf_gamemode_pd.SetValue( 1 );
-			m_nGameType.Set( TF_GAMETYPE_PD );
-		}
-	}
-	else if ( pMannVsMachineLogic )
+	if ( pMannVsMachineLogic )
 	{
 		m_bPlayingMannVsMachine.Set( true );
 		tf_gamemode_mvm.SetValue( 1 );
@@ -4165,7 +4108,7 @@ void CTFGameRules::Activate()
 		m_bPlayingSpecialDeliveryMode.Set( true );
 		tf_gamemode_sd.SetValue( 1 );
 	}
-	else if ( bFlag && !CTFRobotDestructionLogic::GetRobotDestructionLogic() )
+	else if ( bFlag )
 	{
 		m_nGameType.Set( TF_GAMETYPE_CTF );
 		tf_gamemode_ctf.SetValue( 1 );
@@ -17781,9 +17724,7 @@ const char *GetMapDisplayName( const char *mapName, bool bTitleCase /* = false *
 		 !Q_strncmp( pszSrc, "tc_", 3 ) ||
 		 !Q_strncmp( pszSrc, "pl_", 3 ) ||
 		 !Q_strncmp( pszSrc, "ad_", 3 ) ||
-		 !Q_strncmp( pszSrc, "sd_", 3 ) || 
-		 !Q_strncmp( pszSrc, "rd_", 3 ) ||
-		 !Q_strncmp( pszSrc, "pd_", 3 ) )
+		 !Q_strncmp( pszSrc, "sd_", 3 ) )
 	{
 		pszSrc +=  3;
 	}
@@ -17911,14 +17852,6 @@ const char *GetMapType( const char *mapName )
 		else if ( !Q_strnicmp( mapName, "mvm_", 4 ) )
 		{
 			return "#Gametype_MVM";
-		}
-		else if ( !Q_strnicmp( mapName, "rd_", 3 ) )
-		{
-			return "#Gametype_RobotDestruction";
-		}
-		else if ( !Q_strnicmp( mapName, "pd_", 3 ) )
-		{
-			return "#Gametype_PlayerDestruction";
 		}
 		else
 		{

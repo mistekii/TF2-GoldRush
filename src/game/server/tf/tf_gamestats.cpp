@@ -88,7 +88,6 @@ void CTFGameStats::Clear( void )
 	m_iPlayerUpdates = 0;
 	m_reportedStats.Clear();
 	Q_memset( m_aPlayerStats, 0, sizeof( m_aPlayerStats ) );
-	m_rdStats.Clear();
 	m_iLoadoutChangesCount = 1;
 }
 
@@ -1350,8 +1349,6 @@ void CTFGameStats::Event_RoundStart()
 	m_iKillCount = 0;
 	m_iPlayerUpdates = 0;
 	m_currentRoundRed.m_iRoundStartTime = GetSteamWorksSGameStatsUploader().GetTimeSinceEpoch();
-
-	m_rdStats.Clear();
 }
 
 //-----------------------------------------------------------------------------

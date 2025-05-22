@@ -464,17 +464,6 @@ const char *CHudNotificationPanel::GetNotificationByType( int iType, float& flDu
 		pszResult = "resource/UI/notifications/notify_golden_wrench.res";
 		break;
 
-	case HUD_NOTIFY_RD_ROBOT_UNDER_ATTACK:
-		if ( bOnBlueTeam )
-		{
-			pszResult = "resource/UI/notifications/notify_rd_robot_attacked_blue.res";
-		}
-		else
-		{
-			pszResult = "resource/UI/notifications/notify_rd_robot_attacked_red.res";
-		}
-		break;
-
 	case HUD_NOTIFY_HOW_TO_CONTROL_GHOST:
 		pszResult = "resource/UI/notifications/notify_how_to_control_ghost.res";
 		flDuration = 10.f;

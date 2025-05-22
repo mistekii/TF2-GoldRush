@@ -7,7 +7,6 @@
 #include "entity_bonuspack.h"
 
 #ifdef GAME_DLL
-	#include "tf_logic_robot_destruction.h"
 	#include "tf_player.h"
 	#include "particle_parse.h"
 	#include "tf_fx.h"
@@ -100,14 +99,6 @@ bool CBonusPack::MyTouch( CBasePlayer *pPlayer )
 		CPVSFilter pvsfilter( vecOrigin );
 		const char *pszParticleName = pPlayer->GetTeamNumber() == TF_TEAM_RED ? TF_POWERCORE_RED_PICKUP : TF_POWERCORE_BLUE_PICKUP;
 		TE_TFParticleEffect( pvsfilter, 0.f, pszParticleName, vecOrigin, vec3_angle );
-
- 		if ( CTFRobotDestructionLogic::GetRobotDestructionLogic() )
- 		{
- 			CTFRobotDestructionLogic::GetRobotDestructionLogic()->ScorePoints( GetTeamNumber()
-																			  , tf_bonuspack_score.GetInt()
-																			  , SCORE_CORES_COLLECTED
-																			  , ToTFPlayer( pPlayer ) );
- 		}
 
 		int iBoostMax = pTFPlayer->m_Shared.GetMaxBuffedHealth();
 		// Cap it to the max we'll boost a player's health

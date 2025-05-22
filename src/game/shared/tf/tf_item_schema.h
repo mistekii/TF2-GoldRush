@@ -376,7 +376,6 @@ enum EGameCategory
 	kGameCategory_Quickplay,
 	kGameCategory_Event247,
 	kGameCategory_Arena,
-	kGameCategory_RobotDestruction,
 	kGameCategory_Powerup,
 	kGameCategory_Featured,
 	kGameCategory_Community_Update,

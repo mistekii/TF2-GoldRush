@@ -20,7 +20,6 @@
 #include "props.h"
 #include "tf_objective_resource.h"
 #include "rtime.h"
-#include "tf_logic_player_destruction.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -506,10 +505,7 @@ bool CObjectTeleporter::PlayerCanBeTeleported( CTFPlayer *pPlayer )
 		return false;
 
 	if ( pPlayer->HasTheFlag() )
-	{
-		if ( !CTFPlayerDestructionLogic::GetRobotDestructionLogic() || ( CTFPlayerDestructionLogic::GetRobotDestructionLogic()->GetType() != CTFPlayerDestructionLogic::TYPE_PLAYER_DESTRUCTION ) )
-			return false;
-	}
+		return false;
 
 	CTFPlayer *pBuilder = GetBuilder();
 	if ( !pBuilder && m_bWasMapPlaced == false )

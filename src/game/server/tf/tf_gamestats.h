@@ -148,9 +148,6 @@ public:
 	int							m_iPlayerUpdates;
 	int							m_iLoadoutChangesCount;
 
-	// Robot Destruction Struct
-	RobotDestructionStats_t		m_rdStats;
-
 private:
 	CUtlMap< CUtlConstString, int > m_MapsPlaytime;
 	char						m_szNextMap[32];

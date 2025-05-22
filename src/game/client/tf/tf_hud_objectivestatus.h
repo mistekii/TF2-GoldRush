@@ -54,7 +54,6 @@ private:
 	CControlPointProgressBar *m_pControlPointProgressBar;
 	CTFHudEscort			*m_pEscortPanel;
 	CTFHudMultipleEscort	*m_pMultipleEscortPanel;
-	class CTFHUDRobotDestruction	*m_pRobotDestructionPanel;
 };
 
 #endif	// TF_HUD_OBJECTIVESTATUS_H

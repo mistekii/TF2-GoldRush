@@ -425,9 +425,7 @@ static const char *s_aGameTypeNames[] =
 	"#Gametype_CP",
 	"#Gametype_Escort",
 	"#Gametype_Arena",
-	"#Gametype_MVM",
-	"#Gametype_RobotDestruction",
-	"#GameType_PlayerDestruction",
+	"#Gametype_MVM"
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aGameTypeNames ) );
 
@@ -443,9 +441,7 @@ static const char *s_aEnumGameTypeName[] =
 	"TF_GAMETYPE_CP",
 	"TF_GAMETYPE_ESCORT",
 	"TF_GAMETYPE_ARENA",
-	"TF_GAMETYPE_MVM",
-	"TF_GAMETYPE_RD",
-	"TF_GAMETYPE_PD"
+	"TF_GAMETYPE_MVM"
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aEnumGameTypeName ) );
 
@@ -518,35 +514,6 @@ ETFFlagEventTypes GetCTFEventTypeFromName( const char *pszName )
 
 
 
-const char *GetRDScoreMethodName( RDScoreMethod_t iScoreMethod )
-{
-	static const char *aRDScoreMethodNames[] =
-	{
-		"SCORE_UNDEFINED", // -1
-		"SCORE_REACTOR_CAPTURED", // 0
-		"SCORE_CORES_COLLECTED",
-		"SCORE_REACTOR_RETURNED",
-		"SCORE_REACTOR_STEAL",
-		
-		"NUM_SCORE_TYPES"
-	};
-
-	return aRDScoreMethodNames[ iScoreMethod + 1 ];
-}
-
-RDScoreMethod_t GetRDScoreMethodFromName( const char *pszName )
-{
-	for( int i=SCORE_UNDEFINED; i < NUM_SCORE_TYPES; ++i )
-	{
-		if ( FStrEq( pszName, GetRDScoreMethodName( (RDScoreMethod_t)i ) ) )
-		{
-			return (RDScoreMethod_t)i;
-		}
-	}
-	
-	Assert( false );
-	return SCORE_UNDEFINED;
-}
 
 //-----------------------------------------------------------------------------
 // Weapons.
@@ -1666,8 +1633,7 @@ const char *g_pszInvasionMaps[] =
 {
 	"maps/ctf_2fort_invasion.bsp",
 	"maps/koth_probed.bsp",
-	"maps/arena_byre.bsp",
-	"maps/pd_watergate.bsp"
+	"maps/arena_byre.bsp"
 };
 
 bool IsPlayingInvasionMap( void )

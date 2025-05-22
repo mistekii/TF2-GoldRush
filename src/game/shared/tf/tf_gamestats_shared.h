@@ -593,36 +593,6 @@ struct MapStats_t
 //=============================================================================
 
 //=============================================================================
-// Robot Destruction
-struct RobotDestructionStats_t
-{
-	RobotDestructionStats_t();
-
-	void	Clear();
-	int		GetRobotInteractionCount();
-	int		GetRobotCoreInteractionCount();
-	int		GetFlagInteractionCount();
-
-	// Robot Cores Collected
-	int		iCoresCollectedByTeam[ TF_TEAM_COUNT ];
-
-	// Collected By What Class
-	int		iCoreCollectedByClass[ TF_CLASS_COUNT ];
-
-	// Robots Killed By Type
-	// eRobotType::NUM_ROBOT_TYPES
-	int		iBlueRobotsKilledByType[ 3 ];
-	int		iRedRobotsKilledByType[ 3 ];
-
-	int		iRobotsDamageFromClass[ TF_CLASS_COUNT ];
-
-	// Player Interaction
-	int		iRobotInteraction[MAX_PLAYERS_ARRAY_SAFE];
-	int		iRobotCoreInteraction[MAX_PLAYERS_ARRAY_SAFE];
-	int		iFlagInteraction[MAX_PLAYERS_ARRAY_SAFE];
-};
-
-//=============================================================================
 // Cactus Canyon
 
 //=============================================================================

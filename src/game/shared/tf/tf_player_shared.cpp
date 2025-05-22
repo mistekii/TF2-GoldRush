@@ -2724,7 +2724,7 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		m_flSpyTranqBuffDuration = 0;
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() || TFGameRules()->IsPlayingRobotDestructionMode() )
+	if ( TFGameRules()->IsMannVsMachineMode() )
 	{
 		RadiusCurrencyCollectionCheck();
 	}
@@ -7228,13 +7228,6 @@ bool CTFPlayerShared::CanRecieveMedigunChargeEffect( medigun_charge_types eType 
 	{
 		bCanRecieve = false;
 
-		// The "flag" in Player Destruction doesn't block uber
-		const CCaptureFlag* pFlag = static_cast< const CCaptureFlag* >( pItem );
-		if ( pFlag->GetType() == TF_FLAGTYPE_PLAYER_DESTRUCTION )
-		{
-			bCanRecieve = true;
-		}
-
 		if ( TFGameRules()->IsMannVsMachineMode() )
 		{
 			// allow bot flag carriers to be ubered
@@ -10818,9 +10811,7 @@ bool CTFPlayer::TryToPickupBuilding()
 //-----------------------------------------------------------------------------
 bool CTFPlayer::CanGoInvisible( bool bAllowWhileCarryingFlag )
 {
-	// The "flag" in Player Destruction doesn't block cloak
-	ETFFlagType ignoreTypes[] = { TF_FLAGTYPE_PLAYER_DESTRUCTION };
-	if ( !bAllowWhileCarryingFlag && HasTheFlag( ignoreTypes, ARRAYSIZE( ignoreTypes ) ) )
+	if ( !bAllowWhileCarryingFlag && HasTheFlag() )
 	{
 		HintMessage( HINT_CANNOT_CLOAK_WITH_FLAG );
 		return false;
@@ -11055,8 +11046,7 @@ bool CTFPlayer::CanDisguise( void )
 
 	bool bHasFlag = false;
 
-	ETFFlagType ignoreTypes[] = { TF_FLAGTYPE_PLAYER_DESTRUCTION };
-	if ( HasTheFlag( ignoreTypes, ARRAYSIZE( ignoreTypes ) ) )
+	if ( HasTheFlag() )
 	{
 		bHasFlag = true;
 	}
