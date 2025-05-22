@@ -352,21 +352,12 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "cp_sulfur", "Sulfur", "#TF_AttackDefend" },
 	{ "cp_hardwood_final", "Hardwood", "#TF_AttackDefend" },
 	{ "ctf_pelican_peak", "Pelican Peak", "#Gametype_CTF" },
-	{ "vsh_tinyrock", "Tiny Rock", "#GameType_VSH" },
-	{ "vsh_distillery", "Distillery", "#GameType_VSH" },
-	{ "vsh_skirmish", "Skirmish", "#GameType_VSH" },
-	{ "vsh_nucleus", "Nucleus VSH", "#GameType_VSH" },
 	{ "arena_perks", "Perks", "#Gametype_Arena" },
 	{ "koth_slime", "Slime", "#Gametype_Koth" },
 	{ "cp_lavapit_final", "Lava Pit", "#TF_AttackDefend" },
 	{ "cp_degrootkeep_rats", "Sandcastle", "#TF_MedievalAttackDefend" },
 	{ "pl_spineyard", "Spineyard", "#Gametype_Escort" },
 	{ "pl_corruption", "Corruption", "#Gametype_Escort" },
-	{ "zi_murky", "Murky", "#GameType_ZI" },
-	{ "zi_atoll", "Atoll", "#GameType_ZI" },
-	{ "zi_woods", "Woods", "#GameType_ZI" },
-	{ "zi_sanitarium", "Sanitarium", "#GameType_ZI" },
-	{ "zi_devastation_final1", "Devastation", "#GameType_ZI" },
 	{ "koth_snowtower", "Snowtower", "#Gametype_Koth" },
 	{ "koth_krampus", "Krampus", "#Gametype_Koth" },
 	{ "ctf_haarp", "Haarp", "#TF_AttackDefend" },
@@ -389,14 +380,11 @@ static MapInfo_t s_CommunityMaps[] = {
 	{ "cp_darkmarsh", "Darkmarsh", "#TF_AttackDefend" },
 	{ "cp_freaky_fair", "Freaky Fair", "#Gametype_CP" },
 	{ "tow_dynamite", "Dynamite", "#GameType_TOW" },
-	{ "vsh_outburst", "Outburst", "#GameType_VSH" },
-	{ "zi_blazehattan", "Blazehattan", "#GameType_ZI" },
 	{ "koth_overcast_final", "Overcast", "#Gametype_Koth" },
 	{ "cp_fortezza", "Fortezza", "#TF_AttackDefend" },
 	{ "ctf_penguin_peak", "Penguin Peak", "#Gametype_CTF" },
 	{ "pl_patagonia", "Patagonia", "#Gametype_Escort" },
 	{ "plr_cutter", "Cutter", "#Gametype_EscortRace" },
-	{ "vsh_maul", " Maul", "#GameType_VSH" },
 };
 
 /*
@@ -510,10 +498,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_sulfur", 				619869471 },
 	{ "cp_hardwood_final", 		2944867157 },
 	{ "ctf_pelican_peak", 		2886563496 },
-	{ "vsh_tinyrock", 			2959976540 },
-	{ "vsh_distillery", 		2967856987 },
-	{ "vsh_skirmish", 			2965961179 },
-	{ "vsh_nucleus", 			2973250677 },
 
 	// Halloween 2023
 	{ "arena_perks", 			3029918524 },
@@ -522,11 +506,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_degrootkeep_rats", 	3031036719 },
 	{ "pl_spineyard", 			3028181847 },
 	{ "pl_corruption", 			2858934869 },
-	{ "zi_murky", 				3030503176 },
-	{ "zi_atoll", 				3030515121 },
-	{ "zi_woods", 				3030549855 },
-	{ "zi_sanitarium", 			3030548510 },
-	{ "zi_devastation_final1", 	3031246748 },
 
 	// Smissmas 2023
 	{ "koth_snowtower",			2781286631 },
@@ -555,8 +534,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "cp_darkmarsh",			2860559688 },
 	{ "cp_freaky_fair",			3326591381 },
 	{ "tow_dynamite",			3320549037 },
-	{ "vsh_outburst",			3028713660 },
-	{ "zi_blazehattan",			3031862054 },
 
 	// Smissmas 2024
 	{ "koth_overcast_final",	3089995488 },
@@ -564,7 +541,6 @@ static FeaturedWorkshopMap_t s_FeaturedWorkshopMaps[] = {
 	{ "ctf_penguin_peak",		2888338683 },
 	{ "pl_patagonia",			3236427113 },
 	{ "plr_cutter",				3363801747 },
-	{ "vsh_maul",				3069796653 },
 };
 
 */
@@ -937,18 +913,6 @@ static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int e
 
 	return false;
 }
-
-#ifdef GAME_DLL
-bool IsCustomGameMode( const char *pszMapName )
-{
-	return ( StringHasPrefix( pszMapName, "vsh_" ) || StringHasPrefix( pszMapName, "zi_" ) );
-}
-
-bool IsCustomGameMode()
-{
-	return IsCustomGameMode( STRING( gpGlobals->mapname ) );
-}
-#endif
 
 // Fetch holiday setting taking into account convars, etc, but NOT
 // taking into consideration the current game rules, map, etc.
@@ -17593,36 +17557,6 @@ const char *CTFGameRules::FormatVideoName( const char *videoName, bool bWithExte
 		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof(strFullpath), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
 		{
 			V_strncpy( strFullpath, "media/" "mvm_intro", MAX_PATH );
-		}
-	}
-	else if ( Q_strstr( videoName, "zi_" ) )
-	{
-		char strTempPath[ MAX_PATH ];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to zi_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof( strFullpath ), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "zi_intro", MAX_PATH );
-		}
-	}
-	else if ( Q_strstr( videoName, "vsh_" ) )
-	{
-		char strTempPath[ MAX_PATH ];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to vsh_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof( strFullpath ), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "vsh_intro", MAX_PATH );
 		}
 	}
 	else
