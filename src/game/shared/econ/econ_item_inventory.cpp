@@ -1722,6 +1722,7 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 		pItem->SetQuality( pItemDef->GetQuality() );						// set quality
 		pItem->SetItemLevel( RandomInt( 1, 100 ) );							// roll the item level
 		pItem->SetOrigin( eEconItemOrigin::kEconItemOrigin_Drop );			// set the item's origin
+		pItem->SetFlags(0);													// remove any extra description text
 		pItem->SetQuantity(1);												// item quantity
 
 		// Add the item to the so cache
