@@ -30,7 +30,6 @@ class CIntroViewpoint;
 class CTriggerAreaCapture;
 class CTFWeaponBaseGun;
 class CCaptureZone;
-class CTFReviveMarker;
 class CWaveSpawnPopulator;
 class CTFTauntProp;
 class CTFDroppedWeapon;
@@ -1423,11 +1422,7 @@ private:
 	CNetworkVar( bool, m_bForcedSkin );
 	CNetworkVar( int, m_nForcedSkin );
 
-private:
-	CHandle< CTFReviveMarker >		m_hReviveMarker;
 public:
-	CTFReviveMarker	*GetReviveMarker( void ) { return m_hReviveMarker; }
-
 	// Send ForcePlayerViewAngles user message. Handled in __MsgFunc_ForcePlayerViewAngles in
 	// clientmode_tf.cpp. Sets Local and Abs angles, along with TauntYaw and VehicleMovingAngles.
 	void ForcePlayerViewAngles( const QAngle& qTeleportAngles );

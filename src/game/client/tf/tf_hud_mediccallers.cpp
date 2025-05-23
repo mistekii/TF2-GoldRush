@@ -170,56 +170,6 @@ void CTFMedicCallerPanel::PerformLayout( void )
 			pPanelHealth->SetAlpha( 0 );
 		}
 	}
-
-	// Revive block
-	vgui::Panel *pPanelReviveEasy = FindChildByName( "CallerReviveEasy" );
-	if ( pPanelReviveEasy )
-	{
-		bool bReviveEasy = m_nCallerType == CALLER_TYPE_REVIVE_EASY;
-		if ( pPanelReviveEasy->IsVisible() != bReviveEasy )
-		{
-			pPanelReviveEasy->SetVisible( bReviveEasy );
-		}
-
-		if ( bReviveEasy )
-		{
-			pPanelReviveEasy->GetSize( nWide, nTall );
-			pPanelReviveEasy->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveEasy->SetPos( ( GetWide() - pPanelReviveEasy->GetWide() ) * 0.5, ( GetTall() - pPanelReviveEasy->GetTall() ) * 0.5 );
-		}
-	}
-	vgui::Panel *pPanelReviveMedium = FindChildByName( "CallerReviveMedium" );
-	if ( pPanelReviveMedium )
-	{
-		bool bReviveMedium = m_nCallerType == CALLER_TYPE_REVIVE_MEDIUM;
-		if ( pPanelReviveMedium->IsVisible() != bReviveMedium )
-		{
-			pPanelReviveMedium->SetVisible( bReviveMedium );
-		}
-
-		if ( bReviveMedium )
-		{
-			pPanelReviveMedium->GetSize( nWide, nTall );
-			pPanelReviveMedium->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveMedium->SetPos( ( GetWide() - pPanelReviveMedium->GetWide() ) * 0.5, ( GetTall() - pPanelReviveMedium->GetTall() ) * 0.5 );
-		}
-	}
-	vgui::Panel *pPanelReviveHard = FindChildByName( "CallerReviveHard" );
-	if ( pPanelReviveHard )
-	{
-		bool bReviveHard = m_nCallerType == CALLER_TYPE_REVIVE_HARD;
-		if ( pPanelReviveHard->IsVisible() != bReviveHard )
-		{
-			pPanelReviveHard->SetVisible( bReviveHard );
-		}
-
-		if ( bReviveHard )
-		{
-			pPanelReviveHard->GetSize( nWide, nTall );
-			pPanelReviveHard->SetSize ( nWide * m_flPanelScale, nTall * m_flPanelScale );
-			pPanelReviveHard->SetPos( ( GetWide() - pPanelReviveHard->GetWide() ) * 0.5, ( GetTall() - pPanelReviveHard->GetTall() ) * 0.5 );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

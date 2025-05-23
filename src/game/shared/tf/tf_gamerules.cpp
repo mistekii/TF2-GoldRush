@@ -135,7 +135,6 @@
 
 #include "econ_holidays.h"
 #include "rtime.h"
-#include "tf_revive.h"
 #include "tf_duckleaderboard.h"
 
 #include "tier3/tier3.h"
@@ -14149,27 +14148,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 				pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MVM_UPGRADE_COMPLETE );
 			}
 		}
-		else if ( FStrEq( pszCommand, "MVM_Revive_Response" ) )
-		{
-			CTFReviveMarker *pReviveMarker = pTFPlayer->GetReviveMarker();
-			if ( pReviveMarker )
-			{
-				if ( pKeyValues->GetBool( "accepted", 0 ) )
-				{
-					pReviveMarker->ReviveOwner();
-				}
-				else
-				{
-					// They hit cancel after their spawn timer was up
-					if ( HasPassedMinRespawnTime( pTFPlayer ) )
-					{
-						pTFPlayer->ForceRespawn();
-					}
-	
-					UTIL_Remove( pReviveMarker );
-				}
-			}
-		}
 		else if ( FStrEq( pszCommand, "MVM_Respec" ) )
 		{
 			if ( GameModeUsesUpgrades() && IsMannVsMachineRespecEnabled() && CanPlayerUseRespec( pTFPlayer ) )
@@ -19786,7 +19764,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET );
 		}
 	case 499:	// generate rage on heal (shield)
-	case 554:	// revive
 	case 555:	// medigun specialist
 		{
 			return ( iWeaponID == TF_WEAPON_MEDIGUN );

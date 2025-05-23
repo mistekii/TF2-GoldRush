@@ -119,7 +119,6 @@
 #include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/tf_upgrades.h"
 #include "player_vs_environment/tf_population_manager.h"
-#include "tf_revive.h"
 #include "tf_logic_halloween_2014.h"
 #include "func_croc.h"
 #include "tf_weapon_bonesaw.h"
@@ -897,8 +896,6 @@ CTFPlayer::CTFPlayer()
 	m_iTeamChanges = 0;
 	m_iClassChanges = 0;
 
-	m_hReviveMarker = NULL;
-
 	// Bounty Mode
 	m_nExperienceLevel = 1;
 	m_nExperiencePoints = 0;
@@ -1613,12 +1610,6 @@ CTFPlayer::~CTFPlayer()
 
 		m_ItemsToTest[i].pKV->deleteThis();
 		m_ItemsToTest[i].pKV = NULL;
-	}
-
-	if ( m_hReviveMarker )
-	{
-		UTIL_Remove( m_hReviveMarker );
-		m_hReviveMarker = NULL;
 	}
 }
 
@@ -2577,8 +2568,6 @@ void CTFPlayer::PrecacheTFPlayer()
 
 	PrecacheModel( "models/effects/resist_shield/resist_shield.mdl" );
 
-	PrecacheModel( "models/props_mvm/mvm_revive_tombstone.mdl" );
-
 	PrecacheScriptSound( "General.banana_slip" ); // Used for SodaPopper Hype Jumps
 
 
@@ -2704,12 +2693,6 @@ bool CTFPlayer::IsReadyToSpawn( void )
 		}
 	}
 #endif // TF_RAID_MODE
-
-	// Medic attached to marker - delay
-	if ( m_hReviveMarker && m_hReviveMarker->IsReviveInProgress() && ( StateGet() != TF_STATE_DYING ) )
-	{
-		return false;
-	}
 
 	// Map-makers can force players to have custom respawn times
 	if ( GetRespawnTimeOverride() != -1.f && gpGlobals->curtime < GetDeathTime() + GetRespawnTimeOverride() )
@@ -3242,12 +3225,6 @@ void CTFPlayer::Spawn()
 				TFGameRules()->SpawnPlayerInHell( this, pSpawnEntName );
 			}
 		}
-	}
-
-	if ( m_hReviveMarker )
-	{
-		UTIL_Remove( m_hReviveMarker );
-		m_hReviveMarker = NULL;
 	}
 
 	// make sure we clear custom attributes that we added
@@ -10960,11 +10937,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 				event->SetInt( "level", nLevel );
 				gameeventmanager->FireEvent( event );
 			}
-		}
-
-		if ( !IsBot() && !m_hReviveMarker )
-		{
-			m_hReviveMarker = CTFReviveMarker::Create( this );
 		}
 	}
 

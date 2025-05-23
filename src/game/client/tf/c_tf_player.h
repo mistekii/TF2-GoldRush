@@ -35,7 +35,6 @@ class C_TFRagdoll;
 class C_TFWearable;
 class C_CaptureZone;
 class C_MerasmusBombEffect;
-class CTFReviveDialog;
 class C_TFDroppedWeapon;
 
 extern ConVar tf_medigun_autoheal;
@@ -874,8 +873,6 @@ private:
 	CNetworkVar( int, m_nForcedSkin );
 
 	int m_nFootStamps;
-
-	vgui::DHANDLE< CTFReviveDialog > m_hRevivePrompt;
 
 public:
 	void SetShowHudMenuTauntSelection( bool bShow ) { m_bShowHudMenuTauntSelection = bShow; }

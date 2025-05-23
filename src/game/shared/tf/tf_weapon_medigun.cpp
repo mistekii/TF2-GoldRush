@@ -38,7 +38,6 @@
 #include "func_respawnroom.h"
 #endif
 
-#include "tf_revive.h"
 #include "tf_weapon_medigun.h"
 #include "tf_weapon_shovel.h"
 
@@ -511,21 +510,6 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 			return true;
 		}
 	}
-	else
-	{
-		if ( !pTarget->InSameTeam( pOwner ) )
-			return false;
-
-		if ( pTarget->IsBaseObject() )
-			return false;
-
-		CTFReviveMarker *pReviveMarker = dynamic_cast< CTFReviveMarker* >( pTarget );
-		if ( pReviveMarker )
-		{
-			m_hReviveMarker = pReviveMarker;	// Store last marker we touched
-			return true;
-		}
-	}
 
 	return false;
 }
@@ -771,40 +755,6 @@ void CWeaponMedigun::HealTargetThink( void )
 			if ( m_hHealingTarget.Get() == m_hLastHealingTarget.Get() )
 			{
 				Lower();
-			}
-		}
-	}
-
-	if ( !pTarget->IsPlayer() )
-	{
-
-		CTFReviveMarker *pReviveMarker = dynamic_cast< CTFReviveMarker* >( pTarget );
-		if ( pReviveMarker )
-		{
-			CTFPlayer *pDeadPlayer = pReviveMarker->GetOwner();
-			if ( pDeadPlayer )
-			{
-				pReviveMarker->SetReviver( pOwner );
-
-				// Instantly revive players when deploying uber
-				float flHealRate = GetHealRate();
-				float flReviveRate = m_bChargeRelease ? flHealRate / 2.f : flHealRate / 8.f;
-				pReviveMarker->AddMarkerHealth( flReviveRate );
-
-				// Set observer target to reviver so they know they're being revived
-				if ( pDeadPlayer->GetObserverMode() > OBS_MODE_FREEZECAM )
-				{
-					if ( pReviveMarker->GetReviver() && pDeadPlayer->GetObserverTarget() != pReviveMarker->GetReviver() )
-					{
-						pDeadPlayer->SetObserverTarget( pReviveMarker->GetReviver() );
-					}
-				}
-
-				if ( !pReviveMarker->HasOwnerBeenPrompted() )
-				{
-					// This will give them a messagebox that has a Cancel button
-					pReviveMarker->PromptOwner();
-				}
 			}
 		}
 	}
@@ -1921,8 +1871,7 @@ void CWeaponMedigun::UpdateEffects( void )
 		if ( m_hHealingTargetEffect.pTarget == m_hHealingTarget )
 			return;
 
-		bool bReviveMarker = m_hReviveMarker && m_hReviveMarker == m_hHealingTarget;	// Hack to avoid another dynamic_cast here
-		bool bHealTargetMarker = hud_medichealtargetmarker.GetBool() && !bReviveMarker;
+		bool bHealTargetMarker = hud_medichealtargetmarker.GetBool();
 
 		const char *pszEffectName;
 		if ( IsAttachedToBuilding() )
@@ -1966,10 +1915,9 @@ void CWeaponMedigun::UpdateEffects( void )
 			}
 		}
 
-		// Attach differently if targeting a revive marker
-		float flVecHeightOffset = bReviveMarker ? 0.f : 50.f;
-		ParticleAttachment_t attachType = bReviveMarker ? PATTACH_POINT_FOLLOW : PATTACH_ABSORIGIN_FOLLOW;
-		const char *pszAttachName = bReviveMarker ? "healbeam" : NULL;
+		float flVecHeightOffset = 50.f;
+		ParticleAttachment_t attachType = PATTACH_ABSORIGIN_FOLLOW;
+		const char *pszAttachName = NULL;
 
 		CNewParticleEffect *pEffect = pEffectOwner->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "muzzle" );
 		pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, attachType, pszAttachName, Vector(0.f,0.f,flVecHeightOffset) );

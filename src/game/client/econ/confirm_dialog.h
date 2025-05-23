@@ -170,39 +170,6 @@ protected:
 };
 
 #ifdef TF_CLIENT_DLL
-// A dialog presented to dead players when being revived
-class CTFReviveDialog : public CTFMessageBoxDialog
-{
-	DECLARE_CLASS_SIMPLE( CTFReviveDialog, CTFMessageBoxDialog );
-public:
-	CTFReviveDialog( const char *pTitle, const char *pText, const char *pConfirmBtnText, GenericConfirmDialogCallback callback, vgui::Panel *parent );
-	virtual ~CTFReviveDialog() { }
-
-	virtual void PerformLayout() OVERRIDE;
-	virtual void OnTick() OVERRIDE;
-	virtual const char *GetResFile() OVERRIDE { return "Resource/UI/ReviveDialog.res"; }
-	void SetOwner( CBaseEntity *pEntity );
-
-	virtual GameActionSet_t GetPreferredActionSet() const OVERRIDE { return GAME_ACTION_SET_IN_GAME_HUD; }
-
-	CTFSpectatorGUIHealth *m_pTargetHealth;
-	CHandle< C_BaseEntity >	m_hEntity;
-	float m_flPrevHealth;
-
-protected:
-	// Revive dialog occurs in game, so we expect to be in this action set
-	virtual const char* GetActionSet() const { return "InGameHUDControls"; }
-};
-
-CTFReviveDialog *ShowRevivePrompt( CBaseEntity *pOwner,
-								   const char *pTitle = "#TF_Prompt_Revive_Title", 
-								   const char *pText = "#TF_Prompt_Revive_Message",
-								   const char *pConfirmBtnText = "#TF_Prompt_Revive_Cancel",
-								   GenericConfirmDialogCallback callback = NULL,
-								   vgui::Panel *parent = NULL,
-								   void *pContext = NULL );
-
-
 // A generic message dialog, which is just a generic confirm dialog w/o the cancel button
 class CEconRequirementDialog : public CTFGenericConfirmDialog
 {

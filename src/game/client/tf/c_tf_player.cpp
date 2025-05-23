@@ -350,17 +350,6 @@ static ConVar tf_medieval_cam_idealpitch( "tf_medieval_cam_idealpitch", "0", FCV
 extern ConVar cam_idealpitch;
 extern ConVar tf_allow_taunt_switch;
 
-static void PromptAcceptReviveCallback( bool bCancel, void *pContext )
-{
-	if ( bCancel )
-	{
-		KeyValues *kv = new KeyValues( "MVM_Revive_Response" );
-		kv->SetBool( "accepted", false );
-		engine->ServerCmdKeyValues( kv );
-	}
-}
-
-
 C_TFPlayerPreviewEffect g_PlayerPreviewEffect;
 
 
@@ -3882,8 +3871,6 @@ C_TFPlayer::C_TFPlayer() :
 
 	m_flChangeClassTime = 0.f;
 
-	m_hRevivePrompt = NULL;
-
 	m_bIsDisplayingTranqMark = false;
 
 	m_pKart = NULL;
@@ -3907,8 +3894,6 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "sticky_jump_landed" );
 	ListenForGameEvent( "player_spawn" );
 	ListenForGameEvent( "damage_resisted" );
-	ListenForGameEvent( "revive_player_notify" );
-	ListenForGameEvent( "revive_player_stopped" );
 	ListenForGameEvent( "player_changeclass" );
 	ListenForGameEvent( "player_abandoned_match" );
 	ListenForGameEvent( "rocketpack_launch" );
@@ -6765,14 +6750,6 @@ void C_TFPlayer::UpdateIDTarget()
 	}
 	else
 	{
-		// Add DEBRIS when a medic has revive (for tracing against revive markers)
-		int iReviveMedic = 0;
-		CALL_ATTRIB_HOOK_INT( iReviveMedic, revive );
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() && pLocalPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			iReviveMedic = 1;
-		}
-
 		int nMask = MASK_SOLID | CONTENTS_DEBRIS;
 		UTIL_TraceLine( vecStart, vecEnd, nMask, this, COLLISION_GROUP_NONE, &tr );
 	}
@@ -7643,12 +7620,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 #endif
 
 		SetAppropriateCamera( this );
-
-		if ( m_hRevivePrompt )
-		{
-			m_hRevivePrompt->MarkForDeletion();
-			m_hRevivePrompt = NULL;
-		}
 
 		// make sure the chat window has been restored to the appropriate place
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "CompetitiveGame_RestoreChatWindow", false );
@@ -10759,37 +10730,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		if ( index_ == entindex() )
 		{
 			m_flLastResistTime = gpGlobals->curtime;
-		}
-	}
-	else if ( FStrEq( event->GetName(), "revive_player_notify" ) )
-	{
-		if ( !pLocalPlayer )
-			return;
-
-		const int index_ = event->GetInt( "entindex" );
-		if ( pLocalPlayer == this && entindex() == index_ && !m_hRevivePrompt )
-		{
-			const int nMarkerIndex = event->GetInt( "marker_entindex" );
-			CBaseEntity *pMarker = ClientEntityList().GetEnt( nMarkerIndex );
-			if ( pMarker )
-			{
-				m_hRevivePrompt = ShowRevivePrompt( pMarker, "#TF_Prompt_Revive_Title", "#TF_Prompt_Revive_Message", "#TF_Prompt_Revive_Cancel", &PromptAcceptReviveCallback, NULL, NULL );
-				if ( m_hRevivePrompt )
-				{
-					m_hRevivePrompt->SetKeyBoardInputEnabled( false );
-				}
-			}
-		}
-	}
-	else if ( FStrEq( event->GetName(), "revive_player_stopped" ) )
-	{
-		if ( !pLocalPlayer )
-			return;
-
-		if ( m_hRevivePrompt )
-		{
-			m_hRevivePrompt->MarkForDeletion();
-			m_hRevivePrompt = NULL;
 		}
 	}
 	else if ( FStrEq( event->GetName(), "player_changeclass" ) )

@@ -1648,58 +1648,6 @@ private:
 DECLARE_ACHIEVEMENT( CAchievementTF_MvM_Medic_ShieldBlockDamage, ACHIEVEMENT_TF_MVM_MEDIC_SHIELD_BLOCK_DAMAGE, "TF_MVM_MEDIC_SHIELD_BLOCK_DAMAGE", 5 );
 
 //----------------------------------------------------------------------------------------------------------------
-class CAchievementTF_MvM_Medic_ReviveTeammates : public CBaseTFAchievementSimple
-{
-	void Init() 
-	{
-		SetFlags( ACH_SAVE_GLOBAL );
-		SetGoal( 1 );
-	}
-
-	virtual void ListenForEvents()
-	{
-		ListenForGameEvent( "revive_player_complete" );
-	}
-
-	void FireGameEvent_Internal( IGameEvent *event )
-	{
-		if ( FStrEq( event->GetName(), "revive_player_complete" ) )
-		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-				if ( pLocalPlayer && pLocalPlayer->MedicIsReleasingCharge() )
-				{
-					if ( event->GetInt( "entindex" ) == GetLocalPlayerIndex() )
-					{
-						int iNewIndex = m_Times.AddToTail();
-						m_Times[iNewIndex] = gpGlobals->curtime;
-
-						// we only care about the last two times we revived someone
-						if ( m_Times.Count() > 2 )
-						{
-							m_Times.Remove( 0 );
-						}
-
-						if ( m_Times.Count() == 2 )
-						{
-							if ( m_Times.Tail() - m_Times.Head() <= 5.0 )
-							{
-								AwardAchievement();
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-private:
-	CUtlVector< float >	m_Times;
-};
-DECLARE_ACHIEVEMENT( CAchievementTF_MvM_Medic_ReviveTeammates, ACHIEVEMENT_TF_MVM_MEDIC_REVIVE_TEAMMATES, "TF_MVM_MEDIC_REVIVE_TEAMMATES", 5 );
-
-//----------------------------------------------------------------------------------------------------------------
 class CAchievementTF_MvM_RocketSpecialistKillGrind : public CBaseTFAchievementSimple
 {
 	void Init() 

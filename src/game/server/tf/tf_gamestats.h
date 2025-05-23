@@ -84,7 +84,6 @@ public:
 	void Event_TeamChange( CTFPlayer* pPlayer, int oldTeam, int newTeam );
 	void Event_PlayerCollectedCurrency( CBasePlayer *pPlayer, int nAmount );
 	void Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceReport );
-	void Event_PlayerRevived( CTFPlayer *pPlayer );
 	void Event_PlayerThrowableHit( CTFPlayer *pPlayer );
 	void Event_PlayerThrowableKill( CTFPlayer *pPlayer );
 	void Event_PlayerEarnedKillStreak( CTFPlayer *pPlayer );

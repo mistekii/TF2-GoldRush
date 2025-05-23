@@ -18,7 +18,6 @@
 #endif
 
 class CTFMedigunShield;
-class CTFReviveMarker;
 
 enum medigun_weapontypes_t
 {
@@ -194,7 +193,6 @@ protected:
 	float					m_flOverHealExpert;		// Upgrade
 
 	CHandle< CTFMedigunShield > m_hMedigunShield;
-	CHandle< CTFReviveMarker > m_hReviveMarker;
 
 #ifdef CLIENT_DLL
 	bool					m_bPlayingSound;

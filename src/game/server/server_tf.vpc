@@ -293,8 +293,6 @@ $Project "Server (TF)"
 			$File	"$SRCDIR\game\shared\tf\tf_gamestats_shared.cpp"
 			$File	"$SRCDIR\game\server\tf\tf_gc_api.h" [!$SOURCESDK]
 			$File	"$SRCDIR\game\server\tf\tf_gc_api.cpp" [!$SOURCESDK]
-			$File	"$SRCDIR\game\shared\tf\tf_revive.cpp"
-			$File	"$SRCDIR\game\shared\tf\tf_revive.h"
 			$File	"$SRCDIR\game\shared\tf\tf_wheel_of_doom.cpp"
 			$File	"$SRCDIR\game\shared\tf\tf_wheel_of_doom.h"
 			$File	"$SRCDIR\game\shared\tf\tf_item_constants.cpp"

@@ -1802,9 +1802,6 @@ enum MedicCallerType
 {
 	CALLER_TYPE_NORMAL,
 	CALLER_TYPE_AUTO,
-	CALLER_TYPE_REVIVE_EASY,		// The more someone is revived, the harder
-	CALLER_TYPE_REVIVE_MEDIUM,		// subsequent revives become.
-	CALLER_TYPE_REVIVE_HARD,
 };
 
 //-----------------------------------------------------------------------------

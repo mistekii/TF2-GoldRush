@@ -20,7 +20,6 @@
 #endif // REPLAY_ENABLED
 #include "tf_weapon_bonesaw.h"
 #include "sourcevr/isourcevirtualreality.h"
-#include "tf_revive.h"
 #include "entity_capture_flag.h"
 #include "vgui_avatarimage.h"
 
@@ -820,19 +819,6 @@ void CTargetID::UpdateID( void )
 					flHealth = pEnt->GetHealth();
 					flMaxHealth = pEnt->GetMaxHealth();
 					iMaxBuffedHealth = pEnt->GetMaxHealth();
-
-					// Display respawn timer on revive markers by hacking bountymode's player level display
-					if ( !pEnt->IsPlayer() )
-					{
-						CTFReviveMarker *pMarker = dynamic_cast< CTFReviveMarker* >( pEnt );
-						if ( pMarker && pMarker->GetOwner() )
-						{
-							float flRespawn = TFGameRules()->GetNextRespawnWave( pMarker->GetTeamNumber(), pMarker->GetOwner() ) - gpGlobals->curtime;
-							m_pTargetHealth->SetLevel( (int)flRespawn );
-
-							g_pVGuiLocalize->ConvertANSIToUnicode( pMarker->GetOwner()->GetPlayerName(), sIDString, sizeof(sIDString) );
-						}
-					}
 				}
 			}
 		}

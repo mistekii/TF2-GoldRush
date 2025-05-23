@@ -2878,14 +2878,6 @@ void CTFGameStats::Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceRe
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerRevived( CTFPlayer *pPlayer )
-{
-	IncrementStat( pPlayer, TFSTAT_REVIVED, 1 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerThrowableHit( CTFPlayer *pAttacker )
 {
 	IncrementStat( pAttacker, TFSTAT_THROWABLEHIT, 1 );
