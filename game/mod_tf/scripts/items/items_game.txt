@@ -10594,6 +10594,7 @@
 			"name"			"The Chargin' Targe"
 			"prefab"	"valve weapon_targe"
 			"first_sale_date"	"2010/09/29"
+			"holiday_restriction"	"halloween_or_fullmoon"
 			"xifier_class_remap"	"weapon_targe"
 		}
 		"132"
@@ -10601,6 +10602,7 @@
 			"name"	"The Eyelander"
 			"prefab"	"valve weapon_eyelander"
 			"first_sale_date"	"2010/09/29"
+			"holiday_restriction"	"halloween_or_fullmoon"
 			"static_attrs"
 			{
 				"min_viewmodel_offset"		"10 0 -11"				
