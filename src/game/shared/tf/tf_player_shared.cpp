@@ -29,7 +29,6 @@
 #include "tf_weapon_flamethrower.h"
 #include "econ_entity_creation.h"
 #include "tf_mapinfo.h"
-#include "tf_dropped_weapon.h"
 #include "tf_weapon_passtime_gun.h"
 #include <functional>
 
@@ -12854,64 +12853,6 @@ CTFWeaponBuilder *CTFPlayerSharedUtils::GetBuilderForObjectType( CTFPlayer *pTFP
 	}
 
 	return NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Can player pick up this weapon?
-//-----------------------------------------------------------------------------
-bool CTFPlayer::CanPickupDroppedWeapon( const CTFDroppedWeapon *pWeapon )
-{
-	if ( !pWeapon->GetItem()->IsValid() )
-		return false;
-
-	int iClass = GetPlayerClass()->GetClassIndex();
-	if ( iClass == TF_CLASS_SPY && ( m_Shared.InCond( TF_COND_DISGUISED ) || m_Shared.GetPercentInvisible() > 0 ) )
-		return false;
-
- 	if ( IsTaunting() )
- 		return false;
-
-	if ( !IsAlive() )
-		return false;
-
-	// There's a rare case that the player doesn't have an active weapon. This shouldn't happen. 
-	// If you hit this assert, figure out and fix WHY the player doesn't have a weapon.
-	Assert( GetActiveTFWeapon() );
-	if ( !GetActiveTFWeapon() || !GetActiveTFWeapon()->CanPickupOtherWeapon() )
-		return false;
-
-	int iItemSlot = pWeapon->GetItem()->GetStaticData()->GetLoadoutSlot( iClass );
-	CBaseEntity *pOwnedWeaponToDrop = GetEntityForLoadoutSlot( iItemSlot );
-
-	return pOwnedWeaponToDrop && pWeapon->GetItem()->GetStaticData()->CanBeUsedByClass( iClass ) && IsValidPickupWeaponSlot( iItemSlot );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns true if player is in range to pick up this weapon
-//-----------------------------------------------------------------------------
-CTFDroppedWeapon* CTFPlayer::GetDroppedWeaponInRange()
-{
-	// Check to see if a building we own is in front of us.
-	Vector vecForward;
-	AngleVectors( EyeAngles(), &vecForward );
-
-	trace_t tr;
-	UTIL_TraceLine( EyePosition(), EyePosition() + vecForward * TF_WEAPON_PICKUP_RANGE, MASK_SOLID | CONTENTS_DEBRIS, this, COLLISION_GROUP_NONE, &tr );
-
-	CTFDroppedWeapon *pDroppedWeapon = dynamic_cast< CTFDroppedWeapon * >( tr.m_pEnt );
-	if ( !pDroppedWeapon )
-		return NULL;
-
-	if ( !CanPickupDroppedWeapon( pDroppedWeapon ) )
-		return NULL;
-
-	// too far?
-	if ( EyePosition().DistToSqr( pDroppedWeapon->GetAbsOrigin() ) > Square( TF_WEAPON_PICKUP_RANGE ) )
-		return NULL;
-
-	return pDroppedWeapon;
 }
 
 

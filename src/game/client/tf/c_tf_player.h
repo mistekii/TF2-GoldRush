@@ -36,7 +36,6 @@ class C_TFWearable;
 class C_CaptureZone;
 class C_MerasmusBombEffect;
 class CTFReviveDialog;
-class C_TFDroppedWeapon;
 class C_PasstimePlayerReticle;
 class C_PasstimeAskForBallReticle;
 
@@ -892,9 +891,6 @@ public:
 	
 	void SetSecondaryLastWeapon( CBaseCombatWeapon *pSecondaryLastWeapon ) { m_hSecondaryLastWeapon = pSecondaryLastWeapon; }
 	CBaseCombatWeapon* GetSecondaryLastWeapon() const { return m_hSecondaryLastWeapon; }
-
-	bool CanPickupDroppedWeapon( const C_TFDroppedWeapon *pWeapon );
-	C_TFDroppedWeapon* GetDroppedWeaponInRange();
 
 	bool HasCampaignMedal( int iMedal );
 	CampaignMedalDisplayType_t GetCampaignMedalType( void );

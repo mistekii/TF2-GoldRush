@@ -33,7 +33,6 @@ class CCaptureZone;
 class CTFReviveMarker;
 class CWaveSpawnPopulator;
 class CTFTauntProp;
-class CTFDroppedWeapon;
 
 extern const float tf_afterburn_max_duration;
 
@@ -1447,9 +1446,6 @@ public:
 	void CreateDisguiseWeaponList( CTFPlayer *pDisguiseTarget );
 	void ClearDisguiseWeaponList();
 
-	bool CanPickupDroppedWeapon( const CTFDroppedWeapon *pWeapon );
-	CTFDroppedWeapon* GetDroppedWeaponInRange();
-
 	bool HasCampaignMedal( int iMedal );
 	void SetCampaignMedalActive( int iMedal ){ m_iCampaignMedals |= iMedal; }
 
@@ -1474,8 +1470,6 @@ public:
 	bool IsMaxHealthDraining( void ) { return m_nMaxHealthDrainBucket != 0.0; }
 
 private:
-	bool PickupWeaponFromOther( CTFDroppedWeapon *pDroppedWeapon );
-	bool TryToPickupDroppedWeapon();
 	float m_flSendPickupWeaponMessageTime;
 
 	void ModifyDamageInfo( CTakeDamageInfo *pInfo, const CBaseEntity *pTarget );

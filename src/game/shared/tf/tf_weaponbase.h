@@ -772,8 +772,6 @@ private:
 	CNetworkVar( int,	m_nKillComboClass );
 	CNetworkVar( int,	m_nKillComboCount );
 
-	friend class CTFDroppedWeapon;
-
 #ifdef CLIENT_DLL
 	bool m_bInitViewmodelOffset;
 	Vector m_vecViewmodelOffset;
