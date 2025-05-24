@@ -576,10 +576,6 @@ bool CEconEntity::ValidateEntityAttachedToPlayer( bool &bShouldRetry )
 	// We only need this in debug (for item_debug_validation) or PvE mode
 	bool bOwnerIsBot = pOwner->IsABot(); // THIS IS INSECURE -- DO NOT USE THIS OUTSIDE OF DEBUG OR PVE MODE
 
-	// Allow bots to use anything in PvE mode
-	if ( bOwnerIsBot && TFGameRules()->IsPVEModeActive() )
-		return true;
-
 	int iClass = pOwner->GetPlayerClass()->GetClassIndex();
 	int iTeam = pOwner->GetTeamNumber();
 

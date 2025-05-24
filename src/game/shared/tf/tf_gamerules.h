@@ -427,11 +427,6 @@ public:
 	// Client connection/disconnection
 	virtual bool ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );
 
-	virtual bool ShouldSkipAutoScramble( void ) OVERRIDE
-	{
-		return IsPVEModeActive();
-	}
-
 	bool			ShouldMakeChristmasAmmoPack( void );
 
 	void			UpdatePeriodicEvent( CTFPlayer *pPlayer, eEconPeriodicScoreEvents eEvent, uint32 nCount );
@@ -606,9 +601,6 @@ bool IsCreepWaveMode( void ) const;
 #endif // GAME_DLL
 
 	bool IsDefaultGameMode( void );		// The absence of arena, mvm, tournament mode, etc
-
-	bool IsPVEModeActive( void ) const;						// return true if we are playing a PvE mode
-	bool IsPVEModeControlled( CBaseEntity *who ) const;		// return true for PvE opponents (ie: enemy bot team)
 
 //=============================================================================
 // HPE_BEGIN:

@@ -263,24 +263,7 @@ CTFPlayer *CTFBotMedicHeal::SelectPatient( CTFBot *me, CTFPlayer *current )
 
 	CSelectPrimaryPatient choose( me, current );
 
-	if ( TFGameRules()->IsPVEModeActive() )
-	{
-		// assume perfect knowledge
-		CUtlVector< CTFPlayer * > livePlayerVector;
-		CollectPlayers( &livePlayerVector, me->GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-
-		for( int i=0; i<livePlayerVector.Count(); ++i )
-		{
-			CKnownEntity known( livePlayerVector[i] );
-			known.UpdatePosition();
-
-			choose.Inspect( known );
-		}
-	}
-	else
-	{
-		me->GetVisionInterface()->ForEachKnownEntity( choose );
-	}
+	me->GetVisionInterface()->ForEachKnownEntity( choose );
 
 	return choose.m_selected;
 }
@@ -495,20 +478,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 
 	if ( m_patient == NULL )
 	{
-		// no patients
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// no-one is left to heal - get the flag!
-			return ChangeTo( new CTFBotFetchFlag, "Everyone is gone! Going for the flag" );
-		}
-
-		if ( TFGameRules()->IsPVEModeActive() )
-		{
-			// don't retreat, just wait
-			return Continue();
-		}
-
 		// no patients - retreat to spawn to find another one
 		return SuspendFor( new CTFBotMedicRetreat, "Retreating to find another patient to heal" );
 	}

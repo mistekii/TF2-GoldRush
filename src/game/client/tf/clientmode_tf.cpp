@@ -663,9 +663,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 #endif // TF_RAID_MODE
 	else if ( FStrEq( "player_connect_client", eventname ) || FStrEq( "player_disconnect", eventname ) )
 	{
-		// ignore these
-		if ( TFGameRules() && TFGameRules()->IsPVEModeActive() && event->GetInt( "bot" ) != 0 )
-			return;
 	}
 	else if ( FStrEq( "client_disconnect", eventname ) )
 	{
@@ -679,8 +676,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "server_cvar", eventname ) )
 	{
-		if ( TFGameRules() && TFGameRules()->IsPVEModeActive() && !Q_strcmp( event->GetString("cvarname"), "tf_bot_count" ) )
-			return;
 	}
 	else if ( FStrEq( "player_buyback", eventname ) )
 	{

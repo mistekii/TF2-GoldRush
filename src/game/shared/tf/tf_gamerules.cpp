@@ -1827,47 +1827,6 @@ int	CTFGameRules::Damage_GetShouldNotBleed( void )
 	return 0;
 }
 
-//-----------------------------------------------------------------------------
-// Return true if we are playing a PvE mode
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsPVEModeActive( void ) const
-{
-#ifdef TF_RAID_MODE
-	if ( IsRaidMode() || IsBossBattleMode() )
-		return true;
-#endif
-
-	if ( IsMannVsMachineMode() )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Return true for PvE opponents (ie: enemy bot team)
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsPVEModeControlled( CBaseEntity *who ) const
-{
-	if ( !who )
-	{
-		return false;
-	}
-
-#ifdef GAME_DLL
-	if ( IsMannVsMachineMode() )
-	{
-		return who->GetTeamNumber() == TF_TEAM_PVE_INVADERS ? true : false;
-	}
-
-	if ( IsPVEModeActive() )
-	{
-		return who->GetTeamNumber() == TF_TEAM_RED ? true : false;
-	}
-#endif
-
-	return false;
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Return true if engineers can build quickly now
@@ -10527,10 +10486,6 @@ void CTFGameRules::CalcDominationAndRevenge( CTFPlayer *pAttacker, CBaseEntity *
 
 	PlayerStats_t *pStatsVictim = CTF_GameStats.FindPlayerStats( pVictim );
 
-	// no dominations/revenge in PvE mode
-	if ( IsPVEModeActive() )
-		return;
-
 	CEconEntity *pEconWeapon = dynamic_cast<CEconEntity *>( pWeapon );
 	
 	int nAttackerEntIdx = pAttacker->entindex();
@@ -13409,9 +13364,6 @@ void CTFGameRules::RoundRespawn( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldSwitchTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return false;
-
 	return BaseClass::ShouldSwitchTeams();
 }
 
@@ -13421,9 +13373,6 @@ bool CTFGameRules::ShouldSwitchTeams( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldScrambleTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return false;
-
 	if ( IsCompetitiveMode() )
 		return false;
 
@@ -14458,9 +14407,6 @@ int CTFGameRules::GetAssignedHumanTeam( void )
 //-----------------------------------------------------------------------------
 void CTFGameRules::HandleSwitchTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return;
-
 	m_bTeamsSwitched.Set( !m_bTeamsSwitched );
 
 	// switch this as well
@@ -15035,9 +14981,6 @@ bool CTFGameRules::IsBirthdayOrPyroVision( void ) const
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsHolidayActive( /*EHoliday*/ int eHoliday ) const
 {
-	//if ( IsPVEModeActive() )
-	//	return false;
-
 	return TF_IsHolidayActive( eHoliday );
 }
 
@@ -15641,7 +15584,7 @@ bool CTFGameRules::ShouldBalanceTeams( void )
 
 	bool bDisableBalancing = false;
 
-	if ( IsPVEModeActive() || bDisableBalancing )
+	if ( bDisableBalancing )
 		return false;
 
 	// don't balance the teams while players are in hell
@@ -16589,12 +16532,6 @@ bool CTFGameRules::HasPassedMinRespawnTime( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldRespawnQuickly( CBasePlayer *pPlayer )
 {
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	if ( IsPVEModeActive() && pTFPlayer && pTFPlayer->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS && pTFPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT )
-	{
-		return true;
-	}
-
 #if defined( _DEBUG ) || defined( STAGING_ONLY )
 	if ( mp_developer.GetBool() )
 		return true;
@@ -16614,14 +16551,6 @@ struct convar_tags_t
 	const char *pszTag;
 	BIgnoreConvarChangeFunc ignoreConvarFunc;
 };
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static bool BIgnoreConvarChangeInPVEMode(void)
-{
-	return TFGameRules() && TFGameRules()->IsPVEModeActive();
-}
 
 // The list of convars that automatically turn on tags when they're changed.
 // Convars in this list need to have the FCVAR_NOTIFY flag set on them, so the
@@ -16644,7 +16573,7 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_beta_content", "beta", NULL },
 	{ "tf_damage_disablespread", "dmgspread", NULL },
 	{ "mp_highlander", "highlander", NULL },
-	{ "tf_bot_count", "bots", &BIgnoreConvarChangeInPVEMode },
+	{ "tf_bot_count", "bots" },
 	{ "tf_pve_mode", "pve" },
 	{ "sv_registration_successful", "_registered", NULL },
 	{ "tf_server_identity_disable_quickplay", "noquickplay", NULL },
@@ -18807,7 +18736,6 @@ bool	ScriptPlayerReadyStatus_HaveMinPlayersToEnable()			{ return TFGameRules()->
 bool	ScriptPlayerReadyStatus_ArePlayersOnTeamReady(int iTeam)	{ return TFGameRules()->PlayerReadyStatus_ArePlayersOnTeamReady( iTeam ); }
 void	ScriptPlayerReadyStatus_ResetState()						{ TFGameRules()->PlayerReadyStatus_ResetState(); }
 bool	ScriptIsDefaultGameMode()									{ return TFGameRules()->IsDefaultGameMode(); }
-bool	ScriptIsPVEModeActive()										{ return TFGameRules()->IsPVEModeActive(); }
 bool	ScriptAllowThirdPersonCamera()								{ return TFGameRules()->AllowThirdPersonCamera(); }
 void	ScriptSetGravityMultiplier( float flMultiplier )			{ return TFGameRules()->SetGravityMultiplier( flMultiplier ); }
 float	ScriptGetGravityMultiplier()								{ return TFGameRules()->GetGravityMultiplier(); }
@@ -18857,7 +18785,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ArePlayersOnTeamReady,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ResetState,				"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsDefaultGameMode,						"The absence of arena, mvm, tournament mode, etc" );
-	TF_GAMERULES_SCRIPT_FUNC( IsPVEModeActive,							"" );
 	TF_GAMERULES_SCRIPT_FUNC( AllowThirdPersonCamera,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetGravityMultiplier,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetGravityMultiplier,						"" );

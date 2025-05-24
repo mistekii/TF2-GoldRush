@@ -1389,17 +1389,6 @@ void CTFWeaponBase::CalcIsAttackCritical( void)
 
 	m_bCurrentCritIsRandom = false;
 
-#if !defined( CLIENT_DLL )
-	if ( TFGameRules()->IsPVEModeActive() && TFGameRules()->IsPVEModeControlled( pPlayer ) )
-	{
-		// no crits for enemies in PvE
-
-		// Support critboosted even in no crit mode
-		m_bCurrentAttackIsCrit = CalcIsAttackCriticalHelperNoCrits();
-		return;
-	}
-#endif
-
 	if ( (TFGameRules()->State_Get() == GR_STATE_TEAM_WIN) && (TFGameRules()->GetWinningTeam() == pPlayer->GetTeamNumber()) )
 	{
 		m_bCurrentAttackIsCrit = true;
@@ -4185,30 +4174,6 @@ bool CTFWeaponBase::CanAttack()
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::CanFireCriticalShot( bool bIsHeadshot, CBaseEntity *pTarget /*= NULL*/ )
 {
-#ifdef GAME_DLL
-	CTFPlayer *player = GetTFPlayerOwner();
-
-	if ( TFGameRules()->IsPVEModeControlled( player ) )
-	{
-		// scenario bots cant crit (unless they always do)
-		CTFBot *bot = ToTFBot( player );
-		return ( bot && bot->HasAttribute( CTFBot::ALWAYS_CRIT ) );
-	}
-
-#ifdef TF_CREEP_MODE
-	if ( TFGameRules()->IsCreepWaveMode() && player )
-	{
-		CTFBot *bot = ToTFBot( player );
-
-		if ( bot && bot->HasAttribute( CTFBot::IS_NPC ) )
-		{
-			// creeps can't crit
-			return false;
-		}
-	}
-#endif // TF_CREEP_MODE
-#endif
-
 	return true;
 }
 

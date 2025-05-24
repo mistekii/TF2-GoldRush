@@ -404,17 +404,6 @@ bool CTFProjectile_Arrow::StrikeTarget( mstudiobbox_t *pBox, CBaseEntity *pOther
 				nDamageType |= DMG_CRITICAL;
 			}
 
-#ifdef GAME_DLL
-			if ( TFGameRules()->IsPVEModeControlled( pAttacker ) )
-			{
-				// scenario bots cant crit (unless they always do)
-				CTFBot *bot = ToTFBot( pAttacker );
-				if ( !bot || !bot->HasAttribute( CTFBot::ALWAYS_CRIT ) )
-				{
-					nDamageType &= ~DMG_CRITICAL;
-				}
-			}
-#endif
 			// Damage
 			if ( bApplyEffect )
 			{

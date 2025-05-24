@@ -5410,14 +5410,13 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 		}
 
 		DuelMiniGame_NotifyPlayerChangedTeam( this, iTeam, true );
-		bool bSilent = TFGameRules() && TFGameRules()->IsPVEModeActive() && IsBot();
 
 #ifndef _DEBUG
 		TFGameRules()->SetPlayerReadyState( entindex(), false );
 		TFGameRules()->SetTeamReadyState( false, GetTeamNumber() );
 #endif // _DEBUG
 
-		ChangeTeam( iTeam, bAutoTeamed, bSilent );
+		ChangeTeam( iTeam, bAutoTeamed, false );
 
 		if ( tf_arena_force_class.GetBool() == false )
 		{

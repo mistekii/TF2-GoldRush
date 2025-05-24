@@ -19,18 +19,10 @@
 
 #include "raid/tf_raid_logic.h"
 
-// this was useful when engineers build at their normal (slow) rate to make sure initial sentries get built in time
-ConVar tf_raid_engineer_infinte_metal( "tf_raid_engineer_infinte_metal", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY );
-
 
 //---------------------------------------------------------------------------------------------
 Action< CTFBot > *CTFBotEngineerBuild::InitialContainedAction( CTFBot *me )
 {
-	if ( TFGameRules()->IsPVEModeActive() )
-	{
-		return new CTFBotEngineerMoveToBuild;
-	}
-
 	return new CTFBotEngineerBuildTeleportEntrance;
 }
 
@@ -45,12 +37,6 @@ ActionResult< CTFBot >	CTFBotEngineerBuild::OnStart( CTFBot *me, Action< CTFBot 
 //---------------------------------------------------------------------------------------------
 ActionResult< CTFBot >	CTFBotEngineerBuild::Update( CTFBot *me, float interval )
 {
-	if ( TFGameRules()->IsPVEModeActive() && tf_raid_engineer_infinte_metal.GetBool() )
-	{
-		// infinite ammo
-		me->GiveAmmo( 1000, TF_AMMO_METAL, true );
-	}
-
 	return Continue();
 }
 

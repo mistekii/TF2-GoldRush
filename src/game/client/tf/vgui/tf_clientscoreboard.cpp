@@ -194,7 +194,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_iImageStreakDead = 0;
 	m_iTextureCamera = -1;
 
-	m_bIsPVEMode = false;
 //	m_bDisplayLevel = false;
 	m_bMouseActivated = true;
 
@@ -341,13 +340,6 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	if ( m_pImageList == NULL )
 	{
 		InvalidateLayout( true, true );
-	}
-
-	bool bIsPVEMode = TFGameRules() && TFGameRules()->IsPVEModeActive();
-	if ( m_bIsPVEMode != bIsPVEMode )
-	{
-		m_bIsPVEMode = bIsPVEMode;
-		InvalidateLayout( true, true );		
 	}
 
 	// Don't show in commentary mode
@@ -799,14 +791,11 @@ void CTFClientScoreBoardDialog::InitializeInputScheme( void )
 //-----------------------------------------------------------------------------
 void CTFClientScoreBoardDialog::Reset()
 {
-	if ( !m_bIsPVEMode )
-	{
-		InitPlayerList( m_pPlayerListBlue );
-		InitPlayerList( m_pPlayerListRed );
-	}
+	InitPlayerList( m_pPlayerListBlue );
+	InitPlayerList( m_pPlayerListRed );
 
- 	m_pPlayerListBlue->SetVisible( !m_bIsPVEMode );
- 	m_pPlayerListRed->SetVisible( !m_bIsPVEMode );
+ 	m_pPlayerListBlue->SetVisible( true );
+ 	m_pPlayerListRed->SetVisible( true );
 }
 
 //-----------------------------------------------------------------------------

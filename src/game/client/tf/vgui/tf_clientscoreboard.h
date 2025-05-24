@@ -141,7 +141,6 @@ private:
 
 	int							m_iTextureCamera;
 
-	bool						m_bIsPVEMode;
 //	bool						m_bDisplayLevel;
 	bool						m_bMouseActivated;
 	vgui::HFont					m_hScoreFontDefault;

@@ -2216,10 +2216,7 @@ void CCaptureFlag::ManageTrailEffects( void )
 				{
 					if ( m_pPaperTrailEffect == NULL )
 					{
-						if ( !( TFGameRules() && TFGameRules()->IsPVEModeActive() ) )
-						{
-							m_pPaperTrailEffect = ParticleProp()->Create( GetPaperEffect(), PATTACH_ABSORIGIN_FOLLOW );
-						}
+						m_pPaperTrailEffect = ParticleProp()->Create( GetPaperEffect(), PATTACH_ABSORIGIN_FOLLOW );
 					}
 				}
 				else
