@@ -9007,11 +9007,6 @@
 					"attribute_class"	"mult_cloak_meter_regen_rate"
 					"value"	"1.5"
 				}
-				"mod_cloak_no_regen_from_items"
-				{
-					"attribute_class"	"mod_cloak_no_regen_from_items"
-					"value"	"1"
-				}
 				"kill eater score type"
 				{
 					"attribute_class"	"kill_eater_score_type"
@@ -9071,15 +9066,10 @@
 					"attribute_class"	"mult_cloak_meter_regen_rate"
 					"value"	"2.0"
 				}
-				"NoCloakWhenCloaked"
+				"mod_cloak_no_regen_from_items"
 				{
-					"attribute_class"	"NoCloakWhenCloaked"
+					"attribute_class"	"mod_cloak_no_regen_from_items"
 					"value"	"1"
-				}
-				"ReducedCloakFromAmmo"
-				{
-					"attribute_class"	"ReducedCloakFromAmmo"
-					"value"	"0.65"
 				}
 			}
 			"mouse_pressed_sound"	"ui/item_watch_pickup.wav"
