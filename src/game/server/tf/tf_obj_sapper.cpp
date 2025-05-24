@@ -692,16 +692,6 @@ void CObjectSapper::ApplyRoboSapper( CTFPlayer *pTarget, float flDuration, int n
 				iCount++;
 		}
 
-		// ACHIEVEMENT_TF_MVM_SPY_SAP_ROBOTS
-		if ( iCount >= 10 )
-		{
-			CTFPlayer *pBuilder = ToTFPlayer( GetBuilder() );
-			if ( pBuilder && TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				pBuilder->AwardAchievement( ACHIEVEMENT_TF_MVM_SPY_SAP_ROBOTS );
-			}
-		}
-
 		Vector vecOrigin = GetAbsOrigin();
 		CPVSFilter filter( vecOrigin );
 		TE_TFParticleEffect( filter, 0.f, "Explosion_ShockWave_01", vecOrigin, vec3_angle );

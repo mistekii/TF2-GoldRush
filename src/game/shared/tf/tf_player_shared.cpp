@@ -7933,11 +7933,7 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 							if ( m_DamageEvents[iDamage].nDamageType == info.GetDamageType() &&
 								m_DamageEvents[iDamage].nDamageType == g_aWeaponDamageTypes[TF_WEAPON_PIPEBOMBLAUNCHER] )
 							{
-								if ( TFGameRules()->IsMannVsMachineMode() && m_DamageEvents[iDamage].nKills >= 10 )
-								{
-									m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_DEMO_GROUP_KILL );
-								}
-								else if ( m_DamageEvents[iDamage].nKills >= 3 )
+								if ( m_DamageEvents[iDamage].nKills >= 3 )
 								{
 									m_pOuter->AwardAchievement( ACHIEVEMENT_TF_DEMOMAN_KILL3_WITH_DETONATION );
 								}
@@ -7974,25 +7970,6 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 	m_DamageEvents[iIndex].nKills = bKill;
 
 //	Msg( "Damage Event: D:%f, T:%f\n", m_DamageEvents[iIndex].flDamage, m_DamageEvents[iIndex].flTime );
-
-	if ( TFGameRules()->IsMannVsMachineMode() && m_pOuter->IsPlayerClass( TF_CLASS_SNIPER ) )
-	{
-		int nKillCount = 0;
-		int nDamageCount = m_DamageEvents.Count();
-		for ( int iDamage = 0; iDamage < nDamageCount; ++iDamage )
-		{
-			// Did it happen very recently?
-			if ( ( gpGlobals->curtime - m_DamageEvents[iDamage].flTime ) < CRIT_DAMAGE_TIME )
-			{
-				nKillCount += m_DamageEvents[iDamage].nKills;
-			}
-		}
-
-		if ( nKillCount >= 4 )
-		{
-			m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_SNIPER_KILL_GROUP );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -11965,18 +11942,6 @@ void CTFPlayerShared::PulseRageBuff( ERageBuffSlot eBuffSlot )
 	if ( nBuffedFriends >= 5 )
 	{
 		g_AchievementMgrTF.OnAchievementEvent( ACHIEVEMENT_TF_SOLDIER_BUFF_FRIENDS );
-	}
-#else
-	// ACHIEVEMENT_TF_MVM_SOLDIER_BUFF_TEAM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( ( m_pOuter->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) && m_pOuter->IsPlayerClass( TF_CLASS_SOLDIER ) )
-		{
-			if ( nBuffedPlayers >= 5 )
-			{
-				m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_SOLDIER_BUFF_TEAM );
-			}
-		}
 	}
 #endif
 }

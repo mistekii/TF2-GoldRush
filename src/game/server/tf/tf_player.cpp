@@ -18020,49 +18020,6 @@ void CTFPlayer::InputRoundSpawn( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CTFPlayer::Internal_HandleMapEvent( inputdata_t &inputdata )
 {
-	if ( FStrEq( "mvm_mannhattan", STRING( gpGlobals->mapname ) ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			{
-				if ( FStrEq( inputdata.value.String(), "banana" ) )
-				{
-					CTFPlayer *pRecentDamager = TFGameRules()->GetRecentDamager( this, 0, 5.0 );
-					if ( pRecentDamager && ( pRecentDamager->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) )
-					{
-						pRecentDamager->AwardAchievement( ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_MYSTERY );
-					}
-				}
-				else if ( FStrEq( inputdata.value.String(), "pit" ) )
-				{
-					IGameEvent *event = gameeventmanager->CreateEvent( "mvm_mannhattan_pit" );
-					if ( event )
-					{
-						gameeventmanager->FireEvent( event );
-					}
-				}
-			}
-		}
-	}
-	else if ( FStrEq( "mvm_rottenburg", STRING( gpGlobals->mapname ) ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			{
-				if ( FStrEq( inputdata.value.String(), "pit" ) )
-				{
-					CTFPlayer *pRecentDamager = TFGameRules()->GetRecentDamager( this, 0, 5.0 );
-					if ( pRecentDamager && ( pRecentDamager->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) )
-					{
-						pRecentDamager->AwardAchievement( ACHIEVEMENT_TF_MVM_MAPS_ROTTENBURG_PIT_GRIND );
-					}
-				}
-			}
-		}
-	}
-
 	BaseClass::Internal_HandleMapEvent( inputdata );
 }
 
