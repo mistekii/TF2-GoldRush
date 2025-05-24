@@ -690,21 +690,6 @@ bool CTFHudDeathNotice::ShouldShowDeathNotice( IGameEvent *event )
 		}
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && ( event->GetInt( "death_flags" ) & TF_DEATH_MINIBOSS ) == 0 )
-	{
-		int iLocalPlayerIndex = GetLocalPlayerIndex();
-
-		if ( iLocalPlayerIndex != engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) && 
-			 iLocalPlayerIndex != engine->GetPlayerForUserID( event->GetInt( "assister" ) ) )
-		{
-			C_TFPlayer* pVictim = ToTFPlayer( UTIL_PlayerByIndex( engine->GetPlayerForUserID( event->GetInt( "userid" ) ) ) );
-			if ( pVictim && pVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			{
-				return false;
-			}
-		}
-	}
-
 	return true;
 }
 

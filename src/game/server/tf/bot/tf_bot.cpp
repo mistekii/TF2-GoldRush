@@ -4535,60 +4535,6 @@ float CTFBot::GetDesiredPathLookAheadRange( void ) const
 void CTFBot::StartIdleSound( void )
 {
 	StopIdleSound();
-
-	if ( TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
-		return;
-
-	// SHIELD YOUR EYES MIKEB!!!
-	if ( IsMiniBoss() )
-	{
-		const char *pszSoundName = NULL;
-
-		int iClass = GetPlayerClass()->GetClassIndex();
-		switch ( iClass )
-		{
-		case TF_CLASS_HEAVYWEAPONS:
-			{
-				pszSoundName = "MVM.GiantHeavyLoop";
-				break;
-			}
-		case TF_CLASS_SOLDIER:
-			{
-				pszSoundName = "MVM.GiantSoldierLoop";
-				break;
-			}
-		case TF_CLASS_DEMOMAN:
-			{
-				if ( m_mission == MISSION_DESTROY_SENTRIES )
-				{
-					pszSoundName = "MVM.SentryBusterLoop";
-				}
-				else
-				{
-					pszSoundName = "MVM.GiantDemomanLoop";
-				}
-				break;
-			}
-		case TF_CLASS_SCOUT:
-			{
-				pszSoundName = "MVM.GiantScoutLoop";
-				break;
-			}
-		case TF_CLASS_PYRO:
-			{
-				pszSoundName = "MVM.GiantPyroLoop";
-				break;
-			}
-		}
-
-		if ( pszSoundName )
-		{
-			CReliableBroadcastRecipientFilter filter;
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			m_pIdleSound = controller.SoundCreate( filter, entindex(), pszSoundName );
-			controller.Play( m_pIdleSound, 1.0, 100 );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------------------

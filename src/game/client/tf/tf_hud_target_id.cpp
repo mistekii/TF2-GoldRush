@@ -341,16 +341,12 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 			bool bSpectator = pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR;
 			int iSeeEnemyHealth = 0;
 			bool bStealthed = false;
-			bool bHealthBarVisible = ShouldHealthBarBeVisible( pEnt, pLocalTFPlayer );
-			bool bShow = bHealthBarVisible;
 
 			if ( pPlayer )
 			{
 				if ( pPlayer->m_Shared.IsStealthed() )
 				{
 					bStealthed = true;
-					bHealthBarVisible = false;
-					bShow = false;
 				}
 
 				if ( !bStealthed )
@@ -359,25 +355,6 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 				}
 
 				bool bMaintainInFOV = !pLocalTFPlayer->InSameTeam( pEnt );
-
-				if ( bHealthBarVisible )
-				{
-					bool bEnemyPlayer = pPlayer->GetTeamNumber() != pLocalTFPlayer->GetTeamNumber();
-					bool bEnemyMiniBoss = pPlayer->IsMiniBoss() && bEnemyPlayer;
-					bShow = bEnemyMiniBoss;
-
-					if ( bShow )
-					{
-						bMaintainInFOV = false;
-
-						// Minibosses keep the health indicator up within a small FOV until a different valid target is selected
-						// The FOV needs to grow exponentially when a target is getting near
-						if ( bEnemyMiniBoss )
-						{
-							bMaintainInFOV = true;
-						}
-					}
-				}
 
 				if ( bMaintainInFOV )
 				{

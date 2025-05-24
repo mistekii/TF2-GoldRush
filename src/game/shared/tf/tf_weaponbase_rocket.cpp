@@ -522,7 +522,7 @@ void CTFBaseRocket::CheckForStunOnImpact( CTFPlayer* pTarget )
 		return;
 
 	// Stun
-	float flStunAmount = pTarget->IsMiniBoss() ? 0.85f : 1.f;
+	float flStunAmount = 1.f;
 	float flStunTime = RemapValClamped( iRocketSpecialist, 1.f, 4.f, 0.5f, 0.75f );
 
 	pTarget->SetAbsVelocity( vec3_origin );

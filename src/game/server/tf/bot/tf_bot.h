@@ -255,12 +255,11 @@ public:
 		PRIORITIZE_DEFENSE			= 1<<12,				// bot prioritizes defending when possible
 		ALWAYS_FIRE_WEAPON			= 1<<13,				// constantly fire our weapon
 		TELEPORT_TO_HINT			= 1<<14,				// bot will teleport to hint target instead of walking out from the spawn point
-		MINIBOSS					= 1<<15,				// is miniboss?
-		USE_BOSS_HEALTH_BAR			= 1<<16,				// should I use boss health bar?
-		IGNORE_FLAG					= 1<<17,				// don't pick up flag/bomb
-		AUTO_JUMP					= 1<<18,				// auto jump
-		AIR_CHARGE_ONLY				= 1<<19,				// demo knight only charge in the air
 		PROJECTILE_SHIELD			= 1<<20,				// medic projectile shield
+		USE_BOSS_HEALTH_BAR			= 1<<15,				// should I use boss health bar?
+		IGNORE_FLAG					= 1<<16,				// don't pick up flag/bomb
+		AUTO_JUMP					= 1<<17,				// auto jump
+		AIR_CHARGE_ONLY				= 1<<18,				// demo knight only charge in the air
 	};
 	void SetAttribute( int attributeFlag );
 	void ClearAttribute( int attributeFlag );
@@ -974,14 +973,6 @@ public:
 
 			// add a random penalty unique to this character so they choose different routes to the same place
 			float preference = 1.0f;
-
-			if ( m_routeType == DEFAULT_ROUTE && !m_me->IsMiniBoss() ) 
-			{
-				// this term causes the same bot to choose different routes over time,
-				// but keep the same route for a period in case of repaths
-				int timeMod = (int)( gpGlobals->curtime / 10.0f ) + 1;
-				preference = 1.0f + 50.0f * ( 1.0f + FastCos( (float)( m_me->GetEntity()->entindex() * area->GetID() * timeMod ) ) );
-			}
 
 			if ( m_routeType == SAFEST_ROUTE )
 			{

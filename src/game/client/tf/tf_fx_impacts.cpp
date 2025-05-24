@@ -49,10 +49,6 @@ void ImpactCallback( const CEffectData &data )
 
 	if ( bImpact )
 	{
-		// We create lots of impact sounds, especially from Heavy's firing miniguns. To cut down on the number
-		// of active sounds, we precull impact sounds that are too far from the current viewpoint. 
-		bool bIsMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
 		int nApparentTeam = pEntity->GetTeamNumber();
 
 		C_TFPlayer *pPlayer = ToTFPlayer( pEntity );
@@ -61,18 +57,7 @@ void ImpactCallback( const CEffectData &data )
 			nApparentTeam = pPlayer->m_Shared.GetDisguiseTeam();
 		}
 
-		bool bPlaySound = true;
-		bool bIsRobotImpact = false;
-		
-		if ( bIsMVM && pPlayer && nApparentTeam == TF_TEAM_PVE_INVADERS )
-		{
-			bPlaySound = true;
-			bIsRobotImpact = true;
-		}
-		else
-		{
-			bPlaySound = (MainViewOrigin() - vecOrigin).LengthSqr() < (1024*1024);
-		}
+		bool bPlaySound = (MainViewOrigin() - vecOrigin).LengthSqr() < (1024*1024);
 
 		// If we hit, perform our custom effects and play the sound
 		if ( Impact( vecOrigin, vecStart, iMaterial, iDamageType, iHitbox, pEntity, tr ) )
@@ -90,32 +75,7 @@ void ImpactCallback( const CEffectData &data )
 
 		if ( bPlaySound )
 		{
-			// every other one of the mvm impacts are emitted from the world to allow for ~2 impacts playing at a time
-			if ( bIsRobotImpact )
-			{
-				//pEntity->EmitSound( "MVM_Robot.BulletImpact" );
-				CLocalPlayerFilter filter;
-				if ( g_MvMRobotImpactCount % 4 == 0 )
-				{
-					if( pPlayer->IsMiniBoss() )
-					{
-						C_BaseEntity::EmitSound( filter, pEntity->entindex(), "MVM_Giant.BulletImpact", &vecOrigin );
-					}
-					else
-					{
-						C_BaseEntity::EmitSound( filter, pEntity->entindex(), "MVM_Robot.BulletImpact", &vecOrigin );
-					}
-				}
-				else
-				{
-					C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, "MVM_Robot.BulletImpact", &vecOrigin );
-				}
-				g_MvMRobotImpactCount++;
-			}
-			else
-			{
-				PlayImpactSound( pEntity, tr, vecOrigin, nSurfaceProp );
-			}
+			PlayImpactSound( pEntity, tr, vecOrigin, nSurfaceProp );
 		}
 	}
 }

@@ -1046,7 +1046,7 @@ void CTFSniperRifle::ExplosiveHeadShot( CTFPlayer *pAttacker, CTFPlayer *pVictim
 
 	// Stun the source
 	float flStunDuration = 1.f + ( ( (float)iExplosiveShot - 1.f ) * 0.5f );
-	float flStunAmt = pVictim->IsMiniBoss() ? 0.5f : RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
+	float flStunAmt = RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
 	pVictim->m_Shared.StunPlayer( flStunDuration, flStunAmt, TF_STUN_MOVEMENT, pAttacker );
 
 	// Generate an explosion and look for nearby bots
@@ -1083,7 +1083,7 @@ void CTFSniperRifle::ExplosiveHeadShot( CTFPlayer *pAttacker, CTFPlayer *pVictim
 			continue;
 
 		// Stun			
-		flStunAmt = pTFPlayer->IsMiniBoss() ? 0.5f : RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
+		flStunAmt = RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
 		pTFPlayer->m_Shared.StunPlayer( flStunDuration, flStunAmt, TF_STUN_MOVEMENT, pAttacker );
 
 		// DoT

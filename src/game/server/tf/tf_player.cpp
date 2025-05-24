@@ -527,8 +527,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( SetNextChangeTeamTime, "Set next change team time." )
 	DEFINE_SCRIPTFUNC( DropFlag, "Force player to drop the flag." )
 	DEFINE_SCRIPTFUNC( ForceChangeTeam, "Force player to change their team." )
-	DEFINE_SCRIPTFUNC( IsMiniBoss, "Is this player an MvM mini-boss?" )
-	DEFINE_SCRIPTFUNC( SetIsMiniBoss, "Make this player an MvM mini-boss." )
 	DEFINE_SCRIPTFUNC( CanJump, "Can the player jump?" )
 	DEFINE_SCRIPTFUNC( CanDuck, "Can the player duck?" )
 	DEFINE_SCRIPTFUNC( CanPlayerMove, "Can the player move?" )
@@ -730,7 +728,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropExclude( "DT_BaseFlex", "m_viewtarget" ),
 
 	SendPropBool(SENDINFO(m_bSaveMeParity)),
-	SendPropBool(SENDINFO(m_bIsMiniBoss)),
 	SendPropBool(SENDINFO(m_bIsABot)),
 	SendPropInt( SENDINFO(m_nBotSkill), 3, SPROP_UNSIGNED ),
 
@@ -930,8 +927,6 @@ CTFPlayer::CTFPlayer()
 	m_bIsSapping = false;
 	m_iSappingEvent = TF_SAPEVENT_NONE;
 	m_flSapStartTime = 0.00;
-
-	m_bIsMiniBoss = false;
 
 	m_bUseBossHealthBar = false;
 
@@ -3125,7 +3120,6 @@ void CTFPlayer::Spawn()
 
 	m_playerMovementStuckTimer.Invalidate();
 
-	m_bIsMiniBoss = false;
 	m_bUseBossHealthBar = false;
 
 	m_bUsingActionSlot = false;
@@ -7556,42 +7550,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		return 0;
 	}
 
-	if ( IsBot() )
-	{
-		// Don't let Sentry Busters die until they've done their spin-up
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CTFBot *bot = ToTFBot( this );
-			if ( bot )
-			{
-				if ( bot->HasMission( CTFBot::MISSION_DESTROY_SENTRIES ) )
-				{
-					if ( ( m_iHealth - info.GetDamage() ) <= 0 )
-					{
-						m_iHealth = 1;
-						return 0;
-					}
-				}
-
-				// Sentry Busters hurt teammates when they explode.
-				// Force damage value when the victim is a giant.
-				if ( pTFAttacker && pTFAttacker->IsBot() )
-				{
-					CTFBot *pTFAttackerBot = ToTFBot( pTFAttacker );
-					if ( pTFAttackerBot && 
-						 ( pTFAttackerBot != this ) && 
-						 pTFAttackerBot->GetPrevMission() == CTFBot::MISSION_DESTROY_SENTRIES &&
-						 info.IsForceFriendlyFire() && 
-						 InSameTeam( pTFAttackerBot ) &&
-						 IsMiniBoss() )
-					{
-						info.SetDamage( 600.f );
-					}
-				}
-			}
-		}
-	}
-
 	// Halloween 2011
 	if ( IsInPurgatory() )
 	{
@@ -9108,22 +9066,8 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 			vDamagePos = WorldSpaceCenter();
 		}
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			if ( ( IsMiniBoss() && static_cast< float >( GetHealth() ) / GetMaxHealth() > 0.3f ) || realDamage < 50 )
-			{
-				DispatchParticleEffect( "bot_impact_light", GetAbsOrigin(), vec3_angle );
-			}
-			else
-			{
-				DispatchParticleEffect( "bot_impact_heavy", GetAbsOrigin(), vec3_angle );
-			}
-		}
-		else
-		{
-			CPVSFilter filter( vDamagePos );
-			TE_TFBlood( filter, 0.0, vDamagePos, -vecDir, entindex() );
-		}
+		CPVSFilter filter( vDamagePos );
+		TE_TFBlood( filter, 0.0, vDamagePos, -vecDir, entindex() );
 	}
 
 	if ( m_bIsTargetDummy )
@@ -12878,7 +12822,7 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
 	{
-		nDeathSoundOffset = IsMiniBoss() ? DEATH_SOUND_GIANT_MVM_FIRST : DEATH_SOUND_MVM_FIRST;
+		nDeathSoundOffset = DEATH_SOUND_MVM_FIRST;
 	}
 	
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
@@ -12911,23 +12855,6 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 	{
 		EmitSound( pData->GetDeathSound( DEATH_SOUND_GENERIC + nDeathSoundOffset ) );
 	}
-
-	// Play an additional sound when we're in MvM and have a boss death
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsMiniBoss() )
-	{
-		switch ( GetPlayerClass()->GetClassIndex() )
-		{
-			case TF_CLASS_HEAVYWEAPONS:
-			{
-				EmitSound( "MVM.GiantHeavyExplodes" );
-				break;
-			}
-			default:
-			{
-				EmitSound( "MVM.GiantCommonExplodes" );
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -12935,21 +12862,7 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 //-----------------------------------------------------------------------------
 const char* CTFPlayer::GetSceneSoundToken( void )
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		if ( IsMiniBoss() )
-		{
-			return "M_MVM_";
-		}
-		else
-		{
-			return "MVM_";
-		}
-	}
-	else
-	{
-		return "";
-	}
+	return "";
 }
 
 //-----------------------------------------------------------------------------
@@ -15957,11 +15870,7 @@ void CTFPlayer::DoTauntAttack( void )
 				case TAUNTATK_SNIPER_ARROW_STAB_IMPALE:
 					if ( pVictim )
 					{
-						// don't stun giants
-						if ( !pVictim->IsMiniBoss() )
-						{
-							pVictim->m_Shared.StunPlayer( 3.0f, 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS, this );
-						}
+						pVictim->m_Shared.StunPlayer( 3.0f, 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS, this );
 					}
 					break;
 
@@ -16329,11 +16238,7 @@ void CTFPlayer::DoTauntAttack( void )
 				{
 					if ( pVictim )
 					{
-						// don't stun giants
-						if ( !pVictim->IsMiniBoss() )
-						{
-							pVictim->m_Shared.StunPlayer( 1.5f, 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS, this );
-						}
+						pVictim->m_Shared.StunPlayer( 1.5f, 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS, this );
 						pVictim->TakeDamage( CTakeDamageInfo( this, this, GetActiveTFWeapon(), vecForward, WorldSpaceCenter(), 1, DMG_BULLET | DMG_PREVENT_PHYSICS_FORCE, TF_DMG_CUSTOM_TAUNTATK_UBERSLICE ) );
 					}
 				}

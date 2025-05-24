@@ -11488,11 +11488,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			iDeathFlags |= TF_DEATH_PURGATORY;
 		}
 
-		if ( pTFPlayerVictim->IsMiniBoss() )
-		{
-			iDeathFlags |= TF_DEATH_MINIBOSS;
-		}
-
 		// Australium Guns get a Gold Background
 		IHasAttributes *pAttribInterface = GetAttribInterface( info.GetWeapon() );
 		if ( pAttribInterface )

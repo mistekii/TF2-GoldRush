@@ -310,10 +310,6 @@ public:
 	int					GetMaxHealthForBuffing();
 
 	//-----------------------------------------------------------------------------------------------------
-	// Return true if we are a "mini boss" in Mann Vs Machine mode
-	bool				IsMiniBoss( void ) const;
-	void				SetIsMiniBoss( bool isMiniBoss ) { m_bIsMiniBoss = isMiniBoss; }
-
 	bool				CanAttack( int iCanAttackFlags = 0 );
 	bool				CanJump() const;
 	bool				CanDuck() const;
@@ -1262,8 +1258,6 @@ private:
 	bool				m_bIsMissionEnemy;
 	bool				m_bIsSupportEnemy;
 	bool				m_bIsLimitedSupportEnemy;
-
-	CNetworkVar( bool, m_bIsMiniBoss );
 
 	// Bounty Mode
 	CNetworkVar( uint32, m_nExperienceLevel );

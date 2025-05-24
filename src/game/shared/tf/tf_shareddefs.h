@@ -1647,8 +1647,7 @@ enum testitem_botanims_t
 #define TF_DEATH_INTERRUPTED			0x0040	// interrupted a player doing an important game event (like capping or carrying flag)
 #define TF_DEATH_GIBBED					0x0080	// player was gibbed
 #define TF_DEATH_PURGATORY				0x0100	// player died while in purgatory
-#define TF_DEATH_MINIBOSS				0x0200	// player killed was a miniboss
-#define TF_DEATH_AUSTRALIUM				0x0400	// player killed by a Australium Weapon
+#define TF_DEATH_AUSTRALIUM				0x0200	// player killed by a Australium Weapon
 
 #define MAX_DECAPITATIONS		4
 
@@ -1731,7 +1730,6 @@ enum mvm_announcement_t
 #define MVM_CLASS_FLAG_NORMAL			(1<<0)
 #define MVM_CLASS_FLAG_SUPPORT			(1<<1)
 #define MVM_CLASS_FLAG_MISSION			(1<<2)
-#define MVM_CLASS_FLAG_MINIBOSS			(1<<3)
 #define MVM_CLASS_FLAG_ALWAYSCRIT		(1<<4)
 #define MVM_CLASS_FLAG_SUPPORT_LIMITED	(1<<5)
 

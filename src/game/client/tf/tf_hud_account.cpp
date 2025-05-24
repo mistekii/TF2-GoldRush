@@ -345,15 +345,7 @@ public:
 						}
 						else if ( iAmount >= 100 )
 						{
-							if ( pEventPlayer->IsMiniBoss() )
-							{
-								pEffectName = bShouldSpawnRedParticle ? "healthgained_red_giant" : "healthgained_blu_giant";
-
-							}
-							else
-							{
-								pEffectName = bShouldSpawnRedParticle ? "healthgained_red_large" : "healthgained_blu_large";
-							}
+							pEffectName = bShouldSpawnRedParticle ? "healthgained_red_large" : "healthgained_blu_large";
 						}
 						else
 						{

@@ -701,13 +701,6 @@ bool CObjectSapper::ApplyRoboSapperEffects( CTFPlayer *pTarget, float flDuration
 
 	int iStunFlags = TF_STUN_MOVEMENT | TF_STUN_CONTROLS | TF_STUN_NO_EFFECTS;
 
-	// Giants and players can't be fully incapacitated - only slowed
-	CTFBot *pTFBot = static_cast<CTFBot *>( pTarget );
-	if ( ( pTFBot && pTFBot->IsMiniBoss() ) || !pTFBot )
-	{
-		iStunFlags = TF_STUN_MOVEMENT;
-	}
-
 	pTarget->m_Shared.StunPlayer( flDuration, 0.85f, iStunFlags, GetBuilder() );
 	pTarget->m_Shared.AddCond( TF_COND_SAPPED, flDuration, GetBuilder() );
 

@@ -394,8 +394,6 @@ public:
 	int		GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 
 	//-----------------------------------------------------------------------------------------------------
-	// Return true if we are a "mini boss" in Mann Vs Machine mode
-	bool IsMiniBoss( void ) const;
 	bool ShouldTauntHintIconBeVisible() const;
 	virtual bool IsHealthBarVisible( void ) const OVERRIDE;
 
@@ -640,7 +638,6 @@ public:
 	int				m_iSpawnCounter;
 	bool			m_bArenaSpectator;
 
-	bool			m_bIsMiniBoss;
 	bool			m_bIsABot;
 	int				m_nBotSkill;
 	int				m_nOldBotSkill;

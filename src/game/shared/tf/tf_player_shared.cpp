@@ -9078,35 +9078,32 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		maxfbspeed = MIN( flMaxDisguiseSpeed, maxfbspeed );
 	}
 
-	if ( !TFGameRules()->IsMannVsMachineMode() || !IsMiniBoss() ) // No aiming slowdown penalties for MiniBoss players in MVM
+	// if they're a sniper, and they're aiming, their speed must be 80 or less
+	if ( m_Shared.InCond( TF_COND_AIMING ) )
 	{
-		// if they're a sniper, and they're aiming, their speed must be 80 or less
-		if ( m_Shared.InCond( TF_COND_AIMING ) )
-		{
-			float flAimMax = 0;
+		float flAimMax = 0;
 
-			// Heavies are allowed to move slightly faster than a sniper when spun-up
-			if ( playerclass == TF_CLASS_HEAVYWEAPONS )
+		// Heavies are allowed to move slightly faster than a sniper when spun-up
+		if ( playerclass == TF_CLASS_HEAVYWEAPONS )
+		{
 			{
-				{
-					flAimMax = 110;
-				}
+				flAimMax = 110;
+			}
+		}
+		else
+		{
+			if ( GetActiveTFWeapon() && (GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_COMPOUND_BOW) )
+			{
+				flAimMax = 160;
 			}
 			else
 			{
-				if ( GetActiveTFWeapon() && (GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_COMPOUND_BOW) )
-				{
-					flAimMax = 160;
-				}
-				else
-				{
-					flAimMax = 80;
-				}
+				flAimMax = 80;
 			}
-			
-			CALL_ATTRIB_HOOK_FLOAT( flAimMax, mult_player_aiming_movespeed );
-			maxfbspeed = MIN( maxfbspeed, flAimMax );
 		}
+			
+		CALL_ATTRIB_HOOK_FLOAT( flAimMax, mult_player_aiming_movespeed );
+		maxfbspeed = MIN( maxfbspeed, flAimMax );
 	}
 
 #ifdef GAME_DLL
@@ -9249,18 +9246,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 			{
 				// Prevent other speed modifiers like GRU from making berzerker mode too fast.
 				maxfbspeed = heavy_max_speed;
-			}
-		}
-	}
-
-	// Mann Vs Machine mode has a speed penalty for carrying the flag
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			if ( HasTheFlag() && !IsMiniBoss() )
-			{
-				maxfbspeed *= tf_mvm_bot_flag_carrier_movement_penalty.GetFloat();
 			}
 		}
 	}
@@ -10023,12 +10008,6 @@ void CTFPlayer::SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking
 //-----------------------------------------------------------------------------
 const char *CTFPlayer::GetOverrideStepSound( const char *pszBaseStepSoundName )
 {
-
-	if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS && !IsMiniBoss() && !m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-		return "MVM.BotStep";
-	}
-
 	Assert( pszBaseStepSoundName );
 
 	struct override_sound_entry_t { int iOverrideIndex; const char *pszBaseSoundName; const char *pszNewSoundName; };
@@ -10849,11 +10828,6 @@ int	CTFPlayer::GetMaxAmmo( int iAmmoIndex, int iClassIndex /*= -1*/ )
 	}
 
 	return iMax;
-}
-
-bool CTFPlayer::IsMiniBoss( void ) const
-{
-	return m_bIsMiniBoss;
 }
 
 //-----------------------------------------------------------------------------

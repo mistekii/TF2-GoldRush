@@ -1169,12 +1169,10 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 		{
 			m_bBatted = true;
 		}
-		
-		bool bMiniBoss = ( pPlayer && pPlayer->IsMiniBoss() ) ? true : false;
 
 		if ( GetDamageCustom() == TF_DMG_CUSTOM_PLASMA )
 		{
-			if ( !m_bBecomeAsh && !bMiniBoss )
+			if ( !m_bBecomeAsh )
 			{
 				m_bDissolving = true;
 			}
@@ -1184,7 +1182,7 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 
 		if ( GetDamageCustom() == TF_DMG_CUSTOM_PLASMA_CHARGED )
 		{
-			if ( !m_bBecomeAsh && !bMiniBoss )
+			if ( !m_bBecomeAsh )
 			{
 				m_bDissolving = true;
 			}
@@ -3666,7 +3664,6 @@ END_RECV_TABLE()
 IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 
 	RecvPropBool(RECVINFO(m_bSaveMeParity)),
-	RecvPropBool(RECVINFO(m_bIsMiniBoss)),
 	RecvPropBool(RECVINFO(m_bIsABot)),
 	RecvPropInt(RECVINFO(m_nBotSkill)),
 
@@ -3857,7 +3854,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flTorsoScale = 1.f;
 	m_flHandScale = 1.f;
 
-	m_bIsMiniBoss = false;
 	m_bUseBossHealthBar = false;
 	m_bUsingVRHeadset = false;
 
@@ -7515,10 +7511,6 @@ void C_TFPlayer::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
-	// FIXME: Why do decals on giants crash clients?
-	if ( IsMiniBoss() )
-		return;
-
 	if ( m_Shared.IsInvulnerable() )
 	{ 
 		Vector vecDir = rayEnd - rayStart;
@@ -10222,7 +10214,7 @@ void C_TFPlayer::UpdateMVMEyeGlowEffect( bool bVisible )
 		Vector vColor = m_nBotSkill >= 2 ? Vector( 255, 180, 36 ) : Vector( 0, 240, 255 );
 
 		// Create the effects
-		int nAttachement = LookupAttachment( IsMiniBoss() ? "eye_boss_1" : "eye_1" );
+		int nAttachement = LookupAttachment( "eye_1" );
 		if ( nAttachement > 0 )
 		{
 			m_pMVMEyeGlowEffect[ 0 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
@@ -10232,7 +10224,7 @@ void C_TFPlayer::UpdateMVMEyeGlowEffect( bool bVisible )
 			}
 		}
 
-		nAttachement = LookupAttachment( IsMiniBoss() ? "eye_boss_2" : "eye_2" );
+		nAttachement = LookupAttachment( "eye_2" );
 		if ( nAttachement > 0 )
 		{
 			m_pMVMEyeGlowEffect[ 1 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
@@ -10325,7 +10317,7 @@ bool C_TFPlayer::ShouldTauntHintIconBeVisible() const
 //-----------------------------------------------------------------------------
 bool C_TFPlayer::IsHealthBarVisible( void ) const
 {
-	return IsMiniBoss();
+	return false;
 }
 
 

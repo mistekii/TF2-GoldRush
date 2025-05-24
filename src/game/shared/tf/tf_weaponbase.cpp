@@ -4226,15 +4226,6 @@ char const *CTFWeaponBase::GetShootSound( int iIndex ) const
 	{
 		int nTeam = GetTeamNumber();
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && nTeam == TF_TEAM_PVE_INVADERS )
-		{
-			CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
-			if ( pPlayer && pPlayer->IsMiniBoss() )
-			{
-				// Not a real team - just a define used in replacing visuals via itemdefs ("visuals_mvm")
-				nTeam = TF_TEAM_PVE_INVADERS_GIANTS;
-			}
-		}
 		const char *pszSound = pItem->GetStaticData()->GetWeaponReplacementSound( nTeam, (WeaponSound_t)iIndex );
 		if ( pszSound )
 			return pszSound;
@@ -4960,7 +4951,7 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 				pAttacker->m_pMarkedForDeathTarget->m_Shared.RemoveCond( TF_COND_MARKEDFORDEATH );
 			}
 
-			float flDuration = pVictim->IsMiniBoss() ? tf_dev_marked_for_death_lifetime.GetFloat() / 2 : tf_dev_marked_for_death_lifetime.GetFloat();
+			float flDuration = tf_dev_marked_for_death_lifetime.GetFloat();
 			pVictim->m_Shared.AddCond( TF_COND_MARKEDFORDEATH, flDuration, pAttacker );
 
 			pAttacker->m_pMarkedForDeathTarget = pVictim;

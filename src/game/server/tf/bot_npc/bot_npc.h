@@ -191,8 +191,6 @@ public:
 	};
 	virtual bool HasAbility( Ability ability ) const;
 
-	virtual bool IsMiniBoss( void ) const					{ return false; }
-
 	virtual float GetMoveSpeed( void ) const				{ return 300.0f; }
 
 	virtual int GetRocketLaunchCount( void ) const			{ return 5; }

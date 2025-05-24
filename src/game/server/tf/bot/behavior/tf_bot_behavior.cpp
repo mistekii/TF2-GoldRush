@@ -398,25 +398,6 @@ EventDesiredResult< CTFBot > CTFBotMainAction::OnContact( CTFBot *me, CBaseEntit
 	{
 		m_lastTouch = other;
 		m_lastTouchTime = gpGlobals->curtime;
-
-		// Mini-bosses destroy non-Sentrygun objects they bump into (ie: Dispensers)
-		if ( TFGameRules()->IsMannVsMachineMode() && me->IsMiniBoss() )
-		{
-			if ( other->IsBaseObject() )
-			{
-				CBaseObject *pObject = assert_cast< CBaseObject* >( other );
-				if ( pObject->GetType() != OBJ_SENTRYGUN || pObject->IsMiniBuilding() )
-				{
-					int damage = MAX( other->GetMaxHealth(), other->GetHealth() );
-
-					Vector toVictim = other->WorldSpaceCenter() - me->WorldSpaceCenter();
-
-					CTakeDamageInfo info( me, me, 4 * damage, DMG_BLAST, TF_DMG_CUSTOM_NONE );
-					CalculateMeleeDamageForce( &info, toVictim, me->WorldSpaceCenter(), 1.0f );
-					other->TakeDamage( info );
-				}
-			}
-		}
 	}
 
 	return TryContinue();
@@ -540,12 +521,6 @@ EventDesiredResult< CTFBot > CTFBotMainAction::OnOtherKilled( CTFBot *me, CBaseC
 		if ( !ToTFPlayer( victim )->IsBot() && me->IsEnemy( victim ) && me->IsSelf( info.GetAttacker() ) )
 		{
 			bool isTaunting = !me->HasTheFlag() && RandomFloat( 0.0f, 100.0f ) <= tf_bot_taunt_victim_chance.GetFloat();
-
-			if ( TFGameRules()->IsMannVsMachineMode() && me->IsMiniBoss() )
-			{
-				// Bosses don't taunt puny humans
-				isTaunting = false;
-			}
 
 			if ( isTaunting )
 			{

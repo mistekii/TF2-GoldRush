@@ -466,11 +466,11 @@ void CTFMinigun::AttackEnemyProjectiles( void )
 
 	// Parameters
 	const int nSweepDist = 300;	// How far out
-	const int nHitDist = ( pPlayer->IsMiniBoss() ) ? 56 : 38;	// How far from the center line (radial)
+	const int nHitDist = 38;	// How far from the center line (radial)
 	float flRechargeTime = 0.1f;
 
 	// Pos
-	const Vector &vecGunPos = ( pPlayer->IsMiniBoss() ) ? pPlayer->Weapon_ShootPosition() : pPlayer->EyePosition();
+	const Vector &vecGunPos = pPlayer->EyePosition();
 	Vector vecForward;
 	AngleVectors( GetAbsAngles(), &vecForward );
 	Vector vecGunAimEnd = vecGunPos + vecForward * (float)nSweepDist;
