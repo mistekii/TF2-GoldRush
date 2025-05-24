@@ -14,6 +14,7 @@
 #include "shareddefs.h"
 #include "filesystem.h"
 #include "econ_item_description.h"				// only for CSteamAccountIDAttributeCollector
+#include "achievementmgr.h"
 
 #ifdef CLIENT_DLL
 #include <igameevents.h>
@@ -1657,7 +1658,6 @@ void CPlayerInventory::SODestroyed( const CSteamID & steamIDOwner, const GCSDK::
 	SendInventoryUpdateEvent();
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: This is our initial notification that this cache has been received
 //			from the server.
@@ -1701,6 +1701,9 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 	{
 		GameItemDefinition_t* pItemDef = dynamic_cast<GameItemDefinition_t*>( itemMap[i] );
 
+		CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );
+		const AchievementAward_t* pAchievementAward = GetItemSchema()->GetAchievementRewardByDefIndex( pItemDef->GetDefinitionIndex() );
+
 		// Ignore hidden items
 		if ( pItemDef->IsHidden() )
 			continue;
@@ -1709,9 +1712,21 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 		if ( pItemDef->IsBaseItem() )
 			continue;
 
+		// Must show up in the armory
 		if ( !pItemDef->ShouldShowInArmory() ) 
 			continue;
-		
+
+		// Is this an achievement item?
+		if ( pAchievementAward != NULL )
+		{
+			const char* cAchName = pAchievementAward->m_sNativeName.String();
+			CBaseAchievement* pAchievement = pAchievementMgr->GetAchievementByName( cAchName );
+
+			// We haven't earned this item yet, skip it.
+			if ( !pAchievement->IsAchieved() )
+				continue;
+		}
+
 		// Create the item
 		CEconItem* pItem = new CEconItem();
 		pItem->SetAccountID( GetOwner().GetAccountID() );
