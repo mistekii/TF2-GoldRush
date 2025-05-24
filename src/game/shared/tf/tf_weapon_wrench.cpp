@@ -231,31 +231,16 @@ void CTFWrench::Detach( void )
 	CTFPlayer *pPlayer = GetTFPlayerOwner();
 	if ( pPlayer )
 	{
-		bool bDetonateObjects = true;
-
-		// In MvM mode, leave engineer's buildings after he dies
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+		// if switching off of gunslinger detonate
+		int iMiniSentry = 0;
+		CALL_ATTRIB_HOOK_INT( iMiniSentry, wrench_builds_minisentry );
+		if ( iMiniSentry )
 		{
-			if ( pPlayer->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS )
+			// Just detonate Sentries
+			CObjectSentrygun *pSentry = dynamic_cast<CObjectSentrygun*>( pPlayer->GetObjectOfType( OBJ_SENTRYGUN ) );
+			if ( pSentry )
 			{
-				bDetonateObjects = false;
-			}
-		}
-
-		// Only detonate if we are unequipping gunslinger
-		if ( bDetonateObjects )
-		{
-			// if switching off of gunslinger detonate
-			int iMiniSentry = 0;
-			CALL_ATTRIB_HOOK_INT( iMiniSentry, wrench_builds_minisentry );
-			if ( iMiniSentry )
-			{
-				// Just detonate Sentries
-				CObjectSentrygun *pSentry = dynamic_cast<CObjectSentrygun*>( pPlayer->GetObjectOfType( OBJ_SENTRYGUN ) );
-				if ( pSentry )
-				{
-					pSentry->DetonateObject();
-				}
+				pSentry->DetonateObject();
 			}
 		}
 	}

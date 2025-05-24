@@ -3589,7 +3589,7 @@ void CEconItemDescription::AddAttributeDescription( const CLocalizationProvider 
 	// On TF, these user-generated attributes can be from upgrade cards which only apply in MvM.
 	// We then colorize them based on whether they'll be active, with the caveat that out-of-game
 	// views always say yes (GC, loadout when not on a server, etc.).
-	if ( pAttribDef->GetUserGenerationType() == kUserGeneratedAttributeType_MVMEngineering && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+	if ( pAttribDef->GetUserGenerationType() == kUserGeneratedAttributeType_MVMEngineering )
 	{
 		eDefaultAttribColor = ATTRIB_COL_ITEMSET_MISSING;
 	}

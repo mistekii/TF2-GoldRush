@@ -697,20 +697,10 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 						continue;
 
 					int nTeam = g_PR->GetTeam( iPlayerIndex );
-
-					bool bAllowKickUnassigned = false;
-#ifdef TF_CLIENT_DLL
-					// Allow kicking team unassigned or spectator in MvM
-					if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && g_PR->IsConnected( iPlayerIndex ) && ( nTeam == TEAM_UNASSIGNED || nTeam == TEAM_SPECTATOR ) )
-					{
-						if ( !g_PR->IsFakePlayer( iPlayerIndex ) )
-							bAllowKickUnassigned = true;
-					}
-#endif // TF_CLIENT_DLL
 					
 					// Can't kick people on the other team, so don't list them
-					if ( ( nTeam != nLocalPlayerTeam ) && !bAllowKickUnassigned )
-							continue;
+					if ( nTeam != nLocalPlayerTeam )
+						continue;
 
 					char szPlayerIndex[32];
 					Q_snprintf( szPlayerIndex, sizeof( szPlayerIndex ), "%d", iPlayerIndex );
@@ -1724,20 +1714,11 @@ void CHudVote::MsgFunc_VoteSetup( bf_read &msg )
 	m_VoteSetupMapCycle.RemoveAll();
 
 	// Use the appropriate stringtable for maps based on gamemode
-	bool bMvM = false;
 	INetworkStringTable *pStringTable = g_pStringTableServerMapCycle;
-
-#ifdef TF_CLIENT_DLL
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		bMvM = true;
-		pStringTable = g_pStringTableServerMapCycleMvM;
-	}
-#endif // TF_CLIENT_DLL
 
 	if ( pStringTable )
 	{
-		int index = bMvM ? pStringTable->FindStringIndex( "ServerMapCycleMvM" ) : pStringTable->FindStringIndex( "ServerMapCycle" );
+		int index = pStringTable->FindStringIndex( "ServerMapCycle" );
 		if ( index != ::INVALID_STRING_INDEX )
 		{
 			int nLength = 0;
@@ -1977,18 +1958,7 @@ void CHudVotePanel::FireGameEvent( IGameEvent *event )
 
 		m_bPlayerVoted = true;
 
-		bool bForceActive = false;
-#ifdef TF_CLIENT_DLL
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( m_iVoteCallerIdx == GetLocalPlayerIndex() )
-			{
-				bForceActive = true;
-			}
-		}
-#endif // TF_CLIENT_DLL
-
-		if ( !cl_vote_ui_active_after_voting.GetBool() && !bForceActive )
+		if ( !cl_vote_ui_active_after_voting.GetBool() )
 		{
 			m_flPostVotedHideTime = gpGlobals->curtime + 1.5f;
 		}

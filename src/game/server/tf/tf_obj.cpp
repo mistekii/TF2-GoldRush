@@ -3603,16 +3603,6 @@ bool CBaseObject::ShouldQuickBuild( void )
 
 		if ( TFGameRules()->IsQuickBuildTime() )
 			return true;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-				// Engineer bots in MvM deploy pre-built sentries that build up at the normal rate
-				return m_bForceQuickBuild;
-
-			if ( m_bCarryDeploy || TFGameRules()->State_Get() == GR_STATE_BETWEEN_RNDS )
-				return true;
-		}
 	}
 
 	return m_bForceQuickBuild;

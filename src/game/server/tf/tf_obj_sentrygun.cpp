@@ -300,15 +300,6 @@ void CObjectSentrygun::SentryThink( void )
 		m_nShieldLevel.Set( SHIELD_NONE );
 		m_vecGoalAngles.x = 0;
 	}
-
-	// infinite ammo for enemy team in MvM mode
-	if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		m_iAmmoRockets = SENTRYGUN_MAX_ROCKETS;
-		m_iMaxAmmoRockets = SENTRYGUN_MAX_ROCKETS;
-		m_iAmmoShells = SENTRYGUN_MAX_SHELLS_3;
-		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_3;
-	}
 }
 
 void CObjectSentrygun::StartPlacement( CTFPlayer *pPlayer )

@@ -950,14 +950,6 @@ bool CVoteController::IsValidVoter( CBasePlayer *pWhom )
 	if ( pWhom->IsReplay() )
 		return false;
 
-#ifdef TF_DLL
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( pWhom->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS )
-			return false;
-	}
-#endif // TF_DLL
-
 	return true;
 }
 
@@ -1257,13 +1249,6 @@ void CBaseIssue::OnVoteFailed( int iEntityHoldingVote )
 			if ( Q_strcmp( pFailedVote->szFailedVoteParameter, GetDetailsString() ) == 0 )
 			{
 				int nTime = sv_vote_failure_timer.GetInt();
-
-#ifdef TF_DLL
-				if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-				{
-					nTime = sv_vote_failure_timer_mvm.GetInt();
-				}
-#endif // TF_DLL
 
 				pFailedVote->flLockoutTime = gpGlobals->curtime + nTime;
 

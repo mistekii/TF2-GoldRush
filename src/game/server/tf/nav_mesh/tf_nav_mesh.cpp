@@ -1286,31 +1286,28 @@ void CTFNavMesh::ComputeIncursionDistances( void )
 		Warning( "Can't compute incursion distances from the Blue spawn room(s). Bots will perform poorly. This is caused by either a missing func_respawnroom, or missing info_player_teamspawn entities within the func_respawnroom.\n" );
 	}
 
-	if ( !TFGameRules()->IsMannVsMachineMode() )
+	// In Raid mode, the Red (bot) team has no spawn room.
+	// So, we'll assume the Red incursion distance is the inverse of the Blue incursion distance for now.
+	// @TODO: Use the Boss battle room as the anchor for computing Red incursion distances
+	float maxBlueIncursionDistance = 0.0f;
+
+	for( int i=0; i<TheNavAreas.Count(); ++i )
 	{
-		// In Raid mode, the Red (bot) team has no spawn room.
-		// So, we'll assume the Red incursion distance is the inverse of the Blue incursion distance for now.
-		// @TODO: Use the Boss battle room as the anchor for computing Red incursion distances
-		float maxBlueIncursionDistance = 0.0f;
+		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
 
-		for( int i=0; i<TheNavAreas.Count(); ++i )
+		if ( area->GetIncursionDistance( TF_TEAM_BLUE ) > maxBlueIncursionDistance )
 		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-			if ( area->GetIncursionDistance( TF_TEAM_BLUE ) > maxBlueIncursionDistance )
-			{
-				maxBlueIncursionDistance = area->GetIncursionDistance( TF_TEAM_BLUE );
-			}
+			maxBlueIncursionDistance = area->GetIncursionDistance( TF_TEAM_BLUE );
 		}
+	}
 
-		for( int i=0; i<TheNavAreas.Count(); ++i )
+	for( int i=0; i<TheNavAreas.Count(); ++i )
+	{
+		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
+
+		if ( area->GetIncursionDistance( TF_TEAM_BLUE ) >= 0.0f )
 		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-			if ( area->GetIncursionDistance( TF_TEAM_BLUE ) >= 0.0f )
-			{
-				area->m_distanceFromSpawnRoom[ TF_TEAM_RED ] = maxBlueIncursionDistance - area->GetIncursionDistance( TF_TEAM_BLUE );
-			}
+			area->m_distanceFromSpawnRoom[ TF_TEAM_RED ] = maxBlueIncursionDistance - area->GetIncursionDistance( TF_TEAM_BLUE );
 		}
 	}
 }
@@ -1342,32 +1339,13 @@ void CTFNavMesh::ComputeIncursionDistances( CTFNavArea *spawnArea, int team )
 	{
 		// get next area to check
 		CTFNavArea *area = static_cast< CTFNavArea * >( CNavArea::PopOpenList() );
-		
-		bool bIgnoreBlockedAreas = false;
 
-#ifdef TF_RAID_MODE
-		// TODO: Raid mode ignores blocked areas for now (cap gates break this)
-		if ( TFGameRules()->IsRaidMode()  )
+		// ignore spawn room exits, since they presumably will be open
+		// ignore setup gates, since they will be open after the setup time
+		if ( !area->HasAttributeTF( TF_NAV_SPAWN_ROOM_EXIT | TF_NAV_BLUE_SETUP_GATE | TF_NAV_RED_SETUP_GATE ) && area->IsBlocked( team ) )
 		{
-			bIgnoreBlockedAreas = true;
-		}
-#endif // TF_RAID_MODE
-
-		// TODO: Ditto for Mann Vs Machine mode
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			bIgnoreBlockedAreas = true;
-		}
-
-		if ( !bIgnoreBlockedAreas )
-		{
-			// ignore spawn room exits, since they presumably will be open
-			// ignore setup gates, since they will be open after the setup time
-			if ( !area->HasAttributeTF( TF_NAV_SPAWN_ROOM_EXIT | TF_NAV_BLUE_SETUP_GATE | TF_NAV_RED_SETUP_GATE ) && area->IsBlocked( team ) )
-			{
-				// don't pass through blocked areas
-				continue;
-			}
+			// don't pass through blocked areas
+			continue;
 		}
 
 		// explore adjacent floor areas

@@ -118,11 +118,6 @@ bool CTFBotGetHealth::IsPossible( CTFBot *me )
 	}
 #endif // TF_RAID_MODE
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		return false;
-	}
-
 	float healthRatio = (float)me->GetHealth() / (float)me->GetMaxHealth();
 
 	float t = ( healthRatio - tf_bot_health_critical_ratio.GetFloat() ) / ( tf_bot_health_ok_ratio.GetFloat() - tf_bot_health_critical_ratio.GetFloat() );

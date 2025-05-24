@@ -61,30 +61,26 @@ ActionResult< CTFBot > CTFBotAttackFlagDefenders::Update( CTFBot *me, float inte
 			return Done( "No flag" );
 		}
 
-		// can't reach flag if it is at home
-		if ( !TFGameRules()->IsMannVsMachineMode() || !flag->IsHome() )
+		CTFPlayer *carrier = ToTFPlayer( flag->GetOwnerEntity() );
+		if ( !carrier )
 		{
-			CTFPlayer *carrier = ToTFPlayer( flag->GetOwnerEntity() );
-			if ( !carrier )
-			{
-				return Done( "Flag was dropped" );
-			}
+			return Done( "Flag was dropped" );
+		}
 
-			if ( me->IsSelf( carrier ) )
-			{
-				return Done( "I picked up the flag!" );
-			}
+		if ( me->IsSelf( carrier ) )
+		{
+			return Done( "I picked up the flag!" );
+		}
 
-			// escort the flag carrier, unless the carrier is in a squad
-			CTFBot *botCarrier = ToTFBot( carrier );
-			if ( !botCarrier || !botCarrier->IsInASquad() )
+		// escort the flag carrier, unless the carrier is in a squad
+		CTFBot *botCarrier = ToTFBot( carrier );
+		if ( !botCarrier || !botCarrier->IsInASquad() )
+		{
+			if ( me->IsRangeLessThan( carrier, tf_bot_flag_escort_range.GetFloat() ) )
 			{
-				if ( me->IsRangeLessThan( carrier, tf_bot_flag_escort_range.GetFloat() ) )
+				if ( GetBotEscortCount( me->GetTeamNumber() ) < tf_bot_flag_escort_max_count.GetInt() )
 				{
-					if ( GetBotEscortCount( me->GetTeamNumber() ) < tf_bot_flag_escort_max_count.GetInt() )
-					{
-						return ChangeTo( new CTFBotEscortFlagCarrier, "Near flag carrier - escorting" );
-					}
+					return ChangeTo( new CTFBotEscortFlagCarrier, "Near flag carrier - escorting" );
 				}
 			}
 		}
@@ -115,7 +111,7 @@ ActionResult< CTFBot > CTFBotAttackFlagDefenders::Update( CTFBot *me, float inte
 			m_repathTimer.Start( RandomFloat( 1.0f, 3.0f ) );
 
 			CTFBotPathCost cost( me, DEFAULT_ROUTE );
-			float maxPathLength = TFGameRules()->IsMannVsMachineMode() ? TFBOT_MVM_MAX_PATH_LENGTH : 0.0f;
+			float maxPathLength = 0.0f;
 			m_path.Compute( me, m_chasePlayer, cost, maxPathLength );
 		}
 

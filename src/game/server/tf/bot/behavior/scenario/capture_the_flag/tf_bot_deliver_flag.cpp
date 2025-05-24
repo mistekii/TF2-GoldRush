@@ -80,33 +80,6 @@ ActionResult< CTFBot > CTFBotDeliverFlag::Update( CTFBot *me, float interval )
 
 		m_flTotalTravelDistance = NavAreaTravelDistance( me->GetLastKnownArea(), TheNavMesh->GetNavArea( zone->WorldSpaceCenter() ), cost );
 
-		if ( TFGameRules()->IsMannVsMachineMode() && flOldTravelDistance != -1.0f && m_flTotalTravelDistance - flOldTravelDistance > 2000.0f )
-		{
-			TFGameRules()->BroadcastSound( 255, "Announcer.MVM_Bomb_Reset" );
-
-			// Look for players that helped with the reset and send an event
-			CUtlVector<CTFPlayer *> playerVector;
-			CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
-			FOR_EACH_VEC( playerVector, i )
-			{
-				CTFPlayer *pPlayer = playerVector[i];
-				if ( !pPlayer )
-					continue;
-
-				if ( me->m_AchievementData.IsPusherInHistory( pPlayer, 3.f ) )
-				{
-					IGameEvent *event = gameeventmanager->CreateEvent( "mvm_bomb_reset_by_player" );
-					if ( event )
-					{
-						event->SetInt( "player", pPlayer->entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-
-					CTF_GameStats.Event_PlayerAwardBonusPoints( pPlayer, me, 100 );
-				}
-			}
-		}
-
 		m_repathTimer.Start( RandomFloat( 1.0f, 2.0f ) );
 	}
 
@@ -125,11 +98,6 @@ ActionResult< CTFBot > CTFBotDeliverFlag::Update( CTFBot *me, float interval )
 void CTFBotDeliverFlag::OnEnd( CTFBot *me, Action< CTFBot > *nextAction )
 {
 	me->ClearAttribute( CTFBot::SUPPRESS_FIRE );
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		me->m_Shared.ResetRageBuffs();
-	}
 }
 
 

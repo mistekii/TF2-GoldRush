@@ -1026,7 +1026,7 @@ void CTFGameStats::Event_PlayerFiredWeapon( CTFPlayer *pPlayer, bool bCritical )
 void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDamageInfo &info, int iDamageTaken )
 {
 	// defensive guard against insanely huge damage values that apparently get into the stats system once in a while -- ignore insane values
-	const int INSANE_PLAYER_DAMAGE = TFGameRules()->IsMannVsMachineMode() ? 5000 : 1500;
+	const int INSANE_PLAYER_DAMAGE = 1500;
 
 	if ( sv_cheats && !sv_cheats->GetBool() )
 	{

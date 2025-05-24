@@ -1363,9 +1363,6 @@ void CTFBot::PhysicsSimulate( void )
 	// sometimes force an immediate respawn, which will destroy the bot's existing actions out from under it.
 	if ( !IsAlive() && !m_didReselectClass && tf_bot_keep_class_after_death.GetBool() == false && TFGameRules()->CanBotChangeClass( this ) )
 	{
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			return;
-
 		HandleCommand_JoinClass( GetNextSpawnClassname() );
 
 		m_didReselectClass = true;
@@ -1383,15 +1380,7 @@ void CTFBot::Touch( CBaseEntity *pOther )
 	{
 		if ( them->m_Shared.IsStealthed() || them->m_Shared.InCond( TF_COND_DISGUISED ) )
 		{
-			// bumped a spy - they are discovered!
-			if ( TFGameRules()->IsMannVsMachineMode() )	// we have to build up to knowing that they are a spy in MvM
-			{
-				SuspectSpy( them );
-			}
-			else
-			{
-				RealizeSpy( them );
-			}
+			RealizeSpy( them );
 		}
 
 		// always notice if we bump an enemy
@@ -1417,11 +1406,6 @@ void CTFBot::AvoidPlayers( CUserCmd *pCmd )
 	Vector avoidVector = vec3_origin;
 
 	float tooClose = 50.0f;
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		// bots stay farther apart in MvM mode
-		tooClose = 150.0f;
-	}
 
 	for( int i=0; i<playerVector.Count(); ++i )
 	{
@@ -1510,14 +1494,6 @@ int CTFBot::ShouldTransmit( const CCheckTransmitInfo *pInfo )
 void CTFBot::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent, bool bAutoBalance /*= false*/  )
 {
 	BaseClass::ChangeTeam( iTeamNum, bAutoTeam, bSilent, bAutoBalance );
-	
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		SetPrevMission( CTFBot::NO_MISSION );
-		ClearAllAttributes();
-		// Clear Sound
-		StopIdleSound();
-	}
 }
 
 
@@ -1632,105 +1608,6 @@ void CTFBot::Event_Killed( const CTakeDamageInfo &info )
 	{
 		GetProxy()->OnKilled();
 	}
-
-	// announce Spies
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( IsPlayerClass( TF_CLASS_SPY ) )
-		{
-			CUtlVector< CTFPlayer * > playerVector;
-			CollectPlayers( &playerVector, TF_TEAM_PVE_INVADERS, COLLECT_ONLY_LIVING_PLAYERS );
-
-			int spyCount = 0;
-			for( int i=0; i<playerVector.Count(); ++i )
-			{
-				if ( playerVector[i]->IsPlayerClass( TF_CLASS_SPY ) )
-				{
-					++spyCount;
-				}
-			}
-
-			IGameEvent *event = gameeventmanager->CreateEvent( "mvm_mission_update" );
-			if ( event )
-			{
-				event->SetInt( "class", TF_CLASS_SPY );
-				event->SetInt( "count", spyCount );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-		else if ( IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			// in MVM, when an engineer dies, we need to decouple his objects so they stay alive when his bot slot gets recycled
-			while ( GetObjectCount() > 0 )
-			{
-				// set to not have owner
-				CBaseObject *pObject = GetObject( 0 );
-				if ( pObject )
-				{
-					pObject->SetOwnerEntity( NULL );
-					pObject->SetBuilder( NULL );
-				}
-				RemoveObject( pObject );
-			}
-
-			// unown engineer nest if owned any
-			for ( int i=0; i<ITFBotHintEntityAutoList::AutoList().Count(); ++i )
-			{
-				CBaseTFBotHintEntity* pHint = static_cast< CBaseTFBotHintEntity* >( ITFBotHintEntityAutoList::AutoList()[i] );
-				if ( pHint->GetOwnerEntity() == this )
-				{
-					pHint->SetOwnerEntity( NULL );
-				}
-			}
-
-			CUtlVector< CTFPlayer* > playerVector;
-			CollectPlayers( &playerVector, TF_TEAM_PVE_INVADERS, COLLECT_ONLY_LIVING_PLAYERS );
-			bool bShouldAnnounceLastEngineerBotDeath = HasAttribute( CTFBot::TELEPORT_TO_HINT );
-			if ( bShouldAnnounceLastEngineerBotDeath )
-			{
-				for ( int i=0; i<playerVector.Count(); ++i )
-				{
-					if ( playerVector[i] != this && playerVector[i]->IsPlayerClass( TF_CLASS_ENGINEER ) )
-					{
-						bShouldAnnounceLastEngineerBotDeath = false;
-						break;
-					}
-				}
-			}
-
-			if ( bShouldAnnounceLastEngineerBotDeath )
-			{
-				bool bEngineerTeleporterInTheWorld = false;
-				for ( int i=0; i<IBaseObjectAutoList::AutoList().Count(); ++i )
-				{
-					CBaseObject* pObj = static_cast< CBaseObject* >( IBaseObjectAutoList::AutoList()[i] );
-					if ( pObj->GetType() == OBJ_TELEPORTER && pObj->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-					{
-						bEngineerTeleporterInTheWorld = true;
-					}
-				}
-
-				if ( bEngineerTeleporterInTheWorld )
-				{
-					TFGameRules()->BroadcastSound( 255, "Announcer.MVM_An_Engineer_Bot_Is_Dead_But_Not_Teleporter" );
-				}
-				else
-				{
-					TFGameRules()->BroadcastSound( 255, "Announcer.MVM_An_Engineer_Bot_Is_Dead" );
-				}
-			}
-		}
-
-		// remove this bot from following flag
-		for ( int i=0; i<ICaptureFlagAutoList::AutoList().Count(); ++i )
-		{
-			for ( int i=0; i<ICaptureFlagAutoList::AutoList().Count(); ++i )
-			{
-				CCaptureFlag *flag = static_cast< CCaptureFlag* >( ICaptureFlagAutoList::AutoList()[i] );
-				flag->RemoveFollower( this );
-			}
-		}
-	} // MvM
 
 	if ( HasSpawner() )
 	{
@@ -1935,25 +1812,6 @@ CCaptureFlag *CTFBot::GetFlagToFetch( void ) const
 	CUtlVector<CCaptureFlag *> flagsVector;
 	int nCarriedFlags = 0;
 
-	// MvM Engineer bot never pick up a flag
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS && IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			return NULL;
-		}
-
-		if( HasAttribute( CTFBot::IGNORE_FLAG ) )
-		{
-			return NULL;
-		}
-
-		if ( TFGameRules()->IsMannVsMachineMode() && HasFlagTaget() )
-		{
-			return GetFlagTarget();
-		}
-	}
-
 	// Collect flags
 	for ( int i=0; i<ICaptureFlagAutoList::AutoList().Count(); ++i )
 	{
@@ -2003,71 +1861,25 @@ CCaptureFlag *CTFBot::GetFlagToFetch( void ) const
 	CCaptureFlag *pClosestUncarriedFlag = NULL;
 	float flClosestUncarriedFlagDist = FLT_MAX;
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+	FOR_EACH_VEC( flagsVector, i )
 	{
-		int nMinFollower = INT_MAX;
-
-		FOR_EACH_VEC( flagsVector, i )
+		if ( flagsVector[i] )
 		{
-			CCaptureFlag *pFlag = flagsVector[i];
-			if ( pFlag )
+			// Find the closest
+			float flDist = ( flagsVector[i]->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
+			if ( flDist < flClosestFlagDist )
 			{
-				// find the one which needs the most love
-				if ( pFlag->GetNumFollowers() < nMinFollower )
-				{
-					nMinFollower = pFlag->GetNumFollowers();
-
-					pClosestFlag = NULL;
-					flClosestFlagDist = FLT_MAX;
-					pClosestUncarriedFlag = NULL;
-					flClosestUncarriedFlagDist = FLT_MAX;
-				}
-				
-				if ( pFlag->GetNumFollowers() == nMinFollower )
-				{
-					// Find the closest
-					float flDist = ( pFlag->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
-					if ( flDist < flClosestFlagDist )
-					{
-						pClosestFlag = pFlag;
-						flClosestFlagDist = flDist;
-					}
-
-					// Find the closest uncarried
-					if ( nCarriedFlags < flagsVector.Count() && !pFlag->IsStolen() )
-					{
-						if ( flDist < flClosestUncarriedFlagDist )
-						{
-							pClosestUncarriedFlag = flagsVector[i];
-							flClosestUncarriedFlagDist = flDist;
-						}
-					}
-				}
+				pClosestFlag = flagsVector[i];
+				flClosestFlagDist = flDist;
 			}
-		}
-	}
-	else
-	{
-		FOR_EACH_VEC( flagsVector, i )
-		{
-			if ( flagsVector[i] )
-			{
-				// Find the closest
-				float flDist = ( flagsVector[i]->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
-				if ( flDist < flClosestFlagDist )
-				{
-					pClosestFlag = flagsVector[i];
-					flClosestFlagDist = flDist;
-				}
 
-				// Find the closest uncarried
-				if ( nCarriedFlags < flagsVector.Count() && !flagsVector[i]->IsStolen() )
+			// Find the closest uncarried
+			if ( nCarriedFlags < flagsVector.Count() && !flagsVector[i]->IsStolen() )
+			{
+				if ( flDist < flClosestUncarriedFlagDist )
 				{
-					if ( flDist < flClosestUncarriedFlagDist )
-					{
-						pClosestUncarriedFlag = flagsVector[i];
-						flClosestUncarriedFlagDist = flDist;
-					}
+					pClosestUncarriedFlag = flagsVector[i];
+					flClosestUncarriedFlagDist = flDist;
 				}
 			}
 		}
@@ -3058,20 +2870,6 @@ float CTFBot::GetMaxAttackRange( void ) const
 	
 	if ( myWeapon->IsWeapon( TF_WEAPON_FLAMETHROWER ) )
 	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			const float flameRange = 350.0f;
-
-			static CSchemaItemDefHandle pItemDef_GiantFlamethrower( "MVM Giant Flamethrower" );
-
-			if ( IsActiveTFWeapon( pItemDef_GiantFlamethrower ) )
-			{
-				return 2.5f * flameRange;
-			}
-
-			return flameRange;
-		}
-
 		return 250.0f;
 	}
 
@@ -3124,7 +2922,7 @@ float CTFBot::GetDesiredAttackRange( void ) const
 		return FLT_MAX;
 	}
 
-	if ( myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER ) && !TFGameRules()->IsMannVsMachineMode() )
+	if ( myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER ) )
 	{
 		return 1250.0f;
 	}
@@ -3202,19 +3000,6 @@ void CTFBot::EquipBestWeaponForThreat( const CKnownEntity *threat )
 	CTFWeaponBase *secondary = dynamic_cast< CTFWeaponBase *>( Weapon_GetSlot( TF_WPN_TYPE_SECONDARY ) );
 	if ( !IsCombatWeapon( secondary ) )
 	{
-		secondary = NULL;
-	}
-
-	// no secondary weapons in MvM
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( IsPlayerClass( TF_CLASS_MEDIC ) && IsInASquad() && GetSquad() && !GetSquad()->IsLeader( this ) )
-		{
-			// always try to heal leader
-			Weapon_Switch( Weapon_GetSlot( TF_WPN_TYPE_SECONDARY ) );
-			return;
-		}
-
 		secondary = NULL;
 	}
 
@@ -3352,10 +3137,6 @@ void CTFBot::EquipBestWeaponForThreat( const CKnownEntity *threat )
 // NOTE: This assumes default weapon loadouts
 bool CTFBot::EquipLongRangeWeapon( void )
 {
-	// no secondary weapons in MvM
-	if ( TFGameRules()->IsMannVsMachineMode() )
-		return false;
-
 	if ( IsPlayerClass( TF_CLASS_SOLDIER ) || 
 		 IsPlayerClass( TF_CLASS_DEMOMAN ) ||
 		 IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) ||
@@ -4012,42 +3793,37 @@ bool CTFBot::ShouldFireCompressionBlast( void )
 		}
 	}
 
-	bool shouldPushPlayers = !TFGameRules()->IsMannVsMachineMode();
-
-	if ( shouldPushPlayers )
+	const CKnownEntity *threat = GetVisionInterface()->GetPrimaryKnownThreat( true );
+	if ( threat && threat->GetEntity() && threat->GetEntity()->IsPlayer() )
 	{
-		const CKnownEntity *threat = GetVisionInterface()->GetPrimaryKnownThreat( true );
-		if ( threat && threat->GetEntity() && threat->GetEntity()->IsPlayer() )
+		CTFPlayer *pushVictim = ToTFPlayer( threat->GetEntity() );
+
+		if ( IsRangeLessThan( pushVictim, tf_bot_pyro_shove_away_range.GetFloat() ) )
 		{
-			CTFPlayer *pushVictim = ToTFPlayer( threat->GetEntity() );
+			// our threat is very close - shove them!
 
-			if ( IsRangeLessThan( pushVictim, tf_bot_pyro_shove_away_range.GetFloat() ) )
+			// always shove ubers
+			if ( pushVictim && pushVictim->m_Shared.IsInvulnerable() )
 			{
-				// our threat is very close - shove them!
+				return true;
+			}
 
-				// always shove ubers
-				if ( pushVictim && pushVictim->m_Shared.IsInvulnerable() )
-				{
-					return true;
-				}
+			if ( pushVictim->GetGroundEntity() == NULL )
+			{
+				// they are in the air - juggle them some of the time
+				return ( TransientlyConsistentRandomValue( 0.5f ) < 0.5f );
+			}
 
-				if ( pushVictim->GetGroundEntity() == NULL )
-				{
-					// they are in the air - juggle them some of the time
-					return ( TransientlyConsistentRandomValue( 0.5f ) < 0.5f );
-				}
+			if ( pushVictim->IsCapturingPoint() )
+			{
+				// push them off the point!
+				return true;
+			}
 
-				if ( pushVictim->IsCapturingPoint() )
-				{
-					// push them off the point!
-					return true;
-				}
-
-				// be pushy sometimes
-				if ( TransientlyConsistentRandomValue( 3.0f ) < 0.5f )
-				{
-					return true;
-				}
+			// be pushy sometimes
+			if ( TransientlyConsistentRandomValue( 3.0f ) < 0.5f )
+			{
+				return true;
 			}
 		}
 	}
@@ -4444,7 +4220,7 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 	}
 
 	// don't use items if we have the flag, since most of them are unusable (unless we're a bomb carrier in MvM)
-	if ( HasTheFlag() && !TFGameRules()->IsMannVsMachineMode() )
+	if ( HasTheFlag() )
 	{
 		return NULL;
 	}
@@ -4637,12 +4413,6 @@ void CTFBot::OnEventChangeAttributes( const CTFBot::EventChangeAttributes_t* pEv
 		SetAttribute( pEvent->m_attributeFlags );
 
 		SetMaxVisionRangeOverride( pEvent->m_maxVisionRange );
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			SetAttribute( CTFBot::BECOME_SPECTATOR_ON_DEATH );
-			SetAttribute( CTFBot::RETAIN_BUILDINGS );
-		}
 
 		// cache off health value before we clear attribute because ModifyMaxHealth adds new attribute and reset the health
 		int nHealth = GetHealth();

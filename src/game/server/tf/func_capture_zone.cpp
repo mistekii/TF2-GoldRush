@@ -137,8 +137,7 @@ void CCaptureZone::ShimTouch( CBaseEntity *pOther )
 					}
 				}
 
-				// in MvM, the "flag" is the bomb and is captured when the carrying bot deploys it
-				if ( TFGameRules()->FlagsMayBeCapped() && !TFGameRules()->IsMannVsMachineMode() )
+				if ( TFGameRules()->FlagsMayBeCapped() )
 				{
 					Capture( pOther );
 				}

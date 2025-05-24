@@ -551,8 +551,6 @@ public:
 #ifdef TF_CREEP_MODE
 bool IsCreepWaveMode( void ) const;
 #endif
-
-	bool IsMannVsMachineMode( void ) const { return m_bPlayingMannVsMachine; }
 	
 	bool IsQuickBuildTime( void );
 
@@ -1055,7 +1053,6 @@ private:
 	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
 	CNetworkVar( bool, m_bPlayingSpecialDeliveryMode );
 
-	CNetworkVar( bool, m_bPlayingMannVsMachine );
 	CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
 
 	CNetworkVar( bool, m_bBountyModeEnabled );

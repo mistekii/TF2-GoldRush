@@ -701,7 +701,7 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 		// Make sure they're not doing a dead ringer fake death
 		if ( ( event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH ) == 0 )
 		{
-			if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && ( TFGameRules()->IsMannVsMachineMode() || TFGameRules()->IsCompetitiveMode() ) )
+			if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && TFGameRules()->IsCompetitiveMode() )
 			{
 				C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 				if ( pLocalPlayer )
@@ -732,35 +732,24 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 
 					if ( !bSomeAlive )
 					{
-						if ( TFGameRules()->IsMannVsMachineMode() )
+						const char *pszSound = NULL;
+
+						if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
 						{
-							if ( nVictimTeam == TF_TEAM_PVE_DEFENDERS )
-							{
-								// Inform the team that everyone is dead
-								pLocalPlayer->EmitSound( "Announcer.MVM_All_Dead" );
-							}
+							pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
+						}
+						else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
+						{
+							pszSound = "Announcer.YourTeamWiped";
 						}
 						else
 						{
-							const char *pszSound = NULL;
+							pszSound = "Announcer.TheirTeamWiped";
+						}
 
-							if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
-							{
-								pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
-							}
-							else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
-							{
-								pszSound = "Announcer.YourTeamWiped";
-							}
-							else
-							{
-								pszSound = "Announcer.TheirTeamWiped";
-							}
-
-							if ( pszSound )
-							{
-								pLocalPlayer->EmitSound( pszSound );
-							}
+						if ( pszSound )
+						{
+							pLocalPlayer->EmitSound( pszSound );
 						}
 					}
 				}
@@ -1345,14 +1334,14 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "scorestats_accumulated_reset", eventname ) )
 	{
-		if ( g_TF_PR && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+		if ( g_TF_PR && TFGameRules() )
 		{
 			g_TF_PR->ResetPlayerScoreStats();
 		}
 	}
 	else if ( FStrEq( "scorestats_accumulated_update", eventname ) )
 	{
-		if ( g_TF_PR && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+		if ( g_TF_PR && TFGameRules() )
 		{
 			g_TF_PR->UpdatePlayerScoreStats();
 		}

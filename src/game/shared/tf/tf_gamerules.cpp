@@ -1194,7 +1194,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropInt( RECVINFO( m_nMapHolidayType ) ),
 
 	RecvPropEHandle( RECVINFO( m_itHandle ) ),
-	RecvPropBool( RECVINFO( m_bPlayingMannVsMachine ) ),
 	RecvPropEHandle( RECVINFO( m_hBirthdayPlayer ) ),
 
 	RecvPropInt( RECVINFO( m_nBossHealth ) ),
@@ -1255,7 +1254,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropInt( SENDINFO( m_nMapHolidayType ), 3, SPROP_UNSIGNED ),
 
 	SendPropEHandle( SENDINFO( m_itHandle ) ),
-	SendPropBool( SENDINFO( m_bPlayingMannVsMachine ) ),
 	SendPropEHandle( SENDINFO( m_hBirthdayPlayer ) ),
 
 	SendPropInt( SENDINFO( m_nBossHealth ) ),
@@ -2435,9 +2433,6 @@ void CTFGameRules::EndManagedMvMMatch( bool bKickPlayersToParties )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::UsePlayerReadyStatusMode( void )
 {
-	if ( IsMannVsMachineMode() )
-		return true;
-
 	if ( IsCompetitiveMode() )
 		return true;
 
@@ -2491,11 +2486,6 @@ bool CTFGameRules::PlayerReadyStatus_HaveMinPlayersToEnable( void )
 	{
 		nMinPlayers = pMatch->GetCanonicalMatchSize();
 	}
-	else if ( IsMannVsMachineMode() &&
-	          ( engine->IsDedicatedServer() || ( !engine->IsDedicatedServer() && nNumPlayers > 1 ) ) )
-	{
-		nMinPlayers = tf_mvm_min_players_to_start.GetInt();
-	}
 	else if ( UsePlayerReadyStatusMode() && engine->IsDedicatedServer() )
 	{
 		nMinPlayers = mp_tournament_readymode_min.GetInt();
@@ -2513,9 +2503,6 @@ bool CTFGameRules::PlayerReadyStatus_HaveMinPlayersToEnable( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::PlayerReadyStatus_ArePlayersOnTeamReady( int iTeam )
 {
-	if ( IsMannVsMachineMode() && iTeam == TF_TEAM_PVE_INVADERS )
-		return true;
-
 	CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
 	if ( pMatch )
 	{
@@ -2549,7 +2536,7 @@ bool CTFGameRules::PlayerReadyStatus_ArePlayersOnTeamReady( int iTeam )
 		}
 		else
 		{
-			int iTeamSize = IsMannVsMachineMode() ? pMatch->GetCanonicalMatchSize() : pMatch->GetCanonicalMatchSize() / 2;
+			int iTeamSize = pMatch->GetCanonicalMatchSize() / 2;
 			return iPlayerReadyCount >= iTeamSize;
 		}
 	}
@@ -2584,19 +2571,7 @@ bool CTFGameRules::PlayerReadyStatus_ShouldStartCountdown( void )
 	CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
 
 
-	if ( IsMannVsMachineMode() )
-	{
-		if ( !IsTeamReady( TF_TEAM_PVE_DEFENDERS ) && m_flRestartRoundTime >= gpGlobals->curtime + mp_tournament_readymode_countdown.GetInt() )
-		{
-			bool bIsTeamReady = PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_PVE_DEFENDERS );
-			if ( bIsTeamReady )
-			{
-				SetTeamReadyState( true, TF_TEAM_PVE_DEFENDERS );
-				return true;
-			}
-		}
-	}
-	else if ( pMatch &&
+	if ( pMatch &&
 	          PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_RED ) &&
 	          PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_BLUE ) )
 	{
@@ -2691,7 +2666,7 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 	}
 	else
 	{
-		if ( IsMannVsMachineMode() || IsCompetitiveMode() )
+		if ( IsCompetitiveMode() )
 		{
 			// Reduce timer as each player hits Ready, but only once per-player
 			if ( !m_bPlayerReadyBefore[nEntIndex] && m_flRestartRoundTime > gpGlobals->curtime + 60.f )
@@ -2721,7 +2696,7 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 
 		// Unofficial modes set team ready state here
 		CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
-		if ( !pMatch && !IsMannVsMachineMode() )
+		if ( !pMatch )
 		{
 			int nRed = 0;
 			int nRedCount = 0;
@@ -2780,9 +2755,6 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsDefaultGameMode( void )
 {
-	if ( IsMannVsMachineMode() )
-		return false;
-
 	if ( IsInArenaMode() )
 		return false;
 
@@ -2918,7 +2890,6 @@ CTFGameRules::CTFGameRules()
 	// Initialize the game type
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
-	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
 
 	m_bPlayingKoth.Set( false );
@@ -3142,11 +3113,6 @@ float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayer
 		return tf_creep_wave_player_respawn_time.GetFloat();
 	}
 #endif
-
-	if ( IsMannVsMachineMode() )
-	{
-		bScale = false;
-	}
 
 	float flTime = BaseClass::GetRespawnWaveMaxLength( iTeam, bScale );
 
@@ -3718,7 +3684,6 @@ void CTFGameRules::Activate()
 
 	tf_bot_count.SetValue( 0 );
 
-	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
 	m_bPlayingKoth.Set( false );
 	m_bPlayingMedieval.Set( false );
@@ -4057,10 +4022,6 @@ const char* CTFGameRules::LoseSongName( int nTeam )
 		return (nTeam == TF_TEAM_RED) 
 			? "Announcer.Helltower_Hell_Red_Lose" 
 			: "Announcer.Helltower_Hell_Blue_Lose";
-	}
-	else if ( IsMannVsMachineMode() )
-	{
-		return "music.mvm_lost_wave";
 	}
 	else
 	{
@@ -6280,8 +6241,8 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			{
 				bool bReduceBlast = false;
 
-				// If someone else shot us or we're in MvM
-				if( pAttacker != pVictimBaseEntity || IsMannVsMachineMode() )
+				// If someone else shot us
+				if( pAttacker != pVictimBaseEntity )
 				{
 					bReduceBlast = true;
 				}
@@ -6535,12 +6496,6 @@ CTFGameRules::~CTFGameRules()
 
 	// clean up cached teleport locations
 	m_mapTeleportLocations.PurgeAndDeleteElements();
-
-	// reset this only if we quit MvM to minimize the risk of breaking pub tournament
-	if ( IsMannVsMachineMode() )
-	{
-		mp_tournament.SetValue( 0 );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -6661,10 +6616,6 @@ bool CTFGameRules::TFVoiceManager( CBasePlayer *pListener, CBasePlayer *pTalker 
 	if ( pTalker && pTalker->BHaveChatSuspensionInCurrentMatch() )
 		return false;
 
-	// Always allow teams to hear each other in TD mode
-	if ( IsMannVsMachineMode() )
-		return true;
-
 	if ( !tf_gravetalk.GetBool() )
 	{
 		// Dead players can only be heard by other dead team mates but only if a match is in progress
@@ -6699,9 +6650,6 @@ bool CTFGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	{
 		if ( FStrEq( pcmd, "tournament_readystate" ) )
 		{
-			if ( IsMannVsMachineMode() )
-				return true;
-
 			if ( UsePlayerReadyStatusMode() )
 				return true;
 
@@ -6743,9 +6691,6 @@ bool CTFGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 
 		if ( FStrEq( pcmd, "tournament_teamname" ) )
 		{
-			if ( IsMannVsMachineMode() )
-				return true;
-
 			if ( IsCompetitiveMode() )
 				return true;
 
@@ -6944,7 +6889,7 @@ void CTFGameRules::Think()
 
 	if ( g_fGameOver )
 	{
-		if ( IsCompetitiveMode() && !IsMannVsMachineMode() )
+		if ( IsCompetitiveMode() )
 		{
 			const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( GetCurrentMatchGroup() );
 
@@ -11683,11 +11628,7 @@ void CTFGameRules::ClientDisconnected( edict_t *pClient )
 				const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( GetCurrentMatchGroup() );
 				if ( !pMatchDesc || !pMatchDesc->BUsesAutoReady() )
 				{
-					// Always reset when a player leaves this type of match if it isn't MvM
-					if ( !IsMannVsMachineMode() )
-					{
-						PlayerReadyStatus_ResetState();
-					}
+					PlayerReadyStatus_ResetState();
 				}
 				else if ( !IsTeamReady( pPlayer->GetTeamNumber() ) )
 				{
@@ -13262,13 +13203,10 @@ void CTFGameRules::RoundRespawn( void )
 		pTeam->SetFlagCaptures( 0 );
 	}
 
-	if ( !IsMannVsMachineMode() )
+	IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
+	if ( event )
 	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
-		if ( event )
-		{
-			gameeventmanager->FireEvent( event );
-		}
+		gameeventmanager->FireEvent( event );
 	}
 
 	// reset player per-round stats
@@ -13775,12 +13713,6 @@ void CTFGameRules::HandleMapEvent( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldWaitToStartRecording( void )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		// Don't wait for the WaitingForPlayers period to end if we're MvM
-		return false;
-	}
-	
 	return BaseClass::ShouldWaitToStartRecording(); 
 }
 
@@ -14727,7 +14659,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-	if ( ( pTFPlayer->m_Shared.IsInvulnerable() ) && !IsMannVsMachineMode() )
+	if ( pTFPlayer->m_Shared.IsInvulnerable() )
 	{
 		if ( pszReason )
 		{
@@ -14824,8 +14756,6 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 		iHealing = 0;
 	}
 
-	bool bMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
 	int iScore =	( pRoundStats->m_iStat[TFSTAT_KILLS] * TF_SCORE_KILL ) + 
 					( pRoundStats->m_iStat[TFSTAT_KILLS_RUNECARRIER] * TF_SCORE_KILL_RUNECARRIER ) + // Kill someone who is carrying a rune
 					( pRoundStats->m_iStat[TFSTAT_CAPTURES] * ( TF_SCORE_CAPTURE ) ) +
@@ -14834,7 +14764,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_BUILDINGSDESTROYED] * TF_SCORE_DESTROY_BUILDING ) + 
 					( pRoundStats->m_iStat[TFSTAT_HEADSHOTS] / TF_SCORE_HEADSHOT_DIVISOR ) + 
 					( pRoundStats->m_iStat[TFSTAT_BACKSTABS] * TF_SCORE_BACKSTAB ) + 
-					( iHealing / ( ( bMvM ) ? TF_SCORE_DAMAGE : TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) ) +  // MvM values healing more than PvP
+					( iHealing / TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) +  // MvM values healing more than PvP
 					( pRoundStats->m_iStat[TFSTAT_KILLASSISTS] / TF_SCORE_KILL_ASSISTS_PER_POINT ) + 
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
@@ -14860,7 +14790,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 	}
 
 	// Previously MvM-only
-	const int nDivisor = ( bMvM ) ? TF_SCORE_DAMAGE : TF_SCORE_HEAL_HEALTHUNITS_PER_POINT;
+	const int nDivisor = TF_SCORE_HEAL_HEALTHUNITS_PER_POINT;
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE] / nDivisor );
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE_ASSIST] / nDivisor );
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE_BOSS] / nDivisor );
@@ -15547,11 +15477,7 @@ bool CTFGameRules::ShouldBalanceTeams( void )
 //-----------------------------------------------------------------------------
 int CTFGameRules::GetBonusRoundTime( bool bGameOver /* = false*/ )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		return 5;
-	}
-	else if ( IsCompetitiveMode() && bGameOver )
+	if ( IsCompetitiveMode() && bGameOver )
 	{
 		if ( IsMatchTypeCompetitive() )
 		{
@@ -15710,25 +15636,6 @@ CObjectSentrygun *CTFGameRules::FindSentryGunWithMostKills( int team ) const
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		int nCount = 0;
-		CTFPlayer *pPlayer;
-
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( !pPlayer || pPlayer->IsFakeClient() )
-				continue;
-
-			nCount++;
-		}
-
-		if ( nCount >= tf_mvm_max_connected_players.GetInt() )
-			return false;
-	}
-
 	bool bRet = BaseClass::ClientConnected( pEntity, pszName, pszAddress, reject, maxrejectlen );
 	if ( bRet )
 	{
@@ -15749,9 +15656,6 @@ bool CTFGameRules::ClientConnected( edict_t *pEntity, const char *pszName, const
 bool CTFGameRules::ShouldMakeChristmasAmmoPack( void )
 {
 	if ( IsInTournamentMode() && !IsMatchTypeCasual() )
-		return false;
-
-	if ( IsMannVsMachineMode() )
 		return false;
 
 	if ( mp_holiday_nogifts.GetBool() == true )
@@ -16001,9 +15905,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 #ifdef GAME_DLL
 	if ( !Q_strcmp( eventName, "teamplay_point_captured" ) )
 	{
-		if ( IsMannVsMachineMode() )
-			return;
-
 		// keep track of how many times each team caps
 		int iTeam = event->GetInt( "team" );
 		Assert( iTeam >= FIRST_GAME_TEAM && iTeam < TF_TEAM_COUNT );
@@ -17763,20 +17664,6 @@ void CTFGameRules::BetweenRounds_Start( void )
 {
 	SetSetup( true );
 
-	if ( IsMannVsMachineMode() )
-	{
-		mp_tournament.SetValue( true );
-		RestartTournament();
-		SetInStopWatch( false );
-
-		char szName[16];
-		Q_strncpy( szName, "ROBOTS", MAX_TEAMNAME_STRING + 1 );
-		mp_tournament_blueteamname.SetValue( szName );
-		Q_strncpy( szName, "MANNCO", MAX_TEAMNAME_STRING + 1 );
-		mp_tournament_redteamname.SetValue( szName );
-		SetTeamReadyState( true, TF_TEAM_PVE_INVADERS );
-	}
-
 	for ( int i = 0; i < IBaseObjectAutoList::AutoList().Count(); ++i )
 	{
 		CBaseObject *pObj = static_cast<CBaseObject*>( IBaseObjectAutoList::AutoList()[i] );
@@ -17821,12 +17708,6 @@ void CTFGameRules::BetweenRounds_End( void )
 	SetInWaitingForPlayers( false );
 	SetSetup( false );
 
-	if ( IsMannVsMachineMode() )
-	{
-		SetInStopWatch( false );
-		mp_tournament_stopwatch.SetValue( false );
-	}
-
 	for ( int i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
@@ -17852,7 +17733,7 @@ void CTFGameRules::BetweenRounds_Think( void )
 		float flDropDeadTime = gpGlobals->curtime + mp_tournament_readymode_countdown.GetFloat() + 0.1f;
 		if ( bStartFinalCountdown && ( m_flRestartRoundTime < 0 || m_flRestartRoundTime >= flDropDeadTime ) )
 		{
-			float flDelay = IsMannVsMachineMode() ? 10.f : mp_tournament_readymode_countdown.GetFloat();
+			float flDelay = mp_tournament_readymode_countdown.GetFloat();
 			m_flRestartRoundTime.Set( gpGlobals->curtime + flDelay );
 			ShouldResetScores( true, true );
 			ShouldResetRoundsPlayed( true );
@@ -18589,9 +18470,6 @@ bool CTFGameRules::PointsMayBeCaptured( void )
 	}
 #endif // GAME_DLL
 
-	if ( IsMannVsMachineMode() )
-		return true;
-
 	if ( GetActiveRoundTimer() && InSetup() )
 		return false;
 
@@ -18668,7 +18546,6 @@ bool	ScriptIsInArenaMode()										{ return TFGameRules()->IsInArenaMode(); }
 bool	ScriptIsInKothMode()										{ return TFGameRules()->IsInKothMode(); }
 bool	ScriptIsInMedievalMode()									{ return TFGameRules()->IsInMedievalMode(); }
 bool	ScriptIsHolidayMap( int nHoliday )							{ return TFGameRules()->IsHolidayMap( nHoliday ); }
-bool	ScriptIsMannVsMachineMode()									{ return TFGameRules()->IsMannVsMachineMode(); }
 bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
@@ -18714,7 +18591,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( IsInKothMode,								"Playing king of the hill mode?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsInMedievalMode,							"Playing medieval mode?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsHolidayMap,								"Playing a holiday map? See Constants.EHoliday" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineMode,						"Playing MvM? Beep boop" );
 	TF_GAMERULES_SCRIPT_FUNC( IsQuickBuildTime,							"If an engie places a building, will it immediately upgrade? Eg. MvM pre-round etc." );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );

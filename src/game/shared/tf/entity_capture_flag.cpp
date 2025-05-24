@@ -527,22 +527,7 @@ void CCaptureFlag::PlaySound( IRecipientFilter& filter, const char *pszString, i
 	// Note:  iTeam parameter is only used for rate-limiting flag sounds based on team, and does not affect
 	// who the sound is targetted at; the filter parameter is the only thing that will affect who hears this.
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// Don't play bomb announcements unless we're at least 5 seconds into a wave in MVM
-		if ( !( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING && gpGlobals->curtime - TFGameRules()->GetLastRoundStateChangeTime() >= 5.0f ) )
-		{
-			return;
-		}
-
-		// Only play the reset sound in MVM
-		// Other flag announcements are too noisy
-		if ( V_strcmp( pszString, TF_MVM_AD_ENEMY_RETURNED ) == 0 )
-		{
-			EmitSound( filter, entindex(), pszString );
-		}
-	}
-	else if ( TFGameRules()->IsPlayingSpecialDeliveryMode() && ( ( V_strcmp( pszString, TF_RESOURCE_TEAM_DROPPED ) == 0 ) || ( V_strcmp( pszString, TF_RESOURCE_EVENT_TEAM_DROPPED ) == 0 ) ) )
+	if ( TFGameRules()->IsPlayingSpecialDeliveryMode() && ( ( V_strcmp( pszString, TF_RESOURCE_TEAM_DROPPED ) == 0 ) || ( V_strcmp( pszString, TF_RESOURCE_EVENT_TEAM_DROPPED ) == 0 ) ) )
 	{
 		// Rate limit certain flag sounds in Special Delivery
 		if ( iTeam == TEAM_ANY || gpGlobals->curtime >= m_flNextTeamSoundTime[iTeam]  )
@@ -734,14 +719,7 @@ void CCaptureFlag::ResetMessage( void )
 			else
 			{
 				CTeamRecipientFilter filter( iTeam, true );
-				if ( TFGameRules()->IsMannVsMachineMode() )
-				{
-					PlaySound( filter, TF_MVM_AD_ENEMY_RETURNED );
-				}
-				else
-				{
-					PlaySound( filter, TF_AD_ENEMY_RETURNED );
-				}
+				PlaySound( filter, TF_AD_ENEMY_RETURNED );
 			}
 		}
 	}
@@ -858,15 +836,6 @@ void CCaptureFlag::FlagTouch( CBaseEntity *pOther )
 		return;
 	}
 
-#ifdef GAME_DLL
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// skip all the restrictions and let bots pick up the flag
-		PickUp( pPlayer, true );
-		return;
-	}
-#endif
-
 	// Is the touching player about to teleport?
 	if ( pPlayer->m_Shared.InCond( TF_COND_SELECTED_TO_TELEPORT ) )
 		return;
@@ -918,13 +887,6 @@ void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 
 	if ( !TFGameRules()->FlagsMayBeCapped() )
 		return;
-
-	// For maps/scenarios with multiple flags, only allow one flag per player
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( pPlayer->HasTheFlag() )
-			return;
-	}
 
 #ifdef GAME_DLL
 	if ( !m_bAllowOwnerPickup )
@@ -1006,15 +968,7 @@ void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 			if ( iTeam != pPlayer->GetTeamNumber() )
 			{
 				CTeamRecipientFilter filter( iTeam, true );
-
-				if ( TFGameRules()->IsMannVsMachineMode() )
-				{
-					PlaySound( filter, TF_MVM_AD_ENEMY_STOLEN );
-				}
-				else
-				{
-					PlaySound( filter, TF_AD_ENEMY_STOLEN );
-				}
+				PlaySound( filter, TF_AD_ENEMY_STOLEN );
 			}
 			else
 			{
@@ -1226,15 +1180,7 @@ void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 			if ( iTeam != pPlayer->GetTeamNumber() )
 			{
 				CTeamRecipientFilter filter( iTeam, true );
-
-				if ( TFGameRules()->IsMannVsMachineMode() )
-				{
-					PlaySound( filter, TF_MVM_AD_ENEMY_CAPTURED );
-				}
-				else
-				{
-					PlaySound( filter, TF_AD_ENEMY_CAPTURED );
-				}
+				PlaySound( filter, TF_AD_ENEMY_CAPTURED );
 			}
 			else
 			{
@@ -1472,91 +1418,6 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 		}
 	}
 
-	// ensure the bomb drops somewhere the bots can reach it in MvM mode
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		Vector bombPos = GetAbsOrigin();
-
-		CTFNavArea *bombArea = (CTFNavArea *)TheNavMesh->GetNavArea( bombPos, 99999.9f );
-
-		bool isBombInBadPlace = false;
-
-		if ( bombArea )
-		{
-			if ( bombArea->HasAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE ) )
-			{
-				float height = bombArea->GetZ( bombPos );
-
-				if ( height > HalfHumanHeight )
-				{
-					isBombInBadPlace = true;
-				}
-			}
-			else
-			{
-				// Bomb not allowed in this nav area
-				isBombInBadPlace = true;
-			}
-		}
-		else
-		{
-			// Bomb is off the mesh
-			isBombInBadPlace = true;
-		}
-
-		if ( isBombInBadPlace )
-		{
-			// the bomb has dropped in an invalid spot - move it to a nearby valid area
-			const float searchRange = 500.0f;
-
-			Extent nearExtent;
-			nearExtent.lo = bombPos;
-			nearExtent.lo.x -= searchRange;
-			nearExtent.lo.y -= searchRange;
-			nearExtent.lo.z = MIN_COORD_FLOAT;			// make sure we catch all areas under flag, even it is way up in the air for some reason
-
-			nearExtent.hi = bombPos;
-			nearExtent.hi.x += searchRange;
-			nearExtent.hi.y += searchRange;
-			nearExtent.hi.z += searchRange;
-
-			CUtlVector< CTFNavArea * > nearAreaVector;
-
-			TheNavMesh->CollectAreasOverlappingExtent< CTFNavArea >( nearExtent, &nearAreaVector );
-
-			CTFNavArea *nearValidArea = NULL;
-			float nearRangeSq = FLT_MAX;
-			Vector nearSpot;
-
-			for( int i=0; i<nearAreaVector.Count(); ++i )
-			{
-				CTFNavArea *area = nearAreaVector[i];
-
-				if ( area->HasAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE ) )
-				{
-					area->GetClosestPointOnArea( bombPos, &nearSpot );
-
-					float rangeSq = ( nearSpot - bombPos ).LengthSqr();
-
-					if ( rangeSq < nearRangeSq )
-					{
-						nearRangeSq = rangeSq;
-						nearValidArea = area;
-					}
-				}
-			}
-
-
-			if ( nearValidArea )
-			{
-				nearValidArea->GetClosestPointOnArea( bombPos, &bombPos );
-				bombPos.z += 5.0f;
-
-				SetAbsOrigin( bombPos );
-			}
-		}
-	}
-
 	if ( m_nType == TF_FLAGTYPE_CTF )
 	{
 		if ( bMessage  )
@@ -1621,15 +1482,7 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 				if ( iTeam != pPlayer->GetTeamNumber() )
 				{
 					CTeamRecipientFilter filter( iTeam, true );
-
-					if ( TFGameRules()->IsMannVsMachineMode() )
-					{
-						PlaySound( filter, TF_MVM_AD_ENEMY_DROPPED );
-					}
-					else
-					{
-						PlaySound( filter, TF_AD_ENEMY_DROPPED );
-					}
+					PlaySound( filter, TF_AD_ENEMY_DROPPED );
 				}
 				else
 				{
@@ -1676,10 +1529,7 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 	m_outputOnDrop.FireOutput( this, this );
 	m_outputOnDrop1.FireOutput( pPlayer, this );
 
-	if ( !TFGameRules()->IsMannVsMachineMode() || ( GetMaxReturnTime() < 600 ) )
-	{
-		CreateReturnIcon();
-	}
+	CreateReturnIcon();
 
 	// did we get dropped in a func_respawnflag zone?
 	if ( PointInRespawnFlagZone( GetAbsOrigin() ) == true )
@@ -1689,11 +1539,6 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 	}
 
 	HandleFlagDroppedInDetectionZone( pPlayer );
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_BOMB_DROPPED, TF_TEAM_PVE_DEFENDERS );
-	}
 #endif
 }
 

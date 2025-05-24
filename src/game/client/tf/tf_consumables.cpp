@@ -1049,21 +1049,6 @@ static void StartUseActionSlotItem( const CCommand &args )
 		return;
 	}
 
-	// If we're in Mann Vs MAchine, and we're dead, we can use this to respawn instantly.
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pLocalPlayer->IsObserver() )
-	{
-		float flNextRespawn = TFGameRules()->GetNextRespawnWave( pLocalPlayer->GetTeamNumber(), pLocalPlayer );
-		if ( flNextRespawn )
-		{
-			int iRespawnWait = (flNextRespawn - gpGlobals->curtime);
-			if ( iRespawnWait > 1.0 )
-			{
-				engine->ClientCmd_Unrestricted( "td_buyback\n" );
-				return;
-			}
-		}
-	}
-
 	// trying to pick up a dropped weapon?
 	if ( pLocalPlayer->GetDroppedWeaponInRange() != NULL )
 	{

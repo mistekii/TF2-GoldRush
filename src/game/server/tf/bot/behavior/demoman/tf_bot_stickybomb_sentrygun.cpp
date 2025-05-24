@@ -150,12 +150,6 @@ ActionResult< CTFBot >	CTFBotStickybombSentrygun::Update( CTFBot *me, float inte
 
 	int requiredStickyBombs = 3;
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// launch more stickies to make sure we take out beefed-up sentries
-		requiredStickyBombs = 5;
-	}
-
 	if ( stickyLauncher->GetPipeBombCount() >= requiredStickyBombs || me->GetAmmoCount( TF_AMMO_SECONDARY ) <= 0 )
 	{
 		// stickies laid - detonate them once they are on the ground

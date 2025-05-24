@@ -378,7 +378,6 @@ public:
 			for ( int iTip = 1; iTip < nTipCount+1; ++iTip )
 			{
 				const wchar_t *pwszText = g_pVGuiLocalize->Find( CFmtStr( "#ClassTips_%d_%d", iClass, iTip ) );
-				const wchar_t *pwszTextMvM = g_pVGuiLocalize->Find( CFmtStr( "#ClassTips_%d_%d_MvM", iClass, iTip ) );
 				wchar_t *pwszIcon = g_pVGuiLocalize->Find( CFmtStr( "ClassTips_%d_%d_Icon", iClass, iTip ) );
 				char szIcon[MAX_PATH];
 
@@ -388,28 +387,13 @@ public:
 					g_pVGuiLocalize->ConvertUnicodeToANSI( pwszIcon, szIcon, sizeof( szIcon ) );
 				}
 
-				// Don't load MvM tips outside the mode
-				if ( pwszTextMvM )
-				{
-					if ( !TFGameRules()->IsMannVsMachineMode() )
-						continue;
-
-					// If we're MvM mode, remember first MvM tip
-					if ( !nScrollToItem )
-						nScrollToItem = iTip;
-				}
-
 				// Create a TipsItemPanel for each tip
-				if ( pwszText || pwszTextMvM )
+				if ( pwszText )
 				{
 					CTFClassTipsItemPanel *pClassTipsItemPanel = new CTFClassTipsItemPanel( this, "ClassTipsItemPanel", iTip );
 					if ( pwszText )
 					{
 						pClassTipsItemPanel->SetClassTip( pwszText, szIcon );
-					}
-					else if ( pwszTextMvM )
-					{
-						pClassTipsItemPanel->SetClassTip( pwszTextMvM, szIcon );
 					}
 
 					m_pClassTipsListPanel->AddItem( NULL, pClassTipsItemPanel );
@@ -797,14 +781,7 @@ void CTFClassMenu::SelectClass( int iClass )
 	enginesound->StopSoundByGuid( m_nBaseMusicGuid );
 	CBroadcastRecipientFilter filter;
 	char nClassMusicStr[64];
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		sprintf( nClassMusicStr, "music.mvm_class_menu_0%i", iClass );
-	}
-	else
-	{
-		sprintf( nClassMusicStr, "music.class_menu_0%i", iClass );
-	}
+	sprintf( nClassMusicStr, "music.class_menu_0%i", iClass );
 	CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, nClassMusicStr );
 	m_nBaseMusicGuid = enginesound->GetGuidForLastSoundEmitted();
 	
@@ -1170,28 +1147,14 @@ void CTFClassMenu::SetVisible( bool state )
 		engine->ClientCmd( "_cl_classmenuopen 1" );	// for other panels
 		CBroadcastRecipientFilter filter;
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.mvm_class_menu" );
-		}
-		else
-		{
-			CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.class_menu" );
-		}
+		CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.class_menu" );
 	}
 	else
 	{
 		engine->ServerCmd( "menuclosed" );	
 		engine->ClientCmd( "_cl_classmenuopen 0" );
-		
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.mvm_class_menu" );
-		}
-		else
-		{
-			CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.class_menu" );
-		}
+
+		CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.class_menu" );
 	}
 }
 
@@ -1246,17 +1209,6 @@ void CTFClassMenu::Go()
 
 	// Change class
 	BaseClass::OnCommand( CFmtStr( "joinclass %s", g_aRawPlayerClassNames[ iClass ] ).Access() );
-
-	CBroadcastRecipientFilter filter;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.mvm_class_select" );
-	}
-	else
-	{
-		
-	}
 }
 
 //-----------------------------------------------------------------------------

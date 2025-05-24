@@ -1500,63 +1500,14 @@ void CTFGCServerSystem::PreClientUpdate( )
 
 	// Check for slamming visiblemaxplayers
 	static ConVarRef sv_visiblemaxplayers( "sv_visiblemaxplayers" );
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+
+	// Check for restoring sv_visiblemaxplayers
+	if ( m_bOverridingVisibleMaxPlayers )
 	{
-		// Abort the server if they don't have enough maxplayers
-		if ( gpGlobals->maxClients < 32 )
-		{
-			if( !g_bWarnedAboutMaxplayersInMVM )
-			{
-				// Prevent this warning from endlessly spamming the console...
-				g_bWarnedAboutMaxplayersInMVM = true;
-				Warning( "You must set maxplayers to 32 to host Mann vs. Machine\n" );
-			}
-
-			if ( engine->IsDedicatedServer() )
-			{
-				engine->ServerCommand( "exit\n" );
-			}
-			return;
-		}
-
-		// This changes what the server browser displays
-		// update sv_visiblemaxplayers for MvM, count only non-bot spectators
-		CUtlVector<CTFPlayer *> spectatorVector;
-		CollectPlayers( &spectatorVector, TEAM_SPECTATOR );
-		int spectatorCount = 0;
-		FOR_EACH_VEC ( spectatorVector, iIndex )
-		{
-			if ( !spectatorVector[iIndex]->IsBot() && !spectatorVector[iIndex]->IsReplay() && !spectatorVector[iIndex]->IsHLTV() )
-			{
-				spectatorCount++;
-			}
-		}
-
-		int playerCount = tf_mvm_defenders_team_size.GetInt() + spectatorCount;
-		if ( sv_visiblemaxplayers.GetInt() <= 0 || sv_visiblemaxplayers.GetInt() != playerCount )
-		{
-			MMLog( "Setting sv_visiblemaxplayers to %d for MvM\n", playerCount );
-
-			// save off visible players
-			if ( !m_bOverridingVisibleMaxPlayers )
-			{
-				m_bOverridingVisibleMaxPlayers = true;
-				m_iSavedVisibleMaxPlayers = sv_visiblemaxplayers.GetInt();
-			}
-
-			sv_visiblemaxplayers.SetValue( playerCount );
-		}
-	}
-	else
-	{
-		// Not in MvM.  Check for restoring sv_visiblemaxplayers
-		if ( m_bOverridingVisibleMaxPlayers )
-		{
-			MMLog( "Restoring sv_visiblemaxplayers to %d\n", m_iSavedVisibleMaxPlayers );
-			sv_visiblemaxplayers.SetValue( m_iSavedVisibleMaxPlayers );
-			m_bOverridingVisibleMaxPlayers = false;
-			m_iSavedVisibleMaxPlayers = -1;
-		}
+		MMLog( "Restoring sv_visiblemaxplayers to %d\n", m_iSavedVisibleMaxPlayers );
+		sv_visiblemaxplayers.SetValue( m_iSavedVisibleMaxPlayers );
+		m_bOverridingVisibleMaxPlayers = false;
+		m_iSavedVisibleMaxPlayers = -1;
 	}
 
 	// You may not be in matchmaking if you have a password!
@@ -1973,16 +1924,8 @@ void CTFGCServerSystem::VoteKickPlayerRequestResponse( CSteamID voterSteamID, CS
 		{ return; }
 
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( !CanKickPlayerMvM( pVoterPlayer, pTargetPlayer ) )
-			return;
-	}
-	else
-	{
-		if ( !CanKickPlayer( pVoterPlayer, pTargetPlayer ) )
-			return;
-	}
+	if ( !CanKickPlayer( pVoterPlayer, pTargetPlayer ) )
+		return;
 
 	CVoteController *pVoteController = pVoterPlayer->GetTeamVoteController();
 	Assert( pVoteController );
@@ -3216,17 +3159,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 		case GR_STATE_TEAM_WIN:
 		case GR_STATE_STALEMATE:
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				// *Currently* can only end in victory (or dissolves because everyone leaves)
-				if (
-					TFGameRules()->State_Get() == GR_STATE_TEAM_WIN
-					&& TFGameRules()->GetWinningTeam() == TF_TEAM_PVE_DEFENDERS )
-				{
-					gcState = TF_GC_GAMESTATE_POST_GAME;
-				}
-			}
-			else if ( TFGameRules()->IsCompetitiveMode() )
+			if ( TFGameRules()->IsCompetitiveMode() )
 			{
 				if ( TFGameRules()->State_Get() == GR_STATE_GAME_OVER )
 				{
@@ -3237,8 +3170,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 		case GR_STATE_GAME_OVER:
 			gcState = TF_GC_GAMESTATE_GAME_IN_PROGRESS;
-			if ( TFGameRules()->IsMannVsMachineMode() ||
-			     TFGameRules()->IsCompetitiveMode() ) // right?
+			if ( TFGameRules()->IsCompetitiveMode() ) // right?
 			{
 				gcState = TF_GC_GAMESTATE_DISCONNECT;
 			}
@@ -3300,18 +3232,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 			eGameServerInfoState = ServerMatchmakingState_NOT_PARTICIPATING;
 		}
 	}
-
-// This is probably not worth the risk / reward right now.  We've given instructions
-// telling server operators how to avoid this from happening, and it might break something
-//		// Check if we have a lobby, and they have switched to/from MvM mode, then don't
-//		// put us in matchmaking for now
-//		bool bMapIsMvmMap = ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() );
-//		if ( ( pLobby != NULL ) && ( bMapIsMvmMap != bIsMvmMode ) )
-//		{
-//			eGameServerInfoMatchmakingMode = TF_Matchmaking_INVALID;
-//			eGameServerInfoState = ServerMatchmakingState_NOT_PARTICIPATING;
-//			MMLog( "Sending NOT_PARTICIPATING.  Is MvM Map: %d, tf_mm_servermode=%d\n", bMapIsMvmMap ? 1 : 0, tf_mm_servermode.GetInt() );
-//		}
 
 	int nSlotsFree = nMaxHumans - nHumans;
 

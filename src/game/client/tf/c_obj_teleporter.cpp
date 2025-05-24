@@ -216,17 +216,6 @@ void C_ObjectTeleporter::UpdateTeleporterEffects( void )
 		StopBuildingEffects();
 	}
 
-	// In MVM, teleporter from invaders act as spawn point. Always play active effect
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( m_iState != TELEPORTER_STATE_BUILDING && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			StartChargedEffects();
-			StartActiveEffects();
-			return;
-		}
-	}
-
 	if ( m_iState == TELEPORTER_STATE_READY )
 	{
 		StartChargedEffects();

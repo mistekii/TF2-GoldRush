@@ -99,16 +99,6 @@ void CTFWeaponBaseMelee::Precache()
 {
 	BaseClass::Precache();
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		char szMeleeSoundStr[128] = "MVM_";
-		const char *shootsound = GetShootSound( MELEE_HIT );
-		if ( shootsound && shootsound[0] )
-		{
-			V_strcat(szMeleeSoundStr, shootsound, sizeof( szMeleeSoundStr ));
-			CBaseEntity::PrecacheScriptSound( szMeleeSoundStr );
-		}
-	}
 	CBaseEntity::PrecacheScriptSound("MVM_Weapon_Default.HitFlesh");
 }
 
@@ -423,11 +413,6 @@ bool CTFWeaponBaseMelee::DoSwingTraceInternal( trace_t &trace, bool bCleave, CUt
 	Vector vecSwingStart = pPlayer->Weapon_ShootPosition();
 	Vector vecSwingEnd = vecSwingStart + vecForward * fSwingRange;
 
-	// In MvM, melee hits from the robot team wont hit teammates to ensure mobs of melee bots don't 
-	// swarm so tightly they hit each other and no-one else
-	bool bDontHitTeammates = pPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS && TFGameRules()->IsMannVsMachineMode();
-	CTraceFilterIgnoreTeammates ignoreTeammatesFilter( pPlayer, COLLISION_GROUP_NONE, pPlayer->GetTeamNumber() );
-
 	if ( bCleave )
 	{
 		Ray_t ray;
@@ -442,12 +427,6 @@ bool CTFWeaponBaseMelee::DoSwingTraceInternal( trace_t &trace, bool bCleave, CUt
 			if ( pTarget == pPlayer )
 			{
 				// don't hit yourself
-				continue;
-			}
-
-			if ( bDontHitTeammates && pTarget->GetTeamNumber() == pPlayer->GetTeamNumber() )
-			{
-				// don't hit teammate
 				continue;
 			}
 
@@ -495,27 +474,13 @@ bool CTFWeaponBaseMelee::DoSwingTraceInternal( trace_t &trace, bool bCleave, CUt
 		if ( !bSapperHit )
 		{
 			// See if we hit anything.
-			if ( bDontHitTeammates )
-			{
-				UTIL_TraceLine( vecSwingStart, vecSwingEnd, MASK_SOLID, &ignoreTeammatesFilter, &trace );
-			}
-			else
-			{
-				CTraceFilterIgnoreFriendlyCombatItems filter( pPlayer, COLLISION_GROUP_NONE, pPlayer->GetTeamNumber() );
-				UTIL_TraceLine( vecSwingStart, vecSwingEnd, MASK_SOLID, &filter, &trace );
-			}
+			CTraceFilterIgnoreFriendlyCombatItems filter( pPlayer, COLLISION_GROUP_NONE, pPlayer->GetTeamNumber() );
+			UTIL_TraceLine( vecSwingStart, vecSwingEnd, MASK_SOLID, &filter, &trace );
 
 			if ( trace.fraction >= 1.0 )
 			{
-				if ( bDontHitTeammates )
-				{
-					UTIL_TraceHull( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, MASK_SOLID, &ignoreTeammatesFilter, &trace );
-				}
-				else
-				{
-					CTraceFilterIgnoreFriendlyCombatItems filter( pPlayer, COLLISION_GROUP_NONE, pPlayer->GetTeamNumber() );
-					UTIL_TraceHull( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, MASK_SOLID, &filter, &trace );
-				}
+				CTraceFilterIgnoreFriendlyCombatItems filter( pPlayer, COLLISION_GROUP_NONE, pPlayer->GetTeamNumber() );
+				UTIL_TraceHull( vecSwingStart, vecSwingEnd, vecSwingMins, vecSwingMaxs, MASK_SOLID, &filter, &trace );
 
 				if ( trace.fraction < 1.0 )
 				{
@@ -567,46 +532,7 @@ bool CTFWeaponBaseMelee::OnSwingHit( trace_t &trace )
 	{
 		CTFPlayer *pTargetPlayer = ToTFPlayer( trace.m_pEnt );
 
-		bool bPlayMvMHitOnly = false;
-		// handle hitting a robot	
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( pTargetPlayer  && pTargetPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS && !pTargetPlayer->IsPlayer() )
-			{
-				bPlayMvMHitOnly = true;
-
-				CBroadcastRecipientFilter filter;
-				// 					CSingleUserRecipientFilter filter( ToBasePlayer( GetOwner() ) );
-				// 					if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
-				// 					{
-				// 						filter.UsePredictionRules();
-				// 					}
-
-				char szMeleeSoundStr[128] = "MVM_";
-				const char *shootsound = GetShootSound( MELEE_HIT );
-				if ( shootsound && shootsound[0] )
-				{
-					V_strcat(szMeleeSoundStr, shootsound, sizeof( szMeleeSoundStr ));
-					CSoundParameters params;
-					if ( CBaseEntity::GetParametersForSound( szMeleeSoundStr, params, NULL ) )
-					{
-						EmitSound( filter, GetOwner()->entindex(), szMeleeSoundStr, NULL );
-					}
-					else
-					{
-						EmitSound( filter, GetOwner()->entindex(), "MVM_Weapon_Default.HitFlesh", NULL );
-					}
-				}
-				else
-				{
-					EmitSound( filter, GetOwner()->entindex(), "MVM_Weapon_Default.HitFlesh", NULL );
-				}
-			}
-		} 
-		if(! bPlayMvMHitOnly )
-		{
-			WeaponSound( MELEE_HIT );
-		}
+		WeaponSound( MELEE_HIT );
 
 #if !defined (CLIENT_DLL)
 

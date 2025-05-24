@@ -250,25 +250,8 @@ void CTFFlagStatus::ApplySchemeSettings( IScheme *pScheme )
 {
 	BaseClass::ApplySchemeSettings( pScheme );
 
-	KeyValues *pConditions = NULL;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-
-		if ( pConditions )
-		{
-			AddSubKeyNamed( pConditions, "if_mvm" );
-		}
-	}
-
 	// load control settings...
-	LoadControlSettings( "resource/UI/FlagStatus.res", NULL, NULL, pConditions );
-
-	if ( pConditions )
-	{
-		pConditions->deleteThis();
-	}
+	LoadControlSettings( "resource/UI/FlagStatus.res" );
 }
 
 //-----------------------------------------------------------------------------
@@ -310,11 +293,6 @@ void CTFFlagStatus::UpdateStatus( void )
 			if ( m_pStatusIcon )
 			{
 				m_pStatusIcon->SetImage( pszImage );
-			}
-
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && m_pBriefcase )
-			{
-				m_pBriefcase->SetImage( pszBombImage );
 			}
 		}
 	}
@@ -365,7 +343,6 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 	KeyValues *pConditions = NULL;
 
 	bool bHybrid = TFGameRules() && TFGameRules()->IsPlayingHybrid_CTF_CP();
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
 	bool bSpecialDeliveryMode = TFGameRules() && TFGameRules()->IsPlayingSpecialDeliveryMode();
 
 	int nNumFlags = 0;
@@ -401,7 +378,7 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 	}
 	else
 	{
-		if ( bHybrid || ( nNumFlags == 1 ) || bMVM || bSpecialDeliveryMode )
+		if ( bHybrid || ( nNumFlags == 1 ) || bSpecialDeliveryMode )
 		{
 			pConditions = new KeyValues( "conditions" );
 			if ( pConditions )
@@ -418,11 +395,6 @@ void CTFHudFlagObjectives::ApplySchemeSettings( IScheme *pScheme )
 				else if ( nNumFlags == 2 )
 				{
 					AddSubKeyNamed( pConditions, "if_hybrid_double" );
-				}
-
-				if ( bMVM )
-				{
-					AddSubKeyNamed( pConditions, "if_mvm" );
 				}
 
 				if ( bSpecialDeliveryMode )
@@ -588,7 +560,7 @@ void CTFHudFlagObjectives::OnTick()
 	}
 
 	// are we playing captures for rounds?
-	if ( !TFGameRules() || ( !TFGameRules()->IsPlayingHybrid_CTF_CP() && !TFGameRules()->IsPlayingSpecialDeliveryMode() && !TFGameRules()->IsMannVsMachineMode() ) )
+	if ( !TFGameRules() || ( !TFGameRules()->IsPlayingHybrid_CTF_CP() && !TFGameRules()->IsPlayingSpecialDeliveryMode() ) )
 	{
 		if ( tf_flag_caps_per_round.GetInt() > 0 )
 		{

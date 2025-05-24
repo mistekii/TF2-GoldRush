@@ -991,9 +991,6 @@ void CTFPlayer::ForcePlayerViewAngles( const QAngle& qTeleportAngles )
 //-----------------------------------------------------------------------------
 bool CTFPlayer::CanBeForcedToLaugh( void )
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsBot() && ( GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-		return false;
-
 	return true;
 }
 
@@ -1327,21 +1324,6 @@ void CTFPlayer::TFPlayerThink()
 		}
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		// prevents player from standing on bot's head to block its movement.
-		if ( pGroundEntity && pGroundEntity->IsPlayer() )
-		{
-			Vector vPush = GetAbsOrigin() - pGroundEntity->GetAbsOrigin();
-			vPush.z = 0.f;
-			vPush.NormalizeInPlace();
-			vPush.z = 1.f;
-			vPush *= 100.f;
-
-			ApplyAbsVelocityImpulse( vPush );
-		}
-	}
-
 	// Scale our head
 	m_flHeadScale = Approach( GetDesiredHeadScale(), m_flHeadScale, GetHeadScaleSpeed() );
 
@@ -1439,12 +1421,7 @@ void CTFPlayer::RegenThink( void )
 	{
 		float flTimeSinceDamage = gpGlobals->curtime - GetLastDamageReceivedTime();
 		float flScale = 1.0f;
-		// Ignore Scale for MvM, always give full regen
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			flScale = 1.0f;
-		}
-		else if ( flTimeSinceDamage < 5.0f )
+		if ( flTimeSinceDamage < 5.0f )
 		{
 			flScale = 0.25f;
 		}
@@ -2140,30 +2117,6 @@ void CTFPlayer::PostThink()
 	{
 		m_flTauntAttackTime = 0;
 		DoTauntAttack();
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// metal is free during setup time
-		if ( TFGameRules()->IsQuickBuildTime() )
-		{
-			GiveAmmo( 1000, TF_AMMO_METAL, true );
-		}
-
-		// clamp maximum velocity to avoid sending mini-bosses into the stratosphere
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			Vector ahead = GetAbsVelocity();
-			float speed = ahead.NormalizeInPlace();
-
-			const float velocityLimit = 1000.0f;
-			if ( speed > velocityLimit )
-			{
-				speed = velocityLimit;
-			}
-
-			SetAbsVelocity( speed * ahead );
-		}
 	}
 
 	UpdateHalloween();
@@ -3774,10 +3727,6 @@ void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 
 			for ( int i = 0; i < CLASS_LOADOUT_POSITION_COUNT; i++ )
 			{
-				// bots don't need the action slot item for MvM (canteen)
- 				if ( ( i == LOADOUT_POSITION_ACTION ) && IsBot() && TFGameRules() && TFGameRules()->IsMannVsMachineMode() && ( GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
- 					continue;
-
 				m_EquippedLoadoutItemIndices[i] = LOADOUT_SLOT_USE_BASE_ITEM;
 
 				// use base items in training mode
@@ -5078,25 +5027,6 @@ int CTFPlayer::GetAutoTeam( int nPreferedTeam /*= TF_TEAM_AUTOASSIGN*/ )
 					return TEAM_SPECTATOR;
 				}
 			}
-
-			bool bReturnDefenders = false;
-
-#ifdef TF_RAID_MODE
-			if ( TFGameRules()->IsBossBattleMode() )
-			{
-				bReturnDefenders = true;
-			}
-#endif // TF_RAID_MODE
-
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				bReturnDefenders = true;
-			}
-
-			if ( bReturnDefenders )
-			{
-				return TFGameRules()->GetTeamAssignmentOverride( this, TF_TEAM_PVE_DEFENDERS );
-			}
 		}
 
 		CTFBot *pPlayerBot = dynamic_cast<CTFBot*>( this );
@@ -5218,9 +5148,6 @@ bool CTFPlayer::ShouldForceAutoTeam( void )
 	if ( mp_forceautoteam.GetBool() )
 		return true;
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		return true;
-
 	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
 		return true;
 
@@ -5325,7 +5252,7 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 		}
 
 		// Deny spectator access if it would unbalance the teams
-		if ( ( mp_spectators_restricted.GetBool() || tf_mm_trusted.GetBool() ) && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+		if ( ( mp_spectators_restricted.GetBool() || tf_mm_trusted.GetBool() ) && TFGameRules() )
 		{
 			if ( GetTeamNumber() == TF_TEAM_RED || GetTeamNumber() == TF_TEAM_BLUE )
 			{
@@ -5934,9 +5861,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName, bool bAllowSpaw
 			return;
 		}
 	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && TFGameRules()->State_Get() == GR_STATE_BETWEEN_RNDS )
-		m_bAllowInstantSpawn = true;
 
 	if ( bShouldNotRespawn == false && ( m_bAllowInstantSpawn || bDeadInstantSpawn || bInRespawnRoom || bInStalemateClassChangeTime ) )
 	{
@@ -7771,15 +7695,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		}
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		// can only bounce invaders when they are on the ground
-		if ( GetGroundEntity() == NULL )
-		{
-			info.SetDamageForce( vec3_origin );
-		}
-	}
-
 	// Save damage force for ragdolls.
 	m_vecTotalBulletForce = info.GetDamageForce();
 	m_vecTotalBulletForce.x = clamp( m_vecTotalBulletForce.x, -15000.0f, 15000.0f );
@@ -8190,7 +8105,7 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		// Buff 5: our pyro attacker get rage when we're damaged by fire
 		if ( ( info.GetDamageType() & DMG_BURN ) != 0 || ( info.GetDamageType() & DMG_PLASMA ) != 0 )
 		{
-			float flInverseRageGainScale = TFGameRules()->IsMannVsMachineMode() ? 12.f : 3.f;
+			float flInverseRageGainScale = 3.f;
 			HandleRageGain( pTFAttacker, kRageBuffFlag_OnBurnDamageDealt, info.GetDamage() * flRageScale, flInverseRageGainScale );
 		}
 	}
@@ -8884,11 +8799,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 	}
 
 	m_flLastDamageTime = gpGlobals->curtime; // not networked
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// We only need damage time networked while in MvM
-		m_flMvMLastDamageTime = gpGlobals->curtime;
-	}
 
 	// Apply a damage force.
 	CBaseEntity *pAttacker = info.GetAttacker();
@@ -9129,10 +9039,6 @@ bool CTFPlayer::ShouldGib( const CTakeDamageInfo &info )
 			return true;
 	}
 
-	// normal players/bots don't gib in MvM
-	if ( TFGameRules()->IsMannVsMachineMode() )
-		return false;
-
 	// Suicide explode always gibs.
 	if ( m_bSuicideExplode )
 	{
@@ -9237,22 +9143,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 	if ( pVictim->IsPlayer() )
 	{
 		CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
-
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( pTFVictim && pTFVictim->IsBot() && ( pTFVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-			{
-				if ( pTFVictim->GetDeployingBombState() > TF_BOMB_DEPLOYING_NONE )
-				{
-					IGameEvent *event = gameeventmanager->CreateEvent( "mvm_kill_robot_delivering_bomb" );
-					if ( event )
-					{
-						event->SetInt( "player", entindex() );
-						gameeventmanager->FireEvent( event );
-					}
-				}
-			}
-		}
 
 		// Custom death handlers
 		// TODO: Need a system here!  This conditional is getting pretty big.
@@ -10860,9 +10750,6 @@ void CTFPlayer::AmmoPackCleanUp( void )
 //-----------------------------------------------------------------------------
 bool CTFPlayer::ShouldDropAmmoPack()
 {
-	if ( TFGameRules()->IsMannVsMachineMode() && IsBot() )
-		return false;
-
 	if ( TFGameRules()->IsInArenaMode() && TFGameRules()->InStalemate() == false )
 		return false;
 
@@ -11146,12 +11033,6 @@ void CTFPlayer::TeamFortress_ClientDisconnected( void )
 void CTFPlayer::RemoveAllOwnedEntitiesFromWorld( bool bExplodeBuildings /* = false */ )
 {
 	RemoveOwnedProjectiles();
-
-	if ( TFGameRules()->IsMannVsMachineMode() && ( GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-	{
-		// MvM engineer bots leave their sentries behind when they die
-		return;
-	}
 
 
 #ifdef TF_RAID_MODE
@@ -11471,7 +11352,7 @@ bool CTFPlayer::SetObserverMode(int mode)
 	}
 
 	// this is the old behavior, still supported for community servers
-	bool bAllowSpecModeChange = TFGameRules()->IsInTournamentMode() ? TFGameRules()->IsMannVsMachineMode() : true;
+	bool bAllowSpecModeChange = !TFGameRules()->IsInTournamentMode();
 
 	// new behavior for Valve casual, competitive, and mvm matches
 	const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( TFGameRules()->GetCurrentMatchGroup() );
@@ -11878,14 +11759,6 @@ void CTFPlayer::RemoveAmmo( int iCount, int iAmmoIndex )
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) )
 	{
 		return;
-	}
-
-	// Infinite primary, secondary and metal in these game modes
-	if ( TFGameRules() && iAmmoIndex < TF_AMMO_GRENADES1 )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			return;
-
 	}
 
 	CBaseCombatCharacter::RemoveAmmo( iCount, iAmmoIndex );
@@ -12820,18 +12693,6 @@ void CTFPlayer::DeathSound( const CTakeDamageInfo &info )
 
 	int nDeathSoundOffset = DEATH_SOUND_FIRST;
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		nDeathSoundOffset = DEATH_SOUND_MVM_FIRST;
-	}
-	
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
-		 GetTeamNumber() != TF_TEAM_PVE_INVADERS && !m_bGoingFeignDeath )
-	{
-		EmitSound( "MVM.PlayerDied" );
-		return;
-	}
-
 	if ( m_LastDamageType & DMG_FALL ) // Did we die from falling?
 	{
 		// They died in the fall. Play a splat sound.
@@ -13087,10 +12948,6 @@ void CTFPlayer::TeleportEffect( void )
 	m_Shared.AddCond( TF_COND_TELEPORTED );
 
 	float flDuration = 12.f;
-	if ( TFGameRules()->IsMannVsMachineMode() && m_bIsABot && IsBotOfType( TF_BOT_TYPE ) )
-	{
-		flDuration = 30.f;
-	}
 
 	// Also removed on death
 	SetContextThink( &CTFPlayer::RemoveTeleportEffect, gpGlobals->curtime + flDuration, "TFPlayer_TeleportEffect" );
@@ -13859,7 +13716,7 @@ bool CTFPlayer::IsValidObserverTarget( CBaseEntity * target )
 		}
 		else
 		{
-			bStrictRules = ( TFGameRules()->IsInTournamentMode() && !TFGameRules()->IsMannVsMachineMode() );
+			bStrictRules = TFGameRules()->IsInTournamentMode();
 		}
 
 		if ( bStrictRules )
@@ -15986,18 +15843,7 @@ void CTFPlayer::DoTauntAttack( void )
 
 				if ( HasTheFlag() )
 				{
-					bool bShouldDrop = true;
-
-					// Always allow teams to hear each other in TD mode
-					if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-					{
-						bShouldDrop = false;
-					}
-
-					if ( bShouldDrop )
-					{
-						DropFlag();
-					}
+					DropFlag();
 				}
 
 				SelectLastItem();
@@ -16783,22 +16629,19 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 	// only roll random halloween taunt if the active weapon doesn't have special taunt attribute
 	if ( TFGameRules()->IsHolidayActive( kHoliday_Halloween ) && iSpecialTaunt == 0 )
 	{
-		if ( !TFGameRules()->IsMannVsMachineMode() || ( GetTeamNumber() != TF_TEAM_PVE_INVADERS ) )
+		if ( pActiveWeapon )
 		{
-			if ( pActiveWeapon )
-			{
-				int iRageTaunt = 0;
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iRageTaunt, burn_damage_earns_rage );		
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iRageTaunt, generate_rage_on_dmg );
+			int iRageTaunt = 0;
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iRageTaunt, burn_damage_earns_rage );		
+			CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iRageTaunt, generate_rage_on_dmg );
 
-				int iWeaponID = pActiveWeapon->GetWeaponID();
-				if ( iWeaponID != TF_WEAPON_LUNCHBOX && !( iRageTaunt && m_Shared.GetRageMeter() >= 100.f ) )
+			int iWeaponID = pActiveWeapon->GetWeaponID();
+			if ( iWeaponID != TF_WEAPON_LUNCHBOX && !( iRageTaunt && m_Shared.GetRageMeter() >= 100.f ) )
+			{
+				float frand = (float) rand() / VALVE_RAND_MAX;
+				if ( frand < 0.4f )
 				{
-					float frand = (float) rand() / VALVE_RAND_MAX;
-					if ( frand < 0.4f )
-					{
-						criteriaSet.AppendCriteria( "IsHalloweenTaunt", "1" );
-					}
+					criteriaSet.AppendCriteria( "IsHalloweenTaunt", "1" );
 				}
 			}
 		}
@@ -16895,14 +16738,6 @@ void CTFPlayer::ModifyOrAppendCriteria( AI_CriteriaSet& criteriaSet )
 		if ( IsFairyHeavy() )
 		{
 			criteriaSet.AppendCriteria( "IsFairyHeavy", "1" );
-		}
-	}
-	
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_DEFENDERS )
-		{
-			criteriaSet.AppendCriteria( "IsMvMDefender", "1" );
 		}
 	}
 }
@@ -17073,15 +16908,6 @@ bool CTFPlayer::CanHearAndReadChatFrom( CBasePlayer *pPlayer )
 	// check if we're ignoring all but teammates
 	if ( ( m_iIgnoreGlobalChat == CHAT_IGNORE_TEAM ) && ( g_pGameRules->PlayerRelationship( this, pPlayer ) != GR_TEAMMATE ) )
 		return false;
-
-	// Always allow teams to hear each other in TD mode
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( IsHLTV() || IsReplay() )
-			return true;
-		
-		return ( GetTeamNumber() == pPlayer->GetTeamNumber() );
-	}
 
 	if ( pPlayer->m_lifeState != LIFE_ALIVE && m_lifeState == LIFE_ALIVE )
 	{
@@ -19279,11 +19105,7 @@ void CTFPlayer::PlayReadySound( void )
 			int iTeam = GetTeamNumber();
 			const char *pszFormat = "%s.Ready";
 
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				pszFormat = "%s.ReadyMvM";
-			}
-			else if ( TFGameRules()->IsCompetitiveMode() )
+			if ( TFGameRules()->IsCompetitiveMode() )
 			{
 				pszFormat = "%s.ReadyComp";
 			}

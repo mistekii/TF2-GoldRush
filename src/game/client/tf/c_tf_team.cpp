@@ -177,21 +177,10 @@ void C_TFTeam::UpdateTeamName( void )
 	}
 	else if ( m_iTeamNum == TF_TEAM_RED )
 	{
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+		pwzName = g_pVGuiLocalize->Find( "#TF_RedTeam_Name" );
+		if ( !pwzName )
 		{
-			pwzName = g_pVGuiLocalize->Find( "#TF_Defenders" );
-			if ( !pwzName )
-			{
-				pwzName = L"DEFENDERS";
-			}
-		}
-		else
-		{
-			pwzName = g_pVGuiLocalize->Find( "#TF_RedTeam_Name" );
-			if ( !pwzName )
-			{
-				pwzName = L"RED";
-			}
+			pwzName = L"RED";
 		}
 	}
 	else if ( m_iTeamNum == TEAM_SPECTATOR )

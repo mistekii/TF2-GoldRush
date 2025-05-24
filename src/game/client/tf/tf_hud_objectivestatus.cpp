@@ -155,13 +155,6 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 		bCTFVisible = ( iGameType == TF_GAMETYPE_CTF || iHudType == TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_CP ) && ( iHudType != TF_HUDTYPE_ESCORT );
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		bCTFVisible = ( ( TFGameRules()->State_Get() != GR_STATE_BETWEEN_RNDS ) 
-					 && ( TFGameRules()->State_Get() != GR_STATE_TEAM_WIN ) 
-					 && ( TFGameRules()->State_Get() != GR_STATE_GAME_OVER ) );
-	}
-
 	if ( m_pFlagPanel && m_pFlagPanel->IsVisible() != bCTFVisible )
 	{
 		m_pFlagPanel->SetVisible( bCTFVisible );

@@ -645,12 +645,7 @@ void CHudTournament::ApplySchemeSettings( IScheme *pScheme )
 	m_bReapplyPlayerPanelKVs = true;
 
 	KeyValues *pConditions = NULL;
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
-	else if ( m_bCompetitiveMode )
+	if ( m_bCompetitiveMode )
 	{
 		pConditions = new KeyValues( "conditions" );
 		AddSubKeyNamed( pConditions, "if_competitive" );
@@ -710,7 +705,7 @@ void CHudTournament::PerformLayout( void )
 		}
 	}
 
-	bool bShowTournamentConditions = !m_bCompetitiveMode && TFGameRules() && !TFGameRules()->IsMannVsMachineMode();
+	bool bShowTournamentConditions = !m_bCompetitiveMode;
 
 	// Hide some elements when in competitive mode
 	if ( m_pTournamentConditionLabel )
@@ -783,10 +778,6 @@ void CHudTournament::RecalculatePlayerPanels( void )
 
 		int iTeam = g_TF_PR->GetTeam( i );
 		if ( iTeam == TEAM_UNASSIGNED && !m_bReadyStatusMode )
-			continue;
-			
-		// Spectators see all players, team members only see their team.
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && iTeam != iLocalTeam && iLocalTeam != TEAM_SPECTATOR )
 			continue;
 
 		if ( iTeam != TF_TEAM_RED && iTeam != TF_TEAM_BLUE )
@@ -932,7 +923,7 @@ void CHudTournament::UpdatePlayerPanels( void )
 		if ( iTeam == iTeam1 )
 		{
 			// Two teams.  First team left of center.
-			if ( m_bReadyStatusMode && !TFGameRules()->IsMannVsMachineMode() )
+			if ( m_bReadyStatusMode )
 			{
 				int iTeam1LeftCorner = iCenter - ( iTeamSize * nOffset );
 				iXPos += ( iTeam1LeftCorner + ( iTeam1Processed * nOffset ) );

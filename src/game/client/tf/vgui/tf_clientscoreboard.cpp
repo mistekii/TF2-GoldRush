@@ -237,12 +237,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 
 	KeyValues *pConditions = NULL;
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
-
 	LoadControlSettings( "Resource/UI/Scoreboard.res", NULL, NULL, pConditions );
 	m_hScoreFontDefault = pScheme->GetFont( "Default", true );
 	m_hScoreFontSmallest = pScheme->GetFont( "ScoreboardSmallest", true );
@@ -943,8 +937,7 @@ void CTFClientScoreBoardDialog::UpdateTeamInfo()
 		}
 	}
 
-	bool bMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-	bool bTournament = mp_tournament.GetBool() && !bMvM;
+	bool bTournament = mp_tournament.GetBool();
 	if ( m_pRedTeamName->IsVisible() != bTournament )
 	{
 		m_pRedTeamName->SetVisible( bTournament );
@@ -966,11 +959,11 @@ void CTFClientScoreBoardDialog::UpdateTeamInfo()
 
 	m_pRedLeaderAvatarImage->SetVisible( bShowAvatars );
 	m_pRedLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pRedTeamImage->SetVisible( !bShowAvatars && !bMvM );
+	m_pRedTeamImage->SetVisible( !bShowAvatars );
 
 	m_pBlueLeaderAvatarImage->SetVisible( bShowAvatars );
 	m_pBlueLeaderAvatarBG->SetVisible( bShowAvatars );
-	m_pBlueTeamImage->SetVisible( !bShowAvatars && !bMvM );
+	m_pBlueTeamImage->SetVisible( !bShowAvatars );
 }
 
 //-----------------------------------------------------------------------------
@@ -2116,11 +2109,6 @@ bool CTFClientScoreBoardDialog::ShouldShowAsSpectator( int iPlayerIndex )
 					return true;
 
 				return false;
-			}
-			else if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( g_TF_PR->IsFakePlayer( iPlayerIndex ) )
-					return false;
 			}
 		}
 

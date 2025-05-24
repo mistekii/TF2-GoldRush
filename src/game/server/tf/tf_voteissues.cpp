@@ -80,12 +80,6 @@ void CRestartGameIssue::ExecuteCommand( void )
 //-----------------------------------------------------------------------------
 bool CRestartGameIssue::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return sv_vote_issue_restart_game_allowed_mvm.GetBool();
-	}
-
 	return sv_vote_issue_restart_game_allowed.GetBool();
 }
 
@@ -197,12 +191,6 @@ void CKickIssue::ExecuteCommand( void )
 //-----------------------------------------------------------------------------
 bool CKickIssue::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return sv_vote_issue_kick_allowed_mvm.GetBool();
-	}
-
 	return sv_vote_issue_kick_allowed.GetBool();
 }
 
@@ -286,61 +274,6 @@ bool CKickIssue::RequestCallVote( int iEntIndex, const char *pszDetails, vote_cr
 			}
 		}
 	}
-
-	// MvM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		// Don't allow kicking unless we're between rounds
-		if ( TFGameRules() && TFGameRules()->State_Get() != GR_STATE_BETWEEN_RNDS )
-		{
-			nFailCode = VOTE_FAILED_CANNOT_KICK_DURING_ROUND;
-			return false;
-		}
-
-		// Allow kicking team unassigned
-		if ( m_hPlayerTarget->IsConnected() && m_hPlayerTarget->GetTeamNumber() == TEAM_UNASSIGNED )
-			return true;
-
-		// Don't allow kicking of players connected less than sv_vote_kick_min_connect_time_mvm
-		CTFPlayer *pTFVoteTarget = ToTFPlayer( m_hPlayerTarget );
-		if ( pTFVoteTarget )
-		{
-			float flTimeConnected = gpGlobals->curtime - pTFVoteTarget->GetConnectionTime();
-
-			// See if we have a lobby...
-			if ( !bFakeClient )
-			{
-				CMatchInfo::PlayerMatchData_t *pMatchPlayerTarget = GTFGCClientSystem()->GetLiveMatchPlayer( m_steamIDVoteTarget );
-				CMatchInfo::PlayerMatchData_t *pMatchPlayerCaller = GTFGCClientSystem()->GetLiveMatchPlayer( m_steamIDVoteCaller );
-				if ( pMatchPlayerTarget )
-				{
-					// Use this time instead (prevents disconnect avoidance)
-					flTimeConnected = CRTime::RTime32TimeCur() - pMatchPlayerTarget->rtJoinedMatch;
-
-					// TODO Now that we have this piped through the GC maybe it should just be doing this
-					if ( sv_vote_issue_kick_limit_mvm.GetInt() )
-					{
-						if ( pMatchPlayerCaller && pMatchPlayerCaller->nVoteKickAttempts > (uint32)sv_vote_issue_kick_limit_mvm.GetInt() )
-						{
-							nFailCode = VOTE_FAILED_KICK_LIMIT_REACHED;
-							return false;
-						}
-					}
-				}
-			}
-
-			if ( flTimeConnected < sv_vote_issue_kick_min_connect_time_mvm.GetFloat() )
-			{
-				nFailCode = VOTE_FAILED_CANNOT_KICK_FOR_TIME;
-				nTime = sv_vote_issue_kick_min_connect_time_mvm.GetFloat() - flTimeConnected;
-				return false;
-			}
-		}
-
-		// Allow kicking of spectators when this is set, except when it's a bot (invader bots are spectators between rounds)
-		if ( sv_vote_issue_kick_spectators_mvm.GetBool() && !m_hPlayerTarget->IsBot() && m_hPlayerTarget->GetTeamNumber() == TEAM_SPECTATOR )
-				return true;
-	}
 	
 #ifndef _DEBUG
 	// Don't kick players on other teams
@@ -389,15 +322,6 @@ void CKickIssue::OnVoteFailed( int iEntityHoldingVote )
 		if ( sv_vote_issue_kick_namelock_duration.GetFloat() > 0 )
 		{
 			CVoteController::AddPlayerToNameLockedList( m_steamIDVoteTarget, sv_vote_issue_kick_namelock_duration.GetFloat(), m_hPlayerTarget->GetUserID() );
-		}
-
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CMatchInfo::PlayerMatchData_t *pMatchPlayerCaller = GTFGCClientSystem()->GetLiveMatchPlayer( m_steamIDVoteCaller );
-			if ( pMatchPlayerCaller )
-			{
-				pMatchPlayerCaller->nVoteKickAttempts++;
-			}
 		}
 	}
 
@@ -722,12 +646,6 @@ bool CChangeLevelIssue::CanTeamCallVote( int iTeam ) const
 //-----------------------------------------------------------------------------
 bool CChangeLevelIssue::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return sv_vote_issue_changelevel_allowed_mvm.GetBool();
-	}
-
 	return sv_vote_issue_changelevel_allowed.GetBool();
 }
 
@@ -893,12 +811,6 @@ bool CNextLevelIssue::CanTeamCallVote( int iTeam ) const
 //-----------------------------------------------------------------------------
 bool CNextLevelIssue::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return false;
-	}
-
 	return sv_vote_issue_nextlevel_allowed.GetBool();
 }
 
@@ -1096,12 +1008,6 @@ void CExtendLevelIssue::ExecuteCommand( void )
 //-----------------------------------------------------------------------------
 bool CExtendLevelIssue::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return false;
-	}
-
 	return sv_vote_issue_extendlevel_allowed.GetBool();
 }
 
@@ -1183,12 +1089,6 @@ void CScrambleTeams::ExecuteCommand( void )
 //-----------------------------------------------------------------------------
 bool CScrambleTeams::IsEnabled( void )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return false;
-	}
-
 	return sv_vote_issue_scramble_teams_allowed.GetBool();
 }
 
@@ -1472,7 +1372,7 @@ void CClassLimitsIssue::ExecuteCommand( void )
 	// Enable
 	else
 	{
-		int nLimit = ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() ) ? sv_vote_issue_classlimits_max_mvm.GetInt() : sv_vote_issue_classlimits_max.GetInt();
+		int nLimit = sv_vote_issue_classlimits_max.GetInt();
 		engine->ServerCommand( CFmtStr( "tf_classlimit %i;", nLimit ) );
 	}
 }
@@ -1491,9 +1391,6 @@ bool CClassLimitsIssue::IsEnabled( void )
 		// Manages class limits already
 		if ( TFGameRules()->IsInHighlanderMode() )
 			return false;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-			return sv_vote_issue_classlimits_allowed_mvm.GetBool();
 	}
 
 	return sv_vote_issue_classlimits_allowed.GetBool();
@@ -1547,9 +1444,6 @@ const char *CClassLimitsIssue::GetVotePassedString( void )
 //-----------------------------------------------------------------------------
 void CClassLimitsIssue::ListIssueDetails( CBasePlayer *pForWhom )
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && !sv_vote_issue_classlimits_allowed_mvm.GetBool() )
-		return;
-
 	if ( !sv_vote_issue_classlimits_allowed.GetBool() )
 		return;
 
@@ -1561,7 +1455,7 @@ void CClassLimitsIssue::ListIssueDetails( CBasePlayer *pForWhom )
 //-----------------------------------------------------------------------------
 const char *CClassLimitsIssue::GetDetailsString( void )
 {
-	int nLimit = ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() ) ? sv_vote_issue_classlimits_max_mvm.GetInt() : sv_vote_issue_classlimits_max.GetInt();
+	int nLimit = sv_vote_issue_classlimits_max.GetInt();
 	m_sRetString = CFmtStr( "%i", nLimit );
 	return m_sRetString.String();
 }

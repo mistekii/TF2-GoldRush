@@ -144,7 +144,6 @@ ActionResult< CTFBot >	CTFBotMainAction::Update( CTFBot *me, float interval )
 
 	// should I try to change class?
 	if ( tf_bot_reevaluate_class_in_spawnroom.GetBool() &&
-	     !TFGameRules()->IsMannVsMachineMode() && 
 		 myArea && myArea->HasAttributeTF( spawnRoomFlag ) )
 	{
 		if ( !m_reevaluateClassTimer.HasStarted() )
@@ -163,59 +162,6 @@ ActionResult< CTFBot >	CTFBotMainAction::Update( CTFBot *me, float interval )
 				me->ReEvaluateCurrentClass();
 				return Continue();
 			}
-		}
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		// infinite ammo
-		// me->GiveAmmo( 100, TF_AMMO_PRIMARY, true );
-		// me->GiveAmmo( 100, TF_AMMO_SECONDARY, true );
-		// This resets the Sandman
-		//me->GiveAmmo( 100, TF_AMMO_GRENADES1, true );
-		// This resets the Bonk drink meter...
-		//me->GiveAmmo( 100, TF_AMMO_GRENADES2, true );
-		me->GiveAmmo( 100, TF_AMMO_METAL, true );
-
-		me->m_Shared.AddToSpyCloakMeter( 100.0f, true );
-
-		if ( myArea && myArea->HasAttributeTF( spawnRoomFlag ) )
-		{
-			// invading bots get uber while they leave their spawn so they don't drop their cash where players can't pick it up
-			me->m_Shared.AddCond( TF_COND_INVULNERABLE, 0.5f );
-			me->m_Shared.AddCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED, 0.5f );
-			me->m_Shared.AddCond( TF_COND_INVULNERABLE_WEARINGOFF, 0.5f );
-			me->m_Shared.AddCond( TF_COND_IMMUNE_TO_PUSHBACK, 1.0f );
-		}
-
-		// watch for bots that have fallen through the ground
-		if ( myArea && myArea->GetZ( me->GetAbsOrigin() ) - me->GetAbsOrigin().z > 100.0f )
-		{
-			if ( !m_undergroundTimer.HasStarted() )
-			{
-				m_undergroundTimer.Start();
-			}
-			else if ( m_undergroundTimer.IsGreaterThen( 3.0f ) )
-			{
-				UTIL_LogPrintf( "\"%s<%i><%s><%s>\" underground (position \"%3.2f %3.2f %3.2f\")\n",
-								me->GetPlayerName(),
-								me->GetUserID(),
-								me->GetNetworkIDString(),
-								me->GetTeam()->GetName(),
-								me->GetAbsOrigin().x, me->GetAbsOrigin().y, me->GetAbsOrigin().z );
-
-				// teleport bot to a reasonable place
-				me->SetAbsOrigin( myArea->GetCenter() );
-			}
-		}
-		else
-		{
-			m_undergroundTimer.Invalidate();
-		}
-
-		if ( me->ShouldAutoJump() )
-		{
-			me->GetLocomotionInterface()->Jump();
 		}
 	}
 
@@ -1017,58 +963,35 @@ const CKnownEntity *CTFBotMainAction::SelectMoreDangerousThreatInternal( const I
 	}
 	
 	// close range sentries are the most dangerous of all
-	bool shouldFearSentryGuns = true;
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
+	CObjectSentrygun *sentry1 = NULL;
+	if ( threat1->IsVisibleRecently() && !threat1->GetEntity()->IsPlayer() )
 	{
-		// MvM bots are not afraid of sentry guns and treat them like other enemy players
-		shouldFearSentryGuns = false;
+		sentry1 = dynamic_cast< CObjectSentrygun * >( threat1->GetEntity() );
 	}
 
-	if ( shouldFearSentryGuns )
+	CObjectSentrygun *sentry2 = NULL;
+	if ( threat2->IsVisibleRecently() && !threat2->GetEntity()->IsPlayer() )
 	{
-		CObjectSentrygun *sentry1 = NULL;
-		if ( threat1->IsVisibleRecently() && !threat1->GetEntity()->IsPlayer() )
-		{
-			sentry1 = dynamic_cast< CObjectSentrygun * >( threat1->GetEntity() );
-		}
+		sentry2 = dynamic_cast< CObjectSentrygun * >( threat2->GetEntity() );
+	}
 
-		CObjectSentrygun *sentry2 = NULL;
-		if ( threat2->IsVisibleRecently() && !threat2->GetEntity()->IsPlayer() )
-		{
-			sentry2 = dynamic_cast< CObjectSentrygun * >( threat2->GetEntity() );
-		}
-
-		if ( sentry1 && me->IsRangeLessThan( sentry1, SENTRY_MAX_RANGE ) && !sentry1->HasSapper() && !sentry1->IsPlasmaDisabled() && !sentry1->IsPlacing() )
-		{
-			// in range of a visible sentry!
-			if ( sentry2 && me->IsRangeLessThan( sentry2, SENTRY_MAX_RANGE ) && !sentry2->HasSapper() && !sentry2->IsPlasmaDisabled() && !sentry2->IsPlacing() )
-			{
-				// in range of two visible sentries!  we're probably dead meat at this point.
-				// default is choose closest
-				return closerThreat;
-			}
-
-			return threat1;
-		}
-
+	if ( sentry1 && me->IsRangeLessThan( sentry1, SENTRY_MAX_RANGE ) && !sentry1->HasSapper() && !sentry1->IsPlasmaDisabled() && !sentry1->IsPlacing() )
+	{
+		// in range of a visible sentry!
 		if ( sentry2 && me->IsRangeLessThan( sentry2, SENTRY_MAX_RANGE ) && !sentry2->HasSapper() && !sentry2->IsPlasmaDisabled() && !sentry2->IsPlacing() )
 		{
-			// in range of a visible sentry!
-			return threat2;
+			// in range of two visible sentries!  we're probably dead meat at this point.
+			// default is choose closest
+			return closerThreat;
 		}
+
+		return threat1;
 	}
 
-	// enforce Spy hatred in MvM mode
-	if ( TFGameRules()->IsMannVsMachineMode() )
+	if ( sentry2 && me->IsRangeLessThan( sentry2, SENTRY_MAX_RANGE ) && !sentry2->HasSapper() && !sentry2->IsPlasmaDisabled() && !sentry2->IsPlacing() )
 	{
-		const float spyHateRadius = 1000.0f;
-
-		const CKnownEntity *spyThreat = SelectClosestSpyToMe( me, threat1, threat2 );
-		if ( spyThreat && me->IsRangeLessThan( spyThreat->GetEntity(), spyHateRadius ) )
-		{
-			return spyThreat;
-		}
+		// in range of a visible sentry!
+		return threat2;
 	}
 
 
@@ -1221,20 +1144,17 @@ void CTFBotMainAction::FireWeaponAtEnemy( CTFBot *me )
 		}
 	}
 
-	// if our target is uber'd, most weapons are useless - unless we're in MvM, where invuln tanking is valuable
-	if ( TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+	// if our target is uber'd, most weapons are useless
+	CTFPlayer *playerThreat = ToTFPlayer( threat->GetEntity() );
+	if ( playerThreat && playerThreat->m_Shared.IsInvulnerable() )
 	{
-		CTFPlayer *playerThreat = ToTFPlayer( threat->GetEntity() );
-		if ( playerThreat && playerThreat->m_Shared.IsInvulnerable() )
+		if ( !myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER ) &&
+			!myWeapon->IsWeapon( TF_WEAPON_GRENADELAUNCHER ) &&
+			!myWeapon->IsWeapon( TF_WEAPON_PIPEBOMBLAUNCHER ) &
+			!myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT ) )
 		{
-			if ( !myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER ) &&
-				!myWeapon->IsWeapon( TF_WEAPON_GRENADELAUNCHER ) &&
-				!myWeapon->IsWeapon( TF_WEAPON_PIPEBOMBLAUNCHER ) &
-				!myWeapon->IsWeapon( TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT ) )
-			{
-				// firing would just waste ammo, so don't
-				return;
-			}
+			// firing would just waste ammo, so don't
+			return;
 		}
 	}
 
@@ -1254,15 +1174,6 @@ void CTFBotMainAction::FireWeaponAtEnemy( CTFBot *me )
 			me->PressFireButton();
 		}
 		return;
-	}
-
-	// limit range of hitscan weapon fire in MvM
-	if ( TFGameRules()->IsMannVsMachineMode() && !me->IsPlayerClass( TF_CLASS_SNIPER ) && me->IsHitScanWeapon( myWeapon ) )
-	{
-		if ( me->IsRangeGreaterThan( threat->GetEntity(), tf_bot_hitscan_range_limit.GetFloat() ) )
-		{
-			return;
-		}
 	}
 
 	if ( myWeapon->IsWeapon( TF_WEAPON_FLAMETHROWER ) )
@@ -1302,7 +1213,7 @@ void CTFBotMainAction::FireWeaponAtEnemy( CTFBot *me )
 			// only fire if zoomed in
 			if ( me->m_Shared.InCond( TF_COND_ZOOMED ) )
 			{
-				const float reactionTime = TFGameRules()->IsMannVsMachineMode() ? 0.5f : 0.1f;	// just a moment to stop headshots when obviously panning too fast to see
+				const float reactionTime = 0.1f;	// just a moment to stop headshots when obviously panning too fast to see
 				if ( m_steadyTimer.HasStarted() && m_steadyTimer.IsGreaterThen( reactionTime ) )
 				{
 					trace_t trace;

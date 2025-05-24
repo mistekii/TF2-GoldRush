@@ -2229,28 +2229,8 @@ void CItemModelPanel::SetItem( const CEconItemView *pItem )
 		{
 			if ( m_ItemData.GetItemID() != INVALID_ITEM_ID )
 			{
-				bool bUseIndexCompare = false;
-					
-#ifdef TF_CLIENT_DLL
-				if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-				{
-					if ( ( m_ItemData.GetItemID() == 1 ) && ( m_ItemData.GetItemID() == pItem->GetItemID() ) )
-					{
-						// Items the bots carry in MvM all have itemID of 1, so we need to compare the item index
-						bUseIndexCompare = true;
-					}
-				}
-#endif
-				 
-				if ( bUseIndexCompare )
-				{
-					bMatch = m_ItemData.GetItemDefIndex() == pItem->GetItemDefIndex();
-				}
-				else
-				{
-					// Our current item is non-base. We need to match global indices.
-					bMatch = ( m_ItemData.GetItemID() == pItem->GetItemID() );
-				}
+				// Our current item is non-base. We need to match global indices.
+				bMatch = ( m_ItemData.GetItemID() == pItem->GetItemID() );
 			}
 			else if ( pItem->GetItemID() == INVALID_ITEM_ID )
 			{

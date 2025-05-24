@@ -90,16 +90,6 @@ int C_TF_PlayerResource::GetTeam( int iIndex )
 
 	int iTeam = BaseClass::GetTeam( iIndex );
 
-	if ( iTeam == TEAM_UNASSIGNED )
-	{
-		// In MvM, force everybody to show as being on the defending team,
-		// even if they have not picked a team yet
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			iTeam = TF_TEAM_PVE_DEFENDERS;
-		}
-	}
-
 	return iTeam;
 }
 

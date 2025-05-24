@@ -17,12 +17,6 @@ float CTFBotBody::GetHeadAimTrackingInterval( void ) const
 {
 	CTFBot *me = (CTFBot *)GetBot();
 
-	// don't let Spies in MvM mode aim too precisely
-	if ( TFGameRules()->IsMannVsMachineMode() && me->IsPlayerClass( TF_CLASS_SPY ) )
-	{
-		return 0.25f;
-	}
-
 	switch( me->GetDifficulty() )
 	{
 	case CTFBot::EXPERT:

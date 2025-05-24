@@ -1076,10 +1076,7 @@ const char*	CHudItemEffectMeter_Weapon<CTFSniperRifle>::GetBeepSound( void )
 template <>
 bool CHudItemEffectMeter_Weapon<C_TFWeaponBuilder>::IsEnabled( void )
 {
-	if ( !m_pPlayer )
-		return false;
-
-	return ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() );
+	return false;
 }
 
 //-----------------------------------------------------------------------------

@@ -314,30 +314,6 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 			bool bInSameTeam = pLocalTFPlayer->InSameDisguisedTeam( pEnt );	
 			bool bSpy = pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && iHideEnemyHealth == 0;
 
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				// We don't want to show health bars to the spy in MVM because it's distracting
-				bSpy = false;
-
-				// Are we disguised as the enemy?
-				if ( pLocalTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pLocalTFPlayer->m_Shared.GetDisguiseTeam() != pLocalTFPlayer->GetTeamNumber() )
-				{
-					// Get the target's apparent team
-					int iTheirApparentTeam = pEnt->GetTeamNumber();
-					if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) )
-					{
-						iTheirApparentTeam = pPlayer->m_Shared.GetDisguiseTeam();
-					}
-
-					// Are we disguised as they appear?
-					if ( pLocalTFPlayer->m_Shared.GetDisguiseTeam() == iTheirApparentTeam )
-					{
-						// Don't show the health
-						bInSameTeam = false;
-					}
-				}
-			}
-
 			bool bSpectator = pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR;
 			int iSeeEnemyHealth = 0;
 			bool bStealthed = false;

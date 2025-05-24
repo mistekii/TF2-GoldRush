@@ -661,12 +661,6 @@ CEconItemView *CTFInventoryManager::GetBaseItemForClass( int iClass, int iSlot )
 		{
 			stockActionItemDefIndices.AddToTail( pItemDef_SpellBook->GetDefinitionIndex() );
 		}
-
-		static CSchemaItemDefHandle pItemDef_MvMCanteen( "Default Power Up Canteen (MvM)" );
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pItemDef_MvMCanteen )
-		{
-			stockActionItemDefIndices.AddToTail( pItemDef_MvMCanteen->GetDefinitionIndex() );
-		}
 		
 		// Traverse List
 		for ( CEconItemView *pActionItem : m_pBaseLoadoutItems )

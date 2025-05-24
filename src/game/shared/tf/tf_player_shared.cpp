@@ -693,7 +693,7 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 
 				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) )
 				{
-					if ( !TFGameRules()->IsMannVsMachineMode() && HasItem() )
+					if ( HasItem() )
 						return false;
 				}
 			}
@@ -3591,28 +3591,13 @@ void CTFPlayerShared::OnRemoveBleeding( void )
 
 const char* CTFPlayerShared::GetSoldierBuffEffectName( void )
 {
-	if ( TFGameRules()->IsMannVsMachineMode() )
+	if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
 	{
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// MVM robot version has fewer particles. Helps keep the framerate up.
-			return "soldierbuff_mvm";
-		}
-		else
-		{
-			return "soldierbuff_red_soldier";
-		}
+		return "soldierbuff_blue_soldier";
 	}
 	else
 	{
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			return "soldierbuff_blue_soldier";
-		}
-		else
-		{
-			return "soldierbuff_red_soldier";
-		}
+		return "soldierbuff_red_soldier";
 	}
 }
 
@@ -7140,12 +7125,6 @@ bool CTFPlayerShared::CanRecieveMedigunChargeEffect( medigun_charge_types eType 
 	if ( pItem && pItem->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
 		bCanRecieve = false;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// allow bot flag carriers to be ubered
-			bCanRecieve = true;
-		}
 	}
 
 	return bCanRecieve;
@@ -8490,18 +8469,6 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 		trace_t pen_trace;
 		FOR_EACH_VEC( vecTracedEntities, i )
 		{
-			// Limit the number of pen targets in MvM if we're not charge-based
-			if ( TFGameRules()->IsMannVsMachineMode() && iChargedPenetration == 0 )
-			{
-				// For sniper class, treat iPenetrationLimit as a bool
-				bool bIsSniper = IsPlayerClass( TF_CLASS_SNIPER );
-				if ( bIsSniper && iPenetrationLimit == 0 && iPenetratedPlayerCount > 0 )
-					break;
-
-				if ( !bIsSniper && iPenetratedPlayerCount > iPenetrationLimit )
-					break;
-			}
-
 			CBaseEntity *pTarget = vecTracedEntities[i];
 
 			if ( !pTarget )
@@ -9104,14 +9071,7 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		}
 	}
 
-	bool bCarryPenalty = true;
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		bCarryPenalty = false;
-	}
-
-	if ( m_Shared.IsCarryingObject() && bCarryPenalty && bAllowSlowing )
+	if ( m_Shared.IsCarryingObject() && bAllowSlowing )
 	{
 		// STAGING_ENGY
 		maxfbspeed *= 0.90f;
@@ -9366,19 +9326,6 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	{
 		if ( TFGameRules()->IsTruceActive() && ( iObjectType == OBJ_ATTACHMENT_SAPPER ) )
 			return CB_CANNOT_BUILD;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// If a human is placing a sapper
-			if ( !IsBot() && iObjectType == OBJ_ATTACHMENT_SAPPER )
-			{
-				// Only allow one Sapper of any kind in MvM
-				if ( GetNumObjects( iObjectType, BUILDING_MODE_ANY ) )
-					return CB_LIMIT_REACHED;
-
-				return ( ( GetAmmoCount( TF_AMMO_GRENADES2 ) > 0 ) ? CB_CAN_BUILD : CB_CANNOT_BUILD );
-			}
-		}
 	}
 
 #ifndef CLIENT_DLL
@@ -9393,14 +9340,6 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	// We can redeploy the object if we are carrying it.
 	CBaseObject* pObjType = GetObjectOfType( iObjectType, iObjectMode );
 	if ( pObjType && pObjType->IsCarried() )
-	{
-		return CB_CAN_BUILD;
-	}
-
-	// Allow MVM engineer bots to have multiple sentries.  Currently they only need this so
-	// they can appear to be carrying a new building when advancing their nest rather than
-	// transporting an existing building.
-	if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsBot() )
 	{
 		return CB_CAN_BUILD;
 	}
@@ -11178,12 +11117,6 @@ int CTFPlayerShared::GetSequenceForDeath( CBaseAnimating* pRagdoll, bool bBurnin
 {
 	if ( !pRagdoll )
 		return -1;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( m_pOuter && ( m_pOuter->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-			return -1;
-	}
 
 	int iDeathSeq = -1;
 // 	if ( bBurning )

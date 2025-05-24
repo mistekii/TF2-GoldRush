@@ -460,22 +460,7 @@ CSpectatorGUI::~CSpectatorGUI()
 //-----------------------------------------------------------------------------
 void CSpectatorGUI::ApplySchemeSettings(IScheme *pScheme)
 {
-	KeyValues *pConditions = NULL;
-
-#ifdef TF_CLIENT_DLL
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
-#endif
-
-	LoadControlSettings( GetResFile(), NULL, NULL, pConditions );
-
-	if ( pConditions )
-	{
-		pConditions->deleteThis();
-	}
+	LoadControlSettings( GetResFile() );
 
 	m_pBottomBarBlank->SetVisible( true );
 	m_pTopBar->SetVisible( true );

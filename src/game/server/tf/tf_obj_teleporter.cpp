@@ -851,12 +851,6 @@ void CObjectTeleporter::DeterminePlaybackRate( void )
 			break;
 		}
 
-		// Always spin when the teleporter is done building
-		if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			flPlaybackRate = 1.f;
-		}
-
 		SetPlaybackRate( flPlaybackRate );
 	}
 

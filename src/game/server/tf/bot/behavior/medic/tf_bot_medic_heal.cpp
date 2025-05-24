@@ -421,10 +421,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	if ( me->IsInASquad() )
 	{
 		CTFBotSquad *squad = me->GetSquad();
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && squad->IsLeader( me ) )
-		{
-			return ChangeTo( new CTFBotFetchFlag, "I'm now a squad leader! Going for the flag!" );
-		}
 
 		if ( !squad->ShouldPreserveSquad() )
 		{
@@ -457,24 +453,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	}
 
 	m_patient = SelectPatient( me, m_patient );
-
-	// prevent a group of medic healing each other in a loop. always heal the top guy in the chain
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && m_patient != NULL && m_patient->IsPlayerClass( TF_CLASS_MEDIC ) )
-	{
-		CUtlVector< CBaseEntity* > seenPatients;
-		seenPatients.AddToTail( m_patient );
-
-		while ( CBaseEntity* pTestPatient = m_patient->MedicGetHealTarget() )
-		{
-			if ( !pTestPatient->IsPlayer() || seenPatients.Find( pTestPatient ) != seenPatients.InvalidIndex() )
-			{
-				break;
-			}
-
-			seenPatients.AddToTail( pTestPatient );
-			m_patient = ToTFPlayer( pTestPatient );
-		}
-	}
 
 	if ( m_patient == NULL )
 	{
@@ -592,7 +570,7 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 			// uber if I'm getting low and have recently taken damage
 			if ( me->GetHealth() < me->GetUberHealthThreshold() )
 			{
-				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || TFGameRules()->IsMannVsMachineMode() )
+				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f )
 				{
 					useUber = true;
 				}
@@ -602,16 +580,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 			if ( me->GetHealth() < 25 )
 			{
 				useUber = true;
-			}
-
-			// special case for bots in mvm spawn zones
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && 
-						me->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
-				{
-					useUber = false;
-				}
 			}
 
 			if ( useUber )
@@ -825,17 +793,7 @@ void CTFBotMedicHeal::ComputeFollowPosition( CTFBot *me )
 		return;
 	}
 
-	bool isExposed;
-
-	if ( TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		// robot medics in MvM don't care if the enemy sees them
-		isExposed = false;
-	}
-	else
-	{
-		isExposed = IsVisibleToEnemy( me, me->EyePosition() );
-	}
+	bool isExposed = IsVisibleToEnemy( me, me->EyePosition() );
 
 	Vector patientForward;
 	m_patient->EyeVectors( &patientForward );

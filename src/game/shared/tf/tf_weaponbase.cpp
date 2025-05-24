@@ -4955,23 +4955,6 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 			pVictim->m_Shared.AddCond( TF_COND_MARKEDFORDEATH, flDuration, pAttacker );
 
 			pAttacker->m_pMarkedForDeathTarget = pVictim;
-
-			// ACHIEVEMENT_TF_MVM_SCOUT_MARK_FOR_DEATH
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( pAttacker->IsPlayerClass( TF_CLASS_SCOUT ) && ( GetWeaponID() == TF_WEAPON_BAT_WOOD ) )
-				{
-					if ( pVictim->IsBot() && ( pVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent( "mvm_scout_marked_for_death" );
-						if ( event )
-						{
-							event->SetInt( "player", pAttacker->entindex() );
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-			}
 		}
 
 		// Stun airborne enemies who are half a body length higher than attacker

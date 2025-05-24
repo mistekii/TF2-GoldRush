@@ -35,11 +35,6 @@ ActionResult< CTFBot > CTFBotFetchFlag::Update( CTFBot *me, float interval )
 
 	if ( !flag )
 	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			return SuspendFor( new CTFBotAttackFlagDefenders, "Flag flag exists - Attacking the enemy flag defenders" );
-		}
-
 		return Done( "No flag" );
 	}
 
@@ -47,25 +42,6 @@ ActionResult< CTFBot > CTFBotFetchFlag::Update( CTFBot *me, float interval )
 	if ( me->m_Shared.IsStealthed() )
 	{
 		me->PressAltFireButton();
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && flag->IsHome() )
-	{
-		if ( gpGlobals->curtime - me->GetSpawnTime() < 1.0f && me->GetTeamNumber() != TEAM_SPECTATOR )
-		{
-			// we just spawned - give us the flag
-			flag->PickUp( me, true );
-		}
-		else
-		{
-			if ( m_isTemporary )
-			{
-				return Done( "Flag unreachable" );
-			}
-
-			// flag is at home and we're out in the world - can't reach it
-			return SuspendFor( new CTFBotAttackFlagDefenders, "Flag unreachable at home - Attacking the enemy flag defenders" );
-		}
 	}
 
 	const CKnownEntity *threat = me->GetVisionInterface()->GetPrimaryKnownThreat();
@@ -90,7 +66,7 @@ ActionResult< CTFBot > CTFBotFetchFlag::Update( CTFBot *me, float interval )
 	if ( m_repathTimer.IsElapsed() )
 	{
 		CTFBotPathCost cost( me, DEFAULT_ROUTE );
-		float maxPathLength = TFGameRules()->IsMannVsMachineMode() ? TFBOT_MVM_MAX_PATH_LENGTH : 0.0f;
+		float maxPathLength = 0.0f;
 		if ( m_path.Compute( me, flag->WorldSpaceCenter(), cost, maxPathLength ) == false )
 		{
 			if ( flag->IsDropped() )

@@ -167,24 +167,6 @@ CON_COMMAND( changeclass, "Choose a new class" )
 			}
 		}
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( !TFGameRules()->InSetup() )
-			{
-				CBaseHudChat *pHUDChat = (CBaseHudChat *)GET_HUDELEMENT( CHudChat );
-
-				if ( pHUDChat )
-				{
-					char szLocalized[100];
-					g_pVGuiLocalize->ConvertUnicodeToANSI( g_pVGuiLocalize->Find( "#TF_MVM_NoClassChangeAfterSetup" ), szLocalized, sizeof(szLocalized) );
-
-					pHUDChat->ChatPrintf( pPlayer->entindex(), CHAT_FILTER_NONE, "%s ", szLocalized );
-				}
-
-				return;
-			}
-		}
-
 		switch( pPlayer->GetTeamNumber() )
 		{
 		case TF_TEAM_RED:
