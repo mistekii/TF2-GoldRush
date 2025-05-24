@@ -25,7 +25,6 @@
 #include "ihasattributes.h"
 #include "GameEventListener.h"
 #include "tf_item_inventory.h"
-#include "c_tf_mvm_boss_progress_user.h"
 #include "c_te_legacytempents.h"
 
 
@@ -68,7 +67,7 @@ extern BonusEffect_t g_BonusEffects[ kBonusEffect_Count ];
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class C_TFPlayer : public C_BasePlayer, public IHasAttributes, public IInventoryUpdateListener, public C_TFMvMBossProgressUser
+class C_TFPlayer : public C_BasePlayer, public IHasAttributes, public IInventoryUpdateListener
 {
 public:
 
@@ -331,10 +330,6 @@ public:
 	CBaseEntity				*GetAttributeOwner( void ) { return NULL; }
 	CAttributeList			*GetAttributeList( void ) { return &m_AttributeList; }
 	virtual void			ReapplyProvision( void ) { return; }
-
-	// ITFMvMBossProgressUser
-	virtual const char* GetBossProgressImageName() const OVERRIDE;
-	virtual float GetBossStatusProgress() const OVERRIDE;
 
 protected:
 	CNetworkVarEmbedded(	CAttributeContainerPlayer, m_AttributeManager );

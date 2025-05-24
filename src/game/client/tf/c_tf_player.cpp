@@ -10375,29 +10375,6 @@ bool C_TFPlayer::IsHealthBarVisible( void ) const
 
 
 //-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-const char* C_TFPlayer::GetBossProgressImageName() const
-{
-	if ( m_bUseBossHealthBar )
-	{
-		return GetPlayerClass()->GetClassIconName();
-	}
-
-	return NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-float C_TFPlayer::GetBossStatusProgress() const
-{
-	float flProgress = float( GetHealth() ) / float( GetMaxHealth() );
-	return flProgress;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Handle karts.
 //-----------------------------------------------------------------------------
 void C_TFPlayer::NotifyShouldTransmit( ShouldTransmitState_t state )
