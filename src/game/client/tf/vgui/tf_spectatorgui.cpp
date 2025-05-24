@@ -88,7 +88,6 @@ CTFSpectatorGUI::CTFSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort
 	m_nEngBuilds_xpos = m_nEngBuilds_ypos = 0;
 	m_nSpyBuilds_xpos = m_nSpyBuilds_ypos = 0;
 
-	m_nMannVsMachineStatus_xpos = m_nMannVsMachineStatus_ypos = 0;
 	m_pBuyBackLabel = new CExLabel( this, "BuyBackLabel", "" );
 	m_pReinforcementsLabel = new Label( this, "ReinforcementsLabel", "" );
 	m_pClassOrTeamLabel = new Label( this, "ClassOrTeamLabel", "" );
