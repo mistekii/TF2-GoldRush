@@ -25,6 +25,7 @@
 #include <vgui/ILocalize.h>
 #include <vgui/VGUI.h>
 #include "tier0/icommandline.h"
+#include <vgui_controls/AnimationController.h>
 
 // client dll/engine defines
 #include "hud.h"
