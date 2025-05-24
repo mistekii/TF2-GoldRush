@@ -555,19 +555,6 @@ bool CObjectDispenser::DispenseAmmo( CTFPlayer *pPlayer )
 			EmitSound( "BaseCombatCharacter.AmmoPickup" );
 		}
 
-		CTFPlayer *pOwner = GetOwner();
-		if ( pOwner && pOwner != pPlayer )
-		{
-			// This is crude; it doesn't account for the value difference in resupplying rockets vs pistol bullets.
-			// Still, it's better than nothing when trying to measure the value classes generate.
-			if ( TFGameRules() && 
-				 TFGameRules()->GameModeUsesUpgrades() &&
-				 TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-			{
-				CTF_GameStats.Event_PlayerAwardBonusPoints( pOwner, pPlayer, 1 );
-			}
-		}
-
 		return true;
 	}
 

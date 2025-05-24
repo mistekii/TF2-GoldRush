@@ -260,11 +260,6 @@ CBaseEntity *CTFRocketLauncher::FireProjectile( CTFPlayer *pPlayer )
 	m_bIsOverloading = false;
 #endif
 
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
-
 
 	return pRocket;
 }

@@ -479,8 +479,6 @@ public:
 	void		UpdateDemomanEyeEffect( int iDecapitations );
 	const char* GetDemomanEyeEffectName( int iDecapitations );
 
-	int		GetCurrency( void ){ return m_nCurrency; }
-
 	virtual void UpdateMVMEyeGlowEffect( bool bVisible );
 
 	void	UpdateKillStreakEffects( int iCount, bool bKillScored = false );
@@ -829,10 +827,6 @@ private:
 	C_TFPlayer( const C_TFPlayer & );
 
 	mutable char m_bIsCalculatingMaximumSpeed;
-
-	// In-game currency
-	int m_nCurrency;
-	int m_nOldCurrency;
 
 	// Bounty Mode
 	int m_nExperienceLevel;

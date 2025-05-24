@@ -26,7 +26,6 @@
 	#include "c_tf_team.h"
 	#include "dt_utlvector_recv.h"
 	#include "tf_autorp.h"
-	#include "player_vs_environment/c_tf_upgrades.h"
 	#include "video/ivideoservices.h"
 	#include "tf_gc_client.h"
 	#include "c_tf_playerresource.h"
@@ -118,8 +117,6 @@
 	#include "tf_autobalance.h"
 	#include "player_voice_listener.h"
 #endif
-
-#include "tf_upgrades_shared.h"
 
 #include "tf_weaponbase_gun.h"
 #include "tf_weaponbase_melee.h"
@@ -1274,7 +1271,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropBool( RECVINFO( m_bCompetitiveMode ), 0, RecvProxy_CompetitiveMode ),
 	RecvPropInt( RECVINFO( m_nMatchGroupType ) ),
 	RecvPropBool( RECVINFO( m_bMatchEnded ) ),
-	RecvPropString( RECVINFO( m_pszCustomUpgradesFile ) ),
 	RecvPropBool( RECVINFO( m_bTruceActive ) ),
 	RecvPropBool( RECVINFO( m_bShowMatchSummary ), 0, RecvProxy_MatchSummary ),
 	RecvPropBool( RECVINFO_NAME( m_bShowMatchSummary, "m_bShowCompetitiveMatchSummary" ), 0, RecvProxy_MatchSummary ),     // Renamed
@@ -1286,7 +1282,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropInt( RECVINFO( m_eRematchState ) ),
 	RecvPropArray3( RECVINFO_ARRAY(m_nNextMapVoteOptions), RecvPropInt( RECVINFO(m_nNextMapVoteOptions[0]), 0, RecvProxy_NewMapVoteStateChanged ) ),
 
-	RecvPropInt( RECVINFO( m_nForceUpgrades ) ),
 	RecvPropInt( RECVINFO( m_nForceEscortPushLogic ) ),
 
 	RecvPropBool( RECVINFO( m_bRopesHolidayLightsAllowed ) ),
@@ -1338,7 +1333,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropBool( SENDINFO( m_bCompetitiveMode ) ),
 	SendPropInt( SENDINFO( m_nMatchGroupType ) ),
 	SendPropBool( SENDINFO( m_bMatchEnded ) ),
-	SendPropString( SENDINFO( m_pszCustomUpgradesFile ) ),
 	SendPropBool( SENDINFO( m_bTruceActive ) ),
 	SendPropBool( SENDINFO( m_bShowMatchSummary ) ),
 	SendPropBool( SENDINFO( m_bTeamsSwitched ) ),
@@ -1349,7 +1343,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropInt( SENDINFO( m_eRematchState ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_nNextMapVoteOptions), SendPropInt( SENDINFO_ARRAY(m_nNextMapVoteOptions), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 
-	SendPropInt( SENDINFO( m_nForceUpgrades ) ),
 	SendPropInt( SENDINFO( m_nForceEscortPushLogic ) ),
 
 	SendPropBool( SENDINFO( m_bRopesHolidayLightsAllowed ) ),
@@ -1417,7 +1410,6 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVOBlue", InputPlayVOBlue ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVO", InputPlayVO ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "SetCustomUpgradesFile", InputSetCustomUpgradesFile ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetRoundRespawnFreezeEnabled", InputSetRoundRespawnFreezeEnabled ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetMapForcedTruceDuringBossFight", InputSetMapForcedTruceDuringBossFight ),
 
@@ -1650,17 +1642,6 @@ void CTFGameRulesProxy::InputHandleMapEvent( inputdata_t &inputdata )
 	if ( TFGameRules() )
 	{
 		TFGameRules()->HandleMapEvent( inputdata );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRulesProxy::InputSetCustomUpgradesFile( inputdata_t &inputdata )
-{
-	if ( TFGameRules() )
-	{
-		TFGameRules()->SetCustomUpgradesFile( inputdata );
 	}
 }
 
@@ -1956,20 +1937,6 @@ bool CTFGameRules::IsQuickBuildTime( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::GameModeUsesUpgrades( void )
-{
-	if ( m_nForceUpgrades == 1 )
-		return false;
-
-	if ( m_nForceUpgrades == 2 )
-		return true;
-
-	if ( IsMannVsMachineMode() || IsBountyMode() )
-		return true;
-
-	return false;
-}
-
 bool CTFGameRules::GameModeUsesEscortPushLogic( void )
 {
 	if ( m_nForceEscortPushLogic == 1 )
@@ -1987,28 +1954,6 @@ bool CTFGameRules::GameModeUsesEscortPushLogic( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::CanPlayerUseRespec( CTFPlayer *pTFPlayer )
-{
-	if ( !pTFPlayer )
-		return false;
-
-	bool bAllowed = IsMannVsMachineRespecEnabled() && State_Get() == GR_STATE_BETWEEN_RNDS;
-
-#ifdef GAME_DLL
-	if ( !g_pPopulationManager )
-		return false;
-
-	bAllowed &= ( g_pPopulationManager->GetNumRespecsAvailableForPlayer( pTFPlayer ) ) ? true : false;
-#else
-	if ( !g_TF_PR )
-		return false;
-
-	bAllowed &= ( g_TF_PR->GetNumRespecCredits( pTFPlayer->entindex() ) ) ? true : false;
-#endif
-	
-	return bAllowed;
-}
-
 bool CTFGameRules::IsCommunityGameMode( void ) const
 {
 	return tf_gamemode_community.GetBool();
@@ -2971,66 +2916,6 @@ bool CTFGameRules::IsDefaultGameMode( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Allows us to give situational discounts, such as secondary weapons
-//-----------------------------------------------------------------------------
-int CTFGameRules::GetCostForUpgrade( CMannVsMachineUpgrades *pUpgrade, int iItemSlot, int nClass, CTFPlayer *pPurchaser /*= NULL*/ )
-{
-	Assert( pUpgrade );
-
-	if ( !pUpgrade )
-		return 0;
-
-	int iCost = pUpgrade->nCost;
-
-	CEconItemSchema *pSchema = ItemSystem()->GetItemSchema();
-	if ( pSchema )
-	{
-		const CEconItemAttributeDefinition *pAttr = pSchema->GetAttributeDefinitionByName( pUpgrade->szAttrib );
-		if ( pAttr )
-		{
-			if ( ( iItemSlot == LOADOUT_POSITION_PRIMARY && nClass == TF_CLASS_ENGINEER ) ||
-				 ( iItemSlot == LOADOUT_POSITION_SECONDARY && nClass != TF_CLASS_DEMOMAN ) ||
-				 ( iItemSlot == LOADOUT_POSITION_MELEE && nClass != TF_CLASS_SPY && nClass != TF_CLASS_ENGINEER ) )
-			{
-				switch ( pAttr->GetDefinitionIndex() )
-				{
-				case 4:		// clip size bonus
-				case 6:		// fire rate bonus
-				case 78:	// maxammo secondary increased
-				case 180:	// heal on kill
-				case 266:	// projectile penetration
-				case 335:	// clip size bonus upgrade
-				case 397:	// projectile penetration heavy
-					iCost *= 0.5f;
-					break;
-				default:
-					break;
-				}
-			}
-			else if ( iItemSlot == LOADOUT_POSITION_ACTION )
-			{
-				if ( pPurchaser )
-				{
-					int iCanteenSpec = 0;
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pPurchaser, iCanteenSpec, canteen_specialist );
-					if ( iCanteenSpec )
-					{
-
-// 						iCost *= ( 1.f - ( iCanteenSpec * 0.1f ) );
-// 						iCost = Max( 1, ( iCost - ( iCost % 5 ) ) );
-
-						iCost -= ( 10 * iCanteenSpec );
-						iCost = Max( 5, iCost );
-					}
-				}
-			}
-		}
-	}
-
-	return iCost;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 CTFGameRules::CTFGameRules()
@@ -3201,8 +3086,6 @@ CTFGameRules::CTFGameRules()
 
 	m_flGravityMultiplier.Set( 1.0 );
 
-	m_pszCustomUpgradesFile.GetForModify()[0] = '\0';
-
 	m_bShowMatchSummary.Set( false );
 	m_bMapHasMatchSummaryStage.Set( false );
 	m_bPlayersAreOnMatchSummaryStage.Set( false );
@@ -3234,8 +3117,6 @@ CTFGameRules::CTFGameRules()
 	}
 
 	m_flCheckPlayersConnectingTime = 0;
-
-	m_pUpgrades = NULL;
 
 	// Determine if a halloween event map is active
 	// Map active always turns on Halloween
@@ -3948,8 +3829,6 @@ void CTFGameRules::Activate()
 
 	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
-	m_nCurrencyAccumulator = 0;
-	m_iCurrencyPool = 0;
 	m_bMannVsMachineAlarmStatus.Set( false );
 	m_bPlayingKoth.Set( false );
 	m_bPlayingMedieval.Set( false );
@@ -3963,7 +3842,6 @@ void CTFGameRules::Activate()
 	
 	m_zombieMobTimer.Invalidate();
 	m_zombiesLeftToSpawn = 0;
-	m_nForceUpgrades = 0;
 	m_nForceEscortPushLogic = 0;
 
 	m_CPTimerEnts.RemoveAll();
@@ -4110,11 +3988,6 @@ void CTFGameRules::Activate()
 	if ( IsInTournamentMode() && m_nGameType != TF_GAMETYPE_MVM && g_TFGameModeHistory.GetPrevState() == TF_GAMETYPE_MVM )
 	{
 		mp_tournament.SetValue( false );
-	}
-
-	if ( GameModeUsesUpgrades() && g_pPopulationManager == NULL )
-	{
-		(CPopulationManager *)CreateEntityByName( "info_populator" );
 	}
 
 	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || m_bPlayingMedieval )
@@ -7186,11 +7059,6 @@ void CTFGameRules::LevelShutdown()
 	DuelMiniGame_LevelShutdown();
 
 	g_TFGameModeHistory.SetPrevState( m_nGameType );
-
-	if ( m_pUpgrades )
-	{
-		UTIL_Remove( m_pUpgrades );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -13613,110 +13481,6 @@ void CTFGameRules::ManageServerSideVoteCreation( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Figures out how much to give for pre-definied events or types
-//-----------------------------------------------------------------------------
-int CTFGameRules::CalculateCurrencyAmount_ByType( CurrencyRewards_t nType )
-{
-	// CUSTOM values are usually determined by CalculateCurrencyAmount_CustomPack() and set via CCurrencyPack::SetValue()
-	Assert ( nType != TF_CURRENCY_PACK_CUSTOM );
-
-	int nAmount = 0;
-
-	switch ( nType )
-	{
-	case TF_CURRENCY_KILLED_PLAYER:
-		nAmount = 40;
-		break;
-
-	case TF_CURRENCY_KILLED_OBJECT:
-		nAmount = 40;
-		break;
-
-	case TF_CURRENCY_ASSISTED_PLAYER:
-		nAmount = 20;
-		break;
-
-	case TF_CURRENCY_BONUS_POINTS:
-		nAmount = 1;
-		break;
-
-	case TF_CURRENCY_CAPTURED_OBJECTIVE:
-		nAmount = 100;
-		break;
-
-	case TF_CURRENCY_ESCORT_REWARD:
-		nAmount = 10;
-		break;
-
-	case TF_CURRENCY_PACK_SMALL:
-		nAmount = 5;
-		break;
-
-	case TF_CURRENCY_PACK_MEDIUM:
-		nAmount = 10;
-		break;
-
-	case TF_CURRENCY_PACK_LARGE:
-		nAmount = 25;
-		break;
-
-	case TF_CURRENCY_TIME_REWARD:
-		nAmount = 5;
-		break;
-
-	case TF_CURRENCY_WAVE_COLLECTION_BONUS:
-		nAmount = 100;
-		break;
-
-	default:
-		Assert( 0 );	// Unknown type
-	};
-
-	return nAmount;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Gives money directly to a team or specific player
-//-----------------------------------------------------------------------------
-int CTFGameRules::DistributeCurrencyAmount( int nAmount, CTFPlayer *pTFPlayer /* = NULL */, bool bShared /* = true */, bool bCountAsDropped /*= false */, bool bIsBonus /*= false */ )
-{
-	// Group distribution (default)
-	if ( bShared )
-	{
-		CUtlVector<CTFPlayer *> playerVector;
-
-		if ( IsMannVsMachineMode() )
-		{
-			CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
-		}
-
-		// Money
-		FOR_EACH_VEC( playerVector, i )
-		{
-			if ( playerVector[i] )
-			{
-
-				playerVector[i]->AddCurrency( nAmount );
-			}
-		}
-	}
-	// Individual distribution
-	else if ( pTFPlayer )
-	{
-
-		pTFPlayer->AddCurrency( nAmount );
-	}
-
-	// Accounting
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		g_pPopulationManager->OnCurrencyCollected( nAmount, bCountAsDropped, bIsBonus );
-	}
-
-	return nAmount;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFGameRules::RoundRespawn( void )
@@ -13937,41 +13701,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 		else if ( FStrEq( pszCommand, "TestItemsBotUpdate" ) )
 		{
 			ItemTesting_SetupFromKV( pKeyValues );
-		}
-		else if ( FStrEq( pszCommand, "MVM_Upgrade" ) )
-		{
-			if ( GameModeUsesUpgrades() )
-			{
-				if ( IsMannVsMachineMode() )
-				{
-					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
-						return;
-				}
-			}
-		}
-		else if ( FStrEq( pszCommand, "MvM_UpgradesBegin" ) )
-		{
-			pTFPlayer->BeginPurchasableUpgrades();
-		}
-		else if ( FStrEq( pszCommand, "MvM_UpgradesDone" ) )
-		{
-			pTFPlayer->EndPurchasableUpgrades();
-
-			if ( IsMannVsMachineMode() && pKeyValues->GetInt( "num_upgrades", 0 ) > 0 )
-			{
-				pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MVM_UPGRADE_COMPLETE );
-			}
-		}
-		else if ( FStrEq( pszCommand, "MVM_Respec" ) )
-		{
-			if ( GameModeUsesUpgrades() && IsMannVsMachineRespecEnabled() && CanPlayerUseRespec( pTFPlayer ) )
-			{
-				if ( IsMannVsMachineMode() )
-				{
-					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
-						return;
-				}
-			}
 		}
 		else if ( FStrEq( pszCommand, "use_action_slot_item_server" ) )
 		{
@@ -14339,28 +14068,6 @@ void CTFGameRules::HandleMapEvent( inputdata_t &inputdata )
 				PlayHelltowerAnnouncerVO( HELLTOWER_VO_RED_LOSE, HELLTOWER_VO_BLUE_WIN );
 			}
 		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetCustomUpgradesFile( inputdata_t &inputdata )
-{
-	const char *pszPath = inputdata.value.String();
-
-	// Reload
-	g_MannVsMachineUpgrades.LoadUpgradesFileFromPath( pszPath );
-
-	// Tell future clients to load from this path
-	V_strncpy( m_pszCustomUpgradesFile.GetForModify(), pszPath, MAX_PATH );
-
-	// Tell connected clients to reload
-	IGameEvent *pEvent = gameeventmanager->CreateEvent( "upgrades_file_changed" );
-	if ( pEvent )
-	{
-		pEvent->SetString( "path", pszPath );
-		gameeventmanager->FireEvent( pEvent );
 	}
 }
 
@@ -15436,8 +15143,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
 					( pRoundStats->m_iStat[TFSTAT_REVENGE] / TF_SCORE_REVENGE ) +
-					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR ) +
-					( pRoundStats->m_iStat[TFSTAT_CURRENCY_COLLECTED] / TF_SCORE_CURRENCY_COLLECTED );
+					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR );
 
 	if ( pPlayer )
 	{
@@ -16626,10 +16332,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 				{
 					pPlayer->AwardAchievement( ACHIEVEMENT_TF_HEAVY_PAYLOAD_CAP_GRIND );
 				}
-
-				// Give money and experience
-				int nAmount = CalculateCurrencyAmount_ByType( TF_CURRENCY_CAPTURED_OBJECTIVE );
-				DistributeCurrencyAmount( nAmount, pPlayer, false );
 			}
 		}
 
@@ -16686,9 +16388,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 			{
 				CTF_GameStats.Event_PlayerScoresEscortPoints( pPlayer, iPoints );
 
-				int nAmount = CalculateCurrencyAmount_ByType( TF_CURRENCY_ESCORT_REWARD );
-				DistributeCurrencyAmount( ( nAmount * iPoints ), pPlayer, false );
-
 				if ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && GetGameType() == TF_GAMETYPE_ESCORT )
 				{
 					for ( int i = 0 ; i < iPoints ; i++ )
@@ -16715,22 +16414,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 	}
 	else if ( !Q_strcmp( eventName, "teamplay_round_start" ) )
 	{
-		if ( IsMannVsMachineMode() )
-		{
-			if ( g_pPopulationManager )
-			{
-				g_pPopulationManager->RestorePlayerCurrency();
-				
-				// make sure all invaders are removed
-				CUtlVector< CTFPlayer * > playerVector;
-				CollectPlayers( &playerVector, TF_TEAM_PVE_INVADERS );
-
-				for( int i=0; i<playerVector.Count(); ++i )
-				{
-					playerVector[i]->ChangeTeam( TEAM_SPECTATOR, false, true );
-				}
-			}
-		}
 	}
 	else if ( !Q_strcmp( eventName, "recalculate_truce" ) )
 	{
@@ -19179,418 +18862,6 @@ void CTFGameRules::PushAllPlayersAway( const Vector& vFromThisPoint, float flRan
 	}
 }
 
-#endif // GAME_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, attrib_definition_index_t iAttribIndex, CMannVsMachineUpgrades *pUpgrade )
-{
-	if ( !pPlayer )
-		return false;
-
-	Assert ( pUpgrade );
-
-	// Upgrades on players are considered active at all times
-	if ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER )
-	{
-		switch ( iAttribIndex )
-		{
-		case 113:	// "metal regen"
-			{
-				return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) );
-			}
-			break;
-		}
-
-		return true;
-	}
-
-	// Get the item entity. We use the entity, not the item in the loadout, because we want
-	// the dynamic attributes that have already been purchases and attached.
-	CEconEntity *pEntity;
-	CEconItemView *pCurItemData = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pPlayer, iWeaponSlot, &pEntity );
-	if ( !pCurItemData || !pEntity )
-		return false;
-
-	CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase* > ( pEntity );
-	CTFWeaponBaseGun *pWeaponGun = dynamic_cast< CTFWeaponBaseGun* > ( pEntity );
-	int iWeaponID = ( pWeapon ) ? pWeapon->GetWeaponID() : TF_WEAPON_NONE;
-	CTFWearableDemoShield *pShield = ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) ) ? dynamic_cast< CTFWearableDemoShield* >( pEntity ) : NULL;
-	bool bShield = ( pShield ) ? true : false;
-
-	// Hack to simplify excluding non-weapons from damage upgrades
-	bool bHideDmgUpgrades = iWeaponID == TF_WEAPON_NONE || 
-							iWeaponID == TF_WEAPON_LASER_POINTER || 
-							iWeaponID == TF_WEAPON_MEDIGUN || 
-							iWeaponID == TF_WEAPON_BUFF_ITEM ||
-							iWeaponID == TF_WEAPON_BUILDER ||
-							iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD ||
-							iWeaponID == TF_WEAPON_INVIS ||
-							iWeaponID == TF_WEAPON_SPELLBOOK ||
-							iWeaponID == TF_WEAPON_LUNCHBOX;
-
-	// What tier upgrade is it?
-	int nQuality = pUpgrade->nQuality;
-
-	// This is bad, but it's hopefully more maintainable than the allowed attributes block for all current & future items
-	switch ( iAttribIndex )
-	{
-	case 2:		// "damage bonus"
-		{
-			if ( bHideDmgUpgrades )
-				return false;
-
-			// Some classes get a weaker dmg upgrade
-			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-			{
-				if ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) && !bShield )
-				{
-					return ( iWeaponSlot == TF_WPN_TYPE_PRIMARY || iWeaponSlot == TF_WPN_TYPE_SECONDARY );
-				}
-				else
-				{
-					return false;
-				}
-			}
-
-			bool bShieldEquipped = false;
-			if ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) )
-			{
-				for ( int i = 0; i < pPlayer->GetNumWearables(); ++i )
-				{
-					CTFWearableDemoShield *pWearableShield = dynamic_cast< CTFWearableDemoShield* >( pPlayer->GetWearable( i ) );
-					if ( pWearableShield )
-					{
-						bShieldEquipped = true;
-					}
-				}
-			}
-
-			return ( ( iWeaponSlot == TF_WPN_TYPE_PRIMARY && 
-					( pPlayer->IsPlayerClass( TF_CLASS_SCOUT ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_SNIPER ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_SOLDIER ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_PYRO ) ) ) || 
-					( iWeaponID == TF_WEAPON_SWORD && bShieldEquipped ) );
-		}
-		break;
-	case 6:		// "fire rate bonus"
-		{
-			// Heavy's version of firing speed costs more
-			bool bMinigun = iWeaponID == TF_WEAPON_MINIGUN;
-			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-			{
-				return bMinigun;
-			}
-			else if ( iWeaponID == TF_WEAPON_GRENADELAUNCHER && pWeapon && pWeapon->AutoFiresFullClipAllAtOnce() )
-			{
-				return false;
-			}
-
-			// Non-melee version
-			return ( dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) == NULL && 
-				iWeaponID != TF_WEAPON_NONE && !bHideDmgUpgrades && 
-				iWeaponID != TF_WEAPON_FLAMETHROWER &&
-				!WeaponID_IsSniperRifleOrBow( iWeaponID ) && 
-				!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
-				!bMinigun );
-		}
-		break;
-	// case 8:		// "heal rate bonus"
-	case 10:	// "ubercharge rate bonus"
-	case 314:	// "uber duration bonus"
-	case 481:	// "canteen specialist"
-	case 482:	// "overheal expert"
-	case 483:	// "medic machinery beam"
-	case 493:	// "healing mastery"
-		{
-			return ( iWeaponID == TF_WEAPON_MEDIGUN );
-		}
-		break;
-	case 31:	// "critboost on kill"
-		{
-			CTFWeaponBaseMelee *pMelee = dynamic_cast<CTFWeaponBaseMelee *> ( pEntity );
-			return ( pMelee && (
-				pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) || 
-				pPlayer->IsPlayerClass( TF_CLASS_SPY ) ) );
-		}
-	case 71:	// weapon burn dmg increased
-	case 73:	// weapon burn time increased
-		{
-			return ( iWeaponID == TF_WEAPON_FLAMETHROWER || iWeaponID == TF_WEAPON_FLAREGUN );
-		}
-		break;
-	case 76:	// "maxammo primary increased"
-		{
-			return ( pWeapon && pWeapon->GetPrimaryAmmoType() == TF_AMMO_PRIMARY && !pWeapon->IsEnergyWeapon() );
-		}
-		break;
-	case 78:	// "maxammo secondary increased"
-		{
-			return ( pWeapon && pWeapon->GetPrimaryAmmoType() == TF_AMMO_SECONDARY && !pWeapon->IsEnergyWeapon() );
-		}
-		break;
-	case 90:	// "SRifle Charge rate increased"
-		{
-			return WeaponID_IsSniperRifle( iWeaponID );
-		}
-		break;
-	case 103:	// "Projectile speed increased"
-		{
-			if ( pWeaponGun )
-			{
-				return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_PIPEBOMB );
-			}
-
-			return false;
-		}
-		break;
-	case 149:	// "bleed duration"
-	case 523:	// "arrow mastery"
-		{
-			return ( iWeaponID == TF_WEAPON_COMPOUND_BOW );
-		}
-		break;
-	case 218:	// "mark for death"
-		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
-		}
-		break;
-	case 249:	// "charge recharge rate increased"
-	case 252:   // "damage force reduction"
-		{
-			return bShield;
-		}
-		break;
-	case 255:	// "airblast pushback scale"
-		{
-			return ( iWeaponID == TF_WEAPON_FLAMETHROWER && pWeaponGun && assert_cast< CTFFlameThrower* >( pWeaponGun )->CanAirBlastPushPlayer() );
-		}
-		break;
-	case 266:	// "projectile penetration"
-		{
-			if ( pWeaponGun && !bHideDmgUpgrades )
-			{
-				if ( !( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY ) )
-				{
-					int iProjectile = pWeaponGun->GetWeaponProjectileType();
-					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET );
-				}
-			}
-
-			return false;
-		}
-		break;
-	case 80:	// "maxammo metal increased"
-	case 276:	// "bidirectional teleport"
-	case 286:	// "engy building health bonus"
-	case 343:	// "engy sentry fire rate increased"
-	case 345:	// "engy dispenser radius increased"
-	case 351:	// "engy disposable sentries"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) && iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD );
-		}
-		break;
-	case 278:	// "effect bar recharge rate increased"
-		{
-			return ( pWeapon && pWeapon->HasEffectBarRegeneration() && iWeaponID != TF_WEAPON_BUILDER && iWeaponID != TF_WEAPON_SPELLBOOK );
-		}
-		break;
-	case 279:	// "maxammo grenades1 increased"
-		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
-		}
-		break;
-	case 313:	// "applies snare effect"
-		{
-			return ( iWeaponID == TF_WEAPON_JAR );
-		}
-		break;
-	case 318:	// "faster reload rate"
-		{
-			return ( ( pWeapon && pWeapon->ReloadsSingly() ) || 
-				WeaponID_IsSniperRifleOrBow( iWeaponID ) || 
-				iWeaponID == TF_WEAPON_FLAREGUN );
-		}
-		break;
-	case 319:	// "increase buff duration"
-		{
-			return ( iWeaponID == TF_WEAPON_BUFF_ITEM );
-		}
-		break;
-	case 320:	// "robo sapper"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) && iWeaponID == TF_WEAPON_BUILDER );
-		}
-		break;
-	case 323:	// "attack projectiles"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-		}
-		break;
-	case 335:		// "clip size bonus upgrade"
-		{
-			return ( pWeapon && !pWeapon->IsBlastImpactWeapon() && pWeapon->UsesClipsForAmmo1() && pWeapon->GetMaxClip1() > 1 
-					 && iWeaponID != TF_WEAPON_FLAREGUN_REVENGE && iWeaponID != TF_WEAPON_SPELLBOOK );
-		}
-		break;
-	case 375:		// "generate rage on damage"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-		}
-		break;
-	case 395:		// "explosive sniper shot"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SNIPER ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY && 
-					 pWeaponGun && pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_BULLET );
-		}
-		break;
-	case 396:		// "melee attack rate bonus"
-		{
-			bool bAllowed = ( iWeaponID != TF_WEAPON_BAT_WOOD &&
-							iWeaponID != TF_WEAPON_BUFF_ITEM && 
-							!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
-							dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) );
-			return bAllowed;
-		}
-		break;
-	case 397:	// "projectile penetration heavy"
-		{
-			if ( !bHideDmgUpgrades )
-			{
-				return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-			}
-		}
-		break;
-	case 399:	// "armor piercing"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) && iWeaponID == TF_WEAPON_KNIFE );
-		}
-		break;
-	case 440:	// "clip size upgrade atomic"
-		{
-			return pWeapon && pWeapon->IsBlastImpactWeapon();
-		}
-		break;
-	case 484:	// "mad milk syringes"
-		{
-			return ( iWeaponID == TF_WEAPON_SYRINGEGUN_MEDIC );
-		}
-	case 488:	// "rocket specialist"
-		if ( pWeaponGun )
-		{
-			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET );
-		}
-	case 499:	// generate rage on heal (shield)
-	case 555:	// medigun specialist
-		{
-			return ( iWeaponID == TF_WEAPON_MEDIGUN );
-		}
-	case 871:	// falling_impact_radius_stun
-		{
-			return false;
-		}
-	}
-
-	// All weapon related attributes require an item that does damage
-	if ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM )
-	{
-		// All guns
-		if ( pWeaponGun )
-			return ( iWeaponID != TF_WEAPON_NONE && !bHideDmgUpgrades && 
-			!( pWeapon && pWeapon->HasEffectBarRegeneration() ) );
-
-		CTFWeaponBaseMelee *pMelee = dynamic_cast< CTFWeaponBaseMelee* >( pEntity );
-		if ( pMelee )
-		{
-			// All melee weapons except buff banners
-			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades );
-		}
-
-		return false;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int CTFGameRules::GetUpgradeTier( int iUpgrade )
-{
-	if ( !GameModeUsesUpgrades() || iUpgrade < 0 || iUpgrade >= g_MannVsMachineUpgrades.m_Upgrades.Count() )
-		return 0;
-	
-	return g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].nTier;
-}
-
-//-----------------------------------------------------------------------------
-//  Given an upgrade and slot, see if its' tier is enabled/available
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsUpgradeTierEnabled( CTFPlayer *pTFPlayer, int iItemSlot, int iUpgrade )
-{
-	if ( !pTFPlayer )
-		return false;
-
-	// If the upgrade has a tier, it's mutually exclusive with upgrades of the same tier for the same slot
-	int nTier = GetUpgradeTier( iUpgrade );
-	if ( !nTier )
-		return false;
-
-	bool bIsAvailable = true;
-	CEconItemView *pItem = NULL;
-	float flValue = 0.f;
-
-	// Go through the upgrades and see if it could apply, and if we already have it
-	for ( int i = 0; i < g_MannVsMachineUpgrades.m_Upgrades.Count(); i++ )
-	{
-		CMannVsMachineUpgrades upgrade = g_MannVsMachineUpgrades.m_Upgrades[i];
-
-		// Same upgrade
-// 		if ( !V_strcmp( upgrade.szAttrib, g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].szAttrib ) )
-// 			continue;
-
-		// Different tier
-		if ( upgrade.nTier != nTier )
-			continue;
-
-		// Wrong type
-		if ( upgrade.nUIGroup != g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].nUIGroup )
-			continue;
-
-		CEconItemAttributeDefinition *pAttribDef = ItemSystem()->GetStaticDataForAttributeByName( upgrade.szAttrib );
-		if ( !pAttribDef )
-			continue;
-			
-		// Can't use
-		if ( !CanUpgradeWithAttrib( pTFPlayer, iItemSlot, pAttribDef->GetDefinitionIndex(), &upgrade ) )
-			continue;
-
-		if ( upgrade.nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM )
-		{
-			pItem = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pTFPlayer, iItemSlot );
-			if ( pItem )
-			{
-				::FindAttribute_UnsafeBitwiseCast< attrib_value_t >( pItem->GetAttributeList(), pAttribDef, &flValue );
-			}
-		}
-		else if ( upgrade.nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER )
-		{
-			::FindAttribute_UnsafeBitwiseCast< attrib_value_t >( pTFPlayer->GetAttributeList(), pAttribDef, &flValue );
-		}
-
-		if ( flValue > 0.f )
-		{
-			bIsAvailable = false;
-			break;
-		}
-	}
-	
-	return bIsAvailable;
-}
-
-#ifdef GAME_DLL
 //-----------------------------------------------------------------------------
 // Helper Functions
 //-----------------------------------------------------------------------------
@@ -19736,10 +19007,7 @@ bool	ScriptIsMannVsMachineMode()									{ return TFGameRules()->IsMannVsMachine
 bool	ScriptGetMannVsMachineAlarmStatus()							{ return TFGameRules()->GetMannVsMachineAlarmStatus(); }
 void	ScriptSetMannVsMachineAlarmStatus( bool bEnabled )			{ return TFGameRules()->SetMannVsMachineAlarmStatus( bEnabled ); }
 bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime(); }
-bool	ScriptGameModeUsesUpgrades()								{ return TFGameRules()->GameModeUsesUpgrades(); }
-bool	ScriptGameModeUsesCurrency()								{ return TFGameRules()->GameModeUsesCurrency(); }
 bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
-bool	ScriptIsMannVsMachineRespecEnabled()						{ return TFGameRules()->IsMannVsMachineRespecEnabled(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
 bool	ScriptIsMatchTypeCompetitive()								{ return TFGameRules()->IsMatchTypeCompetitive(); }
@@ -19766,7 +19034,6 @@ bool	ScriptHaveStopWatchWinner()									{ return TFGameRules()->HaveStopWatchWi
 void	ScriptSetOvertimeAllowedForCTF( bool bAllowed )				{ TFGameRules()->SetOvertimeAllowedForCTF( bAllowed ); }
 bool	ScriptGetOvertimeAllowedForCTF()							{ return TFGameRules()->GetOvertimeAllowedForCTF(); }
 
-void	ScriptForceEnableUpgrades( int nState )						{ TFGameRules()->ForceEnableUpgrades( nState ); }
 void	ScriptForceEscortPushLogic( int nState )					{ TFGameRules()->ForceEscortPushLogic( nState ); }
 
 void CTFGameRules::RegisterScriptFunctions()
@@ -19790,10 +19057,7 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GetMannVsMachineAlarmStatus,				"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetMannVsMachineAlarmStatus,				"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsQuickBuildTime,							"If an engie places a building, will it immediately upgrade? Eg. MvM pre-round etc." );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesUpgrades,						"Does the current gamemode have upgrades?" );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesCurrency,						"Does the current gamemode have currency?" );
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineRespecEnabled,				"Are players allowed to refund their upgrades?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );
@@ -19820,7 +19084,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GetOvertimeAllowedForCTF,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetOvertimeAllowedForCTF,					"" );
 
-	TF_GAMERULES_SCRIPT_FUNC( ForceEnableUpgrades,						"Whether to force on MvM-styled upgrades on/off. 0 -> default, 1 -> force off, 2 -> force on" );
 	TF_GAMERULES_SCRIPT_FUNC( ForceEscortPushLogic,						"Forces payload pushing logic. 0 -> default, 1 -> force off, 2 -> force on" );
 
 	g_pScriptVM->RegisterInstance( &PlayerVoiceListener(), "PlayerVoiceListener" );

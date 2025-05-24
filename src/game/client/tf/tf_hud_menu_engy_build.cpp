@@ -462,14 +462,8 @@ void CHudMenuEngyBuild::SendBuildMessage( int iSlot )
 	C_BaseObject *pObj = pLocalPlayer->GetObjectOfType( iBuilding, iMode );
 	int iCost = pLocalPlayer->m_Shared.CalculateObjectCost( pLocalPlayer, iBuilding );
 
-	int iBuildDisposableSents = CB_CANNOT_BUILD;
-	if ( TFGameRules()->GameModeUsesUpgrades() && iBuilding == OBJ_SENTRYGUN )
-	{
-		iBuildDisposableSents = pLocalPlayer->CanBuild( iBuilding, iMode );
-	}
-
 	// If we don't already have a sentry (NULL), or we're allowed to build multiple, and we can afford it
-	if ( ( pObj == NULL || iBuildDisposableSents == CB_CAN_BUILD ) && pLocalPlayer->GetAmmoCount( TF_AMMO_METAL ) >= iCost )
+	if ( pObj == NULL && pLocalPlayer->GetAmmoCount( TF_AMMO_METAL ) >= iCost )
 	{
 		char szCmd[128];
 		Q_snprintf( szCmd, sizeof(szCmd), "build %d %d", iBuilding, iMode );

@@ -1259,9 +1259,6 @@ void CCaptureFlag::Capture( CTFPlayer *pPlayer, int nCapturePoint )
 		// Reward the player
 		CTF_GameStats.Event_PlayerCapturedPoint( pPlayer );
 
-		int nAmount = TFGameRules()->CalculateCurrencyAmount_ByType( TF_CURRENCY_CAPTURED_OBJECTIVE );
-		TFGameRules()->DistributeCurrencyAmount( nAmount, pPlayer );
-
 		// if someone else stole the flag, give them credit, too
 		if ( m_hInitialPlayer.Get() && m_hInitialPlayer.Get() != pPlayer )
 		{

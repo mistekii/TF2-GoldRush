@@ -97,11 +97,6 @@ void CTFShotgun::UpdatePunchAngles( CTFPlayer *pPlayer )
 void CTFShotgun::PlayWeaponShootSound( void )
 {
 	BaseClass::PlayWeaponShootSound();
-
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
 }
 
 //-----------------------------------------------------------------------------

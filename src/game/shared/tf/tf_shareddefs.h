@@ -1323,7 +1323,6 @@ typedef enum
 #define TF_SCORE_HEAL_HEALTHUNITS_PER_POINT		600
 #define TF_SCORE_BONUS_POINT_DIVISOR			10
 #define TF_SCORE_DAMAGE							250
-#define TF_SCORE_CURRENCY_COLLECTED				20
 #define TF_SCORE_CAPTURE_POWERUPMODE			5 // With these CTF rules capturing flags is tougher, hence the higher scoring for flag events
 #define TF_SCORE_FLAG_RETURN					4
 #define TF_SCORE_KILL_RUNECARRIER				1
@@ -1727,44 +1726,12 @@ enum EAttackBonusEffects_t
 //-----------------------------------------------------------------------------
 // PVE MODE
 //-----------------------------------------------------------------------------
-// In-game currency
-enum CurrencyRewards_t
-{
-	TF_CURRENCY_KILLED_PLAYER,
-	TF_CURRENCY_KILLED_OBJECT,
-	TF_CURRENCY_ASSISTED_PLAYER,
-	TF_CURRENCY_BONUS_POINTS,
-	TF_CURRENCY_CAPTURED_OBJECTIVE,
-	TF_CURRENCY_ESCORT_REWARD,
-	TF_CURRENCY_PACK_SMALL,
-	TF_CURRENCY_PACK_MEDIUM,
-	TF_CURRENCY_PACK_LARGE,
-	TF_CURRENCY_PACK_CUSTOM,
-	TF_CURRENCY_TIME_REWARD,
-	TF_CURRENCY_WAVE_COLLECTION_BONUS,
-};
-
 enum mvm_announcement_t
 {
 	TF_MVM_ANNOUNCEMENT_WAVE_COMPLETE,
 	TF_MVM_ANNOUNCEMENT_WAVE_FAILED,
 
 	TF_MVM_ANNOUNCEMENT_TOTAL
-};
-
-#define MAX_RAIDMODE_UPGRADES		60
-
-enum mvm_upgrade_uigroups_t
-{
-	UIGROUP_UPGRADE_ATTACHED_TO_ITEM = 0,
-	UIGROUP_UPGRADE_ATTACHED_TO_PLAYER,
-};
-
-enum
-{
-	MVM_UPGRADE_QUALITY_LOW = 1,
-	MVM_UPGRADE_QUALITY_NORMAL,		// Default
-	MVM_UPGRADE_QAULITY_HIGH,
 };
 
 #define MVM_BUYBACK_COST_PER_SEC		5

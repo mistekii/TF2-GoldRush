@@ -1127,7 +1127,6 @@ CWaveSpawnPopulator::CWaveSpawnPopulator( CPopulationManager *manager ) : IPopul
 	m_waitBeforeStarting = 0.0f;
 	m_waitBetweenSpawns = 0.0f;
 	m_bWaitBetweenSpawnAfterDeath = false;
-	m_totalCurrency = -1;
 	SetState( PENDING );
 
 	m_startWaveOutput = NULL;
@@ -1291,10 +1290,6 @@ bool CWaveSpawnPopulator::Parse( KeyValues *values )
 		{
 			m_doneOutput = ParseEvent( data );
 		}
-		else if ( !Q_stricmp( name, "TotalCurrency" ) )
-		{
-			m_totalCurrency = data->GetInt();
-		}
 		else if ( !Q_stricmp( name, "Name" ) )
 		{
 			m_name = data->GetString();
@@ -1327,7 +1322,6 @@ bool CWaveSpawnPopulator::Parse( KeyValues *values )
 		}
 
 		// These allow us to avoid rounding errors later when divvying money to bots
-		m_unallocatedCurrency = m_totalCurrency;
 		m_remainingCount = m_totalCount;
 	}
 
@@ -1411,48 +1405,11 @@ void CWaveSpawnPopulator::OnNonSupportWavesDone( void )
 			break;
 		case SPAWNING:
 		case WAIT_FOR_ALL_DEAD:
-			if ( TFGameRules() && ( m_unallocatedCurrency > 0 ) )
-			{
-				TFGameRules()->DistributeCurrencyAmount( m_unallocatedCurrency, NULL, true, true );
-				m_unallocatedCurrency = 0;
-			}
 			SetState( WAIT_FOR_ALL_DEAD );
  		case DONE:
 			break;
 		}
 	}
-}
-
-
-//-----------------------------------------------------------------------
-int CWaveSpawnPopulator::GetCurrencyAmountPerDeath( void )
-{
-	int nCurrency = 0;
-	
-	if ( m_bSupportWave )
-	{
-		if ( m_state == WAIT_FOR_ALL_DEAD )
-		{
-			// we're still in the m_ActiveVector at this point so the number of players
-			// in the vector is the division of the money since we're done spawning
-			m_remainingCount = m_activeVector.Count();
-		}
-	}
-
-	if ( m_unallocatedCurrency > 0 )
-	{
-		// We shouldn't be back in here if our remaining count is 0
-		Assert ( m_remainingCount > 0 );
-
-		// Band-aid for playtest
-		m_remainingCount = m_remainingCount <= 0 ? 1 : m_remainingCount;
-
-		nCurrency = m_unallocatedCurrency / m_remainingCount;
-		m_unallocatedCurrency -= nCurrency;
-		m_remainingCount--;
-	}
-
-	return nCurrency;
 }
 
 	
@@ -1627,7 +1584,6 @@ void CWaveSpawnPopulator::Update( void )
 					CTFBot *bot = ToTFBot( m_justSpawnedVector[i] );
 					if ( bot )
 					{
-						bot->SetCustomCurrencyWorth( 0 );
 						bot->SetWaveSpawnPopulator( this );
 
 						// Allows client UI to know if a specific spawner is active
@@ -1746,7 +1702,6 @@ CWave::CWave( CPopulationManager *manager ) : IPopulator( manager )
 	m_initOutput = NULL;
 	m_bCheckBonusCreditsMin = true;
 	m_bCheckBonusCreditsMax = true;
-	m_bPlayedUpgradeAlert = false;
 	m_flBonusCreditsTime = 0;
 	m_isEveryContainedWaveSpawnDone = false;
 	m_flStartTime = 0;
@@ -1789,7 +1744,6 @@ bool CWave::Parse( KeyValues *data )
 				// this is a total of all enemies we have to fight that are NOT support enemies
 				m_iEnemyCount += wavePopulator->m_totalCount;
 			}
-			m_totalCurrency += wavePopulator->m_totalCurrency;
 
 			wavePopulator->SetParent( this );
 

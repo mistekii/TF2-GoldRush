@@ -34,8 +34,6 @@ public:
 	void SetMannVsMachineWaveEnemyCount( int nCount ) { m_nMannVsMachineWaveEnemyCount = nCount; }
 	int	 GetMannVsMachineWaveEnemyCount( void ) { return m_nMannVsMachineWaveEnemyCount.Get(); }
 
-	void AddMvMWorldMoney( int nCurrency ) { m_nMvMWorldMoney += nCurrency; }
-
 	void SetMannVsMachineNextWaveTime( float flTime ) { m_flMannVsMachineNextWaveTime = flTime; }
 	void SetMannVsMachineBetweenWaves( bool bVal ) { m_bMannVsMachineBetweenWaves = bVal; }
 	bool GetMannVsMachineIsBetweenWaves( void ) { return m_bMannVsMachineBetweenWaves; }

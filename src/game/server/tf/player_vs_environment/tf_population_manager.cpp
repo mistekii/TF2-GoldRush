@@ -18,7 +18,6 @@
 #include "tf_gamestats.h"
 #include "tf_gamerules.h"
 #include "econ_item_schema.h"
-#include "tf_upgrades_shared.h"
 
 #include "etwprof.h"
 
@@ -263,7 +262,6 @@ CPopulationManager::CPopulationManager( void )
 	m_bFixedRespawnWaveTime = false;
 	m_sentryBusterDamageDealtThreshold = tf_mvm_default_sentry_buster_damage_dealt_threshold.GetInt();
 	m_sentryBusterKillThreshold = tf_mvm_default_sentry_buster_kill_threshold.GetInt();
-	m_bCheckForCurrencyAchievement = true;
 	m_bEndlessOn = false;
 	m_bIsWaveJumping = false;
 	m_bSpawningPaused = false;
@@ -296,7 +294,6 @@ CPopulationManager::CPopulationManager( void )
 
 	m_nRespecsAwarded = 0;
 	m_nRespecsAwardedInWave = 0;
-	m_nCurrencyCollectedForRespec = 0;
 	m_PlayerRespecPoints.SetLessFunc( DefLessFunc (uint64) );
 	m_PlayerRespecPoints.EnsureCapacity( MAX_PLAYERS );
 
@@ -459,13 +456,6 @@ bool CPopulationManager::Initialize( void )
 	UpdateObjectiveResource();
 	DebugWaveStats();
 	PostInitialize();
-
-	// Space respecs based on the number allowed
-	if ( tf_mvm_respec_limit.GetBool() )
-	{
-		int nAmount = tf_mvm_respec_limit.GetInt() + 1;
-		tf_mvm_respec_credit_goal.SetValue( GetTotalPopFileCurrency() / nAmount );
-	}
 
 	m_nRespecsAwardedInWave = 0;
 
@@ -818,20 +808,7 @@ void CPopulationManager::ResetMap( void )
 		pPlayer->ResetScores();
 	}
 
-	ResetRespecPoints();
 	ClearCheckpoint();
-
-	for ( int i = 1; i <= MAX_PLAYERS; ++i )
-	{
-		CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-		if ( !pTFPlayer )
-			continue;
-
-		if ( pTFPlayer->IsBot() )
-			continue;
-
-		pTFPlayer->ResetRefundableUpgrades();
-	}
 
 	JumpToWave( 0, 0 );
 }
@@ -1110,7 +1087,6 @@ void CPopulationManager::JumpToWave( uint32 waveNumber, float fCleanMoneyPercent
 	TFGameRules()->State_Transition( GR_STATE_PREROUND );
 	TFGameRules()->PlayerReadyStatus_ResetState();
 	TFObjectiveResource()->SetMannVsMachineBetweenWaves( true );
-	RestorePlayerCurrency();
 	m_bIsWaveJumping = false;
 
 	CTF_GameStats.ResetRoundStats();
@@ -1119,8 +1095,6 @@ void CPopulationManager::JumpToWave( uint32 waveNumber, float fCleanMoneyPercent
 	{
 		gameeventmanager->FireEvent( event );
 	}
-
-	ResetRespecPoints();
 }
 
 //-------------------------------------------------------------------------
@@ -1166,7 +1140,6 @@ void CPopulationManager::WaveEnd( bool bSuccess )
 
 			// display the upcoming wave's description
 			ShowNextWaveDescription();
-			nextWave->StartUpgradesAlertTimer( 3.0f );
 
 			if ( IsInEndlessWaves() )
 			{
@@ -1236,110 +1209,6 @@ void CPopulationManager::SetCheckpoint( int waveNumber )
 	m_checkpointWaveIndex = waveNumber;
 
 	DevMsg( "Checkpoint Saved\n" );
-
-	// snapshot each player's state
-	// Save off all upgrades and purge it, copy back in existing players
-	for( int i=0; i<m_playerUpgrades.Count(); ++i )
-	{
-		// Get this players check point
-		CheckpointSnapshotInfo *snapshot = FindCheckpointSnapshot( m_playerUpgrades[i]->m_steamId );
-		if ( snapshot == NULL )
-		{
-			// New SnapshotInfo, save the player id
-			snapshot = new CheckpointSnapshotInfo;
-			snapshot->m_steamId = m_playerUpgrades[i]->m_steamId;
-			m_checkpointSnapshot.AddToTail( snapshot );
-		}
-
-		// Save the Player upgrade history
-		snapshot->m_currencySpent = m_playerUpgrades[i]->m_currencySpent;
-		snapshot->m_upgradeVector.RemoveAll();
-		// copy in to upgrade history
-		for( int j = 0; j < m_playerUpgrades[i]->m_upgradeVector.Count(); ++j )
-		{
-			snapshot->m_upgradeVector.AddToTail( m_playerUpgrades[i]->m_upgradeVector[j]);
-		}
-	}
-}
-
-//-------------------------------------------------------------------------
-void CPopulationManager::RestoreItemToCheckpointState( CTFPlayer *player, CEconItemView *item )
-{
-	CheckpointSnapshotInfo *snapshot = FindCheckpointSnapshot( player );
-	
-	if ( !snapshot )
-		return;
-
-	if ( !player->Inventory() )
-		return;
-
-	if ( !item || !item->IsValid() )
-		return;
-
-	player->BeginPurchasableUpgrades();
-
-	player->EndPurchasableUpgrades();
-}
-
-// ----------------------------------------------------------------------------------
-void CPopulationManager::RestorePlayerCurrency ()
-{
-	// Set the players money on round start
-
-
-	CUtlVector< CTFPlayer * > playerVector;
-	CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
-
-	for( int i=0; i<playerVector.Count(); ++i )
-	{
-		// deduct any cash that has already been spent
-		int spentCurrency = GetPlayerCurrencySpent( playerVector[i] );
-		playerVector[i]->SetCurrency( spentCurrency ); // temp
-	}
-}
-
-// ----------------------------------------------------------------------------------
-// Purpose : Get the player's upgrade list
-// ----------------------------------------------------------------------------------
-CUtlVector< CUpgradeInfo > *CPopulationManager::GetPlayerUpgradeHistory ( CTFPlayer *player )
-{
-	PlayerUpgradeHistory *history = FindOrAddPlayerUpgradeHistory ( player );
-
-	if ( !history )
-		return NULL;
-
-	return &(history->m_upgradeVector);
-}
-
-// ----------------------------------------------------------------------------------
-// Purpose : Get the player's currency history
-// ----------------------------------------------------------------------------------
-int CPopulationManager::GetPlayerCurrencySpent ( CTFPlayer *player )
-{
-	PlayerUpgradeHistory *history = FindOrAddPlayerUpgradeHistory ( player );
-	if ( !history )
-		return 0;
-
-	return history->m_currencySpent;
-}
-
-// ----------------------------------------------------------------------------------
-// Purpose : Get the player's currency history
-// ----------------------------------------------------------------------------------
-void CPopulationManager::AddPlayerCurrencySpent ( CTFPlayer *player, int cost )
-{
-	PlayerUpgradeHistory *history = FindOrAddPlayerUpgradeHistory ( player );
-	if ( !history )
-		return;
-
-	history->m_currencySpent += cost;
-}
-
-// ----------------------------------------------------------------------------------
-//  Purpose : Send the player their upgrades
-void CPopulationManager::SendUpgradesToPlayer ( CTFPlayer *player )
-{
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory ( player );
 }
 
 //-----------------------------------------------------------------------------------
@@ -1354,27 +1223,6 @@ void CPopulationManager::RestoreCheckpoint( void )
 		m_iCurrentWaveIndex = m_checkpointWaveIndex;
 	}
 
-	// Purge all player upgrades
-	// Set them to the checkpoint state
-	m_playerUpgrades.PurgeAndDeleteElements();
-
-	// We must clear each player's upgrade history to get rid of upgrades they
-	// purchased since the last checkpoint. The history will be rebuilt
-	// as the checkpoint snapshot is restored.
-	for( int i=0; i<m_checkpointSnapshot.Count(); ++i )
-	{
-		CheckpointSnapshotInfo *snapshot = m_checkpointSnapshot[i];
-
-		// Create new Entry since we Purged the list
-		PlayerUpgradeHistory *history = FindOrAddPlayerUpgradeHistory( snapshot->m_steamId );
-		history->m_currencySpent = snapshot->m_currencySpent;
-		
-		for (int j = 0; j < snapshot->m_upgradeVector.Count(); ++j )
-		{
-			history->m_upgradeVector.AddToTail( snapshot->m_upgradeVector[j] );
-		}
-	}
-
 	// Iterate over play
 	// clear Bottles and Sentry danger and send their upgrades
 	CUtlVector< CTFPlayer * > playerVector;
@@ -1386,8 +1234,6 @@ void CPopulationManager::RestoreCheckpoint( void )
 		// Clear sentry danger
 		player->ResetAccumulatedSentryGunDamageDealt();
 		player->ResetAccumulatedSentryGunKillCount();
-
-		SendUpgradesToPlayer( player );
 	}
 
 	m_nNumConsecutiveWipes++;
@@ -1415,13 +1261,6 @@ void CPopulationManager::ClearCheckpoint( void )
 	CUtlVector< CTFPlayer * > playerVector;
 	CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
 
-	for( int i=0; i<playerVector.Count(); ++i )
-	{
-		CTFPlayer *player = playerVector[i];
-
-		player->ClearUpgradeHistory();
-	}
-
 }
 
 //-------------------------------------------------------------------------
@@ -1437,72 +1276,6 @@ void CPopulationManager::OnPlayerKilled( CTFPlayer *corpse )
 	{
 		pWave->OnPlayerKilled( corpse );
 	}
-}
-
-
-//-------------------------------------------------------------------------
-void CPopulationManager::OnCurrencyCollected( int nAmount, bool bCountAsDropped, bool bIsBonus )
-{
-	// Store how much money players collect between waves so we can update the checkpoint
-	int iWaveNumber = GetWaveNumber();
-	if ( TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-	{
-		// Decrement WaveNumber if between waves, money was for previous wave
-		iWaveNumber--;
-	}
-
-	// Respec
-	int nRespecLimit = tf_mvm_respec_limit.GetInt();
-	if ( nRespecLimit )
-	{
-		bool bAtLimit = m_nRespecsAwarded >= nRespecLimit;
-		if ( !bAtLimit )
-		{
-			m_nCurrencyCollectedForRespec += nAmount;
-
-			// It's possible to earn multiple respecs from a large cash award
-			int nCreditGoal = tf_mvm_respec_credit_goal.GetInt();
-			while ( m_nCurrencyCollectedForRespec >= nCreditGoal && !bAtLimit )
-			{
-				++m_nRespecsAwarded;
-				++m_nRespecsAwardedInWave;
-
-				// Award each player a respec
-				CUtlVector< CTFPlayer* > playerVector;
-				CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
-				FOR_EACH_VEC( playerVector, i )
-				{
-					AddRespecToPlayer( playerVector[i] );
-				}
-
-				// Allowed to earn another?
-				bAtLimit = m_nRespecsAwarded >= nRespecLimit;
-				if ( !bAtLimit )
-				{
-					m_nCurrencyCollectedForRespec -= nCreditGoal;
-				}
-				else
-				{
-					// If we're at the limit, peg this value for client UI.
-					// i.e. "Respec Goal: 100 of 100"
-					m_nCurrencyCollectedForRespec = nCreditGoal;
-				}
-			}
-		}
-	}
-}
-
-//-------------------------------------------------------------------------
-int CPopulationManager::GetTotalPopFileCurrency( void )
-{
-	uint32 nTotalPopCurrency = 0;
-
-	FOR_EACH_VEC( m_waveVector, i )
-	{
-		nTotalPopCurrency += m_waveVector[i]->GetTotalCurrency();
-	}
-
-	return nTotalPopCurrency;
 }
 
 //-------------------------------------------------------------------------
@@ -2137,187 +1910,6 @@ CPopulationManager::CheckpointSnapshotInfo *CPopulationManager::FindCheckpointSn
 	return NULL;
 }
 
-// ----------------------------------------------------------------------------------
-// Purpose : Returns the Player's Upgrade History Struct, Adds a new entry if not present
-// ----------------------------------------------------------------------------------
-CPopulationManager::PlayerUpgradeHistory *CPopulationManager::FindOrAddPlayerUpgradeHistory ( CTFPlayer *player )
-{
-	CSteamID steamId;
-	if (!player->GetSteamID( &steamId ))
-	{
-		Log( "MvM : Unable to Find SteamID for player %s, unable to locate their upgrade history!", player->GetPlayerName() );
-		return NULL;
-	}
-
-	return FindOrAddPlayerUpgradeHistory( steamId );
-}
-
-// ----------------------------------------------------------------------------------
-// Purpose : Returns the Player's Upgrade History Struct, Adds a new entry if not present
-// ----------------------------------------------------------------------------------
-CPopulationManager::PlayerUpgradeHistory *CPopulationManager::FindOrAddPlayerUpgradeHistory ( CSteamID steamId )
-{
-	FOR_EACH_VEC( m_playerUpgrades, i )
-	{
-		if ( steamId == m_playerUpgrades[i]->m_steamId ) 
-		{
-			return m_playerUpgrades[i];
-		}
-	}
-
-	PlayerUpgradeHistory *history = new PlayerUpgradeHistory;
-
-	history->m_steamId = steamId; 
-	history->m_currencySpent = 0;
-
-	m_playerUpgrades.AddToTail( history );
-	return history;
-}
-
-// ----------------------------------------------------------------------------------
-// Purpose : Remove upgrade tracking tied to the player and their items (ignores bottles, buybacks)
-// ----------------------------------------------------------------------------------
-void CPopulationManager::RemovePlayerAndItemUpgradesFromHistory( CTFPlayer *pPlayer )
-{
-	CSteamID steamId;
-	if ( !pPlayer->GetSteamID( &steamId ) )
-		return;
-
-	// Remove player and item upgrades from snapshots
-	FOR_EACH_VEC_BACK( m_checkpointSnapshot, i )
-	{
-		CheckpointSnapshotInfo *pSnapshot = m_checkpointSnapshot[i];
-		if ( steamId != pSnapshot->m_steamId )
-			continue;
-
-		FOR_EACH_VEC_BACK( pSnapshot->m_upgradeVector, j )
-		{
-			int iUpgrade = pSnapshot->m_upgradeVector[j].m_upgrade;
-			CMannVsMachineUpgrades *pUpgrade = &(g_MannVsMachineUpgrades.m_Upgrades[ iUpgrade ]);
-			if ( pUpgrade && ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM || pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER ) )
-			{
-				pSnapshot->m_currencySpent -= pSnapshot->m_upgradeVector[j].m_nCost;
-				pSnapshot->m_upgradeVector.Remove( j );
-			}
-		}
-	}
-
-	// Remove player and item upgrades from current
-	FOR_EACH_VEC_BACK( m_playerUpgrades, i )
-	{
-		if ( steamId != m_playerUpgrades[i]->m_steamId ) 
-			continue;
-
-		FOR_EACH_VEC_BACK( m_playerUpgrades[i]->m_upgradeVector, j )
-		{
-			int iUpgrade = m_playerUpgrades[i]->m_upgradeVector[j].m_upgrade;
-			CMannVsMachineUpgrades *pUpgrade = &(g_MannVsMachineUpgrades.m_Upgrades[ iUpgrade ]);
-			if ( pUpgrade && ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM || pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER ) )
-			{
-				m_playerUpgrades[i]->m_currencySpent -= m_playerUpgrades[i]->m_upgradeVector[j].m_nCost;
-				m_playerUpgrades[i]->m_upgradeVector.Remove( j );
-			}
-		}
-	}
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: This adds one per call
-//-----------------------------------------------------------------------------
-void CPopulationManager::AddRespecToPlayer( CTFPlayer *pPlayer )
-{
-	if ( !pPlayer )
-		return;
-	
-	CSteamID steamID;
-	if ( pPlayer->GetSteamID( &steamID ) )
-	{
-		int iIndex = m_PlayerRespecPoints.Find( steamID.ConvertToUint64() );
-		if ( iIndex != m_PlayerRespecPoints.InvalidIndex() )
-		{
-			int nCount = m_PlayerRespecPoints[iIndex];
-			if ( nCount >= tf_mvm_respec_limit.GetInt() )
-				return;
-
-			m_PlayerRespecPoints[iIndex]++;
-		}
-		else
-		{
-			m_PlayerRespecPoints.Insert( steamID.ConvertToUint64(), 1 );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: This removes one per call
-//-----------------------------------------------------------------------------
-void CPopulationManager::RemoveRespecFromPlayer( CTFPlayer *pPlayer )
-{
-	if ( !pPlayer )
-		return;
-
-	// Unlimited
-	if ( !tf_mvm_respec_limit.GetInt() )
-		return;
-
-	CSteamID steamID;
-	if ( pPlayer->GetSteamID( &steamID ) )
-	{
-		int iIndex = m_PlayerRespecPoints.Find( steamID.ConvertToUint64() );
-		if ( iIndex != m_PlayerRespecPoints.InvalidIndex() )
-		{
-			Assert( m_PlayerRespecPoints[iIndex] );
-
-			m_PlayerRespecPoints[iIndex]--;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: This stomps whatever value we have
-//-----------------------------------------------------------------------------
-void CPopulationManager::SetNumRespecsForPlayer( CTFPlayer *pPlayer, int nCount )
-{
-	if ( !pPlayer )
-		return;
-
-	CSteamID steamID;
-	if ( pPlayer->GetSteamID( &steamID ) )
-	{
-		int iIndex = m_PlayerRespecPoints.Find( steamID.ConvertToUint64() );
-		if ( iIndex != m_PlayerRespecPoints.InvalidIndex() )
-		{
-			m_PlayerRespecPoints[iIndex] = nCount;
-		}
-		else
-		{
-			m_PlayerRespecPoints.Insert( steamID.ConvertToUint64(), nCount );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int CPopulationManager::GetNumRespecsAvailableForPlayer( CTFPlayer *pPlayer )
-{
-	// Unlimited
-	if ( !tf_mvm_respec_limit.GetBool() )
-		return 1;
-
-	CSteamID steamID;
-	if ( pPlayer && pPlayer->GetSteamID( &steamID ) )
-	{
-		int iIndex = m_PlayerRespecPoints.Find( steamID.ConvertToUint64() );
-		if ( iIndex != m_PlayerRespecPoints.InvalidIndex() )
-		{
-			return m_PlayerRespecPoints[iIndex];
-		}
-	}
-
-	return 0;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Slam the value to nCount
 //-----------------------------------------------------------------------------
@@ -2403,17 +1995,6 @@ bool CPopulationManager::IsPlayerBeingTrackedForBuybacks( CTFPlayer *pPlayer )
 	return ( iIndex != m_PlayerBuybackPoints.InvalidIndex() );
 }
 
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-void CPopulationManager::ResetRespecPoints( void )
-{
-	m_PlayerRespecPoints.RemoveAll();
-	m_nRespecsAwarded = 0;
-	m_nRespecsAwardedInWave = 0;
-	m_nCurrencyCollectedForRespec = 0;
-}
-
 // ----------------------------------------------------------------------------------
 // Purpose : Output useful info to console - Remove before ship
 // ----------------------------------------------------------------------------------
@@ -2423,12 +2004,10 @@ void CPopulationManager::DebugWaveStats ()
 	// remove before shipping
 	if ( m_waveVector.Count() )
 	{
-		uint32 nTotalPopCurrency = GetTotalPopFileCurrency();
 		uint32 nTotalWaves = GetTotalWaveCount();
 
 		DevMsg( "---\n" );
-		DevMsg( "Credits: %d\n", nTotalPopCurrency );
-		DevMsg( "Waves: %d ( %3.2f credits per wave )\n", nTotalWaves, float( (float)nTotalPopCurrency / (float)nTotalWaves ) );
+		DevMsg( "Waves: %d ( %3.2f credits per wave )\n", nTotalWaves, float( (float)nTotalWaves ) );
 		DevMsg( "---\n" );
 	}
 

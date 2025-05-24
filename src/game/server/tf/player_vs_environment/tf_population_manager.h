@@ -79,17 +79,8 @@ public:
 	void ClearCheckpoint( void );
 	void SetCheckpoint( int waveNumber );
 	void RestoreCheckpoint( void );
-	void RestoreItemToCheckpointState( CTFPlayer *player, CEconItemView *item );
-	void RestorePlayerCurrency ();
-
-	CUtlVector< CUpgradeInfo > *GetPlayerUpgradeHistory ( CTFPlayer *player );	// Returns the Upgrade vector for a given player
-	int GetPlayerCurrencySpent ( CTFPlayer *player );
-	void AddPlayerCurrencySpent ( CTFPlayer *player, int cost );
-	void SendUpgradesToPlayer ( CTFPlayer *player );
 
 	void OnPlayerKilled( CTFPlayer *corpse );
-	void OnCurrencyCollected( int nAmount, bool bCountAsDropped, bool bIsBonus );
-	int GetTotalPopFileCurrency( void );
 
 	void AdjustMinPlayerSpawnTime( void );
 
@@ -113,7 +104,6 @@ public:
 	// inlined
 	bool IsRestoringCheckpoint( void ) const;	// return true if we are in the process of restoring players to their checkpointed state
 	float GetElapsedTime( void ) const;		// return elapsed time since scenario started
-	int GetStartingCurrency( void ) const;
 	int GetRespawnWaveTime( void ) const;
 	bool CanBotsAttackWhileInSpawnRoom( void ) const;
 	KeyValues *GetTemplate( const char *pszName ) const;
@@ -141,16 +131,6 @@ public:
 
 	static int CollectMvMBots ( CUtlVector< CTFPlayer *> *pBots );
 
-	// Respec
-	void RemovePlayerAndItemUpgradesFromHistory( CTFPlayer *pPlayer );
-	void AddRespecToPlayer( CTFPlayer *pPlayer );
-	void RemoveRespecFromPlayer( CTFPlayer *pPlayer );
-	void SetNumRespecsForPlayer( CTFPlayer *pPlayer, int nCount );
-	int GetNumRespecsAvailableForPlayer( CTFPlayer *pPlayer );
-	int GetNumRespecsEarnedInWave( void ) { return m_nRespecsAwardedInWave; }
-	int GetNumRespecsEarned( void ) { return m_nRespecsAwarded; }
-	void ResetRespecPoints( void );
-
 	// Buyback
 	void SetBuybackCreditsForPlayer( CTFPlayer *pPlayer, int nCount );
 	void RemoveBuybackCreditFromPlayer( CTFPlayer *pPlayer );
@@ -163,14 +143,6 @@ private:
 	{
 		CSteamID m_steamId;							// which player this snapshot is for	
 		int m_currencySpent;						// how much money they had spent up to this check point
-		CUtlVector< CUpgradeInfo > m_upgradeVector;	// the upgrades the player had as this checkpoint
-	};
-
-	struct PlayerUpgradeHistory
-	{	
-		CSteamID m_steamId;							// which player this snapshot is for
-		CUtlVector< CUpgradeInfo > m_upgradeVector;	 
-		int m_currencySpent;
 	};
 
 	void PostInitialize( void );
@@ -178,8 +150,6 @@ private:
 
 	CheckpointSnapshotInfo *FindCheckpointSnapshot( CTFPlayer *player ) const;
 	CheckpointSnapshotInfo *FindCheckpointSnapshot( CSteamID id ) const;
-	PlayerUpgradeHistory *FindOrAddPlayerUpgradeHistory ( CTFPlayer *player );
-	PlayerUpgradeHistory *FindOrAddPlayerUpgradeHistory ( CSteamID steamId );
 
 	void LoadLastKnownMission();
 	bool LoadMvMMission( KeyValues *pNextMission );
@@ -210,8 +180,6 @@ private:
 
 	float m_flMapRestartTime;					// Restart the Map if gameover and this time elapses
 
-	CUtlVector< PlayerUpgradeHistory * > m_playerUpgrades;		// list of all players and their upgrades who have played on this MVM rotation
-
 	bool m_isRestoringCheckpoint;
 
 	// checkpoint data must be static because the population manager entity is destroyed and recreated each round
@@ -221,7 +189,6 @@ private:
 	static int m_nNumConsecutiveWipes;
 
 	bool m_bAdvancedPopFile;
-	bool m_bCheckForCurrencyAchievement;
 
 	KeyValues *m_pKvpMvMMapCycle;
 
@@ -241,7 +208,6 @@ private:
 	CUtlMap< uint64, int > m_PlayerRespecPoints;	// The number of upgrade respecs players (steamID) have
 	int m_nRespecsAwarded;
 	int m_nRespecsAwardedInWave;
-	int m_nCurrencyCollectedForRespec;
 
 	// Buyback
 	CUtlMap< uint64, int > m_PlayerBuybackPoints;	// The number of times a player can buyback
@@ -251,11 +217,6 @@ private:
 inline bool CPopulationManager::IsRestoringCheckpoint( void ) const
 {
 	return m_isRestoringCheckpoint;
-}
-
-inline int CPopulationManager::GetStartingCurrency( void ) const
-{ 
-	return m_nStartingCurrency + m_nLobbyBonusCurrency;
 }
 
 inline int CPopulationManager::GetRespawnWaveTime( void ) const

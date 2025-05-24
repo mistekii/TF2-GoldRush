@@ -1003,35 +1003,16 @@ public:
 	void 				MarkAsSupportEnemy( void ){ m_bIsSupportEnemy = true; }
 	void 				MarkAsLimitedSupportEnemy( void ){ m_bIsLimitedSupportEnemy = true; }
 
-	// In-game currency
-	int					GetCurrency( void ) const { return m_nCurrency; }
-	void				SetCurrency( int nAmount ){ m_nCurrency = nAmount; }
-	void				AddCurrency( int nAmount );
-	void				RemoveCurrency( int nAmount );
-
-	// Set the amount of money this bot is worth when killed. We re-use m_nCurrency, because bots don't collect currency.
-	void				SetCustomCurrencyWorth( int nAmount )	{ m_nCurrency = nAmount; }
-
 	// Bounty Mode
 	int					GetExperienceLevel( void ) { return m_nExperienceLevel; }
 	void				SetExperienceLevel( int nValue ) { m_nExperienceLevel.Set( MAX( nValue, 1 ) ); }
 	int					GetExperiencePoints( void ) { return m_nExperiencePoints; }
 	void				SetExperiencePoints( int nValue ) { m_nExperiencePoints = MAX( nValue, 0 ); }
-	void				AddExperiencePoints( int nValue, bool bGiveCurrency = false, CTFPlayer *pSource = NULL );
+	void				AddExperiencePoints( int nValue, CTFPlayer *pSource = NULL );
 	void				CalculateExperienceLevel( bool bAnnounce = true );
 	void				RefundExperiencePoints( void );
 
-	void				RememberUpgrade( int iPlayerClass, CEconItemView *pItem, int iUpgrade, int nCost, bool bDowngrade = false );	// store this upgrade for restoring at a checkpoint
-	void				ForgetFirstUpgradeForItem( CEconItemView *pItem );						// erase the first upgrade stored for this item (for powerup bottles)
-	void				ClearUpgradeHistory( void );
-	void				ReapplyItemUpgrades ( CEconItemView *pItem );
-	void				ReapplyPlayerUpgrades ( void );
 	void				SetWaveSpawnPopulator( CWaveSpawnPopulator *pWave ){ m_pWaveSpawnPopulator = pWave; }
-	CUtlVector< CUpgradeInfo >* GetRefundableUpgrades( void ) { return &m_RefundableUpgrades; }
-	void				ResetRefundableUpgrades( void ) { m_RefundableUpgrades.RemoveAll(); }
-	void				BeginPurchasableUpgrades( void );
-	void				EndPurchasableUpgrades( void );
-	bool				CanPurchaseUpgrades( void ) const { Assert( m_nCanPurchaseUpgradesCount >= 0 ); return m_nCanPurchaseUpgradesCount > 0; }
 
 	void				PlayReadySound( void );
 
@@ -1282,8 +1263,6 @@ private:
 	bool				m_bIsSupportEnemy;
 	bool				m_bIsLimitedSupportEnemy;
 
-	// In-game currency
-	CNetworkVar( int, m_nCurrency );
 	CNetworkVar( bool, m_bIsMiniBoss );
 
 	// Bounty Mode
@@ -1298,15 +1277,7 @@ private:
 	CWaveSpawnPopulator *m_pWaveSpawnPopulator;
 	float				m_flLastReadySoundTime;
 
-	int						m_nCanPurchaseUpgradesCount;
-	CUtlVector< CUpgradeInfo >	m_RefundableUpgrades;
-
-	CUtlVector< CUpgradeInfo > * GetPlayerUpgradeHistory( void );
-	CUtlVector< CUpgradeInfo >  m_LocalUpgradeHistory;
-
 public:
-	void GrantOrRemoveAllUpgrades( bool bRemove, bool bRefund );
-
 	// Marking for death.
 	CHandle<CTFPlayer>	m_pMarkedForDeathTarget;
 

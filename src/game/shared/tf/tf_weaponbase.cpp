@@ -502,14 +502,6 @@ void CTFWeaponBase::Precache()
 		PrecacheParticleSystem( pTracerEffectCrit );
 	}
 
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus1" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus2" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus3" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus4" );
-	}
-
 	PrecacheModel( "models/weapons/c_models/stattrack.mdl" );
 }
 
@@ -791,11 +783,6 @@ void CTFWeaponBase::Equip( CBaseCombatCharacter *pOwner )
 
 #ifdef GAME_DLL
 		UpdateExtraWearables();
-		CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-		if ( pTFPlayer )
-		{
-			pTFPlayer->ReapplyItemUpgrades(pItem);
-		}
 #endif // GAME_DLL
 	}
 }
@@ -5200,13 +5187,6 @@ void CTFWeaponBase::GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecOffset
 		CTraceFilterSimple traceFilter( pPlayer, COLLISION_GROUP_NONE );
 		ITraceFilter *pFilterChain = NULL;
 
-		CTraceFilterIgnoreFriendlyCombatItems traceFilterCombatItem( pPlayer, COLLISION_GROUP_NONE, GetTeamNumber() );
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			// Ignore teammates and their (physical) upgrade items in MvM
-			pFilterChain = &traceFilterCombatItem;
-		}
-
 		CTraceFilterChain traceFilterChain( &traceFilter, pFilterChain );
 		UTIL_TraceLine( vecShootPos, endPos, MASK_SOLID, &traceFilterChain, &tr );
 	}
@@ -5248,20 +5228,6 @@ QAngle CTFWeaponBase::GetSpreadAngles( void )
 	{
 		QAngle angSpread = RandomAngle( -flSpreadAngle, flSpreadAngle );
 		angSpread.z = 0.0f;
-
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			if ( CanOverload() && AutoFiresFullClip() && Clip1() == 1 && !m_bFiringWholeClip )
-			{
-				float flTimeSinceLastAttack = gpGlobals->curtime - GetLastPrimaryAttackTime();
-				if ( flTimeSinceLastAttack < 0.9f )
-				{
-					// Punish upgraded single-fire spam for this class of weapon
-					float flPenaltyAngle = RemapValClamped( flTimeSinceLastAttack, 0.4f, 0.9f, 6.f, 1.f );
-					angSpread += RandomAngle( -flPenaltyAngle, flPenaltyAngle );
-				}
-			}
-		}
 
 		angEyes += angSpread;
 	}
@@ -6089,41 +6055,6 @@ const CEconItemView *CTFWeaponBase::GetTauntItem() const
 	}
 
 	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is an accent sound that plays in addition to the base shoot sound
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::PlayUpgradedShootSound( const char *pszSound )
-{
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-		if ( pOwner )
-		{
-			float flDmgMod = 1.f;
-			CALL_ATTRIB_HOOK_FLOAT( flDmgMod, mult_dmg );
-			if ( flDmgMod > 1.f )
-			{
-				// This is pretty hacky as it assumes a cap of +100% damage for picking
-				// sounds -- anything more and the 1-4 scale below falls apart.
-				int nLevel = RemapValClamped( flDmgMod, 1.f, 1.8f, 1.f, 4.f );
-				const char *pszSoundname = CFmtStr( "%s%d", pszSound, nLevel );
-
-				CSoundParameters params;
-				if ( !GetParametersForSound( pszSoundname, params, NULL ) )
-					return;
-
-				CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
-				if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
-				{
-					filter.UsePredictionRules();
-				}
-
-				EmitSound( filter, pOwner->entindex(), pszSoundname );
-			}
-		}
-	}
 }
 
 

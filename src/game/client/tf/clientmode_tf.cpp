@@ -62,7 +62,6 @@
 #include "tf_partyclient.h"
 
 #include "econ_item_system.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 
 #include "steam/isteamfriends.h"
 #include "steamworks_gamestats.h"
@@ -391,8 +390,6 @@ void ClientModeTFNormal::Init()
 
 	m_pMenuTauntSelection = ( CHudMenuTauntSelection * )GET_HUDELEMENT( CHudMenuTauntSelection );
 	Assert( m_pMenuTauntSelection );
-
-	m_pMenuUpgradePanel = ( CHudUpgradePanel* )GET_HUDELEMENT( CHudUpgradePanel );
 
 
 	m_pMenuSpell = ( CHudSpellMenu * )GET_HUDELEMENT( CHudSpellMenu);
@@ -1933,12 +1930,6 @@ bool ClientModeTFNormal::IsEngyDestroyVisible() const
 bool ClientModeTFNormal::IsSpyDisguiseVisible() const
 {
 	return m_pMenuSpyDisguise && m_pMenuSpyDisguise->IsVisible();
-}
-
-//----------------------------------------------------------------------------
-bool ClientModeTFNormal::IsUpgradePanelVisible() const
-{
-	return m_pMenuUpgradePanel && m_pMenuUpgradePanel->IsVisible();
 }
 
 //----------------------------------------------------------------------------

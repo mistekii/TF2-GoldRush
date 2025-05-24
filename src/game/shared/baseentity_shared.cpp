@@ -1744,28 +1744,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 		}
 		else
 		{
-#ifdef PORTAL
-			Ray_t rayBullet;
-			rayBullet.Init( info.m_vecSrc, vecEnd );
-			pShootThroughPortal = UTIL_Portal_FirstAlongRay( rayBullet, fPortalFraction );
-			if ( !UTIL_Portal_TraceRay_Bullets( pShootThroughPortal, rayBullet, MASK_SHOT, &traceFilter, &tr ) )
-			{
-				pShootThroughPortal = NULL;
-			}
-#elif TF_DLL
-			CTraceFilterIgnoreFriendlyCombatItems traceFilterCombatItem( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-			if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-			{
-				CTraceFilterChain traceFilterChain( &traceFilter, &traceFilterCombatItem );
-				AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilterChain, &tr);
-			}
-			else
-			{
-				AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
-			}
-#else
 			AI_TraceLine(info.m_vecSrc, vecEnd, MASK_SHOT, &traceFilter, &tr);
-#endif //#ifdef PORTAL
 		}
 
 		// Tracker 70354/63250:  ywb 8/2/07

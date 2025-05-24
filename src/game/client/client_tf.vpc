@@ -725,14 +725,6 @@ $Project "Client (TF)"
 				$File	"NextBot\C_NextBot.h"
 			}
 
-			$Folder	"PvE"
-			{
-				$File	"tf\player_vs_environment\c_tf_upgrades.cpp"
-				$File	"tf\player_vs_environment\c_tf_upgrades.h"
-				$File	"$SRCDIR\game\shared\tf\tf_upgrades_shared.cpp"
-				$File	"$SRCDIR\game\shared\tf\tf_upgrades_shared.h"
-			}
-
 			$Folder	"Matchmaking"
 			{
 				$File	"$SRCDIR\game\client\tf\tf_gc_client.cpp"

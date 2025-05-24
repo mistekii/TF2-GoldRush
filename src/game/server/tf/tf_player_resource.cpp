@@ -34,11 +34,9 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayerResource, DT_TFPlayerResource )
 	SendPropArray3( SENDINFO_ARRAY3( m_iHealing ), SendPropInt( SENDINFO_ARRAY( m_iHealing ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iHealingAssist ), SendPropInt( SENDINFO_ARRAY( m_iHealingAssist ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iDamageBlocked ), SendPropInt( SENDINFO_ARRAY( m_iDamageBlocked ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iCurrencyCollected ), SendPropInt( SENDINFO_ARRAY( m_iCurrencyCollected ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iBonusPoints ), SendPropInt( SENDINFO_ARRAY( m_iBonusPoints ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iPlayerLevel ), SendPropInt( SENDINFO_ARRAY( m_iPlayerLevel ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iStreaks ), SendPropInt( SENDINFO_ARRAY( m_iStreaks ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iUpgradeRefundCredits ), SendPropInt( SENDINFO_ARRAY( m_iUpgradeRefundCredits ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iBuybackCredits ), SendPropInt( SENDINFO_ARRAY( m_iBuybackCredits ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropInt( SENDINFO( m_iPartyLeaderRedTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_iPartyLeaderBlueTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
@@ -223,7 +221,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 			m_iHealing.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING] );
 			m_iHealingAssist.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING_ASSIST] );
 			m_iDamageBlocked.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_BLOCKED] );
-			m_iCurrencyCollected.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_CURRENCY_COLLECTED] );
 			m_iBonusPoints.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_BONUS_POINTS] );
 			m_iPlayerLevel.Set( iIndex, pTFPlayer->GetExperienceLevel() );
 		}
@@ -272,16 +269,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 	for ( int streak_type = 0; streak_type < CTFPlayerShared::kTFStreak_COUNT; streak_type++ )
 	{
 		m_iStreaks.Set( iIndex * CTFPlayerShared::kTFStreak_COUNT + streak_type, pTFPlayer->m_Shared.GetStreak( (CTFPlayerShared::ETFStreak)streak_type ) );
-	}
-
-	if ( g_pPopulationManager )
-	{
-		// Only update when we have new data
-		int nRespecs = g_pPopulationManager->GetNumRespecsAvailableForPlayer( pTFPlayer );
-		m_iUpgradeRefundCredits.Set( iIndex, nRespecs );
-
-		int nBuybacks = g_pPopulationManager->GetNumBuybackCreditsForPlayer( pTFPlayer );
-		m_iBuybackCredits.Set( iIndex, nBuybacks );
 	}
 
 	CSteamID steamID;

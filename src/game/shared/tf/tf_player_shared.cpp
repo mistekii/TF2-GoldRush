@@ -797,7 +797,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_flHealedPerSecondTimer = -1000;
 	m_bPulseRadiusHeal = false;
 
-	m_flRadiusCurrencyCollectionTime = 0;
 	m_flRadiusSpyScanTime = 0;
 
 	m_flCloakStartTime = -1.0f;
@@ -8589,17 +8588,8 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 		ePenetrateType = (ETFDmgCustom)nCustomDamageType;
 	}
 
-	// Ignore teammates and their (physical) upgrade items when shooting in MvM
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CTraceFilterIgnoreFriendlyCombatItems traceFilter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-		UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
-	}
-	else
-	{
-		CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
-		UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
-	}
+	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
+	UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
 
 #ifndef CLIENT_DLL
 	CUtlVector<CBaseEntity *> vecTracedEntities;
@@ -9576,50 +9566,6 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	if ( pObjType && pObjType->IsCarried() )
 	{
 		return CB_CAN_BUILD;
-	}
-
-	// Special handling of "disposable" sentries
-	if ( TFGameRules()->GameModeUsesUpgrades() && iObjectType == OBJ_SENTRYGUN )
-	{
-		// If we have our main sentry, see if we're allowed to build disposables
-		if ( GetNumObjects( iObjectType, iObjectMode ) )
-		{
-			bool bHasPrimary = false;
-			int nDisposableCount = 0;
-			int nMaxDisposableCount = 0;
-			CALL_ATTRIB_HOOK_INT( nMaxDisposableCount, engy_disposable_sentries );
-			if ( nMaxDisposableCount )
-			{
-
-				for ( int i = GetObjectCount()-1; i >= 0; i-- )
-				{
-					CBaseObject *pObj = GetObject( i );
-					if ( pObj )
-					{
-						if ( !pObj->IsDisposableBuilding() )
-						{
-							bHasPrimary = true;
-						}
-						else
-						{
-							nDisposableCount++;
-						}
-					}
-				}
-
-				if ( bHasPrimary )
-				{
-					if ( nDisposableCount < nMaxDisposableCount )
-					{
-						return CB_CAN_BUILD;
-					}
-					else
-					{
-						return CB_LIMIT_REACHED;
-					}
-				}
-			}
-		}
 	}
 
 	// Allow MVM engineer bots to have multiple sentries.  Currently they only need this so

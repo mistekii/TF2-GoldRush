@@ -58,12 +58,10 @@ protected:
 	CNetworkArray( int, m_iHealing, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iHealingAssist, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iDamageBlocked, MAX_PLAYERS_ARRAY_SAFE );
-	CNetworkArray( int, m_iCurrencyCollected, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iBonusPoints, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iPlayerLevel, MAX_PLAYERS_ARRAY_SAFE );
 	// Pseudo multidimensional array [MAX_PLAYERS_ARRAY_SAFE][CTFPlayerShared::kTFStreak_COUNT]
 	CNetworkArray( int, m_iStreaks, ( ( MAX_PLAYERS_ARRAY_SAFE ) * CTFPlayerShared::kTFStreak_COUNT ) );
-	CNetworkArray( int, m_iUpgradeRefundCredits, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iBuybackCredits, MAX_PLAYERS_ARRAY_SAFE );
 
 	CNetworkVar( int, m_iPartyLeaderRedTeamIndex );

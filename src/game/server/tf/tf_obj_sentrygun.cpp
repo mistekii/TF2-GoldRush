@@ -1328,13 +1328,6 @@ bool CObjectSentrygun::FireRocket()
 	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
 	ITraceFilter *pFilterChain = NULL;
 
-	CTraceFilterIgnoreFriendlyCombatItems traceFilterCombatItem( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		// Ignore teammates and their (physical) upgrade items in MvM
-		pFilterChain = &traceFilterCombatItem;
-	}
-
 	CTraceFilterChain traceFilterChain( &traceFilter, pFilterChain );
 	UTIL_TraceLine( vecSrc, vecEnemyPos, MASK_SOLID, &traceFilterChain, &tr);
 
@@ -1482,13 +1475,6 @@ bool CObjectSentrygun::Fire()
 		trace_t tr;
 		CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
 		ITraceFilter *pFilterChain = NULL;
-
-		CTraceFilterIgnoreFriendlyCombatItems traceFilterCombatItem( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			// Ignore teammates and their (physical) upgrade items in MvM
-			pFilterChain = &traceFilterCombatItem;
-		}
 
 		CTraceFilterChain traceFilterChain( &traceFilter, pFilterChain );
 		UTIL_TraceLine( vecSrc, vecMidEnemy, MASK_SOLID, &traceFilterChain, &tr);

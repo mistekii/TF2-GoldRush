@@ -374,11 +374,6 @@ void CTFGrenadeLauncher::LaunchGrenade( void )
 #endif
 
 	PostFire();
-
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
 }
 
 float CTFGrenadeLauncher::GetProjectileSpeed( void )

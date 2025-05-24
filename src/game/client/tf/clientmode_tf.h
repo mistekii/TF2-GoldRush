@@ -23,7 +23,6 @@ class CTFFreezePanel;
 class CItemQuickSwitchPanel;
 class CHudMenuTauntSelection;
 class CHudInspectPanel;
-class CHudUpgradePanel;
 #if defined( _X360 )
 class CTFClientScoreBoardDialog;
 #endif
@@ -88,7 +87,6 @@ public:
 	bool IsEngyBuildVisible() const;
 	bool IsEngyDestroyVisible() const;
 	bool IsSpyDisguiseVisible() const;
-	bool IsUpgradePanelVisible() const;
 	bool IsTauntSelectPanelVisible() const;
 
 	void UpdateSteamRichPresence() const;
@@ -121,7 +119,6 @@ private:
 	CHudMenuEngyDestroy 	*m_pMenuEngyDestroy;
 	CHudMenuSpyDisguise 	*m_pMenuSpyDisguise;
 	CHudMenuTauntSelection	*m_pMenuTauntSelection;
-	CHudUpgradePanel		*m_pMenuUpgradePanel;
 	CHudSpellMenu			*m_pMenuSpell;
 	CHudTeamGoalTournament	*m_pTeamGoalTournament;
 

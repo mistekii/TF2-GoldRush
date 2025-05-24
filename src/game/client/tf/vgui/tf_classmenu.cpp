@@ -499,17 +499,6 @@ CTFClassMenu::CTFClassMenu( IViewPort *pViewPort )
 	ListenForGameEvent( "localplayer_changeteam" );
 	ListenForGameEvent( "show_match_summary" );
 
-	Q_memset( m_pMvmUpgradeImages, 0, sizeof( m_pMvmUpgradeImages ) );
-	m_pMvmUpgradeImages[TF_CLASS_SCOUT] = new vgui::ImagePanel( this, "MvMUpgradeImageScout" );
-	m_pMvmUpgradeImages[TF_CLASS_SOLDIER] = new vgui::ImagePanel( this, "MvMUpgradeImageSolider" );
-	m_pMvmUpgradeImages[TF_CLASS_PYRO] = new vgui::ImagePanel( this, "MvMUpgradeImagePyro" );
-	m_pMvmUpgradeImages[TF_CLASS_DEMOMAN] = new vgui::ImagePanel( this, "MvMUpgradeImageDemoman" );
-	m_pMvmUpgradeImages[TF_CLASS_MEDIC] = new vgui::ImagePanel( this, "MvMUpgradeImageMedic" );
-	m_pMvmUpgradeImages[TF_CLASS_HEAVYWEAPONS] = new vgui::ImagePanel( this, "MvMUpgradeImageHeavy" );
-	m_pMvmUpgradeImages[TF_CLASS_SNIPER] = new vgui::ImagePanel( this, "MvMUpgradeImageSniper" );
-	m_pMvmUpgradeImages[TF_CLASS_ENGINEER] = new vgui::ImagePanel( this, "MvMUpgradeImageEngineer" );
-	m_pMvmUpgradeImages[TF_CLASS_SPY] = new vgui::ImagePanel( this, "MvMUpgradeImageSpy" );
-
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 }
 
@@ -1189,8 +1178,6 @@ void CTFClassMenu::SetVisible( bool state )
 		{
 			CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.class_menu" );
 		}
-
-		CheckMvMUpgrades();
 	}
 	else
 	{
@@ -1613,13 +1600,6 @@ void CTFClassMenu::OnEconUIClosed()
 {
 	// Reload items on model panel, in case anything's changed
 	LoadItems();
-}
-
-int g_nNumUpgradeIconsForLastHint = 0;
-
-//-----------------------------------------------------------------------------
-void CTFClassMenu::CheckMvMUpgrades()
-{
 }
 
 

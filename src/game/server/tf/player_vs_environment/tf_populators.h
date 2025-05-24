@@ -222,9 +222,6 @@ public:
 	CFmtStr m_doneWarningSound;
 	EventInfo *m_doneOutput;
 
-	int		m_totalCurrency;
-	int		m_unallocatedCurrency;
-
 	CUtlString m_name;
 	CUtlString m_waitForAllSpawned;
 	CUtlString m_waitForAllDead;
@@ -243,7 +240,6 @@ public:
 	void ForceFinish( void );
 	void ForceReset( void ) 
 	{
-		m_unallocatedCurrency = m_totalCurrency;
 		m_remainingCount = m_totalCount;
 		m_state = PENDING; 
 	}
@@ -251,7 +247,6 @@ public:
 	bool IsSupportWave( void ) const { return m_bSupportWave; }
 	bool IsLimitedSupportWave( void ) const { return m_bLimitedSupport; }
 	void SetParent( CWave *pParent ) { m_pParent = pParent; }
-	int GetCurrencyAmountPerDeath( void );
 	void OnNonSupportWavesDone( void );
 
 private:
@@ -320,7 +315,6 @@ public:
 	void AddClassType( string_t iszClassIconName, int nCount, unsigned int iFlags );
 	
 	int GetNumClassTypes( void ) const { return m_nWaveClassCounts.Count(); }
-	void StartUpgradesAlertTimer ( float flTime ) { m_GetUpgradesAlertTimer.Start( flTime ); }
 	void SetStartTime (float flTime) { m_flStartTime = flTime; }
 
 	// inline
@@ -380,9 +374,6 @@ private:
 	bool m_bCheckBonusCreditsMin;
 	bool m_bCheckBonusCreditsMax;
 	float m_flBonusCreditsTime;
-
-	bool m_bPlayedUpgradeAlert;
-	CountdownTimer m_GetUpgradesAlertTimer;
 
 	bool m_isEveryContainedWaveSpawnDone;
 	float m_flStartTime;

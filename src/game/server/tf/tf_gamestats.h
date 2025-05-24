@@ -82,7 +82,6 @@ public:
 	void Event_PlayerSuicide( CBasePlayer *pPlayer );
 	void Event_KillDetail( CTFPlayer* pKiller, CTFPlayer* pVictim, CTFPlayer* pAssister, IGameEvent* event /*player_death*/, const CTakeDamageInfo &info );
 	void Event_TeamChange( CTFPlayer* pPlayer, int oldTeam, int newTeam );
-	void Event_PlayerCollectedCurrency( CBasePlayer *pPlayer, int nAmount );
 	void Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceReport );
 	void Event_PlayerThrowableHit( CTFPlayer *pPlayer );
 	void Event_PlayerThrowableKill( CTFPlayer *pPlayer );

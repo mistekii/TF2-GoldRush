@@ -1105,36 +1105,6 @@ bool CTFBotSpawner::Spawn( const Vector &rawHere, EntityHandleVector_t *result )
 			newBot->SetAutoJump( m_flAutoJumpMin, m_flAutoJumpMax );
 		}
 
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// initialize currency to be dropped on death to zero
-			newBot->SetCurrency( 0 );
-
-			// announce Spies
-			if ( m_class == TF_CLASS_SPY )
-			{
-				CUtlVector< CTFPlayer * > playerVector;
-				CollectPlayers( &playerVector, TF_TEAM_PVE_INVADERS, COLLECT_ONLY_LIVING_PLAYERS );
-
-				int spyCount = 0;
-				for( int i=0; i<playerVector.Count(); ++i )
-				{
-					if ( playerVector[i]->IsPlayerClass( TF_CLASS_SPY ) )
-					{
-						++spyCount;
-					}
-				}
-
-				IGameEvent *event = gameeventmanager->CreateEvent( "mvm_mission_update" );
-				if ( event )
-				{
-					event->SetInt( "class", TF_CLASS_SPY );
-					event->SetInt( "count", spyCount );
-					gameeventmanager->FireEvent( event );
-				}
-			}
-		}
-
 		newBot->SetScaleOverride( m_scale );
 
 		int nHealth = m_health;

@@ -401,11 +401,6 @@ void CTFSniperRifle::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 void CTFSniperRifle::PlayWeaponShootSound( void )
 {
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
-
 	if ( !IsFullyCharged() )
 	{
 		float flDamageBonus = 1.0f;

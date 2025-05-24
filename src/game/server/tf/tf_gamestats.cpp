@@ -2757,20 +2757,6 @@ void CTFGameStats::Event_TeamChange( CTFPlayer* pPlayer, int oldTeam, int newTea
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Records players touching currency packs - primarily MvM, but future modes will likely use
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerCollectedCurrency( CBasePlayer *pPlayer, int nAmount )
-{
-	Assert( pPlayer );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	if ( pTFPlayer )
-	{
-		IncrementStat( pTFPlayer, TFSTAT_CURRENCY_COLLECTED, nAmount );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Records the item set a player is using and for how long (until class, map, server or loadout  change)
 //-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceReport )

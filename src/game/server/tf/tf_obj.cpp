@@ -1487,12 +1487,6 @@ bool CBaseObject::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
 	if ( !pWrench )
 		return false;
 
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		if ( pPlayer->GetNumObjects( OBJ_SENTRYGUN ) && pPlayer->CanBuild( OBJ_SENTRYGUN ) == CB_CAN_BUILD && !IsCarried() )
-			return true;	
-	}
-
 	if ( !pWrench->IsPDQ() )
 		return false;
 
@@ -2832,22 +2826,6 @@ bool CBaseObject::CheckUpgradeOnHit( CTFPlayer *pPlayer )
 		if ( tf_cheapobjects.GetBool() == false && !ShouldQuickBuild() )
 		{
 			pPlayer->RemoveAmmo( iAmountToAdd, TF_AMMO_METAL );
-		}
-
-		// testing quick builds for engineers in Raid mode
-		if ( TFGameRules() && !TFGameRules()->IsPVEModeControlled( pPlayer ) )
-		{
-#ifdef TF_RAID_MODE
-			if ( TFGameRules()->IsRaidMode() )
-			{
-				iAmountToAdd = 200;
-			}
-#endif
-			
-			if ( TFGameRules()->GameModeUsesUpgrades() && TFGameRules()->IsQuickBuildTime() )
-			{
-				iAmountToAdd = 200;
-			}
 		}
 
 		m_iUpgradeMetal += iAmountToAdd;

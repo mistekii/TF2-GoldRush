@@ -69,13 +69,10 @@ extern ConVar	mp_tournament_redteamname;
 extern ConVar	tf_arena_force_class;
 extern ConVar	tf_arena_change_limit;
 extern ConVar	tf_ctf_bonus_time;
-extern ConVar	tf_mvm_respec_enabled;
 
 #ifdef GAME_DLL
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;
 #endif
-
-class CMannVsMachineUpgrades;
 
 //extern ConVar tf_populator_health_multiplier;
 //extern ConVar tf_populator_damage_multiplier;
@@ -138,7 +135,6 @@ public:
 	void	InputPlayVOBlue( inputdata_t &inputdata );
 	void	InputPlayVO( inputdata_t &inputdata );
 	void	InputHandleMapEvent( inputdata_t &inputdata );
-	void	InputSetCustomUpgradesFile( inputdata_t &inputdata );
 	void	InputSetRoundRespawnFreezeEnabled( inputdata_t &inputdata );
 	void	InputSetMapForcedTruceDuringBossFight( inputdata_t &inputdata );
 
@@ -445,8 +441,6 @@ public:
 
 	void			HandleMapEvent( inputdata_t &inputdata );
 
-	void			SetCustomUpgradesFile( inputdata_t &inputdata );
-
 	virtual bool	ShouldWaitToStartRecording( void );
 
 	void			SetGravityMultiplier( float flValue ){ m_flGravityMultiplier.Set( flValue ); }
@@ -573,13 +567,8 @@ bool IsCreepWaveMode( void ) const;
 	
 	bool IsQuickBuildTime( void );
 
-	bool GameModeUsesUpgrades( void );
-	bool GameModeUsesCurrency( void ) { return GameModeUsesUpgrades(); }
 	bool GameModeUsesMiniBosses( void ) { return IsMannVsMachineMode() || IsBountyMode(); }
 	bool GameModeUsesEscortPushLogic( void );
-
-	bool IsMannVsMachineRespecEnabled( void ) { return IsMannVsMachineMode() && tf_mvm_respec_enabled.GetBool(); }
-	bool CanPlayerUseRespec( CTFPlayer *pTFPlayer );
 
 #ifdef GAME_DLL
 	// Managed competitive matches should go through the End/StopCompetitiveMatch path
@@ -621,14 +610,8 @@ bool IsCreepWaveMode( void ) const;
 
 	bool IsDefaultGameMode( void );		// The absence of arena, mvm, tournament mode, etc
 
-	// Upgrades
-	int	GetCostForUpgrade( CMannVsMachineUpgrades *pUpgrade, int iItemSlot, int nClass, CTFPlayer *pPurchaser = NULL );
-	bool CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, attrib_definition_index_t iAttribIndex, CMannVsMachineUpgrades *pUpgrade );
-	int GetUpgradeTier( int iUpgrade );
-	bool IsUpgradeTierEnabled( CTFPlayer *pTFPlayer, int iItemSlot, int iUpgrade );
 	bool IsPVEModeActive( void ) const;						// return true if we are playing a PvE mode
 	bool IsPVEModeControlled( CBaseEntity *who ) const;		// return true for PvE opponents (ie: enemy bot team)
-	const char*		GetCustomUpgradesFile() { return m_pszCustomUpgradesFile.Get(); }
 
 //=============================================================================
 // HPE_BEGIN:
@@ -894,10 +877,6 @@ bool IsCreepWaveMode( void ) const;
 	CRaidLogic	*GetRaidLogic( void ) const		{ return m_hRaidLogic.Get(); }
 #endif // TF_RAID_MODE
 
-	// Currency awarding
-	int		CalculateCurrencyAmount_ByType( CurrencyRewards_t nType );									// How much to give players for specific items and events, i.e. cash collection bonus, small packs
-	int		DistributeCurrencyAmount( int nAmount, CTFPlayer *pTFPlayer = NULL, bool bShared = true, bool bCountAsDropped = false, bool bIsBonus = false );	// Distributes nAmount to a specific player or team
-
 	virtual bool StopWatchShouldBeTimedWin( void ) OVERRIDE;
 
 public:
@@ -1041,9 +1020,6 @@ private:
 	float	m_flCapInProgressBuffer;
 
 	float	m_flMatchSummaryTeleportTime;
-	
-	int		m_nCurrencyAccumulator;
-	int		m_iCurrencyPool;
 
 	float	m_flCheckPlayersConnectingTime;
 
@@ -1120,16 +1096,12 @@ private:
 	float	m_flNextFlagAlert;
 
 	float	m_flSafeToLeaveTimer;
-
-	CBaseEntity *m_pUpgrades;
 #endif
 
 	CNetworkHandle( CTeamRoundTimer, m_hRedKothTimer );
 	CNetworkHandle( CTeamRoundTimer, m_hBlueKothTimer );
 
 	CNetworkVar( int, m_nMapHolidayType ); // Used by map authors to indicate this is a holiday map
-
-	CNetworkString( m_pszCustomUpgradesFile, MAX_PATH );
 
 	CNetworkVar( bool, m_bShowMatchSummary );
 	CNetworkVar( bool, m_bMapHasMatchSummaryStage );
@@ -1327,7 +1299,6 @@ public:
 	bool BAttemptMapVoteRollingMatch();
 	bool BIsManagedMatchEndImminent( void );
 
-	void ForceEnableUpgrades( int nState ) { m_nForceUpgrades = nState; }
 	void ForceEscortPushLogic( int nState ) { m_nForceEscortPushLogic = nState; }
 
 private:
@@ -1362,7 +1333,6 @@ private:
 	CNetworkVar( float, m_fHalloweenEffectDuration );
 	CNetworkVar( HalloweenScenarioType, m_halloweenScenario );
 
-	CNetworkVar( int, m_nForceUpgrades );
 	CNetworkVar( int, m_nForceEscortPushLogic );
 
 // MvM Helpers

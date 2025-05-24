@@ -84,7 +84,6 @@
 #include "gc_clientsystem.h"
 #include "c_entitydissolve.h"
 #include "tf_viewmodel.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "tempent.h"
 #include "confirm_dialog.h"
@@ -3641,7 +3640,6 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 
-	RecvPropInt( RECVINFO( m_nCurrency ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevel ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevelProgress ) ),
 	RecvPropInt( RECVINFO( m_bMatchSafeToLeave ) ),
@@ -3973,15 +3971,6 @@ void C_TFPlayer::Spawn( void )
 //-----------------------------------------------------------------------------
 void C_TFPlayer::InventoryUpdated( CPlayerInventory *pInventory )
 { 
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CHudUpgradePanel *pUpgradePanel = GET_HUDELEMENT( CHudUpgradePanel );
-		if ( pUpgradePanel && pUpgradePanel->IsVisible() )
-		{
-			pUpgradePanel->PlayerInventoryChanged( this );
-		}
-	}
-
 	return;
 }
 
@@ -4254,8 +4243,6 @@ void C_TFPlayer::OnPreDataChanged( DataUpdateType_t updateType )
 		m_iOldObserverMode = GetObserverMode();
 		m_hOldObserverTarget = GetObserverTarget();
 	}
-
-	m_nOldCurrency = m_nCurrency;
 
 	m_Shared.OnPreDataChanged();
 
@@ -4627,16 +4614,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 			if ( event )
 			{
 				event->SetInt( "amount", m_iHealth - m_iOldHealth );
-				gameeventmanager->FireEventClientSide( event );
-			}
-		}
-
-		if ( m_nOldCurrency != m_nCurrency )
-		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "player_currency_changed" );
-			if ( event )
-			{
-				event->SetInt( "currency", m_nCurrency );
 				gameeventmanager->FireEventClientSide( event );
 			}
 		}
@@ -5998,12 +5975,6 @@ void C_TFPlayer::AvoidPlayers( CUserCmd *pCmd )
 	C_TFTeam *pTeam = (C_TFTeam*)GetTeam();
 	if ( !pTeam )
 		return;
-	
-	CHudUpgradePanel *pHudVote = GET_HUDELEMENT( CHudUpgradePanel );
-	if ( pHudVote && pHudVote->IsActive() )
-	{
-		return;
-	}
 
 	// Up vector.
 	static Vector vecUp( 0.0f, 0.0f, 1.0f );

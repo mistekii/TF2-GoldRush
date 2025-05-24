@@ -1232,17 +1232,6 @@ void CHudBuildingStatusContainer_Engineer::OnTick()
 	{
 		bool bDisposableSentriesVisible = false;
 
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			int nDisposableSentries = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, nDisposableSentries, engy_disposable_sentries );
-			if ( nDisposableSentries )
-			{
-				bDisposableSentriesVisible = true;
-			}
-		}
-
-
 		for ( int i = 0 ; i < m_BuildingPanels.Count() ; i++ )
 		{
 			CBuildingStatusItem *pItem = m_BuildingPanels.Element( i );

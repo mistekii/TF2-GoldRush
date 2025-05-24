@@ -611,12 +611,6 @@ void CObjectSapper::Killed( const CTakeDamageInfo &info )
 	// We don't own the building we removed the sapper from
 	if ( pScorer && GetParentObject() && GetParentObject()->GetOwner() != pScorer )
 	{
-		// Give a bonus point for it
-		if ( TFGameRules()->GameModeUsesUpgrades() )
-		{
-			CTF_GameStats.Event_PlayerAwardBonusPoints( pScorer, this, 10 );
-		}
-
 		if ( pScorer->IsPlayerClass( TF_CLASS_ENGINEER ) )
 		{
 			pScorer->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_DESTROY_SAPPERS, 1 );

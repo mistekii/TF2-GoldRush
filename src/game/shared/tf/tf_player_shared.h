@@ -189,16 +189,6 @@ struct condition_source_t
 
 
 //=============================================================================
-// For checkpointing upgrades Players have purchased in Mann Vs Machine
-class CUpgradeInfo
-{
-public:
-	int m_iPlayerClass;							// the character class this upgrade is being applied too
-	item_definition_index_t m_itemDefIndex;		// item that was upgraded (or INVALID_ITEM_DEF_INDEX for the player itself)
-	int m_upgrade;								// the upgrade that was applied
-	int m_nCost;								// price of the upgrade
-};
-
 #define CONTROL_STUN_ANIM_TIME	1.5f
 
 enum TFStunAnimState_t
@@ -1105,7 +1095,6 @@ private:
 
 	CHandle<CTFPlayer>	m_hPeeAttacker;
 
-	float m_flRadiusCurrencyCollectionTime;
 	float m_flRadiusSpyScanTime;
 
 #else

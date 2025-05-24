@@ -343,11 +343,6 @@ void CTFPipebombLauncher::LaunchGrenade( void )
 	}
 
 	m_flChargeBeginTime = 0;
-
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
 }
 
 float CTFPipebombLauncher::GetProjectileSpeed( void )

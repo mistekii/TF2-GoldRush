@@ -139,14 +139,6 @@ void CObjectTeleporter::TeleporterSend( CTFPlayer *pPlayer )
 			pPlayer,
 			kKillEaterEvent_TeleportsProvided
 		);
-
-		if ( GetBuilder() != pPlayer &&
-			 TFGameRules() && 
-			 TFGameRules()->GameModeUsesUpgrades() &&
-			 TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-		{
-			CTF_GameStats.Event_PlayerAwardBonusPoints( GetBuilder(), pPlayer, 10 );
-		}
 	}
 
 	int iSpeedBoost = 0;

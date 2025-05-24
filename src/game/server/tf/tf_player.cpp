@@ -604,11 +604,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetBonusPoints, "GetBonusPoints", "" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptResetScores, "ResetScores", "" )
 
-	DEFINE_SCRIPTFUNC( GetCurrency, "Get player's cash for game modes with upgrades, ie. MvM" )
-	DEFINE_SCRIPTFUNC( SetCurrency, "Set player's cash for game modes with upgrades, ie. MvM" )
-	DEFINE_SCRIPTFUNC( AddCurrency, "Kaching! Give the player some cash for game modes with upgrades, ie. MvM" )
-	DEFINE_SCRIPTFUNC( RemoveCurrency, "Take away money from a player for reasons such as ie. spending." )
-
 	DEFINE_SCRIPTFUNC( IgnitePlayer, "" )
 	DEFINE_SCRIPTFUNC( SetCustomModel, "" )
 	DEFINE_SCRIPTFUNC( SetCustomModelWithClassAnimations, "" )
@@ -665,8 +660,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( SetVehicleReverseTime, "" )
 	DEFINE_SCRIPTFUNC_WRAPPED( Taunt, "" )
 
-	DEFINE_SCRIPTFUNC( GrantOrRemoveAllUpgrades, "Grants or removes all upgrades the player has purchased." )
-
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetCustomAttribute, "GetCustomAttribute", "Get a custom attribute float from the player" )
 
 	DEFINE_SCRIPTFUNC_WRAPPED( StunPlayer, "" )
@@ -691,7 +684,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayer, DT_TFLocalPlayerExclusive )
 	SendPropFloat( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 8, SPROP_CHANGES_OFTEN, -90.0f, 90.0f ),
 	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 10, SPROP_CHANGES_OFTEN ),
 
-	SendPropInt( SENDINFO( m_nCurrency ), -1, SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_nExperienceLevel ), 7, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nExperienceLevelProgress ), 7, SPROP_UNSIGNED ),
 	SendPropBool( SENDINFO( m_bMatchSafeToLeave ) ),
@@ -920,7 +912,6 @@ CTFPlayer::CTFPlayer()
 
 	m_flLastThinkTime = -1.f;
 
-	m_nCurrency = 0;
 	m_pWaveSpawnPopulator = NULL;
 	m_flLastReadySoundTime = 0.f;
 
@@ -930,8 +921,6 @@ CTFPlayer::CTFPlayer()
 	m_nActiveWpnClip.Set( 0 );
 	m_nActiveWpnClipPrev = 0;
 	m_flNextClipSendTime = 0;
-
-	m_nCanPurchaseUpgradesCount = 0;
 
 	m_flHeadScale = 1.f;
 	m_flTorsoScale = 1.f;
@@ -1444,18 +1433,6 @@ void CTFPlayer::RegenThink( void )
 		}
 
 		flRegenAmt *= flScale;
-
-		// If the medic has this attribute, increase their regen.
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			int iHealingMastery = 0;
-			CALL_ATTRIB_HOOK_INT( iHealingMastery, healing_mastery );
-			if ( iHealingMastery )
-			{
-				float flPerc = RemapValClamped( (float)iHealingMastery, 1.f, 4.f, 1.25f, 2.f );
-				flRegenAmt *= flPerc;
-			}
-		}
 
 		m_flAccumulatedHealthRegen += flRegenAmt;
 
@@ -4062,48 +4039,6 @@ void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 		}
 	}
 
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() && !IsBot() ) 
-	{
-		if (  m_Inventory.ClassLoadoutHasChanged( GetPlayerClass()->GetClassIndex() ) 
-		   || ( m_bSwitchedClass )
-		   || ( g_pPopulationManager && g_pPopulationManager->IsRestoringCheckpoint() ) )
-		{
-			ReapplyPlayerUpgrades();
-		}
-
-		// Calculate how much money is being used on active class / items
-		int nSpending = 0;
-		int iClass = GetPlayerClass()->GetClassIndex();
-		CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-		if ( upgrades )
-		{
-			for( int u = 0; u < upgrades->Count(); ++u )
-			{
-				// Class Match, Check to see if we have this item equipped
-				if ( iClass == upgrades->Element(u).m_iPlayerClass) 
-				{
-					// Player upgrade
-					if ( upgrades->Element( u ).m_itemDefIndex == INVALID_ITEM_DEF_INDEX )
-					{
-						nSpending += upgrades->Element(u).m_nCost;
-						continue;
-					}
-
-					// Item upgrade, look at equipment only not miscs or bottle
-					for ( int itemIndex = 0; itemIndex <= LOADOUT_POSITION_PDA2; itemIndex++ )
-					{
-						CEconItemView *pItem = GetLoadoutItem( iClass, itemIndex, true );
-						if ( upgrades->Element(u).m_itemDefIndex == pItem->GetItemDefIndex() )
-						{
-							nSpending += upgrades->Element(u).m_nCost;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
 
 
 	// Check if we should give a "grenade"
@@ -5824,35 +5759,6 @@ void CTFPlayer::HandleCommand_JoinClass( const char *pClassName, bool bAllowSpaw
 		}
 	}
 
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() && GetTeamNumber() == TF_TEAM_BLUE && !tf_raid_allow_class_change.GetBool() )
-	{
-		CTFNavArea *area = (CTFNavArea *)GetLastKnownArea();
-
-		if ( area && !area->HasAttributeTF( TF_NAV_SPAWN_ROOM_BLUE ) )
-		{
-			ClientPrint( this, HUD_PRINTTALK, "No class changes after leaving the safe room" );
-			return;
-		}
-	}
-#endif // TF_RAID_MODE
-
-	// this was moved outside of the block below for the community game mode that allows upgrades
-	if ( m_nCanPurchaseUpgradesCount > 0 )
-	{
-		ClientPrint( this, HUD_PRINTCENTER, "#TF_MVM_NoClassUpgradeUI" );
-		return;
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_DEFENDERS )
-	{
-		if ( IsReadyToPlay() && !TFGameRules()->InSetup() && g_pPopulationManager && !g_pPopulationManager->IsInEndlessWaves() )
-		{
-			ClientPrint( this, HUD_PRINTTALK, "#TF_MVM_NoClassChangeAfterSetup" );
-			return;
-		}
-	}
-
 	int iClass = TF_CLASS_UNDEFINED;
 	bool bShouldNotRespawn = false;
 
@@ -6569,15 +6475,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 					bSuccess = true;
 					iCost = 1;
 					g_pPopulationManager->RemoveBuybackCreditFromPlayer( this );
-				}
-			}
-			// Old system (currency-based)
-			else
-			{
-				if ( GetCurrency() >= iCost )
-				{
-					bSuccess = true;
-					RemoveCurrency( iCost );
 				}
 			}
 
@@ -8947,32 +8844,6 @@ void CTFPlayer::ApplyPushFromDamage( const CTakeDamageInfo &info, Vector vecDir 
 			}
 		}
 
-		if ( TFGameRules()->GameModeUsesUpgrades() )
-		{
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			{
-				// invading bots can't be pushed by sentry guns
-				if ( info.GetInflictor() && info.GetInflictor()->IsBaseObject() )
-				{
-					return;
-				}
-			}
-
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS && !bBigKnockback )
-			{
-				if ( IsMiniBoss() )
-				{
-					// Minibosses can't be pushed by anything except heavy rage and airblast (airblast is suppressed when deploying in deploy ai code)
-					return;
-				}
-				else if ( m_nDeployingBombState != TF_BOMB_DEPLOYING_NONE && ( info.GetDamageType() & DMG_BLAST ) == 0 )
-				{
-					// Regular robots only get pushed by blast damage when deploying the bomb
-					return;
-				}
-			}
-		}
-
 		float flDamageForceReduction = 1.f;
 		CALL_ATTRIB_HOOK_FLOAT( flDamageForceReduction, damage_force_reduction );
 		vecForce *= flDamageForceReduction;
@@ -9028,8 +8899,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 {
 	if ( TFGameRules()->IsInItemTestingMode() && !IsFakeClient() )
 		return 0;
-
-	bool bUsingUpgrades = TFGameRules()->GameModeUsesUpgrades();
 
 	// Always NULL check this below
 	CTFPlayer *pTFAttacker = ToTFPlayer( info.GetAttacker() );
@@ -9233,16 +9102,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 					}
 				}
 			}
-
-			if ( bUsingUpgrades && pTFAttacker && ( IsHeadshot( info.GetDamageCustom() ) || ( flJarateTime && LastHitGroup() == HITGROUP_HEAD ) ) )
-			{
-				int iExplosiveShot = 0;
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFAttacker, iExplosiveShot, explosive_sniper_shot );
-				if ( iExplosiveShot )
-				{
-					pSniper->ExplosiveHeadShot( pTFAttacker, this );
-				}
-			}
 		}
 	}
 
@@ -9369,22 +9228,11 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 		{
 			// Medigun?
 			CBaseEntity *pProvider = m_Shared.GetConditionProvider( TF_COND_INVULNERABLE );
-			if ( !pProvider && bUsingUpgrades )
-			{
-				// Bottle?
-				pProvider = m_Shared.GetConditionProvider( TF_COND_INVULNERABLE_USER_BUFF );
-			}
-
 			if ( pProvider )
 			{
 				CTFPlayer *pTFProvider = ToTFPlayer( pProvider );
 				if ( pTFProvider )
 				{
-					if ( pTFProvider != pTFAttacker && bUsingUpgrades )
-					{
-						HandleRageGain( pTFProvider, kRageBuffFlag_OnHeal, ( realDamage / 2.f ), 1.f );
-					}
-
 					CTF_GameStats.Event_PlayerBlockedDamage( pTFProvider, realDamage );
 				}
 			}
@@ -19596,56 +19444,9 @@ bool CTFPlayer::IsAnyEnemySentryAbleToAttackMe( void ) const
 }
 
 //-----------------------------------------------------------------------------
-// MVM Con Commands
-//-----------------------------------------------------------------------------
-CON_COMMAND_F( currency_give, "Have some in-game money.", FCVAR_CHEAT )
-{
-	CTFPlayer *pPlayer = ToTFPlayer( UTIL_GetCommandClient() );
-	if ( !pPlayer )
-		return;
-
-	int nAmount = atoi( args[1] );
-
-
-	pPlayer->AddCurrency( nAmount );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Currency awarded directly will not be tracked by stats - see TFGameRules
-//-----------------------------------------------------------------------------
-void CTFPlayer::AddCurrency( int nAmount )
-{
-	if ( nAmount + m_nCurrency > 30000 )
-	{
-		m_nCurrency = 30000;
-	}
-	else if ( nAmount + m_nCurrency < 0 )
-	{
-		m_nCurrency = 0;
-	}
-	else
-	{
-		m_nCurrency += nAmount;
-	}	
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Remove Currency from Display and track it as currency spent
-//-----------------------------------------------------------------------------
-void CTFPlayer::RemoveCurrency( int nAmount )
-{ 
-	m_nCurrency = Max( m_nCurrency - nAmount, 0 ); 
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		g_pPopulationManager->AddPlayerCurrencySpent( this, nAmount );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Ultra crude experience and level system
 //-----------------------------------------------------------------------------
-void CTFPlayer::AddExperiencePoints( int nAmount, bool bGiveCurrency /*= false*/, CTFPlayer *pSource /*= NULL*/ )
+void CTFPlayer::AddExperiencePoints( int nAmount, CTFPlayer *pSource /*= NULL*/ )
 {
 	int nMyLevel = GetExperienceLevel();
 
@@ -19668,14 +19469,6 @@ void CTFPlayer::AddExperiencePoints( int nAmount, bool bGiveCurrency /*= false*/
 
 	m_nExperiencePoints += nAmount;
 	CalculateExperienceLevel();
-	
-	// Money?
-	if ( bGiveCurrency && TFGameRules() )
-	{
-		TFGameRules()->DistributeCurrencyAmount( nAmount, this, false );
-		CTF_GameStats.Event_PlayerCollectedCurrency( this, nAmount );
-		EmitSound( "MVM.MoneyPickup" );
-	}
 
 	// DevMsg( "Exp: %d, Level: %d Perc: %d\n", GetExperiencePoints(), GetExperienceLevel(), m_nExperienceLevelProgress );
 }
@@ -19686,19 +19479,6 @@ void CTFPlayer::AddExperiencePoints( int nAmount, bool bGiveCurrency /*= false*/
 void CTFPlayer::RefundExperiencePoints( void )
 {
 	SetExperienceLevel( 1 );
-
-	int nAmount = 0;
-	PlayerStats_t *pPlayerStats = CTF_GameStats.FindPlayerStats( this );
-	if ( pPlayerStats ) 
-	{
-		nAmount = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_CURRENCY_COLLECTED];
-	}
-	
-	if ( nAmount > 0 )
-	{
-		SetExperiencePoints(nAmount);
-		SetCurrency(nAmount);
-	}
 
 	CalculateExperienceLevel(false);
 }
@@ -19735,229 +19515,6 @@ void CTFPlayer::CalculateExperienceLevel( bool bAnnounce /*= true*/ )
 	if ( m_nExperienceLevelProgress != flLevelPerc )
 	{
 		m_nExperienceLevelProgress.Set( (int)flLevelPerc );
-	}
-}
-
-CUtlVector< CUpgradeInfo > * CTFPlayer::GetPlayerUpgradeHistory( void )
-{	
-	if ( g_pPopulationManager != NULL )
-		return g_pPopulationManager->GetPlayerUpgradeHistory( this );
-
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			Warning( "Remember Upgrade Error: Population Manager does not exist!\n" );
-			return NULL;
-		}
-		else if ( TFGameRules()->GameModeUsesUpgrades() )
-		{
-			return &m_LocalUpgradeHistory;
-		}
-	}
-
-	return NULL;
-}
-
-void CTFPlayer::GrantOrRemoveAllUpgrades( bool bRemove, bool bRefund )
-{
-	// Remove the appropriate upgrade info from upgrade histories
-	if ( g_pPopulationManager && bRemove )
-	{
-		g_pPopulationManager->RemovePlayerAndItemUpgradesFromHistory( this );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Store this upgrade for restoring at a checkpoint
-//-----------------------------------------------------------------------------
-void CTFPlayer::RememberUpgrade( int iPlayerClass, CEconItemView *pItem, int iUpgrade, int nCost, bool bDowngrade )
-{
-	if ( IsBot() )
-		return;
-
-	if ( TFGameRules() == NULL || !TFGameRules()->GameModeUsesUpgrades() )
-		return;
-
-	item_definition_index_t iItemIndex = pItem ? pItem->GetItemDefIndex() : INVALID_ITEM_DEF_INDEX;
-	
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-
-	if ( !bDowngrade )
-	{
-		CUpgradeInfo info;
-		info.m_iPlayerClass = iPlayerClass;
-		info.m_itemDefIndex = iItemIndex;
-		info.m_upgrade = iUpgrade;
-		info.m_nCost = nCost;
-
-		if ( upgrades )
-		{
-			upgrades->AddToTail( info );
-		}
-
-		m_RefundableUpgrades.AddToTail( info );
-	}
-	else
-	{
-		if ( upgrades )
-		{
-			for ( int i = 0; i < upgrades->Count(); ++i )
-			{
-				CUpgradeInfo pInfo = upgrades->Element(i);
-				if ( ( pInfo.m_itemDefIndex == iItemIndex ) && ( pInfo.m_upgrade == iUpgrade ) && ( pInfo.m_nCost == -nCost ) )
-				{
-					upgrades->Remove( i );
-					break;
-				}
-			}
-		}
-
-		// Subset of upgrades that can be sold back
-		for ( int i = 0; i < m_RefundableUpgrades.Count(); ++i )
-		{
-			CUpgradeInfo pInfo = m_RefundableUpgrades.Element( i );
-			if ( ( pInfo.m_itemDefIndex == iItemIndex ) && ( pInfo.m_upgrade == iUpgrade ) && ( pInfo.m_nCost == -nCost ) )
-			{
-				m_RefundableUpgrades.Remove( i );
-				break;
-			}
-		}
-	}
-
-	DevMsg( "%3.2f: %s: Player '%s', item '%s', upgrade '%s', cost '%d'\n",
-		gpGlobals->curtime, 
-		bDowngrade ? "FORGET_UPGRADE" : "REMEMBER_UPGRADE",
-		GetPlayerName(),
-		pItem ? pItem->GetStaticData()->GetItemBaseName() : "<self>",
-		"<NULL>",
-		nCost );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Erase the first upgrade stored for this item (for powerup bottles)
-//-----------------------------------------------------------------------------
-void CTFPlayer::ForgetFirstUpgradeForItem( CEconItemView *pItem )
-{
-	if ( IsBot() )
-		return;
-
-	if ( TFGameRules() && !TFGameRules()->GameModeUsesUpgrades() )
-		return;
-
-	DevMsg( "%3.2f: FORGET_FIRST_UPGRADE_FOR_ITEM: Player '%s', item '%s'\n",
-			gpGlobals->curtime, 
-			GetPlayerName(),
-			pItem ? pItem->GetStaticData()->GetItemBaseName() : "<self>" );
-	
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-	if ( upgrades == NULL )
-		return;
-
-	for( int i = 0; i < upgrades->Count(); ++i )
-	{
-		if ( ( pItem == NULL && upgrades->Element( i ).m_itemDefIndex == INVALID_ITEM_DEF_INDEX ) ||		// self upgrade
-			upgrades->Element(i).m_itemDefIndex == pItem->GetItemDefIndex() )		// item upgrade
-		{
-			upgrades->Remove( i );
-			if ( g_pPopulationManager )
-				g_pPopulationManager->SendUpgradesToPlayer( this );
-			break;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ClearUpgradeHistory( void )
-{
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-	if ( upgrades != NULL )
-		upgrades->RemoveAll();
-
-	ResetAccumulatedSentryGunDamageDealt();
-	ResetAccumulatedSentryGunKillCount();
-
-	if ( g_pPopulationManager )
-		g_pPopulationManager->SendUpgradesToPlayer( this );
-
-	DevMsg( "%3.2f: CLEAR_UPGRADE_HISTORY: Player '%s'\n", gpGlobals->curtime, GetPlayerName() );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ReapplyItemUpgrades( CEconItemView *pItem )
-{
-	if ( IsBot() )
-		return;
-
-	int iClassIndex = GetPlayerClass()->GetClassIndex();
-
-	// Restore player Upgrades
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-	if ( upgrades == NULL )
-		return;
-
-	BeginPurchasableUpgrades();
-
-	EndPurchasableUpgrades();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::ReapplyPlayerUpgrades( void )
-{
-	if ( IsBot() )
-		return;
-
-	int iClassIndex = GetPlayerClass()->GetClassIndex();
-	RemovePlayerAttributes( false );
-
-	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory();
-	if ( upgrades == NULL )
-		return;
-
-	BeginPurchasableUpgrades();
-
-	EndPurchasableUpgrades();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::BeginPurchasableUpgrades( void )
-{
-	m_nCanPurchaseUpgradesCount++;
-
-	if ( TFObjectiveResource()->GetMannVsMachineWaveCount() > 1 )
-	{
-		m_RefundableUpgrades.RemoveAll();
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::EndPurchasableUpgrades( void )
-{
-	AssertMsg( m_nCanPurchaseUpgradesCount > 0, "EndPurchasableUpgrades called when m_nCanPurchaseUpgradesCount <= 0" );
-	if ( m_nCanPurchaseUpgradesCount <= 0 )
-		return;
-
-	m_nCanPurchaseUpgradesCount--;
-
-	if ( TFObjectiveResource()->GetMannVsMachineWaveCount() > 1 )
-	{
-		m_RefundableUpgrades.RemoveAll();
-	}
-
-	// report all upgrades
-	if ( g_pPopulationManager )
-	{
-		g_pPopulationManager->SendUpgradesToPlayer( this );
 	}
 }
 
