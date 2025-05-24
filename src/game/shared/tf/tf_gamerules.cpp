@@ -3167,10 +3167,6 @@ void CTFGameRules::LevelInitPostEntity( void )
 //-----------------------------------------------------------------------------
 float CTFGameRules::GetRespawnTimeScalar( int iTeam )
 {
-	// In PvE mode, we don't modify respawn times
-	if ( IsPVEModeActive() )
-		return 1.0;
-
 	return BaseClass::GetRespawnTimeScalar( iTeam );
 }
 
@@ -8297,30 +8293,6 @@ void CTFGameRules::CheckRespawnWaves()
 		{
 			pTFPlayer->ForceRespawn();
 		}
-		else if ( IsPVEModeActive() )
-		{
-			// special stuff for PVE mode
-			if ( !ShouldRespawnQuickly( pTFPlayer ) )
-				continue;
-
-			// If the player hasn't been dead the minimum respawn time, he
-			// waits until the next wave.
-			if ( !HasPassedMinRespawnTime( pTFPlayer ) )
-				continue;
-
-			if ( !pTFPlayer->IsReadyToSpawn() )
-			{
-				// Let the player spawn immediately when they do pick a class
-				if ( pTFPlayer->ShouldGainInstantSpawn() )
-				{
-					pTFPlayer->AllowInstantSpawn();
-				}
-				continue;
-			}
-
-			// Respawn this player
-			pTFPlayer->ForceRespawn();
-		}
 	}
 }
 
@@ -8618,16 +8590,6 @@ bool CTFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 
 	// prevent eyeball rockets from hurting teammates if it's a spell
 	if ( info.GetDamageCustom() == TF_DMG_CUSTOM_SPELL_MONOCULUS && pAttacker->GetTeamNumber() == pPlayer->GetTeamNumber() )
-	{
-		return false;
-	}
-
-	// in PvE modes, if entities are on the same team, they can't hurt each other
-	// this is needed since not all entities will be players
-	if ( IsPVEModeActive() && 
-			pPlayer->GetTeamNumber() == pAttacker->GetTeamNumber() && 
-			pPlayer != pAttacker && 
-			!info.IsForceFriendlyFire() )
 	{
 		return false;
 	}
@@ -8986,8 +8948,7 @@ void CTFGameRules::ChangePlayerName( CTFPlayer *pPlayer, const char *pszNewName 
 	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// Check if they can change their name
-	// don't show when bots change their names in PvE mode
-	if ( State_Get() != GR_STATE_STALEMATE && !( IsPVEModeActive() && pPlayer->IsBot() ) )
+	if ( State_Get() != GR_STATE_STALEMATE )
 	{
 		CReliableBroadcastRecipientFilter filter;
 		UTIL_SayText2Filter( filter, pPlayer, false, "#TF_Name_Change", pszOldName, pszNewName );
@@ -9997,21 +9958,6 @@ static kill_eater_event_t g_eClassKillEvents[] =
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_eClassKillEvents ) == (TF_LAST_NORMAL_CLASS - TF_FIRST_NORMAL_CLASS) );
 
-//-----------------------------------------------------------------------------
-static kill_eater_event_t g_eRobotClassKillEvents[] =
-{
-	kKillEaterEvent_RobotScoutKill,					// TF_CLASS_SCOUT
-	kKillEaterEvent_RobotSniperKill,				// TF_CLASS_SNIPER
-	kKillEaterEvent_RobotSoldierKill,				// TF_CLASS_SOLDIER
-	kKillEaterEvent_RobotDemomanKill,				// TF_CLASS_DEMOMAN
-	kKillEaterEvent_RobotMedicKill,					// TF_CLASS_MEDIC
-	kKillEaterEvent_RobotHeavyKill,					// TF_CLASS_HEAVYWEAPONS
-	kKillEaterEvent_RobotPyroKill,					// TF_CLASS_PYRO
-	kKillEaterEvent_RobotSpyKill,					// TF_CLASS_SPY
-	kKillEaterEvent_RobotEngineerKill,				// TF_CLASS_ENGINEER
-};
-COMPILE_TIME_ASSERT( ARRAYSIZE( g_eRobotClassKillEvents ) == (TF_LAST_NORMAL_CLASS - TF_FIRST_NORMAL_CLASS) );
-
 static bool BHasWearableOfSpecificQualityEquipped( /*const*/ CTFPlayer *pTFPlayer, EEconItemQuality eQuality )
 {
 	Assert( pTFPlayer );
@@ -10264,248 +10210,204 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 
 		if ( pAttackerEconWeapon )
 		{
-			if ( !( IsPVEModeActive() && pTFPlayerVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
+			EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eKillEaterEvent );
+
+			// Cosmetic any kill type tracking
 			{
-				// Any type of non-robot kill!
-				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eKillEaterEvent );
+				HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_CosmeticKills );
 
-				// Cosmetic any kill type tracking
+				// Halloween silliness: overworld kills for Merasmus carnival.
+				if ( IsHalloweenScenario( HALLOWEEN_SCENARIO_DOOMSDAY ) && !pTFPlayerScorer->m_Shared.InCond( TF_COND_HALLOWEEN_IN_HELL ) )
 				{
-					HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_CosmeticKills );
-
-					// Halloween silliness: overworld kills for Merasmus carnival.
-					if ( IsHalloweenScenario( HALLOWEEN_SCENARIO_DOOMSDAY ) && !pTFPlayerScorer->m_Shared.InCond( TF_COND_HALLOWEEN_IN_HELL ) )
-					{
-						HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer,
-																	  pTFPlayerVictim,
-																	  kKillEaterEvent_Halloween_OverworldKills );
-					}
+					HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer,
+																	pTFPlayerVictim,
+																	kKillEaterEvent_Halloween_OverworldKills );
 				}
+			}
 
-				// Operation Kills
-				EconEntity_NonEquippedItemKillTracking( pTFPlayerScorer, pTFPlayerVictim, 1 );
+			// Operation Kills
+			EconEntity_NonEquippedItemKillTracking( pTFPlayerScorer, pTFPlayerVictim, 1 );
 
-				// Unique kill tracking?
-				// XXX(JohnS) - Disabling.  No longer collecting this on GC, never shipped code using this. See ECON_UNIQUE_EVENT_SUPPORT define
-				// EconEntity_OnOwnerUniqueEconEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UniqueEvent__KilledAccountWithItem );
+			// Unique kill tracking?
+			// XXX(JohnS) - Disabling.  No longer collecting this on GC, never shipped code using this. See ECON_UNIQUE_EVENT_SUPPORT define
+			// EconEntity_OnOwnerUniqueEconEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UniqueEvent__KilledAccountWithItem );
 
-				// Optional Taunt Kill tracking
-				if ( IsTauntDmg( info.GetDamageCustom() ) )
+			// Optional Taunt Kill tracking
+			if ( IsTauntDmg( info.GetDamageCustom() ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
+			}
+			// Scorch Shot Taunt is Different
+			else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_FLARE_PELLET )
+			{
+				CBaseEntity *pInflictor = info.GetInflictor();
+				CTFProjectile_Flare *pFlare = dynamic_cast<CTFProjectile_Flare*>(pInflictor);
+				if ( pFlare && pFlare->IsFromTaunt() )
 				{
 					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
 				}
-				// Scorch Shot Taunt is Different
-				else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_FLARE_PELLET )
-				{
-					CBaseEntity *pInflictor = info.GetInflictor();
-					CTFProjectile_Flare *pFlare = dynamic_cast<CTFProjectile_Flare*>(pInflictor);
-					if ( pFlare && pFlare->IsFromTaunt() )
-					{
-						EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
-					}
-				}
+			}
 
-				// Optional: also track "killed X players of this specific class".
-				int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
-				if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
-				{
-					const kill_eater_event_t eClassKillType = g_eClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
-				}
+			// Optional: also track "killed X players of this specific class".
+			int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
+			if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
+			{
+				const kill_eater_event_t eClassKillType = g_eClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
+			}
 
-				// Optional : Kills while in Victory / Bonus time
-				if ( State_Get() == GR_STATE_TEAM_WIN && GetWinningTeam() != pTFPlayerVictim->GetTeamNumber() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_VictoryTimeKill );
-				}
+			// Optional : Kills while in Victory / Bonus time
+			if ( State_Get() == GR_STATE_TEAM_WIN && GetWinningTeam() != pTFPlayerVictim->GetTeamNumber() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_VictoryTimeKill );
+			}
 
-				// Optional: also track "killed X players while they were in the air".
-				if ( !(pTFPlayerVictim->GetFlags() & FL_ONGROUND) && (pTFPlayerVictim->GetWaterLevel() == WL_NotInWater) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_AirborneEnemyKill );
-				}
+			// Optional: also track "killed X players while they were in the air".
+			if ( !(pTFPlayerVictim->GetFlags() & FL_ONGROUND) && (pTFPlayerVictim->GetWaterLevel() == WL_NotInWater) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_AirborneEnemyKill );
+			}
 
-				// Optional: also track "killed X players with headshots".
-				if ( IsHeadshot( info.GetDamageCustom() ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HeadshotKill );
-				}
+			// Optional: also track "killed X players with headshots".
+			if ( IsHeadshot( info.GetDamageCustom() ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HeadshotKill );
+			}
 
-				// Optional: also track "gibbed X players".
-				if ( pTFPlayerVictim->ShouldGib( info ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_GibKill );
-				}
+			// Optional: also track "gibbed X players".
+			if ( pTFPlayerVictim->ShouldGib( info ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_GibKill );
+			}
 
-				// Optional: also track "killed X players during full moons". We intentionally don't call into the
-				// game rules here because we don't want server variables to override this. Setting local time on the
-				// server will still allow it to happen but it at least takes a little effort.
-				if ( UTIL_IsHolidayActive( kHoliday_FullMoon ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillDuringFullMoon );
-				}
+			// Optional: also track "killed X players during full moons". We intentionally don't call into the
+			// game rules here because we don't want server variables to override this. Setting local time on the
+			// server will still allow it to happen but it at least takes a little effort.
+			if ( UTIL_IsHolidayActive( kHoliday_FullMoon ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillDuringFullMoon );
+			}
 
-				// Optional: also track kills we make while we're dead (afterburn, pre-death-fired rocket, etc.)
-				if ( !pTFPlayerScorer->IsAlive() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillPosthumous );
-				}
+			// Optional: also track kills we make while we're dead (afterburn, pre-death-fired rocket, etc.)
+			if ( !pTFPlayerScorer->IsAlive() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillPosthumous );
+			}
 
-				// Optional: also track kills that were specifically criticals.
-				if ( (info.GetDamageType() & DMG_CRITICAL) != 0 )
+			// Optional: also track kills that were specifically criticals.
+			if ( (info.GetDamageType() & DMG_CRITICAL) != 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillCritical );
+			}
+			else 
+			{
+				// Not special at all kill
+				if ( pTFPlayerVictim->GetAttackBonusEffect() == kBonusEffect_None )
 				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillCritical );
-				}
-				else 
-				{
-					// Not special at all kill
-					if ( pTFPlayerVictim->GetAttackBonusEffect() == kBonusEffect_None )
-					{
-						EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_NonCritKills );
-					}
-				}
-
-				// Optional: also track kills that were made while we were launched into the air from an explosion (ie., rocket-jumping).
-				if ( pTFPlayerScorer->InAirDueToExplosion() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillWhileExplosiveJumping );
-				}
-
-				// Optional: also track kills where the victim was a spy who was invisible at the time of death.
-				if ( iVictimClassIndex == TF_CLASS_SPY && pTFPlayerVictim->m_Shared.GetPercentInvisible() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_InvisibleSpiesKilled );
-				}
-
-				// Optional: also track kills where the victim was a medic with 100% uber.
-				if ( pTFPlayerVictim->MedicGetChargeLevel() >= 1.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MedicsWithFullUberKilled );
-				}
-
-				// Optional: also track kills where the killer was at low health when they dealt the final damage. Don't count
-				// kills with 0 or fewer health -- those would be post-mortem kills instead.
-				if ( ((float)pTFPlayerScorer->GetHealth() / (float)pTFPlayerScorer->GetMaxHealth()) <= 0.1f && pTFPlayerScorer->GetHealth() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileLowHealth );
-				}
-
-				// Optional: also track kills that take place during the Halloween holiday. We intentionally *do* check against
-				// the game rules logic here -- if folks want to enable Halloween mode on a server and play around, I don't see any
-				// reason why we benefit from stopping their fun.
-				if ( TF_IsHolidayActive( kHoliday_Halloween ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKill );
-				}
-
-				// Optional: also track kills where the victim was completely underwater.
-				if ( pTFPlayerVictim->GetWaterLevel() >= WL_Eyes )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UnderwaterKill );
-				}
-
-				// Optional: also track kills where we're under the effects of a medic's ubercharge.
-				if ( pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileUbercharged );
-				}
-
-				// Optional: also track kills where the victim was in the process of carrying the intel, capturing a point, or pushing
-				// the cart. The actual logic for "killed a flag carrier" is handled elsewhere because by this point we've forgotten
-				// if we had a flag before we died.
-				if ( pTFPlayerVictim->IsCapturingPoint() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_DefenderKill );
-				}
-
-				// Optional: also track kills where the victim was at least N units from the person dealing the damage, where N is "however far
-				// you have to be to get the crowd chear noise". This also specifically checks to make sure the damage dealer is alive to avoid
-				// casing where you spectate far away, etc.
-				if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() >= 2000.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_LongDistanceKill );
-				}
-
-				// Optional: also track kills where the victim was wearing at least one unusual-quality item.
-				if ( BHasWearableOfSpecificQualityEquipped( pTFPlayerVictim, AE_UNUSUAL ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayersWearingUnusualKill );
-				}
-
-				// Optional: also track kills where the victim was on fire at the time that they died. We can't check the condition flag
-				// here because that may or may not be active after they die, but instead we test to see whether they still had a burn queued
-				// up for the future as a proxy for "was on fire at this point".
-				if ( pTFPlayerVictim->m_Shared.GetFlameBurnTime() >= gpGlobals->curtime )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_BurningEnemyKill );
-				}
-
-				// Optional: also track kills where this kill ended someone else's killstreak, where "killstreak" starts when the first
-				// announcement happens. If Mike gets to hard-code constants, I do, too.
-				enum { kFirstKillStreakAnnouncement = 5 };
-				if ( pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) >= kFirstKillStreakAnnouncement )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillstreaksEnded );
-				}
-
-				// Optional: also track kills where the killer and the victim were basically right next to each other. This is hard-coded to
-				// 1.5x default melee swing range.
-				if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() <= 72.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PointBlankKills );
-				}
-
-				// Optional : Fullhealth kills
-				if ( pTFPlayerScorer->GetHealth() >= pTFPlayerScorer->GetMaxHealth() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_FullHealthKills );
-				}
-
-				// Optional : Taunting Player kills
-				if ( pTFPlayerVictim->IsTaunting() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntingPlayerKills );
+					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_NonCritKills );
 				}
 			}
-			else
+
+			// Optional: also track kills that were made while we were launched into the air from an explosion (ie., rocket-jumping).
+			if ( pTFPlayerScorer->InAirDueToExplosion() )
 			{
-				Assert( pTFPlayerVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS );
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillWhileExplosiveJumping );
+			}
 
-				// Optional: also track kills where the victim was a robot in MvM
-				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotsDestroyed );
+			// Optional: also track kills where the victim was a spy who was invisible at the time of death.
+			if ( iVictimClassIndex == TF_CLASS_SPY && pTFPlayerVictim->m_Shared.GetPercentInvisible() > 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_InvisibleSpiesKilled );
+			}
 
-				// Optional: also track "killed X Robots of this specific class".
-				int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
-				if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
-				{
-					const kill_eater_event_t eClassKillType = g_eRobotClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
-				}
+			// Optional: also track kills where the victim was a medic with 100% uber.
+			if ( pTFPlayerVictim->MedicGetChargeLevel() >= 1.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MedicsWithFullUberKilled );
+			}
 
-				// Optional: specifically track miniboss kills separately from base robot kills.
-				if ( pTFPlayerVictim->IsMiniBoss() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MinibossRobotsDestroyed );
-				}
+			// Optional: also track kills where the killer was at low health when they dealt the final damage. Don't count
+			// kills with 0 or fewer health -- those would be post-mortem kills instead.
+			if ( ((float)pTFPlayerScorer->GetHealth() / (float)pTFPlayerScorer->GetMaxHealth()) <= 0.1f && pTFPlayerScorer->GetHealth() > 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileLowHealth );
+			}
 
-				// Optional: track whether this shot killed a robot *after* penetrating something else.
-				if ( info.GetPlayerPenetrationCount() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotsDestroyedAfterPenetration );
-				}
+			// Optional: also track kills that take place during the Halloween holiday. We intentionally *do* check against
+			// the game rules logic here -- if folks want to enable Halloween mode on a server and play around, I don't see any
+			// reason why we benefit from stopping their fun.
+			if ( TF_IsHolidayActive( kHoliday_Halloween ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKill );
+			}
 
-				// Optional: also track "killed X players with headshots", but for robots specifically.
-				if ( IsHeadshot( info.GetDamageCustom() ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotHeadshotKills );
-				}
+			// Optional: also track kills where the victim was completely underwater.
+			if ( pTFPlayerVictim->GetWaterLevel() >= WL_Eyes )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UnderwaterKill );
+			}
 
-				// Optional: also track kills that take place during the Halloween holiday. See note for kKillEaterEvent_HalloweenKill
-				// regarding calling into game rules here.
-				if ( TF_IsHolidayActive( kHoliday_Halloween ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKillRobot );
-				}
+			// Optional: also track kills where we're under the effects of a medic's ubercharge.
+			if ( pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileUbercharged );
+			}
+
+			// Optional: also track kills where the victim was in the process of carrying the intel, capturing a point, or pushing
+			// the cart. The actual logic for "killed a flag carrier" is handled elsewhere because by this point we've forgotten
+			// if we had a flag before we died.
+			if ( pTFPlayerVictim->IsCapturingPoint() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_DefenderKill );
+			}
+
+			// Optional: also track kills where the victim was at least N units from the person dealing the damage, where N is "however far
+			// you have to be to get the crowd chear noise". This also specifically checks to make sure the damage dealer is alive to avoid
+			// casing where you spectate far away, etc.
+			if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() >= 2000.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_LongDistanceKill );
+			}
+
+			// Optional: also track kills where the victim was wearing at least one unusual-quality item.
+			if ( BHasWearableOfSpecificQualityEquipped( pTFPlayerVictim, AE_UNUSUAL ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayersWearingUnusualKill );
+			}
+
+			// Optional: also track kills where the victim was on fire at the time that they died. We can't check the condition flag
+			// here because that may or may not be active after they die, but instead we test to see whether they still had a burn queued
+			// up for the future as a proxy for "was on fire at this point".
+			if ( pTFPlayerVictim->m_Shared.GetFlameBurnTime() >= gpGlobals->curtime )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_BurningEnemyKill );
+			}
+
+			// Optional: also track kills where this kill ended someone else's killstreak, where "killstreak" starts when the first
+			// announcement happens. If Mike gets to hard-code constants, I do, too.
+			enum { kFirstKillStreakAnnouncement = 5 };
+			if ( pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) >= kFirstKillStreakAnnouncement )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillstreaksEnded );
+			}
+
+			// Optional: also track kills where the killer and the victim were basically right next to each other. This is hard-coded to
+			// 1.5x default melee swing range.
+			if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() <= 72.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PointBlankKills );
+			}
+
+			// Optional : Fullhealth kills
+			if ( pTFPlayerScorer->GetHealth() >= pTFPlayerScorer->GetMaxHealth() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_FullHealthKills );
+			}
+
+			// Optional : Taunting Player kills
+			if ( pTFPlayerVictim->IsTaunting() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntingPlayerKills );
 			}
 		}
 	}

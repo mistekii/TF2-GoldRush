@@ -648,14 +648,8 @@ enum kill_eater_event_t
 	kKillEaterEvent_SapperDestroyed,						// (part) we destroyed a sapper that was on a friendly building
 	kKillEaterEvent_InvisibleSpiesKilled,					// (part) we killed an invisible spy
 	kKillEaterEvent_MedicsWithFullUberKilled,				// (part) we killed a fully ubered medic
-	kKillEaterEvent_RobotsDestroyed,						// (part) we killed a robot in MvM
-	kKillEaterEvent_MinibossRobotsDestroyed,	// = 40		// (part) we killed a miniboss robot in MvM
-	kKillEaterEvent_RobotsDestroyedAfterPenetration,		// (part) we killed a robot with a shot that had already penetrated another robot
-	kKillEaterEvent_RobotHeadshotKills,						// (part) like kKillEaterEvent_HeadshotKill, but only for robots
-	kKillEaterEvent_RobotsSlowed,							// (part) we hit some robots with Jarate and now they're slow
 	kKillEaterEvent_KillWhileLowHealth,						// (part) we killed someone while we had <10% max health
 	kKillEaterEvent_HalloweenKill,							// (part) we killed someone during the Halloween holiday
-	kKillEaterEvent_HalloweenKillRobot,						// (part) we killed a robot in MvM during the Halloween holiday
 	kKillEaterEvent_DefenderKill,							// (part) we killed someone carrying the intel, pushing the cart, or capping a point
 	kKillEaterEvent_UnderwaterKill,							// (part) we killed someone who was completely submerged
 	kKillEaterEvent_KillWhileUbercharged,					// (part) we killed someone while we were invulnerable
@@ -677,15 +671,6 @@ enum kill_eater_event_t
 	kKillEaterEvent_DoubleDonks,						// Double-Donks scored with the loose cannon
 	kKillEaterEvent_TeammatesWhipped,					// Whipped Teammates with the Disciplinary Action
 	kKillEaterEvent_VictoryTimeKill,					// Kills while in Victory / Bonus Time
-	kKillEaterEvent_RobotScoutKill,				// (part)
-	kKillEaterEvent_RobotSniperKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotSoldierKill,			// = 70 // (part) Not yet shipped
-	kKillEaterEvent_RobotDemomanKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotHeavyKill,				// (part) Not yet shipped
-	kKillEaterEvent_RobotPyroKill,				// (part) Not yet shipped
-	kKillEaterEvent_RobotSpyKill,				// (part)
-	kKillEaterEvent_RobotEngineerKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotMedicKill,				// (part) Not yet shipped
 	kKillEaterEvent_TauntKill,					// Taunt Kills
 	kKillEaterEvent_PlayersWearingUnusualKill,	// (part) we killed someone wearing an unusual hat (!)
 	kKillEaterEvent_BurningEnemyKill,			// (part) we killed someone who was on fire up until they died
