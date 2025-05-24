@@ -477,8 +477,6 @@ public:
 	void		UpdateDemomanEyeEffect( int iDecapitations );
 	const char* GetDemomanEyeEffectName( int iDecapitations );
 
-	virtual void UpdateMVMEyeGlowEffect( bool bVisible );
-
 	void	UpdateKillStreakEffects( int iCount, bool bKillScored = false );
 	const char *GetEyeGlowEffect() { return m_pszEyeGlowEffectName; }
 	Vector GetEyeGlowColor( bool bAlternate ) { return bAlternate? m_vEyeGlowColor1 : m_vEyeGlowColor2 ; }

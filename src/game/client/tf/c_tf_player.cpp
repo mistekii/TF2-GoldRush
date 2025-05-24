@@ -1192,13 +1192,9 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 		}
 
 		// Don't gib zombies, always just ragdoll
-		if ( pPlayer )
+		if ( pPlayer && pPlayer->BRenderAsZombie() )
 		{
-			if ( pPlayer->BRenderAsZombie() )
-			{
-				m_bGib = false;
-			}
-			pPlayer->UpdateMVMEyeGlowEffect( false );
+			m_bGib = false;
 		}
 
 		if ( bCreateRagdoll )
@@ -1216,8 +1212,7 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 					EmitSound( "TFPlayer.Decapitated" );
 
 					bool bBlood = true;
-					if ( TFGameRules() && ( TFGameRules()->UseSillyGibs() || 
-											( TFGameRules()->IsMannVsMachineMode() && pPlayer && pPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) ) )
+					if ( TFGameRules() && TFGameRules()->UseSillyGibs() )
 					{
 						bBlood = false;
 					}
@@ -3953,8 +3948,6 @@ void C_TFPlayer::Spawn( void )
 
 	UpdateInventory( true );
 
-	UpdateMVMEyeGlowEffect( true );
-
 	SetShowHudMenuTauntSelection( false );
 
 	CleanUpAnimationOnSpawn();
@@ -4278,15 +4271,11 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 		if ( m_nOldBotSkill != m_nBotSkill )
 		{
-			UpdateMVMEyeGlowEffect( true );
-
 			m_nOldBotSkill = m_nBotSkill;
 		}
 
 		if ( m_nOldMaxHealth != GetMaxHealth() )
 		{
-			UpdateMVMEyeGlowEffect( true );
-
 			m_nOldMaxHealth = GetMaxHealth();
 		}
 
@@ -4386,18 +4375,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 			// Remove decals.
 			RemoveAllDecals();
-
-			if ( GetPlayerClass()->GetClassIndex() == TF_CLASS_SPY )
-			{
-				if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-				{
-					UpdateMVMEyeGlowEffect( false );
-				}
-				else
-				{
-					UpdateMVMEyeGlowEffect( true );
-				}
-			}
 		}
 	}
 
@@ -4907,15 +4884,6 @@ void C_TFPlayer::UpdateRecentlyTeleportedEffect( void )
 				break;
 			default:
 				break;
-			}
-
-			if ( TFGameRules()->IsMannVsMachineMode() && IsABot() )
-			{
-#if 0 // Nice idea, but it's chewing into our particle budget, and because bots currently spawn in ubered it's nearly invisible.
-				pszEffectName = "bot_recent_teleport_blue";
-#else
-				pszEffectName = NULL;
-#endif
 			}
 
 			if ( pszEffectName )
@@ -5563,10 +5531,6 @@ bool C_TFPlayer::CanLightCigarette( void )
 			return false;
 		}
 	}
-
-	// don't light for MvM Spy robots
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		return false;
 
 	// Don't light if we are invis.
 	if ( GetPercentInvisible() > 0 )
@@ -7593,8 +7557,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 	UpdateKillStreakEffects( 0 );
 
-	UpdateMVMEyeGlowEffect( true );
-
 	m_hHeadGib = NULL;
 	m_hFirstGib = NULL;
 	m_hSpawnedGibs.Purge();
@@ -7698,14 +7660,6 @@ int C_TFPlayer::GetVisionFilterFlags( bool bWeaponsCheck /*= false */  )
 	if ( TFGameRules()->IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
 	{
 		nVisionOptInFlags |= TF_VISION_FILTER_HALLOWEEN;
-	}
-
-	// opt-in for romevision?
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
-		 TFSharedContentManager() && TFSharedContentManager()->IsSharedVisionAvailable( TF_VISION_FILTER_ROME ) && 
-		 tf_romevision_opt_in.GetBool() )
-	{
-		nVisionOptInFlags |= TF_VISION_FILTER_ROME;
 	}
 
 	return nVisionOptInFlags;
@@ -9014,7 +8968,7 @@ bool C_TFPlayer::IsWeaponLowered( void )
 		return true;
 
 	// Hide all view models after the game is over
-	if ( pRules->State_Get() == GR_STATE_GAME_OVER && ( !pRules->IsInTournamentMode() || pRules->IsMannVsMachineMode() ) )
+	if ( pRules->State_Get() == GR_STATE_GAME_OVER && !pRules->IsInTournamentMode() )
 		return true;
 
 	if ( m_Shared.InCond( TF_COND_PHASE ) )
@@ -10193,46 +10147,6 @@ void C_TFPlayer::UpdateKillStreakEffects( int iCount, bool bKillScored /* = fals
 	else
 	{
 		m_pszEyeGlowEffectName[0] = '\0';
-	}
-}
-
-void C_TFPlayer::UpdateMVMEyeGlowEffect( bool bVisible )
-{
-	if ( !TFGameRules() || !TFGameRules()->IsMannVsMachineMode() || GetTeamNumber() != TF_TEAM_PVE_INVADERS )
-	{
-		return;
-	}
-	
-	// Remove the eye glows
-	ParticleProp()->StopParticlesNamed( "bot_eye_glow", true );
-	m_pMVMEyeGlowEffect[ 0 ] = NULL;
-	m_pMVMEyeGlowEffect[ 1 ] = NULL;
-
-	if ( bVisible )
-	{
-		// Set color based on skill
-		Vector vColor = m_nBotSkill >= 2 ? Vector( 255, 180, 36 ) : Vector( 0, 240, 255 );
-
-		// Create the effects
-		int nAttachement = LookupAttachment( "eye_1" );
-		if ( nAttachement > 0 )
-		{
-			m_pMVMEyeGlowEffect[ 0 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
-			if ( m_pMVMEyeGlowEffect[ 0 ] )
-			{
-				m_pMVMEyeGlowEffect[ 0 ]->SetControlPoint( 1, vColor );
-			}
-		}
-
-		nAttachement = LookupAttachment( "eye_2" );
-		if ( nAttachement > 0 )
-		{
-			m_pMVMEyeGlowEffect[ 1 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
-			if ( m_pMVMEyeGlowEffect[ 1 ] )
-			{
-				m_pMVMEyeGlowEffect[ 1 ]->SetControlPoint( 1, vColor );
-			}
-		}
 	}
 }
 
