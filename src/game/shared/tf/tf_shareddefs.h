@@ -147,8 +147,6 @@ enum
 #define PANEL_ARENA_WIN		"arenawinpanel"
 #define PANEL_ARENA_TEAM	"arenateampanel"
 
-#define PANEL_PVE_WIN		"pvewinpanel"
-
 #define PANEL_GIVEAWAY_ITEM		"giveaway_item"
 
 // file we'll save our list of viewed intro movies in

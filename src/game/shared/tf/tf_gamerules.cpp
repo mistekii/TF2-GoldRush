@@ -12157,39 +12157,11 @@ void CTFGameRules::SendArenaWinPanelInfo( void )
 	}
 }
 
-void CTFGameRules::SendPVEWinPanelInfo( void )
-{
-	IGameEvent *winEvent = gameeventmanager->CreateEvent( "pve_win_panel" );
-
-	if ( winEvent )
-	{
-		winEvent->SetInt( "panel_style", WINPANEL_BASIC );
-		winEvent->SetInt( "winning_team", m_iWinningTeam );
-		winEvent->SetInt( "winreason", 0 );
-
-		// Send the event
-		gameeventmanager->FireEvent( winEvent );
-	}
-
-	/*CBroadcastRecipientFilter filter;
-	filter.MakeReliable();
-	UserMessageBegin( filter, "MVMAnnouncement" );
-		WRITE_CHAR( TF_MVM_ANNOUNCEMENT_WAVE_FAILED );
-		WRITE_CHAR( -1 );
-	MessageEnd();*/
-}
-
 void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 {
 	if ( IsInArenaMode() == true )
 	{
 		SendArenaWinPanelInfo();
-		return;
-	}
-
-	if ( IsPVEModeActive() )
-	{
-		SendPVEWinPanelInfo();
 		return;
 	}
 

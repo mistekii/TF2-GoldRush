@@ -444,8 +444,6 @@ void ClientModeTFNormal::Init()
 	ListenForGameEvent( "player_buyback" );
 	ListenForGameEvent( "player_death" );
 
-	ListenForGameEvent( "pve_win_panel" );
-
 	ListenForGameEvent( "arena_win_panel" );
 	ListenForGameEvent( "teamplay_win_panel" );
 	ListenForGameEvent( "server_spawn" );
@@ -775,7 +773,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 		}
 	}
 	else if ( 
-			  FStrEq( "pve_win_panel", eventname ) ||
 			  FStrEq( "arena_win_panel", eventname ) ||
 			  FStrEq( "teamplay_win_panel", eventname )  )
 	{

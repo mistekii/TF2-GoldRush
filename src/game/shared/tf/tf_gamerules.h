@@ -332,7 +332,6 @@ public:
 	// Send the end of round info displayed in the win panel
 	virtual void	SendWinPanelInfo( bool bGameOver ) OVERRIDE;
 	void			SendArenaWinPanelInfo( void );
-	void			SendPVEWinPanelInfo( void );
 
 	// Setup spawn points for the current round before it starts
 	virtual void	SetupSpawnPointsForRound( void );

@@ -703,15 +703,6 @@ int CTFStatPanel::CalcCRC( int iSteamID )
 void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFStatType_t statType, RecordBreakType_t recordBreakType,
 								 bool bAlive )
 {
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
-	// If this is MvM mode and we're looking at the round end, dont show the stats
-	// panel because the PVEWinPanel will be up
-	if( bMVM && TFGameRules()->State_Get() == GR_STATE_TEAM_WIN )
-	{
-		return;
-	}
-
 	ClassStats_t &classStats = GetClassStats( iClass );
 	vgui::Label *pLabel = dynamic_cast<Label *>( FindChildByName( "summaryLabel" ) );
 	if ( !pLabel )
@@ -729,7 +720,7 @@ void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFSt
 		char szCur[32],szBest[32];
 		wchar_t wzCur[32],wzBest[32];
 		GetStatValueAsString( iCurStatValue, statType, szCur, ARRAYSIZE( szCur ) );
-		GetStatValueAsString( bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType], statType, szBest, ARRAYSIZE( szBest ) );
+		GetStatValueAsString( classStats.max.m_iStat[statType], statType, szBest, ARRAYSIZE( szBest ) );
 		g_pVGuiLocalize->ConvertANSIToUnicode( szCur, wzCur, sizeof( wzCur ) );
 		g_pVGuiLocalize->ConvertANSIToUnicode( szBest, wzBest, sizeof( wzBest ) );
 		wchar_t *wzFormat = g_pVGuiLocalize->Find( "#StatPanel_Format_Close" );
@@ -745,7 +736,7 @@ void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFSt
 		SetDialogVariable( "stattextlarge", szValue );
 	}
 
-	SetDialogVariable( "statdesc", g_pVGuiLocalize->Find( CFmtStr( "%s_%s", bMVM ? g_szLocalizedMVMRecordText[statType] : g_szLocalizedRecordText[statType], 
+	SetDialogVariable( "statdesc", g_pVGuiLocalize->Find( CFmtStr( "%s_%s", g_szLocalizedRecordText[statType], 
 		pRecordTextSuffix[recordBreakType] ) ) );
 
 	// Set the class name. We can't use a dialog variable because it's a string that's already

@@ -54,7 +54,6 @@
 #include "character_info_panel.h"
 #include "tf_hud_arena_winpanel.h"
 #include "tf_arenateammenu.h"
-#include "tf_hud_pve_winpanel.h"
 #include "hud_chat.h"
 #include "tf_giveawayitempanel.h"
 #if defined( REPLAY_ENABLED )
@@ -110,7 +109,6 @@ CON_COMMAND( showmapinfo, "Show map info panel" )
 			gViewPortInterface->ShowPanel( PANEL_TEAM, false );
 			gViewPortInterface->ShowPanel( PANEL_ARENA_TEAM, false );
 			gViewPortInterface->ShowPanel( PANEL_ARENA_WIN, false );
-			gViewPortInterface->ShowPanel( PANEL_PVE_WIN, false );
 			gViewPortInterface->ShowPanel( PANEL_CLASS_RED, false );
 			gViewPortInterface->ShowPanel( PANEL_CLASS_BLUE, false );
 			gViewPortInterface->ShowPanel( PANEL_INTRO, false );
@@ -347,10 +345,6 @@ IViewPortPanel* TFViewport::CreatePanelByName(const char *szPanelName)
 	{
 		newpanel = new CTFArenaWinPanel( this );
 	}
-	else if ( Q_strcmp( PANEL_PVE_WIN, szPanelName ) == 0 )
-	{
-		newpanel = new CTFPVEWinPanel( this );
-	}
 	else if ( Q_strcmp( PANEL_GIVEAWAY_ITEM, szPanelName ) == 0 )
 	{
 		newpanel = new CTFGiveawayItemPanel( this );
@@ -374,7 +368,6 @@ void TFViewport::CreateDefaultPanels( void )
 	AddNewPanel( CreatePanelByName( PANEL_ROUNDINFO ), "PANEL_ROUNDINFO" );
 	AddNewPanel( CreatePanelByName( PANEL_ARENA_WIN ), "PANEL_ARENA_WIN" );
 	AddNewPanel( CreatePanelByName( PANEL_ARENA_TEAM ), "PANEL_ARENA_TEAM" );
-	AddNewPanel( CreatePanelByName( PANEL_PVE_WIN ), "PANEL_PVE_WIN" );
 	AddNewPanel( CreatePanelByName( PANEL_GIVEAWAY_ITEM ), "PANEL_GIVEAWAY_ITEM" );
 
 	BaseClass::CreateDefaultPanels();
