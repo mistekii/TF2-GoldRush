@@ -739,8 +739,6 @@ $Project "Client (TF)"
 
 			$Folder	"PvE"
 			{
-				$File	"tf\player_vs_environment\c_boss_alpha.cpp"
-				$File	"tf\player_vs_environment\c_boss_alpha.h"
 				$File	"tf\player_vs_environment\c_tf_base_boss.cpp"
 				$File	"tf\player_vs_environment\c_tf_base_boss.h"
 				$File	"tf\player_vs_environment\c_tf_tank_boss.cpp"
