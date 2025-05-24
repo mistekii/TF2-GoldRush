@@ -49,7 +49,6 @@
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_deliver_flag.h"
 
 #include "bot/behavior/squad/tf_bot_escort_squad_leader.h"
-#include "bot/behavior/missions/tf_bot_mission_reprogrammed.h"
 
 #include "bot/behavior/tf_bot_scenario_monitor.h"
 

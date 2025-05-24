@@ -1948,27 +1948,6 @@ bool CTraceFilterObject::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			}
 		}
 #ifdef GAME_DLL
-		else if ( pEntity->IsPlayer() )
-		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				CTFBot *bot = ToTFBot( pEntity );
-
-				if ( bot && ( bot->HasMission( CTFBot::MISSION_DESTROY_SENTRIES ) || bot->HasMission( CTFBot::MISSION_REPROGRAMMED ) ) )
-				{
-					// Don't collide with sentry busters since they don't collide with us
-					return false;
-				}
-
-				CTFBot *meBot = ToTFBot( pMe );
-
-				if ( meBot && ( meBot->HasMission( CTFBot::MISSION_DESTROY_SENTRIES ) || meBot->HasMission( CTFBot::MISSION_REPROGRAMMED ) ) )
-				{
-					// Sentry Busters don't collide with enemies (so they can't be body-blocked)
-					return false;
-				}
-			}
-		}
 		else if ( pEntity->MyNextBotPointer() && !pEntity->MyNextBotPointer()->GetLocomotionInterface()->ShouldCollideWith( pMe ) )
 		{
 			return false;

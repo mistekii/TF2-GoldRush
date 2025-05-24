@@ -329,16 +329,6 @@ bool CTFKnife::CanPerformBackstabAgainstTarget( CTFPlayer *pTarget )
 	if ( IsBehindAndFacingTarget( pTarget ) )
 		return true;
 
-	// Is target (bot) disabled via a sapper?
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pTarget->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		if ( pTarget->m_Shared.InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
-			return true;
-
-		if ( pTarget->m_Shared.InCond( TF_COND_SAPPED ) && !pTarget->IsMiniBoss() )
-			return true;
-	}
-
 	return false;
 }
 

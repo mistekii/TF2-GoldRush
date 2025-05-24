@@ -631,7 +631,7 @@ enum ETFCond
 	TF_COND_REGENONDAMAGEBUFF                = 27,
 	TF_COND_MARKEDFORDEATH                   = 28,
 	TF_COND_NOHEALINGDAMAGEBUFF              = 29,
-	TF_COND_SPEED_BOOST                      = 30, // = 32
+	TF_COND_SPEED_BOOST                      = 30, // = 30
 	TF_COND_CRITBOOSTED_PUMPKIN              = 31, // Brandon hates bits
 	TF_COND_CRITBOOSTED_USER_BUFF            = 32,
 	TF_COND_CRITBOOSTED_DEMO_CHARGE          = 33,
@@ -639,77 +639,75 @@ enum ETFCond
 	TF_COND_CRITBOOSTED_BONUS_TIME           = 35,
 	TF_COND_CRITBOOSTED_CTF_CAPTURE          = 36,
 	TF_COND_CRITBOOSTED_ON_KILL              = 37, // KGB, etc.
-	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 38, // =40
+	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 38,
 	TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK        = 39, // 35% defense! Still damaged by crits.
-	TF_COND_REPROGRAMMED                     = 40, // Bots only
-	TF_COND_CRITBOOSTED_RAGE_BUFF            = 41,
-	TF_COND_DEFENSEBUFF_HIGH                 = 42, // 75% defense! Still damaged by crits.
-	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 43, // Sniper Rage - Charge time speed up
-	TF_COND_DISGUISE_WEARINGOFF              = 44, // Applied for half-second post-disguise
-	TF_COND_MARKEDFORDEATH_SILENT            = 45, // Sans sound
-	TF_COND_DISGUISED_AS_DISPENSER           = 46,
-	TF_COND_SAPPED                           = 47, // Bots only
-	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 48, // =50
-	TF_COND_INVULNERABLE_USER_BUFF           = 49,
-	TF_COND_HALLOWEEN_BOMB_HEAD              = 50,
-	TF_COND_HALLOWEEN_THRILLER               = 51,
-	TF_COND_RADIUSHEAL_ON_DAMAGE             = 52,
-	TF_COND_CRITBOOSTED_CARD_EFFECT          = 53,
-	TF_COND_INVULNERABLE_CARD_EFFECT         = 54,
-	TF_COND_STEALTHED_USER_BUFF              = 55, // Any class can have this
-	TF_COND_MEDIGUN_DEBUFF                   = 56,
-	TF_COND_STEALTHED_USER_BUFF_FADING       = 57,
-	TF_COND_PREVENT_DEATH                    = 58,
-	TF_COND_MVM_BOT_STUN_RADIOWAVE           = 59, // Bots only
-	TF_COND_HALLOWEEN_SPEED_BOOST            = 60,
-	TF_COND_HALLOWEEN_QUICK_HEAL             = 61,
-	TF_COND_HALLOWEEN_GIANT                  = 62,
-	TF_COND_HALLOWEEN_TINY                   = 63,
-	TF_COND_HALLOWEEN_IN_HELL                = 64,
-	TF_COND_HALLOWEEN_GHOST_MODE             = 65, // =70
-	TF_COND_MINICRITBOOSTED_ON_KILL          = 66,
-	TF_COND_OBSCURED_SMOKE                   = 67,
-	TF_COND_BLASTJUMPING                     = 68,
-	TF_COND_HALLOWEEN_KART                   = 69, 
-	TF_COND_HALLOWEEN_KART_DASH              = 70,
-	TF_COND_BALLOON_HEAD                     = 71, // =76 larger head, lower-gravity-feeling jumps
-	TF_COND_MELEE_ONLY                       = 72, // =77 melee only
-	TF_COND_SWIMMING_CURSE                   = 73, // player movement become swimming movement
-	TF_COND_FREEZE_INPUT                     = 74, // freezes player input
-	TF_COND_HALLOWEEN_KART_CAGE              = 75, // =80 attach cage model to player while in kart
-	TF_COND_DONOTUSE_0                       = 76,
-	TF_COND_RUNE_STRENGTH                    = 77,
-	TF_COND_RUNE_HASTE                       = 78,
-	TF_COND_RUNE_REGEN                       = 79,
-	TF_COND_RUNE_RESIST                      = 80,
-	TF_COND_RUNE_VAMPIRE                     = 81,
-	TF_COND_RUNE_REFLECT                     = 82,
-	TF_COND_RUNE_PRECISION                   = 83,
-	TF_COND_RUNE_AGILITY                     = 84,
-	TF_COND_AFTERBURN_IMMUNE                 = 85,
-	TF_COND_RUNE_KNOCKOUT                    = 86,
-	TF_COND_RUNE_IMBALANCE                   = 87,
-	TF_COND_CRITBOOSTED_RUNE_TEMP            = 88,
-	TF_COND_SWIMMING_NO_EFFECTS              = 89, // =95_DNOC_FT
-	TF_COND_PURGATORY                        = 90,
-	TF_COND_RUNE_KING                        = 91,
-	TF_COND_RUNE_PLAGUE                      = 92,
-	TF_COND_RUNE_SUPERNOVA                   = 93,
-	TF_COND_PLAGUE                           = 94,
-	TF_COND_KING_BUFFED                      = 95,
-	TF_COND_TEAM_GLOWS                       = 96, // used to show team glows to living players
-	TF_COND_KNOCKED_INTO_AIR                 = 97,
-	TF_COND_COMPETITIVE_WINNER               = 98,
-	TF_COND_COMPETITIVE_LOSER                = 99,
-	TF_COND_HEALING_DEBUFF                   = 100,
+	TF_COND_CRITBOOSTED_RAGE_BUFF            = 40, // =40
+	TF_COND_DEFENSEBUFF_HIGH                 = 41, // 75% defense! Still damaged by crits.
+	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 42, // Sniper Rage - Charge time speed up
+	TF_COND_DISGUISE_WEARINGOFF              = 43, // Applied for half-second post-disguise
+	TF_COND_MARKEDFORDEATH_SILENT            = 44, // Sans sound
+	TF_COND_DISGUISED_AS_DISPENSER           = 45,
+	TF_COND_SAPPED                           = 46, // Bots only
+	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 47,
+	TF_COND_INVULNERABLE_USER_BUFF           = 48,
+	TF_COND_HALLOWEEN_BOMB_HEAD              = 49,
+	TF_COND_HALLOWEEN_THRILLER               = 50, // =50
+	TF_COND_RADIUSHEAL_ON_DAMAGE             = 51,
+	TF_COND_CRITBOOSTED_CARD_EFFECT          = 52,
+	TF_COND_INVULNERABLE_CARD_EFFECT         = 53,
+	TF_COND_STEALTHED_USER_BUFF              = 54, // Any class can have this
+	TF_COND_MEDIGUN_DEBUFF                   = 55,
+	TF_COND_STEALTHED_USER_BUFF_FADING       = 56,
+	TF_COND_PREVENT_DEATH                    = 57,
+	TF_COND_HALLOWEEN_SPEED_BOOST            = 58,
+	TF_COND_HALLOWEEN_QUICK_HEAL             = 59,
+	TF_COND_HALLOWEEN_GIANT                  = 60, // =60
+	TF_COND_HALLOWEEN_TINY                   = 61,
+	TF_COND_HALLOWEEN_IN_HELL                = 62,
+	TF_COND_HALLOWEEN_GHOST_MODE             = 63,
+	TF_COND_MINICRITBOOSTED_ON_KILL          = 64,
+	TF_COND_OBSCURED_SMOKE                   = 65,
+	TF_COND_BLASTJUMPING                     = 66,
+	TF_COND_HALLOWEEN_KART                   = 67, 
+	TF_COND_HALLOWEEN_KART_DASH              = 68,
+	TF_COND_BALLOON_HEAD                     = 69, // =69 larger head, lower-gravity-feeling jumps
+	TF_COND_MELEE_ONLY                       = 70, // =70 melee only
+	TF_COND_SWIMMING_CURSE                   = 71, // player movement become swimming movement
+	TF_COND_FREEZE_INPUT                     = 72, // freezes player input
+	TF_COND_HALLOWEEN_KART_CAGE              = 73, // =73 attach cage model to player while in kart
+	TF_COND_DONOTUSE_0                       = 74,
+	TF_COND_RUNE_STRENGTH                    = 75,
+	TF_COND_RUNE_HASTE                       = 76,
+	TF_COND_RUNE_REGEN                       = 77,
+	TF_COND_RUNE_RESIST                      = 78,
+	TF_COND_RUNE_VAMPIRE                     = 79,
+	TF_COND_RUNE_REFLECT                     = 80,
+	TF_COND_RUNE_PRECISION                   = 81,
+	TF_COND_RUNE_AGILITY                     = 82,
+	TF_COND_AFTERBURN_IMMUNE                 = 83,
+	TF_COND_RUNE_KNOCKOUT                    = 84,
+	TF_COND_RUNE_IMBALANCE                   = 85,
+	TF_COND_CRITBOOSTED_RUNE_TEMP            = 86,
+	TF_COND_SWIMMING_NO_EFFECTS              = 87, // =87_DNOC_FT
+	TF_COND_PURGATORY                        = 88,
+	TF_COND_RUNE_KING                        = 89,
+	TF_COND_RUNE_PLAGUE                      = 90,
+	TF_COND_RUNE_SUPERNOVA                   = 91,
+	TF_COND_PLAGUE                           = 92,
+	TF_COND_KING_BUFFED                      = 93,
+	TF_COND_TEAM_GLOWS                       = 94, // used to show team glows to living players
+	TF_COND_KNOCKED_INTO_AIR                 = 95,
+	TF_COND_COMPETITIVE_WINNER               = 96,
+	TF_COND_COMPETITIVE_LOSER                = 97,
+	TF_COND_HEALING_DEBUFF                   = 98,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 101,
+	TF_COND_LOST_FOOTING                     = 99,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 102,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 103,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 104,
+	TF_COND_AIR_CURRENT                      = 100,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 101,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 102,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//
@@ -1260,7 +1258,6 @@ enum
 enum ESpyTrapType_t
 {
 	MODE_SPY_TRAP_RADIUS_STEALTH = 0,
-	MODE_SPY_TRAP_REPROGRAM,
 	MODE_SPY_TRAP_MAGNET,
 	// MODE_SPY_TRAP_REPULSOR,
 };

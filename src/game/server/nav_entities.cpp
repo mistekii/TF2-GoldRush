@@ -237,11 +237,6 @@ bool CFuncNavCost::IsApplicableTo( CBaseCombatCharacter *who ) const
 			}
 		}
 
-		if ( bot->HasMission( CTFBot::MISSION_REPROGRAMMED ) )
-		{
-			return false;
-		}
-
 		if ( !bot->IsOnAnyMission() )
 		{
 			if ( HasTag( "common" ) )

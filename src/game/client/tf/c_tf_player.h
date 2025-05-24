@@ -733,8 +733,6 @@ public:
 	Vector m_vEyeGlowColor2;
 	HPARTICLEFFECT m_pEyeGlowEffect[ 2 ];
 	float m_flNextSheenStartTime;
-	
-	HPARTICLEFFECT m_pMVMBotRadiowave;
 
 	enum EKartParticles
 	{

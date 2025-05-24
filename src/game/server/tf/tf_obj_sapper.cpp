@@ -744,9 +744,6 @@ bool CObjectSapper::IsValidRoboSapperTarget( CTFPlayer *pTarget )
 	if ( pTarget->m_Shared.InCond( TF_COND_SAPPED ) )
 		return false;
 
-	if ( pTarget->m_Shared.InCond( TF_COND_REPROGRAMMED ) )
-		return false;
-
 	return true;
 }
 

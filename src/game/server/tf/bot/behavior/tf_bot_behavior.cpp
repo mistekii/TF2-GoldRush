@@ -466,30 +466,6 @@ EventDesiredResult< CTFBot > CTFBotMainAction::OnStuck( CTFBot *me )
 	}
 */
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( me->m_Shared.InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
-		{
-			// bot is stunned, not stuck
-			return TryContinue();
-		}
-
-		if ( m_lastTouch != NULL && gpGlobals->curtime - m_lastTouchTime < 2.0f )
-		{
-			if ( m_lastTouch->IsBaseObject() && dynamic_cast< CObjectSentrygun * >( m_lastTouch.Get() ) == NULL )
-			{
-				// we are stuck on a teleporter or dispenser - destroy it!
-				int damage = MAX( m_lastTouch->GetMaxHealth(), m_lastTouch->GetHealth() );
-
-				Vector toVictim = m_lastTouch->WorldSpaceCenter() - me->WorldSpaceCenter();
-
-				CTakeDamageInfo info( me, me, 4 * damage, DMG_BLAST, TF_DMG_CUSTOM_NONE );
-				CalculateMeleeDamageForce( &info, toVictim, me->WorldSpaceCenter(), 1.0f );
-				m_lastTouch->TakeDamage( info );
-			}
-		}
-	}
-
 	UTIL_LogPrintf( "\"%s<%i><%s><%s>\" stuck (position \"%3.2f %3.2f %3.2f\") (duration \"%3.2f\") ",
 					me->GetPlayerName(),
 					me->GetUserID(),

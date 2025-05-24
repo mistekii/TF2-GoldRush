@@ -1604,10 +1604,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddSapped();
 		break;
 
-	case TF_COND_REPROGRAMMED:
-		OnAddReprogrammed();
-		break;
-
 	case TF_COND_MARKEDFORDEATH_SILENT:
 		OnAddMarkedForDeathSilent();
 		break;
@@ -1630,10 +1626,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnAddStealthedUserBuffFade();
-		break;
-
-	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
-		OnAddMVMBotRadiowave();
 		break;
 
 	case TF_COND_HALLOWEEN_SPEED_BOOST:
@@ -1852,10 +1844,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveSapped();
 		break;
 
-	case TF_COND_REPROGRAMMED:
-		OnRemoveReprogrammed();
-		break;
-
 	case TF_COND_MARKEDFORDEATH_SILENT:
 		OnRemoveMarkedForDeathSilent();
 		break;
@@ -1878,10 +1866,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnRemoveStealthedUserBuffFade();
-		break;
-
-	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
-		OnRemoveMVMBotRadiowave();
 		break;
 
 	case TF_COND_HALLOWEEN_SPEED_BOOST:
@@ -3889,20 +3873,6 @@ void CTFPlayerShared::OnRemoveSapped( void )
 #endif	// CLIENT_DLL
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Applied to bots
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddReprogrammed( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveReprogrammed( void )
-{
-}
-
 void CTFPlayerShared::OnAddDisguisedAsDispenser( void )
 {
 	m_pOuter->TeamFortress_SetSpeed();
@@ -4117,44 +4087,6 @@ static void RemoveUberScreenEffect( const CTFPlayer* pPlayer )
 	}
 }
 #endif // CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMVMBotRadiowave( void )
-{
-#ifdef CLIENT_DLL
-	if ( !m_pOuter->IsABot() )
-		return;
-
-	if ( !m_pOuter->m_pMVMBotRadiowave )
-	{
-		m_pOuter->m_pMVMBotRadiowave = m_pOuter->ParticleProp()->Create( "bot_radio_waves", PATTACH_POINT_FOLLOW, "head" );
-	}
-#else
-	if ( !m_pOuter->IsBot() )
-		return;
-
-	StunPlayer( GetConditionDuration( TF_COND_MVM_BOT_STUN_RADIOWAVE ), 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMVMBotRadiowave( void )
-{
-#ifdef CLIENT_DLL
-	if ( !m_pOuter->IsABot() )
-		return;
-
-	if ( m_pOuter->m_pMVMBotRadiowave )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pMVMBotRadiowave );
-		m_pOuter->m_pMVMBotRadiowave = NULL;
-	}
-#endif
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -8069,7 +8001,7 @@ void CTFPlayerShared::StunPlayer( float flTime, float flReductionAmount, int iSt
 	if ( InCond( TF_COND_PHASE ) )
 		return;
 
-	if ( InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && !InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
+	if ( InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
 		return;
 
 #ifdef GAME_DLL

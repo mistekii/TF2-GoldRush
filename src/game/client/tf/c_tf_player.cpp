@@ -3790,8 +3790,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_pRadiusHealEffect = NULL;
 	m_pMegaHealEffect = NULL;
 
-	m_pMVMBotRadiowave = NULL;
-
 	m_aGibs.Purge();
 	m_aNormalGibs.PurgeAndDeleteElements();
 	m_aSillyGibs.Purge();
@@ -10327,20 +10325,6 @@ bool C_TFPlayer::ShouldTauntHintIconBeVisible() const
 //-----------------------------------------------------------------------------
 bool C_TFPlayer::IsHealthBarVisible( void ) const
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS || m_Shared.InCond( TF_COND_REPROGRAMMED ) )
-		{
-			float flRegenAmount = 0;
-			CALL_ATTRIB_HOOK_FLOAT( flRegenAmount, add_health_regen );
-			if ( (int)flRegenAmount != 0 )
-			{
-				return true;
-			}
-		}
-	}
-
-
 	return IsMiniBoss();
 }
 
