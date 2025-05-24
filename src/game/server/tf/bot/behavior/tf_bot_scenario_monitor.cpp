@@ -48,7 +48,6 @@
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_fetch_flag.h"
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_deliver_flag.h"
 
-#include "bot/behavior/missions/tf_bot_mission_suicide_bomber.h"
 #include "bot/behavior/squad/tf_bot_escort_squad_leader.h"
 #include "bot/behavior/missions/tf_bot_mission_reprogrammed.h"
 
@@ -94,9 +93,6 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 	{
 	case CTFBot::MISSION_SEEK_AND_DESTROY:
 		break;
-
-	case CTFBot::MISSION_DESTROY_SENTRIES:
-		return new CTFBotMissionSuicideBomber;
 
 	case CTFBot::MISSION_SNIPER:
 		return new CTFBotSniperLurk;

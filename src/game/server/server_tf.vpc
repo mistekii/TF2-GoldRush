@@ -591,8 +591,6 @@ $Project "Server (TF)"
 						$File	"tf\bot\behavior\missions\tf_bot_mission_destroy_sentries.h"
 						$File	"tf\bot\behavior\missions\tf_bot_mission_reprogrammed.cpp"
 						$File	"tf\bot\behavior\missions\tf_bot_mission_reprogrammed.h"
-						$File	"tf\bot\behavior\missions\tf_bot_mission_suicide_bomber.cpp"
-						$File	"tf\bot\behavior\missions\tf_bot_mission_suicide_bomber.h"
 					}
 
 					$Folder "Squad"
