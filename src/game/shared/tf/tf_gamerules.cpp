@@ -1200,7 +1200,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropInt( RECVINFO( m_nBossHealth ) ),
 	RecvPropInt( RECVINFO( m_nMaxBossHealth ) ),
 	RecvPropInt( RECVINFO( m_fBossNormalizedTravelDistance ) ),
-	RecvPropBool( RECVINFO( m_bMannVsMachineAlarmStatus ) ),
 	RecvPropBool( RECVINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	RecvPropBool( RECVINFO( m_bBountyModeEnabled ) ),
@@ -1262,7 +1261,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropInt( SENDINFO( m_nBossHealth ) ),
 	SendPropInt( SENDINFO( m_nMaxBossHealth ) ),
 	SendPropInt( SENDINFO( m_fBossNormalizedTravelDistance ) ),
-	SendPropBool( SENDINFO( m_bMannVsMachineAlarmStatus ) ),
 	SendPropBool( SENDINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	SendPropBool( SENDINFO( m_bBountyModeEnabled ) ),
@@ -2892,10 +2890,6 @@ CTFGameRules::CTFGameRules()
 
 	m_flCapInProgressBuffer = 0.f;
 
-	m_bMannVsMachineAlarmStatus = false;
-	m_flNextFlagAlarm = 0.0f;
-	m_flNextFlagAlert = 0.0f;
-
 	m_doomsdaySetupTimer.Invalidate();
 	StopDoomsdayTicketsTimer();
 
@@ -2925,7 +2919,6 @@ CTFGameRules::CTFGameRules()
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
 	m_bPlayingMannVsMachine.Set( false );
-	m_bMannVsMachineAlarmStatus.Set( false );
 	m_bBountyModeEnabled.Set( false );
 
 	m_bPlayingKoth.Set( false );
@@ -3727,7 +3720,6 @@ void CTFGameRules::Activate()
 
 	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
-	m_bMannVsMachineAlarmStatus.Set( false );
 	m_bPlayingKoth.Set( false );
 	m_bPlayingMedieval.Set( false );
 	m_bPlayingHybrid_CTF_CP.Set( false );
@@ -7318,31 +7310,6 @@ void CTFGameRules::Think()
 
 		tf_item_based_forced_holiday.SetValue( kHoliday_None );
 		FlushAllAttributeCaches();
-	}	
-
-	// play the bomb alarm if we need to
-	if ( m_bMannVsMachineAlarmStatus )
-	{
-		if ( m_flNextFlagAlert < gpGlobals->curtime )
-		{
-			if ( PlayThrottledAlert( 255, "Announcer.MVM_Bomb_Alert_Near_Hatch", 5.0f ) )
-			{
-				m_flNextFlagAlarm = gpGlobals->curtime + 3.0;
-				m_flNextFlagAlert = gpGlobals->curtime + 20.0f;
-			}
-		}
-
-		if ( m_flNextFlagAlarm < gpGlobals->curtime )
-		{
-			m_flNextFlagAlarm = gpGlobals->curtime + 3.0;
-
-			BroadcastSound( 255, "MVM.BombWarning" );
-		}
-	}
-	else if ( m_flNextFlagAlarm > 0.0f )
-	{
-		m_flNextFlagAlarm = 0.0f;
-		m_flNextFlagAlert = gpGlobals->curtime + 5.0f;
 	}
 
 	SpawnHalloweenBoss();
@@ -18721,8 +18688,6 @@ bool	ScriptIsInKothMode()										{ return TFGameRules()->IsInKothMode(); }
 bool	ScriptIsInMedievalMode()									{ return TFGameRules()->IsInMedievalMode(); }
 bool	ScriptIsHolidayMap( int nHoliday )							{ return TFGameRules()->IsHolidayMap( nHoliday ); }
 bool	ScriptIsMannVsMachineMode()									{ return TFGameRules()->IsMannVsMachineMode(); }
-bool	ScriptGetMannVsMachineAlarmStatus()							{ return TFGameRules()->GetMannVsMachineAlarmStatus(); }
-void	ScriptSetMannVsMachineAlarmStatus( bool bEnabled )			{ return TFGameRules()->SetMannVsMachineAlarmStatus( bEnabled ); }
 bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime(); }
 bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
@@ -18770,8 +18735,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( IsInMedievalMode,							"Playing medieval mode?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsHolidayMap,								"Playing a holiday map? See Constants.EHoliday" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineMode,						"Playing MvM? Beep boop" );
-	TF_GAMERULES_SCRIPT_FUNC( GetMannVsMachineAlarmStatus,				"" );
-	TF_GAMERULES_SCRIPT_FUNC( SetMannVsMachineAlarmStatus,				"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsQuickBuildTime,							"If an engie places a building, will it immediately upgrade? Eg. MvM pre-round etc." );
 	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );

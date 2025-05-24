@@ -82,76 +82,41 @@ void CTFArrowPanel::OnTick( void )
 
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+	// figure out what material we need to use
+	if ( pEnt->GetTeamNumber() == TF_TEAM_RED )
 	{
-		if ( m_bUseRed )
-		{
-			m_pMaterial = m_NeutralRedMaterial;
-		}
-		else
-		{
-			m_pMaterial = m_NeutralMaterial;
-		}
+		m_pMaterial = m_RedMaterial;
 
-		if ( pEnt && TFGameRules()->GetMannVsMachineAlarmStatus() == true ) 
+		if ( pLocalPlayer && ( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) )
 		{
-			CCaptureFlag *pFlag = dynamic_cast<CCaptureFlag *>( pEnt );
-			if ( pFlag && pFlag->IsStolen() )
+			// is our target a player?
+			C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
+			if ( pTargetEnt && pTargetEnt->IsPlayer() )
 			{
-				if ( m_flNextColorSwitch < gpGlobals->curtime )
+				// does our target have the flag and are they carrying the flag we're currently drawing?
+				C_TFPlayer *pTarget = static_cast< C_TFPlayer* >( pTargetEnt );
+				if ( pTarget->HasTheFlag() && ( pTarget->GetItem() == pEnt ) )
 				{
-					m_flNextColorSwitch = gpGlobals->curtime + 0.2f;
-					m_bUseRed = !m_bUseRed;
+					m_pMaterial = m_RedMaterialNoArrow;
 				}
 			}
-			else
-			{
-				m_bUseRed = false;
-			}
-		}
-		else
-		{
-			m_bUseRed = false;
 		}
 	}
-	else
+	else if ( pEnt->GetTeamNumber() == TF_TEAM_BLUE )
 	{
-		// figure out what material we need to use
-		if ( pEnt->GetTeamNumber() == TF_TEAM_RED )
-		{
-			m_pMaterial = m_RedMaterial;
+		m_pMaterial = m_BlueMaterial;
 
-			if ( pLocalPlayer && ( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) )
-			{
-				// is our target a player?
-				C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
-				if ( pTargetEnt && pTargetEnt->IsPlayer() )
-				{
-					// does our target have the flag and are they carrying the flag we're currently drawing?
-					C_TFPlayer *pTarget = static_cast< C_TFPlayer* >( pTargetEnt );
-					if ( pTarget->HasTheFlag() && ( pTarget->GetItem() == pEnt ) )
-					{
-						m_pMaterial = m_RedMaterialNoArrow;
-					}
-				}
-			}
-		}
-		else if ( pEnt->GetTeamNumber() == TF_TEAM_BLUE )
+		if ( pLocalPlayer && ( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) )
 		{
-			m_pMaterial = m_BlueMaterial;
-
-			if ( pLocalPlayer && ( pLocalPlayer->GetObserverMode() == OBS_MODE_IN_EYE ) )
+			// is our target a player?
+			C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
+			if ( pTargetEnt && pTargetEnt->IsPlayer() )
 			{
-				// is our target a player?
-				C_BaseEntity *pTargetEnt = pLocalPlayer->GetObserverTarget();
-				if ( pTargetEnt && pTargetEnt->IsPlayer() )
+				// does our target have the flag and are they carrying the flag we're currently drawing?
+				C_TFPlayer *pTarget = static_cast< C_TFPlayer* >( pTargetEnt );
+				if ( pTarget->HasTheFlag() && ( pTarget->GetItem() == pEnt ) )
 				{
-					// does our target have the flag and are they carrying the flag we're currently drawing?
-					C_TFPlayer *pTarget = static_cast< C_TFPlayer* >( pTargetEnt );
-					if ( pTarget->HasTheFlag() && ( pTarget->GetItem() == pEnt ) )
-					{
-						m_pMaterial = m_BlueMaterialNoArrow;
-					}
+					m_pMaterial = m_BlueMaterialNoArrow;
 				}
 			}
 		}

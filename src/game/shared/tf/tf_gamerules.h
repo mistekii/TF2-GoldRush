@@ -553,9 +553,6 @@ bool IsCreepWaveMode( void ) const;
 #endif
 
 	bool IsMannVsMachineMode( void ) const { return m_bPlayingMannVsMachine; }
-
-	void SetMannVsMachineAlarmStatus( bool bStatus ){ m_bMannVsMachineAlarmStatus.Set( bStatus ); }
-	bool GetMannVsMachineAlarmStatus( void ){ return m_bMannVsMachineAlarmStatus; }
 	
 	bool IsQuickBuildTime( void );
 
@@ -1060,7 +1057,6 @@ private:
 	CNetworkVar( bool, m_bPlayingSpecialDeliveryMode );
 
 	CNetworkVar( bool, m_bPlayingMannVsMachine );
-	CNetworkVar( bool, m_bMannVsMachineAlarmStatus );
 	CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
 
 	CNetworkVar( bool, m_bBountyModeEnabled );
@@ -1081,9 +1077,6 @@ private:
 	CNetworkVar( bool, m_bRopesHolidayLightsAllowed );
 
 #ifdef GAME_DLL
-	float	m_flNextFlagAlarm;
-	float	m_flNextFlagAlert;
-
 	float	m_flSafeToLeaveTimer;
 #endif
 
