@@ -805,11 +805,8 @@ $Project "Server (TF)"
 
 			$Folder "PvE"
 			{
-				$File	"tf\player_vs_environment\archer_proxy.cpp"
-				$File	"tf\player_vs_environment\archer_proxy.h"
 				$File	"tf\player_vs_environment\monster_resource.cpp"
 				$File	"tf\player_vs_environment\monster_resource.h"
-				$File	"tf\player_vs_environment\tf_point_weapon_mimic.cpp"
 			}
 
 			$Folder	"Matchmaking"
