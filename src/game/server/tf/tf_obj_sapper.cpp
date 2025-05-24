@@ -100,13 +100,6 @@ void CObjectSapper::Spawn()
 
 	int nFlags = m_fObjectFlags | OF_ALLOW_REPEAT_PLACEMENT;
 
-	// Don't allow repeat placement as a human spy in MvM
-	if ( TFGameRules() && TFGameRules()->GameModeUsesMiniBosses() && 
-		 GetBuilder() && !GetBuilder()->IsBot() )
-	{
-		nFlags &= ~( OF_ALLOW_REPEAT_PLACEMENT );
-	}
-
 	m_fObjectFlags.Set( nFlags );
 
 	SetSolid( SOLID_NONE );

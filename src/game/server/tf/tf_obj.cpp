@@ -1210,25 +1210,6 @@ bool CBaseObject::FindSnapToBuildPos( CBaseObject *pObjectOverride )
 			CTFTeam *pTeam = ( CTFTeam * )GetGlobalTeam( iTeam );
 			if ( !pTeam )
 				continue;
-			
-			// See if we're allowed to build on Robots
-			if ( TFGameRules() && TFGameRules()->GameModeUsesMiniBosses() && 
-				 GetType() == OBJ_ATTACHMENT_SAPPER && !pPlayer->IsBot() )
-			{
-				CUtlVector< CTFPlayer * > playerVector;
-				CollectPlayers( &playerVector, pPlayer->GetOpposingTFTeam()->GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-				FOR_EACH_VEC( playerVector, i )
-				{
-					if ( !playerVector[i]->IsBot() )
-						continue;
-
-					if ( FindBuildPointOnPlayer( playerVector[i], pPlayer, flNearestPoint, vecNearestBuildPoint ) )
-					{
-						bSnappedToPoint = true;
-						bShouldAttachToParent = true;
-					}
-				}
-			}
 
 			// look for nearby buildpoints on other objects
 			for ( i = 0; i < pTeam->GetNumObjects(); i++ )

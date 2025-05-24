@@ -556,7 +556,6 @@ bool IsCreepWaveMode( void ) const;
 	
 	bool IsQuickBuildTime( void );
 
-	bool GameModeUsesMiniBosses( void ) { return IsMannVsMachineMode() || IsBountyMode(); }
 	bool GameModeUsesEscortPushLogic( void );
 
 #ifdef GAME_DLL

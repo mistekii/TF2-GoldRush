@@ -9946,19 +9946,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 		if ( pObject->GetBuilder() != pVictim )
 		{
 			pObject->IncrementKills();
-
-			// minibosses count for 5 kills
-			if ( IsMannVsMachineMode() && pVictim && pVictim->IsPlayer() )
-			{
-				CTFPlayer *playerVictim = ToTFPlayer( pVictim );
-				if ( playerVictim->IsMiniBoss() )
-				{
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-				}
-			}
 		}
 		pInflictor = pObject;
 
@@ -18688,7 +18675,6 @@ bool	ScriptIsInMedievalMode()									{ return TFGameRules()->IsInMedievalMode()
 bool	ScriptIsHolidayMap( int nHoliday )							{ return TFGameRules()->IsHolidayMap( nHoliday ); }
 bool	ScriptIsMannVsMachineMode()									{ return TFGameRules()->IsMannVsMachineMode(); }
 bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime(); }
-bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
 bool	ScriptIsMatchTypeCompetitive()								{ return TFGameRules()->IsMatchTypeCompetitive(); }
@@ -18735,7 +18721,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( IsHolidayMap,								"Playing a holiday map? See Constants.EHoliday" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineMode,						"Playing MvM? Beep boop" );
 	TF_GAMERULES_SCRIPT_FUNC( IsQuickBuildTime,							"If an engie places a building, will it immediately upgrade? Eg. MvM pre-round etc." );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );

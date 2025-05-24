@@ -11952,15 +11952,6 @@ void CTFPlayer::RemoveAmmo( int iCount, int iAmmoIndex )
 //-----------------------------------------------------------------------------
 void CTFPlayer::RemoveAmmo( int iCount, const char *szName )
 {
-	if ( TFGameRules() )
-	{
-		if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			return;
-
-		if ( TFGameRules()->GameModeUsesMiniBosses() && IsMiniBoss() )
-			return;
-	}
-
 	CBaseCombatCharacter::RemoveAmmo( iCount, szName );
 }
 
