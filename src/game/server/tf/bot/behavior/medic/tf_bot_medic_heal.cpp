@@ -529,7 +529,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	CTFPlayer *actualHealTarget = m_patient;
 	bool isHealTargetBlocked = true;
 	bool isActivelyHealing = false;
-	bool isUsingProjectileShield = false;
 	const CKnownEntity *knownThreat = me->GetVisionInterface()->GetPrimaryKnownThreat();
 
 	CWeaponMedigun *medigun = dynamic_cast< CWeaponMedigun * >( me->m_Shared.GetActiveTFWeapon() );
@@ -631,22 +630,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 				}
 			}
 		}
-		
-		// try to activate shield when I'm not using uber so I don't waste it
-		if ( TFGameRules()->IsMannVsMachineMode() && me->HasAttribute( CTFBot::PROJECTILE_SHIELD ) )
-		{
-			isUsingProjectileShield = me->m_Shared.IsRageDraining();
-			// when the rage is ready to deploy and we're not using uber
-			if ( me->m_Shared.GetRageMeter() >= 100.f && !isUsingProjectileShield && !useUber )
-			{
-				// use shield if me or my patient is getting attacked
-				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || m_patient->GetTimeSinceLastInjury( GetEnemyTeam( m_patient->GetTeamNumber() ) ) < 1.0f )
-				{
-					me->PressSpecialFireButton();
-					isUsingProjectileShield = true;
-				}
-			}
-		}
 	}
 
 	bool isThreatened = false;
@@ -667,7 +650,7 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	bool outOfHealRange = me->IsRangeGreaterThan( actualHealTarget, 1.1f * tf_bot_medic_max_heal_range.GetFloat() );
 	bool isPatientObscured = actualHealTarget ? !me->IsLineOfFireClear( actualHealTarget->EyePosition() ) : true;
 
-	if ( !IsReadyToDeployUber( medigun ) && !me->m_Shared.InCond( TF_COND_INVULNERABLE ) && !isActivelyHealing && !isUsingProjectileShield && ( isThreatened || outOfHealRange || isPatientObscured ) )
+	if ( !IsReadyToDeployUber( medigun ) && !me->m_Shared.InCond( TF_COND_INVULNERABLE ) && !isActivelyHealing && ( isThreatened || outOfHealRange || isPatientObscured ) )
 	{
 		// patient is too far to heal or obscured, equip combat weapon and defend ourselves while we move into position
 		me->EquipBestWeaponForThreat( knownThreat );

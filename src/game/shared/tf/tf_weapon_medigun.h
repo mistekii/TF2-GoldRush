@@ -14,10 +14,7 @@
 
 #if defined( CLIENT_DLL )
 #define CWeaponMedigun C_WeaponMedigun
-#define CTFMedigunShield C_TFMedigunShield
 #endif
-
-class CTFMedigunShield;
 
 enum medigun_weapontypes_t
 {
@@ -146,9 +143,6 @@ private:
 	const char				*GetHealSound() const;
 #endif
 
-	void					CreateMedigunShield( void );
-	void					RemoveMedigunShield( void );
-
 public:
 
 
@@ -173,7 +167,6 @@ protected:
 	float					m_flNextTargetCheckTime;
 	bool					m_bCanChangeTarget; // used to track the PrimaryAttack key being released for AutoHeal mode
 	bool					m_bAttack2Down;
-	bool					m_bAttack3Down;
 	bool					m_bReloadDown;
 	
 	struct targetdetachtimes_t
@@ -191,8 +184,6 @@ protected:
 #endif
 	float					m_flChargeLevelToPreserve;
 	float					m_flOverHealExpert;		// Upgrade
-
-	CHandle< CTFMedigunShield > m_hMedigunShield;
 
 #ifdef CLIENT_DLL
 	bool					m_bPlayingSound;
@@ -221,52 +212,6 @@ protected:
 
 private:														
 	CWeaponMedigun( const CWeaponMedigun & );
-};
-
-class CTFMedigunShield : public CBaseAnimating
-{
-	DECLARE_CLASS( CTFMedigunShield, CBaseAnimating );
-
-public:
-	DECLARE_NETWORKCLASS();
-	DECLARE_PREDICTABLE();
-	DECLARE_DATADESC();
-
-	CTFMedigunShield();
-	~CTFMedigunShield();
-
-	virtual void Spawn();
-	virtual void Precache();
-	virtual bool IsCombatItem( void ) const { return true; }
-
-	void UpdateShieldPosition( void );
-
-#ifdef GAME_DLL
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
-	virtual int OnTakeDamage( const CTakeDamageInfo &info );
-
-	static CTFMedigunShield *Create( CTFPlayer *pOwner );
-	// virtual bool TestCollision( const Ray_t &ray, unsigned int mask, trace_t& trace );
-	virtual bool ShouldCollide( int collisionGroup, int contentsMask ) const;
-	virtual void StartTouch( CBaseEntity *pOther ) OVERRIDE;
-	void ShieldTouch( CBaseEntity *pOther );
-	virtual void EndTouch( CBaseEntity *pOther ) OVERRIDE;
-	void ShieldThink( void );
-	void RemoveShield( void );
-
-
-#else
-	virtual void ClientThink();
-#endif
-
-private:
-	int m_nBlinkCount;
-#ifdef GAME_DLL
-	float m_flShieldEnergyLevel;
-	CSoundPatch	*m_pTouchLoop;
-
-
-#endif // GAME_DLL
 };
 
 #endif // TF_WEAPON_MEDIGUN_H

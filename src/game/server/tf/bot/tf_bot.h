@@ -255,7 +255,6 @@ public:
 		PRIORITIZE_DEFENSE			= 1<<12,				// bot prioritizes defending when possible
 		ALWAYS_FIRE_WEAPON			= 1<<13,				// constantly fire our weapon
 		TELEPORT_TO_HINT			= 1<<14,				// bot will teleport to hint target instead of walking out from the spawn point
-		PROJECTILE_SHIELD			= 1<<20,				// medic projectile shield
 		USE_BOSS_HEALTH_BAR			= 1<<15,				// should I use boss health bar?
 		IGNORE_FLAG					= 1<<16,				// don't pick up flag/bomb
 		AUTO_JUMP					= 1<<17,				// auto jump
