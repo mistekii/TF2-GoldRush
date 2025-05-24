@@ -23,7 +23,6 @@
 class C_TFPlayer;
 // Server specific.
 #else
-#include "entity_currencypack.h"
 #include "tf_weapon_builder.h"
 class CTFPlayer;
 #endif
@@ -835,7 +834,6 @@ private:
 	void  SetChargeEffect( medigun_charge_types iCharge, bool bState, bool bInstant, const struct MedigunEffects_t& effects, float flWearOffTime, CTFPlayer *pProvider = NULL );
 	void  SetCritBoosted( bool bState );
 
-	void RadiusCurrencyCollectionCheck( void );
 	void RadiusSpyScan( void );
 
 	// Attr for Conditions
@@ -1109,13 +1107,6 @@ private:
 
 	float m_flRadiusCurrencyCollectionTime;
 	float m_flRadiusSpyScanTime;
-
-	struct pulledcurrencypacks_t
-	{
-		CHandle<CCurrencyPack> hPack;
-		float flTime;
-	};
-	CUtlVector <pulledcurrencypacks_t> m_CurrencyPacks;
 
 #else
 	float	m_flGotTeleEffectAt;

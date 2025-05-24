@@ -822,10 +822,6 @@ ConVar tf_mvm_buybacks_method( "tf_mvm_buybacks_method", "0", FCVAR_REPLICATED |
 ConVar tf_mvm_buybacks_per_wave( "tf_mvm_buybacks_per_wave", "3", FCVAR_REPLICATED | FCVAR_HIDDEN, "The fixed number of buybacks players can use per-wave." );
 
 
-#ifdef GAME_DLL
-enum { kMVM_CurrencyPackMinSize = 1, };
-#endif // GAME_DLL
-
 extern ConVar mp_tournament;
 extern ConVar mp_tournament_post_match_period;
 
@@ -13700,52 +13696,6 @@ void CTFGameRules::ManageServerSideVoteCreation( void )
 	m_flVoteCheckThrottle = gpGlobals->curtime + 0.5f;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: Figures out how much money to put in a custom currency pack drop
-//-----------------------------------------------------------------------------
-int CTFGameRules::CalculateCurrencyAmount_CustomPack( int nAmount )
-{
-	// Entities and events that specify a custom currency value should pass in the amount
-	// they're worth, and we figure out if there's enough currency to generate a pack.
-	// If the amount passed in isn't enough to generate a pack, we store it in an accumulator.
-	
-	int nMinDrop = kMVM_CurrencyPackMinSize;
-	if ( nMinDrop > 1 )
-	{
-		// If we're on the last spawn, drop everything
-		if ( TFObjectiveResource()->GetMannVsMachineWaveEnemyCount() == 1 )
-		{
-			nMinDrop = m_nCurrencyAccumulator + nAmount;
-			m_nCurrencyAccumulator = 0;
-			return nMinDrop;
-		}
-
-		// If we're passing in a value above mindrop, just drop it
-		if ( nAmount >= nMinDrop )
-			return nAmount;
-
-		// Accumulate currency if we're getting values below nMinDrop
-		m_nCurrencyAccumulator += nAmount;
-		if ( m_nCurrencyAccumulator >= nMinDrop )
-		{
-			m_nCurrencyAccumulator -= nMinDrop;
-			//DevMsg( "*MIN REACHED* -- %d left\n", m_nCurrencyAccumulator );
-			return nMinDrop;
-		}
-		else
-		{
-			// We don't have enough yet, drop nothing
-			//DevMsg( "*STORE* -- %d stored\n", m_nCurrencyAccumulator );
-			return 0;
-		}
-	}
-	else
-	{
-		// We don't have a PopManager - return the amount passed in
-		return nAmount;
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Figures out how much to give for pre-definied events or types

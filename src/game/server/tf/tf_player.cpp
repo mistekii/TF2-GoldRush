@@ -115,7 +115,6 @@
 #include "raid/tf_raid_logic.h"
 #endif
 
-#include "entity_currencypack.h"
 #include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/tf_upgrades.h"
 #include "player_vs_environment/tf_population_manager.h"
@@ -2233,10 +2232,6 @@ void CTFPlayer::PrecacheMvM()
 
 	int iModelIndex = PrecacheModel( g_szBotBossSentryBusterModel );
 	PrecacheGibsForModel( iModelIndex );
-
-	PrecacheModel( "models/items/currencypack_small.mdl" );
-	PrecacheModel( "models/items/currencypack_medium.mdl" );
-	PrecacheModel( "models/items/currencypack_large.mdl" );
 
 	PrecacheModel( "models/bots/tw2/boss_bot/twcarrier_addon.mdl" );
 
@@ -10837,63 +10832,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 				m_nCurrency = m_pWaveSpawnPopulator->GetCurrencyAmountPerDeath();
 			}
 
-			// only drop currency if the map designer has specified it
-			if ( m_nCurrency > 0 )
-			{
-				// We only drop a pack when the game's accumulated enough to make it worth it
-				int nDropAmount = TFGameRules()->CalculateCurrencyAmount_CustomPack( m_nCurrency );
-				if ( nDropAmount )
-				{
-					bool bDropPack = true;
-
-					// Give money directly to the team if a trigger killed us
-					if ( info.GetDamageType() )
-					{
-						CBaseTrigger *pTrigger = dynamic_cast< CBaseTrigger *>( info.GetInflictor() );
-						if ( pTrigger )
-						{
-							bDropPack = false;	
-							TFGameRules()->DistributeCurrencyAmount( nDropAmount, NULL, true, true );
-						}
-					}
-
-					if ( bDropPack )
-					{
-						CTFPlayer* pMoneyMaker = NULL;
-						if ( pPlayerAttacker && pPlayerAttacker->IsPlayerClass( TF_CLASS_SNIPER ) )
-						{
-							if ( info.GetDamageCustom() == TF_DMG_CUSTOM_BLEEDING || ( pKillerWeapon && WeaponID_IsSniperRifleOrBow( pKillerWeapon->GetWeaponID() ) ) )
-							{
-								pMoneyMaker = pPlayerAttacker;
-
-								if ( IsHeadshot( info.GetDamageCustom() ) || ( LastHitGroup() == HITGROUP_HEAD && pKillerWeapon && pKillerWeapon->GetJarateTime() ) )
-								{
-									IGameEvent *event = gameeventmanager->CreateEvent( "mvm_sniper_headshot_currency" );
-									if ( event )
-									{
-										event->SetInt( "userid", pPlayerAttacker->GetUserID() );
-										event->SetInt( "currency", nDropAmount );
-										gameeventmanager->FireEvent( event );
-									}
-								}
-							}
-						}
-
-						int iForceDistributeCurrency = 0;
-						CALL_ATTRIB_HOOK_INT( iForceDistributeCurrency, force_distribute_currency_on_death );
-						bool bForceDistribute = iForceDistributeCurrency != 0;
-
-						// if I'm force to distribute currency, just give the credit to the attacker
-						if ( !pMoneyMaker && bForceDistribute )
-						{
-							pMoneyMaker = pPlayerAttacker;
-						}
-
-						DropCurrencyPack( TF_CURRENCY_PACK_CUSTOM, nDropAmount, bForceDistribute, pMoneyMaker );
-					}
-				}
-			}
-
 			if ( !m_bIsSupportEnemy )
 			{
 				unsigned int iFlags = m_bIsMissionEnemy ? MVM_CLASS_FLAG_MISSION : MVM_CLASS_FLAG_NORMAL;
@@ -11695,60 +11633,6 @@ void CTFPlayer::DropHealthPack( const CTakeDamageInfo &info, bool bEmpty )
 
 		Vector vecVelocity = vecImpulse * 250.0;
 		pMedKit->DropSingleInstance( vecVelocity, this, 0 );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFPlayer::DropCurrencyPack( CurrencyRewards_t nSize /* = TF_CURRENCY_PACK_SMALL */, int nAmount /*= 0*/, bool bForceDistribute /*= false*/, CBasePlayer* pMoneyMaker /*= NULL*/ )
-{
-	// SMALL, MEDIUM, LARGE packs generate a default value on spawn
-	// Only pass in an amount when dropping TF_CURRENCY_PACK_CUSTOM
-
-	Vector vecSrc = this->WorldSpaceCenter();
-	CCurrencyPack *pCurrencyPack = NULL;
-
-	switch ( nSize )
-	{
-	case TF_CURRENCY_PACK_SMALL:
-		pCurrencyPack = assert_cast<CCurrencyPackSmall*>( CBaseEntity::Create( "item_currencypack_small", vecSrc, vec3_angle, this ) );
-		break;
-
-	case TF_CURRENCY_PACK_MEDIUM:
-		pCurrencyPack = assert_cast<CCurrencyPackMedium*>( CBaseEntity::Create( "item_currencypack_medium", vecSrc, vec3_angle, this ) );
-		break;
-
-	case TF_CURRENCY_PACK_LARGE:
-		pCurrencyPack = assert_cast<CCurrencyPack*>( CBaseEntity::Create( "item_currencypack_large", vecSrc, vec3_angle, this ) );
-		break;
-
-	case TF_CURRENCY_PACK_CUSTOM:
-		// Pop file may have said to not drop anything
-		Assert( nAmount > 0 );
-		if ( nAmount == 0 )
-			return;
-
-		// Create no spawn first so we can set the multiplier before it spawns & picks it model
-		pCurrencyPack = assert_cast<CCurrencyPack*>( CBaseEntity::CreateNoSpawn( "item_currencypack_custom", vecSrc, vec3_angle, this ) );
-		pCurrencyPack->SetAmount( nAmount );
-		break;
-	};
-
-	if ( pCurrencyPack )
-	{
-		Vector vecImpulse = RandomVector( -1,1 );
-		vecImpulse.z = 1;
-		VectorNormalize( vecImpulse );
-		Vector vecVelocity = vecImpulse * 250.0;
-
-		if ( pMoneyMaker || bForceDistribute )
-		{
-			pCurrencyPack->DistributedBy( pMoneyMaker );
-		}
-		
-		DispatchSpawn( pCurrencyPack );
-		pCurrencyPack->DropSingleInstance( vecVelocity, this, 0, 0 );
 	}
 }
 

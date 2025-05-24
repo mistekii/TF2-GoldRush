@@ -91,7 +91,6 @@ public:
 	void SendUpgradesToPlayer ( CTFPlayer *player );
 
 	void OnPlayerKilled( CTFPlayer *corpse );
-	void OnCurrencyPackFade( void );
 	void OnCurrencyCollected( int nAmount, bool bCountAsDropped, bool bIsBonus );
 	int GetTotalPopFileCurrency( void );
 

@@ -1549,11 +1549,6 @@ void CPopulationManager::OnPlayerKilled( CTFPlayer *corpse )
 	}
 }
 
-//-------------------------------------------------------------------------
-void CPopulationManager::OnCurrencyPackFade( void )
-{
-}
-
 
 //-------------------------------------------------------------------------
 void CPopulationManager::OnCurrencyCollected( int nAmount, bool bCountAsDropped, bool bIsBonus )

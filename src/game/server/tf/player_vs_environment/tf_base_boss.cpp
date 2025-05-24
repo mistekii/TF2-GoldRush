@@ -3,7 +3,6 @@
 
 #include "tf_gamerules.h"
 #include "tf_base_boss.h"
-#include "entity_currencypack.h"
 #include "tf_gamestats.h"
 #include "tf_player.h"
 
@@ -401,21 +400,6 @@ void CTFBaseBoss::Event_Killed( const CTakeDamageInfo &info )
 		nRemainingMoney -= nAmount;
 
 		angRand.y = RandomFloat( -180.0f, 180.0f );
-
-		CCurrencyPackCustom *pCurrencyPack = assert_cast< CCurrencyPackCustom* >( CBaseEntity::CreateNoSpawn( "item_currencypack_custom", WorldSpaceCenter(), angRand, this ) );
-		
-		if ( pCurrencyPack )
-		{
-			pCurrencyPack->SetAmount( nAmount );
-
-			Vector vecImpulse = RandomVector( -1,1 );
-			vecImpulse.z = RandomFloat( 5.0f, 20.0f );
-			VectorNormalize( vecImpulse );
-			Vector vecVelocity = vecImpulse * 250.0 * RandomFloat( 1.0f, 4.0f );
-
-			DispatchSpawn( pCurrencyPack );
-			pCurrencyPack->DropSingleInstance( vecVelocity, this, 0, 0 );
-		}
 	}
 
 	BaseClass::Event_Killed( info );

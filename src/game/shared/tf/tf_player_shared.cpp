@@ -2724,11 +2724,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 		m_flSpyTranqBuffDuration = 0;
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		RadiusCurrencyCollectionCheck();
-	}
-
 	if ( TFGameRules()->IsMannVsMachineMode() && m_pOuter->IsPlayerClass( TF_CLASS_SPY) )
 	{
 		// In MvM, Spies reveal other spies in a radius around them
@@ -7590,109 +7585,6 @@ void CTFPlayerShared::SetChargeEffect( medigun_charge_types iCharge, bool bState
 	}
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Collect currency packs in a radius around the scout
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::RadiusCurrencyCollectionCheck( void )
-{
-	if ( m_pOuter->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS && TFGameRules()->IsMannVsMachineMode() )
-		return;
-
-	if ( !m_pOuter->IsAlive() )
-		return;
-
-	if ( m_flRadiusCurrencyCollectionTime > gpGlobals->curtime )
-		return;
-	
-	bool bScout = m_pOuter->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT;
-	const int nRadiusSqr = bScout ? 288 * 288 : 72 * 72;
-	Vector vecPos = m_pOuter->GetAbsOrigin();
-
-	// NDebugOverlay::Sphere( vecPos, nRadius, 0, 255, 0, 40, 5 );
-
-	for ( int i = 0; i < ICurrencyPackAutoList::AutoList().Count(); ++i )
-	{
-		CCurrencyPack *pCurrencyPack = static_cast< CCurrencyPack* >( ICurrencyPackAutoList::AutoList()[i] );
-		if ( !pCurrencyPack )
-			continue;
-
-		if ( !pCurrencyPack->AffectedByRadiusCollection() )
-			continue;
-
-		if ( ( vecPos - pCurrencyPack->GetAbsOrigin() ).LengthSqr() > nRadiusSqr )
-			continue;
-
-		if ( pCurrencyPack->IsClaimed() )
-			continue;
-
-		if ( m_pOuter->FVisible( pCurrencyPack, MASK_OPAQUE ) == false )
-			continue;
-
-		if ( !pCurrencyPack->ValidTouch( m_pOuter ) )
-			continue;
-
-		// Currencypack's seek classes with a large collection radius
-		if ( bScout )
-		{
-			bool bFound = false;
-			FOR_EACH_VEC( m_CurrencyPacks, i )
-			{
-				pulledcurrencypacks_t packinfo = m_CurrencyPacks[i];
-				if ( packinfo.hPack == pCurrencyPack )
-					bFound = true;
-			}
-
-			if ( !bFound )
-			{
-				// Mark as claimed to prevent other players from grabbing
-				pCurrencyPack->SetClaimed();
-				pulledcurrencypacks_t packinfo;
-				packinfo.hPack = pCurrencyPack;
-				packinfo.flTime = gpGlobals->curtime + 1.f;
-				m_CurrencyPacks.AddToTail( packinfo );
-			}
-		}
-		else
-		{
-			pCurrencyPack->Touch( m_pOuter );
-		}
-	}
-
-	FOR_EACH_VEC_BACK( m_CurrencyPacks, i )
-	{
-		if ( m_CurrencyPacks[i].hPack )
-		{
-			// If the timeout hits, force a touch
-			if ( m_CurrencyPacks[i].flTime <= gpGlobals->curtime )
-			{
-				m_CurrencyPacks[i].hPack->Touch( m_pOuter );
-			}
-			else
-			{
-				// Seek the player
-				const float flForce = 550.0f;
-
-				Vector vToPlayer = m_pOuter->GetAbsOrigin() - m_CurrencyPacks[i].hPack->GetAbsOrigin();
-
-				vToPlayer.z = 0.0f;
-				vToPlayer.NormalizeInPlace();
-				vToPlayer.z = 0.25f;
-
-				Vector vPush = flForce * vToPlayer;
-
-				m_CurrencyPacks[i].hPack->RemoveFlag( FL_ONGROUND );
-				m_CurrencyPacks[i].hPack->ApplyAbsVelocityImpulse( vPush );
-			}
-		}
-		else
-		{
-			// Automatic clean-up
-			m_CurrencyPacks.Remove( i );
-		}
-	}
-
-	m_flRadiusCurrencyCollectionTime = bScout ? gpGlobals->curtime + 0.15f : gpGlobals->curtime + 0.25f;
-}
 //-----------------------------------------------------------------------------
 // Purpose: Scan for and reveal spies in a radius around the player
 //-----------------------------------------------------------------------------
