@@ -324,17 +324,6 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-class ReliableMsgMvMVictory
-	: public CJobReliableMessageBase < ReliableMsgMvMVictory,
-	                                   CMsgMvMVictory,            k_EMsgGCMvMVictory,
-	                                   CMsgMvMMannUpVictoryReply, k_EMsgGCMvMVictoryReply >
-{
-public:
-	const char *MsgName() { return "MvMVictory"; }
-	void InitDebugString( CUtlString &dbgStr ) { dbgStr.Format( "Lobby %016llx", (unsigned long long) Msg().Body().lobby_id() ); }
-};
-
-//-----------------------------------------------------------------------------
 class ReliableMsgGameServerKickingLobby
 	: public CJobReliableMessageBase < ReliableMsgGameServerKickingLobby,
 	                                   CMsgGameServerKickingLobby,         k_EMsgGCGameServerKickingLobby,
@@ -425,43 +414,6 @@ public:
 	const char *MsgName() { return "MatchResult"; }
 	void InitDebugString( CUtlString &dbgStr ) { dbgStr.Format( "Match %016llx", (unsigned long long) Msg().Body().match_id() ); }
 };
-
-//-----------------------------------------------------------------------------
-// CMvMVictoryInfo
-//-----------------------------------------------------------------------------
-void CMvMVictoryInfo::Init ( CTFGSLobby *pLobby )
-{
-	if ( !pLobby )
-	{
-		MMLog( "CTFGCServerSystem::MvMVictory() -- no lobby, so not sending results to GC\n" );
-		return;
-	}
-
-	m_nLobbyId = pLobby->GetGroupID();
-	m_sChallengeName = pLobby->GetMissionName();
-#ifdef USE_MVM_TOUR
-	if ( IsMannUpGroup( pLobby->GetMatchGroup() ) )
-	{
-		const char *pszTourName = pLobby->GetMannUpTourName();
-		Assert( pszTourName );
-		m_sMannUpTourOfDuty = pszTourName;
-	}
-#endif // USE_MVM_TOUR
-	m_tEventTime = CRTime::RTime32TimeCur();
-
-	m_vPlayerIds.RemoveAll();
-	m_vSquadSurplus.RemoveAll();
-
-	for ( auto idxMember : pLobby->GatherMatchPlayers() )
-	{
-		ConstTFLobbyPlayer member = pLobby->GatherMatchPlayers().GetDetails( idxMember );
-		if ( member.BMatchPlayer() )
-		{
-			m_vPlayerIds.AddToTail( member.GetSteamID().ConvertToUint64() );
-			m_vSquadSurplus.AddToTail( member.GetSquadSurplus() );
-		}
-	}
-}
 
 //-----------------------------------------------------------------------------
 // CCompetitiveMatchInfo
@@ -3553,50 +3505,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 
 // ***************************************************************************************************************
-void CTFGCServerSystem::SendMvMVictoryResult()
-{
-	// Note that we don't have to have an *ended* match -- MvM code technically allows players to continue in the same
-	// match and achieve multiple victories.
-	Assert( m_pMatchInfo );
-
-	CTFGSLobby *pLobby = GetLobby();
-	if ( !pLobby )
-	{
-		// FIXME - We should be able to submit this even if the GC reboots and loses our lobby state (though it wont
-		// happen that often, as the GC tries to revive lobby state from memcached)
-		MMLog( "CTFGCServerSystem::MvMVictory() -- no lobby, so not sending results to GC\n" );
-		return;
-	}
-
-	if ( IsMannUpGroup( pLobby->GetMatchGroup() ) )
-	{
-		m_mvmVictoryInfo.Init( pLobby );
-
-		ReliableMsgMvMVictory *pReliable = new ReliableMsgMvMVictory;
-
-		auto &msg = pReliable->Msg().Body();
-
-		msg.set_mission_name( m_mvmVictoryInfo.m_sChallengeName );
-#ifdef USE_MVM_TOUR
-		if ( !m_mvmVictoryInfo.m_sMannUpTourOfDuty.IsEmpty() )
-		{
-			msg.set_tour_name_mannup( m_mvmVictoryInfo.m_sMannUpTourOfDuty );
-		}
-#endif // USE_MVM_TOUR
-		msg.set_lobby_id( m_mvmVictoryInfo.m_nLobbyId );
-		msg.set_event_time( m_mvmVictoryInfo.m_tEventTime );
-
-		FOR_EACH_VEC( m_mvmVictoryInfo.m_vPlayerIds, iMember )
-		{
-			CMsgMvMVictory_Player *pMsgPlayer = msg.add_players();
-			pMsgPlayer->set_steam_id( m_mvmVictoryInfo.m_vPlayerIds[ iMember ]);
-			pMsgPlayer->set_squad_surplus( m_mvmVictoryInfo.m_vSquadSurplus[ iMember ] );
-		}
-
-		ReliableMsgQueue().Enqueue( pReliable );
-	}
-}
-
 ////-----------------------------------------------------------------------------
 //// Purpose: Job for being told when the server GC connection is established
 ////-----------------------------------------------------------------------------

@@ -103,7 +103,6 @@ void RegisterUserMessages()
 	usermessages->Register( "MVMWaveFailed", 0 );
 	usermessages->Register( "MVMAnnouncement", 2 );	// Send an enumerated message
 	usermessages->Register( "MVMPlayerUpgradedEvent", 9 );	// PlayerIdx(1), WaveIdx(1), ItemDef(2), AttributeDef(2), Quality(1), cost(2)
-	usermessages->Register( "MVMVictory", 2 );	// IsKicking(1), time(1) (seconds)
 	usermessages->Register( "MVMWaveChange", 15 ); // ServerWaveID(2), deaths(1), damageBot(4), damageGiant(4), damageTank(4)
 	usermessages->Register( "MVMLocalPlayerUpgradesClear", 1 );	// Count(1)
 	usermessages->Register( "MVMLocalPlayerUpgradesValue", 6 );	// Class(1), ItemDef(2), Upgrade(1), cost(2)
