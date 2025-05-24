@@ -2277,11 +2277,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 								HandleRageGain( m_pOuter, kRageBuffFlag_OnMedicHealingReceived, flHealAmount / 2.f, 1.0f );
 								
 								float flRage = flHealAmount;
-								if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
-									 TFObjectiveResource() && TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-								{
-									flRage = Max( flHealAmount, 10.f );
-								}
 								HandleRageGain( pHealScorer, kRageBuffFlag_OnHeal, flRage, 1.0f );
 
 								// If it's been one second, or we know healing beyond this point will be overheal, generate an event
@@ -9531,14 +9526,6 @@ bool CTFPlayerShared::ShouldSuppressPrediction( void )
 //-----------------------------------------------------------------------------
 int CTFPlayerShared::CalculateObjectCost( CTFPlayer* pBuilder, int iObjectType )
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( TFGameRules()->InSetup() || TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-		{
-			return 0;
-		}
-	}
-
 	int nCost = InternalCalculateObjectCost( iObjectType );
 
 	// Mini sentires are 30 metal cheaper

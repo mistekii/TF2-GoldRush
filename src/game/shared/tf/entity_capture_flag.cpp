@@ -490,14 +490,6 @@ void CCaptureFlag::Spawn( void )
 
 	m_bCaptured = false;
 
-	// update the objective resource so clients have the information
-	if ( TFObjectiveResource() )
-	{
-		TFObjectiveResource()->SetFlagCarrierUpgradeLevel( 0 );
-		TFObjectiveResource()->SetBaseMvMBombUpgradeTime( -1 );
-		TFObjectiveResource()->SetNextMvMBombUpgradeTime( -1 );
-	}
-
 	const char* tags = STRING( m_iszTags );
 	CSplitString splitTags( tags, " " );
 	for ( int i=0; i<splitTags.Count(); ++i )
@@ -688,14 +680,6 @@ void CCaptureFlag::Reset( void )
 	}
 
 	SetMoveType( MOVETYPE_NONE );
-
-	// update the objective resource so clients have the information
-	if ( TFObjectiveResource() )
-	{
-		TFObjectiveResource()->SetFlagCarrierUpgradeLevel( 0 );
-		TFObjectiveResource()->SetBaseMvMBombUpgradeTime( -1 );
-		TFObjectiveResource()->SetNextMvMBombUpgradeTime( -1 );
-	}
 #endif 
 }
 
@@ -1155,40 +1139,6 @@ void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 	StartFlagTrail();
 
 	HandleFlagPickedUpInDetectionZone( pPlayer );
-
-	// update the objective resource so clients have the information
-	if ( TFObjectiveResource() )
-	{
-		TFObjectiveResource()->SetFlagCarrierUpgradeLevel( 0 );
-		TFObjectiveResource()->SetBaseMvMBombUpgradeTime( -1 );
-		TFObjectiveResource()->SetNextMvMBombUpgradeTime( -1 );
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( nOldFlagStatus == TF_FLAGINFO_HOME )
-		{
-			if ( pPlayer->IsMiniBoss() )
-			{
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_GIANT_HAS_BOMB, TF_TEAM_PVE_DEFENDERS );
-			}
-			else
-			{
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_FIRST_BOMB_PICKUP, TF_TEAM_PVE_DEFENDERS );
-			}
-		}
-		else
-		{
-			if ( pPlayer->IsMiniBoss() )
-			{
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_GIANT_HAS_BOMB, TF_TEAM_PVE_DEFENDERS );
-			}
-			else
-			{
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_BOMB_PICKUP, TF_TEAM_PVE_DEFENDERS );
-			}
-		}
-	}
 
 #endif
 }
@@ -1739,14 +1689,6 @@ void CCaptureFlag::Drop( CTFPlayer *pPlayer, bool bVisible,  bool bThrown /*= fa
 	}
 
 	HandleFlagDroppedInDetectionZone( pPlayer );
-
-	// update the objective resource so clients have the information
-	if ( TFObjectiveResource() )
-	{
-		TFObjectiveResource()->SetFlagCarrierUpgradeLevel( 0 );
-		TFObjectiveResource()->SetBaseMvMBombUpgradeTime( -1 );
-		TFObjectiveResource()->SetNextMvMBombUpgradeTime( -1 );
-	}
 
 	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
 	{

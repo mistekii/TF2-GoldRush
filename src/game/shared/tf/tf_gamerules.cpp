@@ -1831,7 +1831,7 @@ int	CTFGameRules::Damage_GetShouldNotBleed( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsQuickBuildTime( void )
 {
-	return IsMannVsMachineMode() && ( InSetup() || TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() );
+	return false;
 }
 
 //-----------------------------------------------------------------------------

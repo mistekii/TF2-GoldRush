@@ -30,49 +30,6 @@ public:
 	const char		*GetGameSpecificCPBarFG( int index, int iOwningTeam );
 	const char		*GetGameSpecificCPBarBG( int index, int iCappingTeam );
 	void			SetCappingTeam( int index, int team );
-	
-	int				GetMannVsMachineMaxWaveCount( void ) { return m_nMannVsMachineMaxWaveCount; }
-	int				GetMannVsMachineWaveCount( void ) { return m_nMannVsMachineWaveCount; }
-	int				GetMannVsMachineWaveEnemyCount( void ) { return m_nMannVsMachineWaveEnemyCount; }
-	int				GetMvMInWorldMoney( void ) { return m_nMvMWorldMoney; }
-
-	float			GetMannVsMachineNextWaveTime( void ) { return m_flMannVsMachineNextWaveTime; }
-	bool			GetMannVsMachineIsBetweenWaves( void ) { return m_bMannVsMachineBetweenWaves; }
-
-	int				GetMannVsMachineWaveClassCount( int nIndex );
-	const char		*GetMannVsMachineWaveClassName( int nIndex );
-	unsigned int	GetMannVsMachineWaveClassFlags( int nIndex );
-	bool			GetMannVsMachineWaveClassActive( int nIndex );
-
-	int				GetFlagCarrierUpgradeLevel( void ) { return m_nFlagCarrierUpgradeLevel; }
-	float			GetBaseMvMBombUpgradeTime( void ) { return m_flMvMBaseBombUpgradeTime; }
-	float			GetNextMvMBombUpgradeTime( void ) { return m_flMvMNextBombUpgradeTime; }
-
-	int				GetMvMChallengeIndex ( void ) { return m_iChallengeIndex; }	
-
-private:
-	int		m_nMannVsMachineMaxWaveCount;
-	int		m_nMannVsMachineWaveCount;
-	int		m_nMannVsMachineWaveEnemyCount;
-	
-	int		m_nMvMWorldMoney;
-
-	float	m_flMannVsMachineNextWaveTime;
-	bool	m_bMannVsMachineBetweenWaves;
-	
-	int		m_nFlagCarrierUpgradeLevel;
-	float	m_flMvMBaseBombUpgradeTime;
-	float	m_flMvMNextBombUpgradeTime;
-
-	int			m_nMannVsMachineWaveClassCounts[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
-	int			m_nMannVsMachineWaveClassCounts2[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
-	char		m_iszMannVsMachineWaveClassNames[ MVM_CLASS_TYPES_PER_WAVE_MAX ][ 64 ];
-	char		m_iszMannVsMachineWaveClassNames2[ MVM_CLASS_TYPES_PER_WAVE_MAX ][ 64 ];
-	int			m_iChallengeIndex;
-	unsigned int m_nMannVsMachineWaveClassFlags[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
-	unsigned int m_nMannVsMachineWaveClassFlags2[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
-	bool		m_bMannVsMachineWaveClassActive[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
-	bool		m_bMannVsMachineWaveClassActive2[ MVM_CLASS_TYPES_PER_WAVE_MAX ];
 };
 
 inline C_TFObjectiveResource *TFObjectiveResource()

@@ -257,11 +257,6 @@ void CObjectTeleporter::Spawn()
 //-----------------------------------------------------------------------------
 void CObjectTeleporter::UpdateOnRemove()
 {
-	if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		TFObjectiveResource()->DecrementTeleporterCount();
-	}
-
 	BaseClass::UpdateOnRemove();
 }
 
@@ -1150,11 +1145,6 @@ void CObjectTeleporter::TeleporterThink( void )
 void CObjectTeleporter::FinishedBuilding( void )
 {
 	BaseClass::FinishedBuilding();
-
-	if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		TFObjectiveResource()->IncrementTeleporterCount();
-	}
 
 	SetActivity( ACT_OBJ_RUNNING );
 	SetPlaybackRate( 0.0f );

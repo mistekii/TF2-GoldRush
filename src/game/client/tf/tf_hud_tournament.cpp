@@ -161,67 +161,11 @@ void CHudTournament::PlaySounds( int nTime )
 		}
 		case 10:
 		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( TFObjectiveResource()->GetMannVsMachineWaveCount() >= TFObjectiveResource()->GetMannVsMachineMaxWaveCount() )
-				{
-					pLocalPlayer->EmitSound( "Announcer.MVM_Final_Wave_Start" );
-				}
-				else if ( TFObjectiveResource()->GetMannVsMachineWaveCount() <= 1 )
-				{
-					if ( GTFGCClientSystem()->GetLobby() && IsMannUpGroup( GTFGCClientSystem()->GetLobby()->GetMatchGroup() ) )
-					{
-						pLocalPlayer->EmitSound( "Announcer.MVM_Manned_Up" );
-					}
-					else
-					{
-						pLocalPlayer->EmitSound( "Announcer.MVM_First_Wave_Start" );
-					}
-				}
-				else
-				{
-					pLocalPlayer->EmitSound( "Announcer.MVM_Wave_Start" );
-				}
-			}
-			else
-			{
-				pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGame1Begins10Seconds" : "Announcer.RoundBegins10Seconds" );
-			}
+			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGame1Begins10Seconds" : "Announcer.RoundBegins10Seconds" );
 			break;
 		}
 		case 9:
 		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				int nMaxWaves = TFObjectiveResource()->GetMannVsMachineMaxWaveCount();
-				int nCurWave = TFObjectiveResource()->GetMannVsMachineWaveCount();
-				bool bHasTank = false;
-				for ( int i = 0; i < MVM_CLASS_TYPES_PER_WAVE_MAX_NEW; ++i )
-				{
-	// 				int nClassCount = TFObjectiveResource()->GetMannVsMachineWaveClassCount( i );
- 					const char *pchClassIconName = TFObjectiveResource()->GetMannVsMachineWaveClassName( i );
-					if( V_stristr( pchClassIconName, "tank" ))
-					{
-						bHasTank = true;
-					}
-				}
-				if( nCurWave == nMaxWaves )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_last_wave" );	
-				}
-				else if( bHasTank )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_tank_wave" );
-				}
-				else if( nCurWave > ( nMaxWaves / 2 ) )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_mid_wave" );	
-				}
-				else
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_wave" );
-				}
-			}
 			break;
 		}
 		case 5:

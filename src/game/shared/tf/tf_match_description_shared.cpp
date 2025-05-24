@@ -21,7 +21,6 @@
 #ifdef GAME_DLL
 #include "tf_lobby_server.h"
 #include "tf_gc_server.h"
-#include "tf_objective_resource.h"
 #include "team_control_point_master.h"
 #endif
 

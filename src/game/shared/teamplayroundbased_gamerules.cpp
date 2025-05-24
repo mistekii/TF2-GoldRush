@@ -1545,11 +1545,6 @@ void CTeamplayRoundBasedRules::State_Enter_PREROUND( void )
 		State_Transition( GR_STATE_BETWEEN_RNDS );
 		m_bAllowBetweenRounds = false;
 
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			TFObjectiveResource()->SetMannVsMachineBetweenWaves( true );
-		}
-
 		StopWatchModeThink();
 		return;
 	}

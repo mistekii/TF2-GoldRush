@@ -16,7 +16,6 @@
 #include "tf_gamestats.h"
 
 #include "tf_gcmessages.h"
-#include "tf_objective_resource.h"
 #include "gc_clientsystem.h"
 #include "tf_gc_server.h"
 #include "player_resource.h"
