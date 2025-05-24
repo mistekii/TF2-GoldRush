@@ -11,7 +11,6 @@
 #include "bot/behavior/missions/tf_bot_mission_suicide_bomber.h"
 #include "particle_parse.h"
 #include "tf_obj_sentrygun.h"
-#include "player_vs_environment/tf_populators.h"
 
 extern ConVar tf_bot_path_lookahead_range;
 
@@ -376,16 +375,6 @@ void CTFBotMissionSuicideBomber::Detonate( CTFBot *me )
 	if ( me->IsAlive() )
 	{
 		me->ForceChangeTeam( TEAM_SPECTATOR );
-	}
-
-	if ( m_bWasKilled )
-	{
-		// increment num sentry killed this wave
-		CWave *pWave = g_pPopulationManager ? g_pPopulationManager->GetCurrentWave() : NULL;
-		if ( pWave )
-		{
-			pWave->IncrementSentryBustersKilled();
-		}
 	}
 }
 

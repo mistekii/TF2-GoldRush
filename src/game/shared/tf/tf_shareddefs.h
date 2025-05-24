@@ -111,14 +111,6 @@ inline bool BAreTeamsEnemies( int team, int otherTeam )
 	return BIsGameTeam( team ) && BIsGameTeam( otherTeam ) && team != otherTeam;
 }
 
-enum 
-{
-	MVM_EVENT_POPFILE_NONE = 0,
-	MVM_EVENT_POPFILE_HALLOWEEN,
-
-	MVM_EVENT_POPFILE_MAX_TYPES,
-};
-
 enum
 {
 	DRAW_ARROW_UP,

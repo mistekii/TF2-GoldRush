@@ -7,7 +7,6 @@
 #include "cbase.h"
 #include "tf_objective_resource.h"
 #include "shareddefs.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include <coordsize.h>
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -26,9 +25,7 @@ IMPLEMENT_SERVERCLASS_ST( CTFObjectiveResource, DT_TFObjectiveResource )
 	SendPropInt( SENDINFO(m_nFlagCarrierUpgradeLevel), 4, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flMvMBaseBombUpgradeTime ) ),
 	SendPropFloat( SENDINFO( m_flMvMNextBombUpgradeTime ) ),
-	SendPropStringT ( SENDINFO( m_iszMvMPopfileName ) ),
 	SendPropInt( SENDINFO(m_iChallengeIndex), 16 ),
-	SendPropInt( SENDINFO(m_nMvMEventPopfileType), 4, SPROP_UNSIGNED ),
 
 	SendPropArray3( SENDINFO_ARRAY3( m_nMannVsMachineWaveClassCounts ), SendPropInt( SENDINFO_ARRAY( m_nMannVsMachineWaveClassCounts ), 16 ) ),
 	SendPropArray( SendPropString( SENDINFO_ARRAY( m_iszMannVsMachineWaveClassNames ), 0, SendProxy_StringT_To_String ), m_iszMannVsMachineWaveClassNames ),
@@ -81,8 +78,6 @@ CTFObjectiveResource::CTFObjectiveResource()
 	m_flMvMBaseBombUpgradeTime = 0;
 	m_flMvMNextBombUpgradeTime = 0;
 	m_iChallengeIndex = -1;
-	SetMvMPopfileName( MAKE_STRING( "" ) );
-	m_nMvMEventPopfileType.Set( MVM_EVENT_POPFILE_NONE );
 
 	int i = 0;
 	for ( i = 0 ; i < m_nMannVsMachineWaveClassCounts.Count() ; ++i )

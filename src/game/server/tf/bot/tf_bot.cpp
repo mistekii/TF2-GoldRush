@@ -31,8 +31,6 @@
 
 #include "econ_entity_creation.h"
 
-#include "player_vs_environment/tf_population_manager.h"
-
 #include "bot/behavior/tf_bot_behavior.h"
 #include "bot/map_entities/tf_bot_generator.h"
 #include "bot/map_entities/tf_bot_hint_entity.h"
@@ -71,10 +69,7 @@ extern ConVar tf_bot_difficulty;
 extern ConVar tf_bot_farthest_visible_theater_sample_count;
 extern ConVar tf_bot_sniper_spot_min_range;
 extern ConVar tf_bot_sniper_spot_epsilon;
-extern ConVar tf_mvm_miniboss_min_health;
 extern ConVar tf_bot_path_lookahead_range;
-
-extern ConVar tf_mvm_miniboss_scale;
 
 
 //-----------------------------------------------------------------------------------------------------
@@ -1529,12 +1524,6 @@ void CTFBot::ChangeTeam( int iTeamNum, bool bAutoTeam, bool bSilent, bool bAutoB
 //-----------------------------------------------------------------------------------------------------
 bool CTFBot::ShouldGib( const CTakeDamageInfo &info )
 {
-	// only gib giant/miniboss
-	if ( TFGameRules()->IsMannVsMachineMode() && ( IsMiniBoss() || GetModelScale() > 1.f ) )
-	{
-		return true;
-	}
-
 	return BaseClass::ShouldGib( info );
 }
 
@@ -1584,12 +1573,6 @@ void CTFBot::ModifyMaxHealth( int nNewMaxHealth, bool bSetCurrentHealth /*= true
 	if ( bSetCurrentHealth )
 	{
 		SetHealth( nNewMaxHealth );
-	}
-
-	if ( bAllowModelScaling && IsMiniBoss() )
-	{
-		SetModelScale( m_fModelScaleOverride > 0.0f ? m_fModelScaleOverride : tf_mvm_miniboss_scale.GetFloat() );
-		SetViewOffset( GetClassEyeHeight() );
 	}
 }
 

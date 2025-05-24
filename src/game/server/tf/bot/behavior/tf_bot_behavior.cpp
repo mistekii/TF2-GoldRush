@@ -27,7 +27,6 @@
 #include "bot/behavior/tf_bot_tactical_monitor.h"
 #include "bot/behavior/tf_bot_taunt.h"
 #include "bot/behavior/scenario/creep_wave/tf_bot_creep_wave.h"
-#include "player_vs_environment/tf_population_manager.h"
 
 
 extern ConVar tf_bot_health_ok_ratio;
@@ -1172,19 +1171,6 @@ const CKnownEntity *CTFBotMainAction::SelectMoreDangerousThreatInternal( const I
 //---------------------------------------------------------------------------------------------
 QueryResultType CTFBotMainAction::ShouldAttack( const INextBot *meBot, const CKnownEntity *them ) const
 {
-	if ( g_pPopulationManager )
-	{
-		// if I'm in my spawn room, obey the population manager's attack restrictions
-		CTFBot *me = ToTFBot( meBot->GetEntity() );
-		CTFNavArea *myArea = me->GetLastKnownArea();
-		int spawnRoomFlag = me->GetTeamNumber() == TF_TEAM_RED ? TF_NAV_SPAWN_ROOM_RED : TF_NAV_SPAWN_ROOM_BLUE;
-
-		if ( myArea && myArea->HasAttributeTF( spawnRoomFlag ) )
-		{
-			return g_pPopulationManager->CanBotsAttackWhileInSpawnRoom() ? ANSWER_YES : ANSWER_NO;
-		}
-	}
-
 	return ANSWER_YES;
 }
 
@@ -1192,23 +1178,6 @@ QueryResultType CTFBotMainAction::ShouldAttack( const INextBot *meBot, const CKn
 //---------------------------------------------------------------------------------------------
 QueryResultType	CTFBotMainAction::ShouldHurry( const INextBot *meBot ) const
 {
-	if ( g_pPopulationManager )
-	{
-		// if I'm in my spawn room, obey the population manager's attack restrictions
-		CTFBot *me = ToTFBot( meBot->GetEntity() );
-		CTFNavArea *myArea = me->GetLastKnownArea();
-		int spawnRoomFlag = me->GetTeamNumber() == TF_TEAM_RED ? TF_NAV_SPAWN_ROOM_RED : TF_NAV_SPAWN_ROOM_BLUE;
-
-		if ( myArea && myArea->HasAttributeTF( spawnRoomFlag ) )
-		{
-			if ( !g_pPopulationManager->CanBotsAttackWhileInSpawnRoom() )
-			{
-				// hurry to leave the spawn
-				return ANSWER_YES;
-			}
-		}
-	}
-
 	return ANSWER_UNDEFINED;
 }
 

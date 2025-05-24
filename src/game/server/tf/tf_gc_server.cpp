@@ -21,7 +21,6 @@
 #include "tf_objective_resource.h"
 #include "tf_player.h"
 #include "tf_voteissues.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "player_resource.h"
 #include "tf_player_resource.h"
 #include "tf_gamestats.h"
@@ -3302,16 +3301,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		sGameServerInfoMap = STRING( gpGlobals->mapname );
 		sGameServerInfoTags = sv_tags.GetString();
 		sGameServerInfoTags.Clear();
-
-		// Set the "map" to the current challenge, if in MvM
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			const char *pszFilenameShort = g_pPopulationManager ? g_pPopulationManager->GetPopulationFilenameShort() : NULL;
-			if ( pszFilenameShort && pszFilenameShort[0] )
-			{
-				sGameServerInfoMap = pszFilenameShort;
-			}
-		}
 
 		// Determine state
 		if ( !m_pMatchInfo && !pLobby )

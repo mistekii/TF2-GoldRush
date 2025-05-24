@@ -61,10 +61,6 @@ public:
 	
 	void SetMannVsMachineChallengeIndex( int iIndex ) { m_iChallengeIndex = iIndex; }
 	int	 GetMannVsMachineChallengeIndex( void ) { return m_iChallengeIndex; }
-	void SetMvMPopfileName( string_t iszMvMPopfileName ) { m_iszMvMPopfileName = iszMvMPopfileName; }
-	string_t GetMvMPopfileName( void ) const { return m_iszMvMPopfileName.Get(); }
-
-	void SetMannVsMachineEventPopfileType( int nType ){ m_nMvMEventPopfileType.Set( nType ); }
 
 	string_t GetTeleporterString() const { return m_teleporterString; }
 
@@ -92,8 +88,6 @@ private:
 	CNetworkVar( float, m_flMvMNextBombUpgradeTime );
 
 	CNetworkVar( int, m_iChallengeIndex );
-	CNetworkVar( string_t, m_iszMvMPopfileName ) ;
-	CNetworkVar( int, m_nMvMEventPopfileType );
 
 	string_t m_teleporterString;
 };

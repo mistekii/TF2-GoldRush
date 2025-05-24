@@ -37,7 +37,7 @@ extern ConVar tf_rd_flag_ui_mode;
 #include "func_respawnflag.h"
 #include "func_capture_zone.h"
 #include "nav_mesh/tf_nav_mesh.h"
-#include "player_vs_environment/tf_population_manager.h"
+#include "bot/tf_bot.h"
 #include "tf_logic_halloween_2014.h"
 extern ConVar tf_flag_caps_per_round;
 extern ConVar tf_mvm_endless_bomb_reset;
@@ -949,16 +949,6 @@ void CCaptureFlag::PickUp( CTFPlayer *pPlayer, bool bInvisible )
 		{
 			return;
 		}
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && pPlayer->IsBot() )
-	{
-		CTFBot *pBot = assert_cast< CTFBot* >( pPlayer );
-
-		if ( pBot->HasAttribute( CTFBot::IGNORE_FLAG ) )
-			return;
-
-		pBot->SetFlagTarget( this );
 	}
 #endif
 
@@ -1921,20 +1911,6 @@ void CCaptureFlag::Think( void )
 			if ( m_flOwnerPickupTime && gpGlobals->curtime > m_flOwnerPickupTime )
 			{
 				m_bAllowOwnerPickup = true;
-			}
-		}
-
-		if ( TFGameRules()->IsMannVsMachineMode() && m_bReturnBetweenWaves )
-		{
-			if ( TFGameRules()->InSetup() || ( TFObjectiveResource() && TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() ) )
-			{
-				Reset();
-			}
-			else if ( g_pPopulationManager && g_pPopulationManager->IsInEndlessWaves() && g_pPopulationManager->EndlessShouldResetFlag() )
-			{
-				Reset();
-				g_pPopulationManager->EndlessFlagHasReset();
-				ResetMessage();
 			}
 		}
 		

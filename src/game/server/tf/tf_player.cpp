@@ -114,7 +114,6 @@
 #include "raid/tf_raid_logic.h"
 #endif
 
-#include "player_vs_environment/tf_population_manager.h"
 #include "tf_logic_halloween_2014.h"
 #include "func_croc.h"
 #include "tf_weapon_bonesaw.h"
@@ -193,7 +192,6 @@ ConVar tf_deploying_bomb_time( "tf_deploying_bomb_time", "1.90", FCVAR_CHEAT | F
 ConVar tf_deploying_bomb_delay_time( "tf_deploying_bomb_delay_time", "0.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to delay before deploying bomb." );
 
 ConVar tf_mvm_death_penalty( "tf_mvm_death_penalty", "0", FCVAR_NOTIFY | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How much currency players lose when dying" );
-extern ConVar tf_populator_damage_multiplier;
 extern ConVar tf_mvm_skill;
 
 ConVar tf_highfive_separation_forward( "tf_highfive_separation_forward", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Forward distance between high five partners" );
@@ -6449,56 +6447,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		// We changed taunt key to be press to toggle instead of press and hold to do long taunt
 		return true;
 	}
-	else if ( FStrEq( pcmd, "td_buyback" ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsPVEModeActive() && IsObserver() && ( GetTeamNumber() > TEAM_SPECTATOR ) && IsValidTFPlayerClass( GetPlayerClass()->GetClassIndex() ) )
-		{
-			// Make sure we're not still in freezecam
-			int iObsMode = GetObserverMode();
-			if ( iObsMode == OBS_MODE_FREEZECAM || iObsMode == OBS_MODE_DEATHCAM )
-				return true;
-
-			float flWaveTime = TFGameRules()->GetNextRespawnWave( GetTeamNumber(), this );
-
-			bool bSuccess = false;
-			int iRespawnWait = (flWaveTime - gpGlobals->curtime);
-			int iCost = iRespawnWait * MVM_BUYBACK_COST_PER_SEC;
-
-			if ( iCost <= 0 )
-				return true;
-
-			// New system (finite buybacks per-wave, not currency-based)
-			if ( tf_mvm_buybacks_method.GetBool() )
-			{
-				if ( g_pPopulationManager->GetNumBuybackCreditsForPlayer( this ) )
-				{
-					bSuccess = true;
-					iCost = 1;
-					g_pPopulationManager->RemoveBuybackCreditFromPlayer( this );
-				}
-			}
-
-			if ( bSuccess )
-			{
-				ForceRespawn();
-				IGameEvent *event = gameeventmanager->CreateEvent( "player_buyback" );
-				if ( event )
-				{
-					event->SetInt( "player", entindex() );
-					event->SetInt( "cost", iCost );
-					gameeventmanager->FireEvent( event );
-				}
-			}
-			else
-			{
-				CSingleUserRecipientFilter filter( this );
-				EmitSound_t params;
-				params.m_pSoundName = "Player.DenyWeaponSelection";
-				EmitSound( filter, entindex(), params );
-			}
-		}
-		return true;
-	}
 	else if ( FStrEq( pcmd, "build" ) )
 	{
 		if ( ShouldRunRateLimitedCommand( args ) )
@@ -6801,40 +6749,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 			EmitSound( "Halloween.GhostBoo" );
 		}
 
-		return true;
-	}
-	else if ( FStrEq( pcmd, "loot_response" ) )
-	{
-		// Only allowed to speak these during post-game MvM
-		if (   !TFGameRules() 
-			|| !TFGameRules()->IsMannVsMachineMode()
-			|| !( TFGameRules()->State_Get() == GR_STATE_GAME_OVER ) )
-		{
-			return true;
-		}
-
-		if ( FStrEq( args[1], "common" ) )
-		{
-			SpeakConceptIfAllowed( MP_CONCEPT_MVM_LOOT_COMMON );
-			return true;
-		}
-		else if ( FStrEq( args[1], "rare" ) )
-		{
-			SpeakConceptIfAllowed( MP_CONCEPT_MVM_LOOT_RARE );
-			return true;
-		}
-		else if ( FStrEq( args[1], "ultra_rare" ) )
-		{
-			SpeakConceptIfAllowed( MP_CONCEPT_MVM_LOOT_ULTRARARE );
-			return true;
-		}
-	}
-	else if ( FStrEq( pcmd, "done_viewing_loot" ) )
-	{
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && g_pPopulationManager )
-		{
-			g_pPopulationManager->PlayerDoneViewingLoot( this );
-		}
 		return true;
 	}
 	else if ( FStrEq( pcmd, "spectate" ) )
@@ -10401,39 +10315,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) )
 	{
 		SetPendingMerasmusPlayerBombExplode();
-	}
-
-	// check for MvM achievements
-	if ( TFGameRules()->IsMannVsMachineMode() && IsBot() )
-	{
-		if ( pPlayerAttacker && ( pPlayerAttacker->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) )
-		{
-			if ( FStrEq( "mvm_mannhattan", STRING( gpGlobals->mapname ) ) )
-			{
-				CTFBot *pBot = dynamic_cast< CTFBot* >( this );
-				if ( pBot )
-				{
-					// kill gate bots
-					if ( pBot->HasTag( "bot_gatebot" ) )
-					{
-						pPlayerAttacker->AwardAchievement( ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_BOMB_BOT_GRIND );
-					}
-				}
-
-				// kill stunned bots
-				if ( m_Shared.InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
-				{
-					if ( g_pPopulationManager->IsAdvancedPopFile() )
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent( "mvm_adv_wave_killed_stun_radio" );
-						if ( event )
-						{
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-			}
-		}
 	}
 
 	// Reset our model if we were disguised

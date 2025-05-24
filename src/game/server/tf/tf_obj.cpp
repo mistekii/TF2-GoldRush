@@ -45,8 +45,6 @@
 #include "tf_weapon_grenade_pipebomb.h"
 #include "tf_weapon_builder.h"
 
-#include "player_vs_environment/tf_population_manager.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 

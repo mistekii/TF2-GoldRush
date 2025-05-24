@@ -809,13 +809,6 @@ $Project "Server (TF)"
 				$File	"tf\player_vs_environment\archer_proxy.h"
 				$File	"tf\player_vs_environment\monster_resource.cpp"
 				$File	"tf\player_vs_environment\monster_resource.h"
-				$File	"tf\player_vs_environment\tf_populators.cpp"
-				$File	"tf\player_vs_environment\tf_populators.h"
-				$File	"tf\player_vs_environment\tf_populator_spawners.cpp"
-				$File	"tf\player_vs_environment\tf_populator_spawners.h"
-				$File	"tf\player_vs_environment\tf_population_manager.cpp"
-				$File	"tf\player_vs_environment\tf_population_manager.h"
-				$File	"tf\player_vs_environment\tf_populator_interface.cpp"
 				$File	"tf\player_vs_environment\tf_point_weapon_mimic.cpp"
 			}
 

@@ -47,11 +47,6 @@
 	#include "hl2orange.spa.h"
 #endif
 
-// TODO Why did we add this to the base class guys.
-#if defined ( TF_DLL ) || defined ( TF_CLIENT_DLL )
-	#include "player_vs_environment/tf_population_manager.h"
-#endif
-
 #endif
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -1442,26 +1437,6 @@ ConVarRef suitcharger( "sk_suitcharger" );
 		}
 
 #if defined ( TF_DLL ) || defined ( TF_CLIENT_DLL )
-		if ( g_pStringTableServerPopFiles )
-		{
-			// Search for all pop files that are prefixed with the current map name
-			CUtlString sFileList;
-
-			CUtlVector< CUtlString > defaultPopFiles;
-			CPopulationManager::FindDefaultPopulationFileShortNames( defaultPopFiles );
-
-			FOR_EACH_VEC( defaultPopFiles, idx )
-			{
-				sFileList += defaultPopFiles[ idx ];
-				sFileList += "\n";
-			}
-
-			if ( sFileList.Length() > 0 )
-			{
-				g_pStringTableServerPopFiles->AddString( CBaseEntity::IsServer(), "ServerPopFiles", sFileList.Length() + 1, sFileList.String() );
-			}
-		}
-
 		if ( g_pStringTableServerMapCycleMvM )
 		{
 			ConVarRef tf_mvm_missioncyclefile( "tf_mvm_missioncyclefile" );

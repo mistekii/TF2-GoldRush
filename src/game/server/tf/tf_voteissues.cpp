@@ -16,7 +16,6 @@
 #include "tf_gamestats.h"
 
 #include "tf_gcmessages.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "tf_objective_resource.h"
 #include "gc_clientsystem.h"
 #include "tf_gc_server.h"
@@ -72,12 +71,6 @@ void CRestartGameIssue::ExecuteCommand( void )
 	if ( sv_vote_issue_restart_game_cooldown.GetInt() )
 	{
 		SetIssueCooldownDuration( sv_vote_issue_restart_game_cooldown.GetFloat() );
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		g_pPopulationManager->ResetMap();
-		return;
 	}
 
 	engine->ServerCommand( "mp_restartgame 1;" );
@@ -766,28 +759,11 @@ bool CChangeLevelIssue::RequestCallVote( int iEntIndex, const char *pszDetails, 
 			return false;
 		}
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			// We can't test if it's valid - deny
-			if ( !g_pPopulationManager )
-			{
-				nFailCode = VOTE_FAILED_GENERIC;
-				return false;
-			}
 
-			if ( !g_pPopulationManager->IsValidMvMMap( pszDetails ) )
-			{
-				nFailCode = VOTE_FAILED_MAP_NOT_VALID;
-				return false;
-			}
-		}
-		else
+		if ( MultiplayRules() && !MultiplayRules()->IsMapInMapCycle( pszDetails ) )
 		{
-			if ( MultiplayRules() && !MultiplayRules()->IsMapInMapCycle( pszDetails ) )
-			{
-				nFailCode = VOTE_FAILED_MAP_NOT_VALID;
-				return false;
-			}
+			nFailCode = VOTE_FAILED_MAP_NOT_VALID;
+			return false;
 		}
 	}
 
@@ -1332,18 +1308,6 @@ bool CMannVsMachineChangeChallengeIssue::RequestCallVote( int iEntIndex, const c
 	{
 		nFailCode = VOTE_FAILED_MAP_NAME_REQUIRED;
 		return false;
-	}
-	else
-	{
-		CUtlString fullPath;
-		if ( !g_pPopulationManager->FindPopulationFileByShortName( pszDetails, fullPath ) ||
-			 // did we fall back to something other than what we asked for?
-			 ( !FStrEq( pszDetails, "normal" ) && !Q_stristr( fullPath, pszDetails ) ) ||
-			 !g_pPopulationManager->IsValidPopfile( fullPath ) )
-		{
-			nFailCode = VOTE_FAILED_INVALID_ARGUMENT;
-			return false;
-		}
 	}
 
 	return true;

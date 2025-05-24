@@ -40,8 +40,6 @@
 	#define CTFGameRulesProxy C_TFGameRulesProxy
 	#define CBonusRoundLogic C_BonusRoundLogic
 #else
-	extern CUtlString s_strNextMvMPopFile;
-
 	extern BOOL no_cease_fire_text;
 	extern BOOL cease_fire;
 
@@ -1338,9 +1336,6 @@ private:
 // MvM Helpers
 #ifdef GAME_DLL
 public:
-	void SetNextMvMPopfile ( const char * next );
-	const char * GetNextMvMPopfile ();
-
 	virtual void BalanceTeams( bool bRequireSwitcheesToBeDead );
 #endif
 };

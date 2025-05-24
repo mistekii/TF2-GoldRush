@@ -13,7 +13,6 @@
 #include <coordsize.h>
 #include "tf_matchmaking_shared.h"
 
-#include "player_vs_environment/tf_population_manager.h"
 #include "tf_gc_server.h"
 
 #define STATS_SEND_FREQUENCY 1.f

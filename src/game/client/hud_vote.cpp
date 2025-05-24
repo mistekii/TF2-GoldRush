@@ -445,20 +445,6 @@ void CVoteSetupDialog::AddVoteIssueParams_MapCycle( CUtlStringList &m_VoteSetupM
 	}
 }
 
-#ifdef TF_CLIENT_DLL
-//-----------------------------------------------------------------------------
-// Purpose: Feeds the server's PopFiles to the parameters dialog
-//-----------------------------------------------------------------------------
-void CVoteSetupDialog::AddVoteIssueParams_PopFiles( CUtlStringList &m_VoteSetupPopFiles )
-{
-	m_VoteIssuesPopFiles.RemoveAll();
-	for ( int index = 0; index < m_VoteSetupPopFiles.Count(); index++ )
-	{
-		m_VoteIssuesPopFiles.AddToTail( m_VoteSetupPopFiles[index] );
-	}
-}
-#endif // TF_CLIENT_DLL
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -605,28 +591,6 @@ void CVoteSetupDialog::OnCommand(const char *command)
 					}
 				}
 			}
-#ifdef TF_CLIENT_DLL
-			else if ( !V_stricmp( "ChangeMission", szIssueRaw ) )
-			{
-				int nSelectedParam = m_pVoteParameterList->GetSelectedItem();
-				if ( nSelectedParam >= 0 )
-				{
-					// Get selected Challenge
-					int iSelectedParam = m_pVoteParameterList->GetSelectedItem();
-					if ( iSelectedParam >= 0 )
-					{
-						KeyValues *pParameterKeyValues = m_pVoteParameterList->GetItemData( iSelectedParam );
-						if ( pParameterKeyValues )
-						{
-							// Which Pop File?
-							const char *szPopFile = pParameterKeyValues->GetString( "Name" );
-							Q_snprintf( szVoteCommand, sizeof( szVoteCommand ), "callvote %s %s\n;", szIssueRaw, szPopFile );
-							engine->ClientCmd( szVoteCommand );
-						}
-					}
-				}
-			}
-#endif	// TF_CLIENT_DLL
 			else
 			{
 				// Non-parameter vote.  i.e.  callvote scrambleteams
@@ -774,55 +738,6 @@ void CVoteSetupDialog::OnItemSelected( vgui::Panel *panel )
 				m_pComboBox->SetVisible( true );
 #endif
 			}
-#ifdef TF_CLIENT_DLL
-			// CHANGE POP FILE
-			else if ( !V_stricmp( "ChangeMission", pszIssueRaw ) )
-			{
-				// Feed the popfiles to the parameters list
-				for ( int index = 0; index < m_VoteIssuesPopFiles.Count(); index++ )
-				{
-					// Don't show the current pop file
-					const char *pszPopFileName = TFObjectiveResource()->GetMvMPopFileName();
-					if ( !pszPopFileName || !pszPopFileName[0] )
-					{
-						// Use the map name
-						char szShortMapName[ MAX_MAP_NAME ];
-						V_strncpy( szShortMapName, engine->GetLevelName(), sizeof( szShortMapName ) );
-						V_StripExtension( szShortMapName, szShortMapName, sizeof( szShortMapName ) );					
-
-						if ( V_strncmp( m_VoteIssuesPopFiles[index], V_GetFileName( szShortMapName ), ( V_strlen( m_VoteIssuesPopFiles[index] ) - 1 ) ) == 0 )
-							continue;
-					}
-					else
-					{
-						// Use the specified pop file
-						if ( V_strncmp( m_VoteIssuesPopFiles[index], TFObjectiveResource()->GetMvMPopFileName(), ( V_strlen( m_VoteIssuesPopFiles[index] ) - 1 ) ) == 0 )
-							continue;
-					}
-
-					KeyValues *pKeyValues = new KeyValues( "Name" );
-					pKeyValues->SetString( "Name", m_VoteIssuesPopFiles[index] );
-					pKeyValues->SetInt( "index", index );
-					int iId = m_pVoteParameterList->AddItem( 0, pKeyValues );
-					pKeyValues->deleteThis();
-
-					if ( m_hIssueFont != INVALID_FONT )
-					{
-						m_pVoteParameterList->SetItemFont( iId, m_hIssueFont );
-						m_pVoteParameterList->SetItemFgColor( iId, m_IssueFGColor );
-					}
-				}
-
-				if ( m_pVoteParameterList->GetItemCount() == 0 )
-				{
-					KeyValues *pKeyValues = new KeyValues( "Name" );
-					pKeyValues->SetString( "Name", "#TF_vote_no_challenges" );
-					pKeyValues->SetInt( "index", 1 );
-					m_pVoteParameterList->AddItem( 0, pKeyValues );
-					pKeyValues->deleteThis();
-				}
-			}
-#endif	// TF_CLIENT_DLL
 			else
 			{
 				// User selected an issue that doesn't require a parameter - Scrambleteams, Restartgame, etc
@@ -1162,10 +1077,6 @@ void CHudVote::PropagateOptionParameters( void )
 		return;
 
 	m_pVoteSetupDialog->AddVoteIssueParams_MapCycle( m_VoteSetupMapCycle );
-
-#ifdef TF_CLIENT_DLL
-	m_pVoteSetupDialog->AddVoteIssueParams_PopFiles( m_VoteSetupPopFiles );
-#endif // TF_CLIENT_DLL
 
 	// Insert future issue param data containers here
 }
@@ -1846,32 +1757,6 @@ void CHudVote::MsgFunc_VoteSetup( bf_read &msg )
 			}
 		}
 	}
-
-#ifdef TF_CLIENT_DLL
-	m_VoteSetupPopFiles.RemoveAll();
-	if ( g_pStringTableServerPopFiles )
-	{
-		int index = g_pStringTableServerPopFiles->FindStringIndex( "ServerPopFiles" );
-		if ( index != ::INVALID_STRING_INDEX )
-		{
-			int nLength = 0;
-			const char *pszPopFiles = (const char *)g_pStringTableServerPopFiles->GetStringUserData( index, &nLength );
-			if ( pszPopFiles && pszPopFiles[0] )
-			{
-				if ( pszPopFiles && nLength )
-				{
-					V_SplitString( pszPopFiles, "\n", m_VoteSetupPopFiles );
-				}
-
-				// Alphabetize
-				if ( m_VoteSetupPopFiles.Count() )
-				{
-					m_VoteSetupPopFiles.Sort( m_VoteSetupPopFiles.SortFunc );
-				}
-			}
-		}
-	}
-#endif // TF_CLIENT_DLL
 
 	// Now send any data we gathered over to the listpanel
 	PropagateOptionParameters();

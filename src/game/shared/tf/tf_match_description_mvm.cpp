@@ -70,11 +70,6 @@ class CMvMMatchGroupDescription : public IMatchGroupDescription
 	{
 		bool bRet = IMatchGroupDescription::InitServerSettingsForMatch( pLobby );
 
-		if ( *pLobby->GetMissionName() != '\0' )
-		{
-			TFGameRules()->SetNextMvMPopfile( pLobby->GetMissionName() );
-		}
-
 		return bRet;
 	}
 

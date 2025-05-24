@@ -89,8 +89,7 @@
 	#include "tf_weapon_knife.h"
 	#include "tf_weapon_jar.h"
 	#include "halloween/tf_weapon_spellbook.h"
-	
-	#include "player_vs_environment/tf_population_manager.h"
+
 	#include "player_vs_environment/monster_resource.h"
 	#include "util_shared.h"
 	#include "gc_clientsystem.h"
@@ -572,7 +571,6 @@ extern ConVar mp_holiday_nogifts;
 extern ConVar tf_debug_damage;
 extern ConVar tf_damage_range;
 extern ConVar tf_damage_disablespread;
-extern ConVar tf_populator_damage_multiplier;
 extern ConVar tf_mm_trusted;
 extern ConVar tf_weapon_criticals;
 extern ConVar tf_weapon_criticals_melee;
@@ -805,61 +803,6 @@ extern ConVar mp_tournament_post_match_period;
 
 extern ConVar tf_flag_return_on_touch;
 extern ConVar tf_flag_return_time_credit_factor;
-
-#ifdef GAME_DLL
-CUtlString s_strNextMvMPopFile;
-CON_COMMAND_F( tf_mvm_popfile, "Change to a target popfile for MvM", FCVAR_GAMEDLL )
-{
-	// Listenserver host or rcon access only!
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-		return;
-
-	if ( args.ArgC() <= 1 )
-	{
-		if ( TFGameRules() && g_pPopulationManager )
-		{
-			const char *pszFile = g_pPopulationManager->GetPopulationFilename();
-			if ( pszFile && pszFile[0] )
-			{
-				Msg( "Current popfile is: %s\n", pszFile );
-				return;
-			}
-		}
-
-		Msg( "Missing Popfile name\n" );
-		return;
-	}
-
-	const char *pszShortName = args.Arg(1);
-
-	if ( !TFGameRules() || !g_pPopulationManager )
-	{
-		Warning( "Cannot set population file before map load.\n" );
-		return;
-	}
-
-	// Make sure we have a file system
-	if ( !g_pFullFileSystem )
-	{
-		Msg( "No File System to find Popfile to load\n" );
-		return;
-	}
-
-	// Form full path
-	CUtlString fullPath;
-
-	if ( g_pPopulationManager->FindPopulationFileByShortName( pszShortName, fullPath ) && g_pPopulationManager->IsValidPopfile( fullPath ) )
-	{
-		g_pPopulationManager->SetPopulationFilename( fullPath );
-		g_pPopulationManager->ResetMap();
-		return;
-	}
-
-	// Give them a message to make it clear what file we were looking for
-	Warning( "Could not find a valid population file matching: %s.\n", pszShortName );
-}
-
-#endif
 
 static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int eHoliday )
 {
@@ -4840,18 +4783,6 @@ void CTFGameRules::SetupOnRoundRunning( void )
 		}
 	}
 
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "mvm_begin_wave" );
-		if ( event )
-		{
-			event->SetInt( "wave_index", g_pPopulationManager->GetWaveNumber() );
-			event->SetInt( "max_waves", g_pPopulationManager->GetTotalWaveCount() );
-			event->SetInt( "advanced", g_pPopulationManager->IsAdvancedPopFile() ? 1 : 0 );
-			gameeventmanager->FireEvent( event );
-		}
-	}
-
 	if ( IsCompetitiveMode() && !( GetActiveRoundTimer() && ( GetActiveRoundTimer()->GetSetupTimeLength() > 0 ) ) )
 	{
 		// Announcer VO
@@ -6459,14 +6390,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			}
 		}
 
-		if ( IsMannVsMachineMode() )
-		{
-			if ( pTFAttacker && pTFAttacker->IsBot() && pAttacker != pVictimBaseEntity && pVictim && !pVictim->IsBot() )
-			{
-				flRealDamage *= g_pPopulationManager ? g_pPopulationManager->GetDamageMultiplier() : tf_populator_damage_multiplier.GetFloat();
-			}
-		}
-
 		// Heavy rage-based knockback+stun effect that also reduces their damage output
 		if ( pTFAttacker && pTFAttacker->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
 		{
@@ -7590,13 +7513,6 @@ void CTFGameRules::Think()
 
 #endif // GAME_DLL
 
-	// This is ugly, but, population manager needs to sometimes think when we're not simulating, but it is an entity.
-	// Really, we need to better split out some kind of "sub-gamerules" class for modes like this.
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		g_pPopulationManager->GameRulesThink();
-	}
-
 	BaseClass::Think();
 }
 
@@ -7621,7 +7537,19 @@ bool CTFGameRules::SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseC
 
 #ifdef GAME_DLL
 
-extern bool IsSpaceToSpawnHere( const Vector &where );
+//--------------------------------------------------------------------------------------------------------------
+/**
+ * Return true if a player has room to spawn at the given position
+ */
+bool IsSpaceToSpawnHere(const Vector& where)
+{
+	// make sure a player will fit here
+	trace_t result;
+	float bloat = 5.0f;
+	UTIL_TraceHull(where, where, VEC_HULL_MIN - Vector(bloat, bloat, 0), VEC_HULL_MAX + Vector(bloat, bloat, bloat), MASK_SOLID | CONTENTS_PLAYERCLIP, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &result);
+
+	return result.fraction >= 1.0;
+}
 
 static bool isZombieMobForceSpawning = false;
 
@@ -18860,20 +18788,6 @@ void CTFGameRules::PushAllPlayersAway( const Vector& vFromThisPoint, float flRan
 			}
 		}
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Helper Functions
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetNextMvMPopfile ( const char * next )
-{
-	s_strNextMvMPopFile = next;
-}
-
-//-----------------------------------------------------------------------------
-const char * CTFGameRules::GetNextMvMPopfile ( )
-{
-	return s_strNextMvMPopFile.Get();
 }
 
 //-----------------------------------------------------------------------------

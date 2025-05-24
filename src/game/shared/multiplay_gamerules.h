@@ -30,7 +30,6 @@ extern ConVar nextlevel;
 extern INetworkStringTable *g_pStringTableServerMapCycle;
 
 #if defined ( TF_DLL ) || defined ( TF_CLIENT_DLL )
-extern INetworkStringTable *g_pStringTableServerPopFiles;
 extern INetworkStringTable *g_pStringTableServerMapCycleMvM;
 #endif
 

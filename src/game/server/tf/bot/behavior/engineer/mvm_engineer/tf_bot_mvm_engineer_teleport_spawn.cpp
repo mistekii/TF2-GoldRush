@@ -14,7 +14,6 @@
 #include "bot/map_entities/tf_bot_hint_entity.h"
 #include "string_t.h"
 #include "tf_fx.h"
-#include "player_vs_environment/tf_population_manager.h"
 
 //---------------------------------------------------------------------------------------------
 CTFBotMvMEngineerTeleportSpawn::CTFBotMvMEngineerTeleportSpawn( CBaseTFBotHintEntity* pHint, bool bFirstTeleportSpawn )
@@ -67,24 +66,6 @@ ActionResult< CTFBot >	CTFBotMvMEngineerTeleportSpawn::Update( CTFBot *me, float
 			TE_TFParticleEffect( filter, 0.0, "teleported_mvm_bot", origin, vec3_angle );
 			me->EmitSound( "Engineer.MVM_BattleCry07" );
 			m_hintEntity->EmitSound( "MVM.Robot_Engineer_Spawn" );
-
-			if ( g_pPopulationManager )
-			{
-				CWave *pWave = g_pPopulationManager->GetCurrentWave();
-				if ( pWave )
-				{
-					if ( pWave->NumEngineersTeleportSpawned() == 0 )
-					{
-						TFGameRules()->BroadcastSound( 255, "Announcer.MVM_First_Engineer_Teleport_Spawned" );
-					}
-					else
-					{
-						TFGameRules()->BroadcastSound( 255, "Announcer.MVM_Another_Engineer_Teleport_Spawned" );
-					}
-
-					pWave->IncrementEngineerTeleportSpawned();
-				}
-			}
 		}
 
 		return Done( "Teleported" );

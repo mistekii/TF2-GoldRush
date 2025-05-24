@@ -21,9 +21,7 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFObjectiveResource, DT_TFObjectiveResource, CTFObje
 	RecvPropInt( RECVINFO(m_nFlagCarrierUpgradeLevel) ),
 	RecvPropFloat( RECVINFO( m_flMvMBaseBombUpgradeTime ) ),
 	RecvPropFloat( RECVINFO( m_flMvMNextBombUpgradeTime ) ),
-	RecvPropString( RECVINFO( m_iszMvMPopfileName ) ),
 	RecvPropInt( RECVINFO(m_iChallengeIndex) ),
-	RecvPropInt( RECVINFO(m_nMvMEventPopfileType) ),
 	
 	RecvPropArray3( RECVINFO_ARRAY( m_nMannVsMachineWaveClassCounts ), RecvPropInt( RECVINFO( m_nMannVsMachineWaveClassCounts[0] ) ) ),
 	RecvPropArray( RecvPropString( RECVINFO( m_iszMannVsMachineWaveClassNames[0]) ), m_iszMannVsMachineWaveClassNames ),
@@ -57,7 +55,6 @@ C_TFObjectiveResource::C_TFObjectiveResource()
 	m_bMannVsMachineBetweenWaves = false;
 	m_nFlagCarrierUpgradeLevel = 0;
 	m_iChallengeIndex = -1;
-	m_nMvMEventPopfileType = MVM_EVENT_POPFILE_NONE;
 
 	memset( m_nMannVsMachineWaveClassCounts, 0, sizeof( m_nMannVsMachineWaveClassCounts ) );
 	memset( m_nMannVsMachineWaveClassCounts2, 0, sizeof( m_nMannVsMachineWaveClassCounts2 ) );

@@ -13,7 +13,6 @@
 #include "bot/behavior/tf_bot_mvm_deploy_bomb.h"
 
 #include "tf_objective_resource.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "econ_item_system.h"
 #include "tf_gamestats.h"
 
