@@ -98,7 +98,6 @@
 
 	#include "raid/tf_raid_logic.h"
 	#include "player_vs_environment/tf_boss_battle_logic.h"
-	#include "player_vs_environment/tf_upgrades.h"
 
 	#include "tf_wheel_of_doom.h"
 	#include "halloween/zombie/zombie.h"
@@ -4384,23 +4383,6 @@ void CTFGameRules::CleanUpMap( void )
 	for ( int i = 0; i < TF_TEAM_COUNT; i++ )
 	{
 		m_bHasSpawnedSoccerBall[i] = false;
-	}
-
-	// If we're in a mode with upgrades, we force the players to recreate their weapons on next spawn.
-	// This clears out any weapon upgrades they had in the previous round.
-	if ( g_hUpgradeEntity )
-	{
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-			if ( !pTFPlayer )
-				continue;
-
-			pTFPlayer->ForceItemRemovalOnRespawn();
-
-			// Remove all player upgrades as well
-			pTFPlayer->RemovePlayerAttributes( false );
-		}
 	}
 #endif
 }
@@ -14016,57 +13998,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
 						return;
 				}
-
-				if ( g_hUpgradeEntity )
-				{
-					// First sell everything we want to sell
-					KeyValues *pSubKey = pKeyValues->GetFirstTrueSubKey();
-					while ( pSubKey )
-					{
-						int iCount = pSubKey->GetInt("count");
-						if ( iCount < 0 )
-						{
-							int iItemSlot = pSubKey->GetInt("itemslot");
-							int iUpgrade = pSubKey->GetInt("upgrade");
-							bool bFree = pSubKey->GetBool( "free", false );
-
-							// Stop attempting once no more purchases are possible to prevent spoofed messages DoSing
-							// the server.
-							bool bAllowed = true;
-							while ( bAllowed && iCount < 0 )
-							{
-								bAllowed = g_hUpgradeEntity->PlayerPurchasingUpgrade( pTFPlayer, iItemSlot, iUpgrade, true, bFree );
-								++iCount;
-							}
-						}
-
-						pSubKey = pSubKey->GetNextTrueSubKey();
-					}
-
-					// Now buy everything we want to buy
-					pSubKey = pKeyValues->GetFirstTrueSubKey();
-					while ( pSubKey )
-					{
-						int iCount = pSubKey->GetInt("count");
-						if ( iCount > 0 )
-						{
-							int iItemSlot = pSubKey->GetInt("itemslot");
-							int iUpgrade = pSubKey->GetInt("upgrade");
-							bool bFree = ( sv_cheats && sv_cheats->GetBool() ) ? pSubKey->GetBool( "free", false ) : false;	// Never let a client set "free" without sv_cheats 1
-
-							// Stop attempting once no more purchases are possible to prevent spoofed messages DoSing
-							// the server.
-							bool bAllowed = true;
-							while ( bAllowed && iCount > 0 )
-							{
-								bAllowed = g_hUpgradeEntity->PlayerPurchasingUpgrade( pTFPlayer, iItemSlot, iUpgrade, false, bFree );
-								--iCount;
-							}
-						}
-
-						pSubKey = pSubKey->GetNextTrueSubKey();
-					}
-				}
 			}
 		}
 		else if ( FStrEq( pszCommand, "MvM_UpgradesBegin" ) )
@@ -14090,20 +14021,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 				{
 					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
 						return;
-				}
-
-				if ( g_hUpgradeEntity && g_pPopulationManager )
-				{
-					// Consume a respec credit
-					g_pPopulationManager->RemoveRespecFromPlayer( pTFPlayer );
-
-					// Remove the appropriate upgrade info from upgrade histories
-					g_pPopulationManager->RemovePlayerAndItemUpgradesFromHistory( pTFPlayer );
-
-					// Remove upgrade attributes from the player and their items
-					g_hUpgradeEntity->GrantOrRemoveAllUpgrades( pTFPlayer, true );
-
-					pTFPlayer->ForceRespawn();
 				}
 			}
 		}

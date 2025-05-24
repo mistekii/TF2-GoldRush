@@ -61,7 +61,6 @@ class CTeamTrainWatcher;
 class CPhysicsProp;
 class CObjectSentrygun;
 class CGhost;
-class CUpgrades;
 
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;

@@ -116,7 +116,6 @@
 #endif
 
 #include "tf_mann_vs_machine_stats.h"
-#include "player_vs_environment/tf_upgrades.h"
 #include "player_vs_environment/tf_population_manager.h"
 #include "tf_logic_halloween_2014.h"
 #include "func_croc.h"
@@ -20071,12 +20070,6 @@ CUtlVector< CUpgradeInfo > * CTFPlayer::GetPlayerUpgradeHistory( void )
 
 void CTFPlayer::GrantOrRemoveAllUpgrades( bool bRemove, bool bRefund )
 {
-	// Remove upgrade attributes from the player and their items
-	if ( g_hUpgradeEntity )
-	{
-		g_hUpgradeEntity->GrantOrRemoveAllUpgrades( this, bRemove, bRefund );
-	}
-
 	// Remove the appropriate upgrade info from upgrade histories
 	if ( g_pPopulationManager && bRemove )
 	{
@@ -20141,14 +20134,12 @@ void CTFPlayer::RememberUpgrade( int iPlayerClass, CEconItemView *pItem, int iUp
 		}
 	}
 
-	const char *upgradeName = g_hUpgradeEntity->GetUpgradeAttributeName( iUpgrade );
-
 	DevMsg( "%3.2f: %s: Player '%s', item '%s', upgrade '%s', cost '%d'\n",
 		gpGlobals->curtime, 
 		bDowngrade ? "FORGET_UPGRADE" : "REMEMBER_UPGRADE",
 		GetPlayerName(),
 		pItem ? pItem->GetStaticData()->GetItemBaseName() : "<self>",
-		upgradeName ? upgradeName : "<NULL>",
+		"<NULL>",
 		nCost );
 }
 
@@ -20220,16 +20211,6 @@ void CTFPlayer::ReapplyItemUpgrades( CEconItemView *pItem )
 
 	BeginPurchasableUpgrades();
 
-	for( int u = 0; u < upgrades->Count(); ++u )
-	{
-		// Player Upgrades for this class and item
-		const CUpgradeInfo& upgrade = upgrades->Element(u);
-		if ( iClassIndex == upgrade.m_iPlayerClass && pItem->GetItemDefIndex() == upgrade.m_itemDefIndex )
-		{
-			g_hUpgradeEntity->ApplyUpgradeToItem( this, pItem, upgrade.m_upgrade, upgrade.m_nCost );
-		}
-	}
-
 	EndPurchasableUpgrades();
 }
 
@@ -20249,20 +20230,6 @@ void CTFPlayer::ReapplyPlayerUpgrades( void )
 		return;
 
 	BeginPurchasableUpgrades();
-
-	// Restore player Upgrades
-	for( int u = 0; u < upgrades->Count(); ++u )
-	{
-		// Player Upgrades for this class
-		if ( iClassIndex == upgrades->Element(u).m_iPlayerClass)
-		{
-			// Upgrades applied to player
-			if ( upgrades->Element(u).m_itemDefIndex == INVALID_ITEM_DEF_INDEX )
-			{
-				g_hUpgradeEntity->ApplyUpgradeToItem( this, NULL, upgrades->Element(u).m_upgrade, upgrades->Element(u).m_nCost );
-			}
-		}
-	}
 
 	EndPurchasableUpgrades();
 }

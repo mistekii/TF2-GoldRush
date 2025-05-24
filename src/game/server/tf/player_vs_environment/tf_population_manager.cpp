@@ -14,7 +14,6 @@
 #include "tf_objective_resource.h"
 #include "econ_entity_creation.h"
 #include "econ_wearable.h"
-#include "tf_upgrades.h"
 #include "tf_item_powerup_bottle.h"
 #include "tf_gc_server.h"
 #include "vote_controller.h"
@@ -1328,29 +1327,6 @@ void CPopulationManager::RestoreItemToCheckpointState( CTFPlayer *player, CEconI
 		return;
 
 	player->BeginPurchasableUpgrades();
-
-	// restore the item's upgrade(s)
-	for( int u=0; u<snapshot->m_upgradeVector.Count(); ++u )
-	{
-		if ( item->GetItemDefIndex() == snapshot->m_upgradeVector[u].m_itemDefIndex )
-		{
-			if ( player->GetPlayerClass()->GetClassIndex() == snapshot->m_upgradeVector[u].m_iPlayerClass )
-			{
-				if ( g_hUpgradeEntity->ApplyUpgradeToItem( player, item, snapshot->m_upgradeVector[u].m_upgrade, snapshot->m_upgradeVector[u].m_nCost ) )
-				{
-					if ( tf_populator_debug.GetBool() )
-					{
-						const char *upgradeName = g_hUpgradeEntity->GetUpgradeAttributeName( snapshot->m_upgradeVector[u].m_upgrade );
-						DevMsg( "%3.2f: CHECKPOINT_RESTORE_ITEM: Player '%s', item '%s', upgrade '%s'\n", 
-								gpGlobals->curtime, 
-								player->GetPlayerName(), 
-								item->GetStaticData()->GetItemBaseName(),
-								upgradeName ? upgradeName : "<self>" );
-					}
-				}
-			}
-		}
-	}
 
 	player->EndPurchasableUpgrades();
 }
