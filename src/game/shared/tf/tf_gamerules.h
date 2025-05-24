@@ -75,17 +75,6 @@ extern ConVar	tf_mvm_respec_enabled;
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;
 #endif
 
-#ifdef TF_RAID_MODE
-
-class CRaidLogic;
-class CBossBattleLogic;
-
-extern ConVar tf_gamemode_raid;
-extern ConVar tf_gamemode_creep_wave;
-extern ConVar tf_gamemode_boss_battle;
-
-#endif // TF_RAID_MODE
-
 class CMannVsMachineUpgrades;
 
 //extern ConVar tf_populator_health_multiplier;
@@ -1052,11 +1041,6 @@ private:
 	float	m_flCapInProgressBuffer;
 
 	float	m_flMatchSummaryTeleportTime;
-
-#ifdef TF_RAID_MODE
-	CHandle< CRaidLogic >		m_hRaidLogic;
-	CHandle< CBossBattleLogic > m_hBossBattleLogic;
-#endif // TF_RAID_MODE
 	
 	int		m_nCurrencyAccumulator;
 	int		m_iCurrencyPool;
@@ -1413,26 +1397,6 @@ inline float CTFGameRules::ItemTesting_GetBotAnimSpeed( void )
 		return (m_flItemTesting_BotAnimSpeed * pHostTimescale->GetFloat());
 	return m_flItemTesting_BotAnimSpeed;
 }
-
-#ifdef TF_RAID_MODE
-
-inline bool CTFGameRules::IsRaidMode( void ) const
-{
-#ifdef GAME_DLL
-	return m_hRaidLogic != NULL; 
-#else
-	return tf_gamemode_raid.GetBool();
-#endif
-}
-
-
-
-inline bool CTFGameRules::IsBossBattleMode( void ) const
-{
-	return tf_gamemode_boss_battle.GetBool();
-}
-
-#endif // TF_RAID_MODE
 
 #ifdef TF_CREEP_MODE
 

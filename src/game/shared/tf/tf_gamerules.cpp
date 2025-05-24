@@ -97,7 +97,6 @@
 	#include "gc_clientsystem.h"
 
 	#include "raid/tf_raid_logic.h"
-	#include "player_vs_environment/tf_boss_battle_logic.h"
 
 	#include "tf_wheel_of_doom.h"
 	#include "halloween/zombie/zombie.h"
@@ -792,20 +791,6 @@ ConVar tf_training_client_message( "tf_training_client_message", "0", FCVAR_REPL
 #define TF_ARENA_MODE_FIRST_BLOOD_CRIT_TIME 5.0f
 #define TF_ARENA_MODE_FAST_FIRST_BLOOD_TIME 20.0f
 #define TF_ARENA_MODE_SLOW_FIRST_BLOOD_TIME 50.0f
-
-#ifdef TF_RAID_MODE
-// Raid mode
-ConVar tf_gamemode_raid( "tf_gamemode_raid", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );		// client needs access to this for IsRaidMode()
-ConVar tf_raid_enforce_unique_classes( "tf_raid_enforce_unique_classes", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-ConVar tf_raid_respawn_time( "tf_raid_respawn_time", "5", FCVAR_REPLICATED | FCVAR_NOTIFY /*| FCVAR_CHEAT*/, "How long it takes for a Raider to respawn with his team after death." );
-ConVar tf_raid_allow_all_classes( "tf_raid_allow_all_classes", "1", FCVAR_REPLICATED | FCVAR_NOTIFY );
-
-ConVar tf_gamemode_boss_battle( "tf_gamemode_boss_battle", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-
-#ifdef GAME_DLL
-ConVar tf_raid_allow_overtime( "tf_raid_allow_overtime", "0"/*, FCVAR_CHEAT*/ );
-#endif // GAME_DLL
-#endif // TF_RAID_MODE
 
 ConVar tf_mvm_defenders_team_size( "tf_mvm_defenders_team_size", "6", FCVAR_REPLICATED | FCVAR_NOTIFY, "Maximum number of defenders in MvM" );
 ConVar tf_mvm_max_connected_players( "tf_mvm_max_connected_players", "10", FCVAR_GAMEDLL, "Maximum number of connected real players in MvM" );
@@ -3969,10 +3954,6 @@ void CTFGameRules::Activate()
 
 	tf_bot_count.SetValue( 0 );
 
-#ifdef TF_RAID_MODE
-	tf_gamemode_raid.SetValue( 0 );
-	tf_gamemode_boss_battle.SetValue( 0 );
-#endif
 	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
 	m_nCurrencyAccumulator = 0;
@@ -4010,27 +3991,6 @@ void CTFGameRules::Activate()
 		Msg( "Executing server arena config file\n" );
 		engine->ServerCommand( "exec config_arena.cfg\n" );
 	}
-
-#ifdef TF_RAID_MODE
-	CRaidLogic *pRaidLogic = dynamic_cast< CRaidLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_raid" ) );
-	if ( pRaidLogic )
-	{
-		m_hRaidLogic = pRaidLogic;
-
-		tf_gamemode_raid.SetValue( 1 );
-
-		Msg( "Executing server raid game mode config file\n" );
-		engine->ServerCommand( "exec config_raid.cfg\n" );
-	}
-
-	CBossBattleLogic *pBossBattleLogic = dynamic_cast< CBossBattleLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_boss_battle" ) );
-	if ( pBossBattleLogic )
-	{
-		m_hBossBattleLogic = pBossBattleLogic;
-
-		tf_gamemode_boss_battle.SetValue( 1 );
-	}
-#endif // TF_RAID_MODE
 
 	// This is beta content if this map has "beta" as a tag in the schema
 	{

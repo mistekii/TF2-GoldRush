@@ -193,18 +193,6 @@ ConVar tf_allow_player_use( "tf_allow_player_use", "0", FCVAR_NOTIFY, "Allow pla
 ConVar tf_deploying_bomb_time( "tf_deploying_bomb_time", "1.90", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to deploy bomb before the point of no return." );
 ConVar tf_deploying_bomb_delay_time( "tf_deploying_bomb_delay_time", "0.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to delay before deploying bomb." );
 
-#ifdef TF_RAID_MODE
-ConVar tf_raid_team_size( "tf_raid_team_size", "5", FCVAR_NOTIFY, "Max number of Raiders" );
-ConVar tf_raid_respawn_safety_time( "tf_raid_respawn_safety_time", "1.5", FCVAR_NOTIFY, "Number of seconds of invulnerability after respawning" );
-ConVar tf_raid_allow_class_change( "tf_raid_allow_class_change", "1", FCVAR_NOTIFY, "If nonzero, allow invaders to change their class after leaving the safe room" );
-ConVar tf_raid_use_rescue_closets( "tf_raid_use_rescue_closets", "1", FCVAR_NOTIFY );
-ConVar tf_raid_drop_healthkit_chance( "tf_raid_drop_healthkit_chance", "50" ); // , FCVAR_CHEAT );
-
-ConVar tf_boss_battle_team_size( "tf_boss_battle_team_size", "5", FCVAR_NOTIFY, "Max number of players in Boss Battle mode" );
-ConVar tf_boss_battle_respawn_safety_time( "tf_boss_battle_respawn_safety_time", "3", FCVAR_NOTIFY, "Number of seconds of invulnerability after respawning" );
-ConVar tf_boss_battle_respawn_on_friends( "tf_boss_battle_respawn_on_friends", "1", FCVAR_NOTIFY );
-#endif
-
 ConVar tf_mvm_death_penalty( "tf_mvm_death_penalty", "0", FCVAR_NOTIFY | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How much currency players lose when dying" );
 extern ConVar tf_populator_damage_multiplier;
 extern ConVar tf_mvm_skill;
@@ -3144,23 +3132,6 @@ void CTFPlayer::Spawn()
 		gameeventmanager->FireEvent( event );
 	}
 
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() && GetTeamNumber() == TF_TEAM_BLUE )
-	{
-		// raiders respawn invulnerable for a short time
-		m_Shared.AddCond( TF_COND_INVULNERABLE, tf_raid_respawn_safety_time.GetFloat() );
-
-		// friends glow
-		AddGlowEffect();
-	}
-
-	if ( TFGameRules()->IsBossBattleMode() && GetTeamNumber() == TF_TEAM_BLUE )
-	{
-		// respawn invulnerable for a short time
-		m_Shared.AddCond( TF_COND_INVULNERABLE, tf_boss_battle_respawn_safety_time.GetFloat() );
-	}
-#endif // TF_RAID_MODE
-
 	m_bIsMissionEnemy = false;
 	m_bIsSupportEnemy = false;
 	m_bIsLimitedSupportEnemy = false;
@@ -4906,71 +4877,6 @@ CBaseEntity* CTFPlayer::EntSelectSpawnPoint()
 	CBaseEntity *pSpot = g_pLastSpawnPoints[ GetTeamNumber() ];
 	const char *pSpawnPointName = "";
 
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// only spawn next to friends if the round is not restarting
-			if ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-			{
-				if ( tf_raid_use_rescue_closets.GetBool() )
-				{
-					// find a valid rescue closet to spawn into
-					CBaseEntity *rescueSpawn = g_pRaidLogic->GetRescueRespawn();
-
-					if ( rescueSpawn )
-					{
-						return rescueSpawn;
-					}
-				}
-				else if ( tf_boss_battle_respawn_on_friends.GetBool() )
-				{
-					// the raiders are in the wild - respawn next to them
-					float timeSinceInjured = -1.0f;
-					CBaseEntity *respawnEntity = NULL;
-
-					// if we are observing a friend, spawn into them
-					CBaseEntity *watchEntity = GetObserverTarget();
-					if ( watchEntity && IsValidRaidRespawnTarget( watchEntity ) )
-					{
-						respawnEntity = watchEntity;
-					}
-					else
-					{
-						// spawn on the least recently damaged friend
-						CTeam *raidingTeam = GetGlobalTeam( TF_TEAM_BLUE );
-						for( int i=0; i<raidingTeam->GetNumPlayers(); ++i )
-						{
-							CTFPlayer *buddy = (CTFPlayer *)raidingTeam->GetPlayer(i);
-
-							// we can't use IsAlive(), because that has already been reset since
-							// this code is mid-spawn.  Use m_Shared state instead.
-							if ( buddy != this && buddy->m_Shared.InState( TF_STATE_ACTIVE ) && IsValidRaidRespawnTarget( buddy ) )
-							{
-								// pick the friend who has been hurt least recently
-								if ( buddy->GetTimeSinceLastInjury( TF_TEAM_RED ) > timeSinceInjured )
-								{
-									timeSinceInjured = buddy->GetTimeSinceLastInjury( TF_TEAM_RED );
-									respawnEntity = buddy;
-								}
-							}
-						}
-					}
-
-					if ( respawnEntity )
-					{
-						CPVSFilter filter( respawnEntity->GetAbsOrigin() );
-						TE_TFParticleEffect( filter, 0.0, "teleported_blue", respawnEntity->GetAbsOrigin(), vec3_angle );
-						TE_TFParticleEffect( filter, 0.0, "player_sparkles_blue", respawnEntity->GetAbsOrigin(), vec3_angle, this, PATTACH_POINT );
-						return respawnEntity;
-					}
-				}
-			}
-		}
-	}
-#endif // TF_RAID_MODE
-
 	bool bMatchSummary = TFGameRules() && TFGameRules()->ShowMatchSummary();
 
 	// See if the map is asking to force this player to spawn at a specific location
@@ -5521,57 +5427,6 @@ void CTFPlayer::HandleCommand_JoinTeam( const char *pTeamName )
 	{
 		return;
 	}
-
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsRaidMode() )
-	{
-		if ( !IsBot() && iTeam != TEAM_SPECTATOR )
-		{
-			// human raiders can only be on the blue team
-			CTeam *raidingTeam = GetGlobalTeam( TF_TEAM_BLUE );
-			int humanCount = 0;
-			for( int i=0; i<raidingTeam->GetNumPlayers(); ++i )
-			{
-				if ( raidingTeam->GetPlayer(i)->IsBot() )
-					continue;
-
-				++humanCount;
-			}
-
-			if ( humanCount < tf_raid_team_size.GetInt() )
-			{
-				iTeam = TF_TEAM_BLUE;
-			}
-			else
-			{
-				// no room
-				iTeam = TEAM_SPECTATOR;
-			}
-		}
-	}
-
-	if ( TFGameRules()->IsBossBattleMode() )
-	{
-		if ( !IsBot() && iTeam != TEAM_SPECTATOR )
-		{
-			// players can only be on the blue team
-			if ( GetGlobalTeam( TF_TEAM_BLUE )->GetNumPlayers() < tf_boss_battle_team_size.GetInt() )
-			{
-				iTeam = TF_TEAM_BLUE;
-			}
-			else
-			{
-				// no room
-				iTeam = TEAM_SPECTATOR;
-			}
-		}
-
-		DuelMiniGame_NotifyPlayerChangedTeam( this, iTeam, true );
-		ChangeTeam( iTeam, true );
-
-		return;
-	}
-#endif // TF_RAID_MODE	
 
 	// Some game modes will overrule our player-based logic
 	iTeam = TFGameRules()->GetTeamAssignmentOverride( this, iTeam );
