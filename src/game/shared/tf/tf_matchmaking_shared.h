@@ -367,43 +367,6 @@ inline bool IsIncompleteMatchPool( int nGameServerPool )
 	return nGameServerPool >= k_nGameServerPool_Incomplete_Match_First && nGameServerPool <= k_nGameServerPool_Incomplete_Match_Last;
 }
 
-// Stuff is simpler if we can set a max number of challenges in the schema
-#define MAX_MVM_CHALLENGES 64
-
-// Store a set of MvM challenges (search criteria, etc)
-class CMvMMissionSet
-{
-public:
-	CMvMMissionSet();
-	CMvMMissionSet( const CMvMMissionSet &x );
-	~CMvMMissionSet();
-	void operator=( const CMvMMissionSet &x );
-	bool operator==( const CMvMMissionSet &x ) const;
-
-	/// Set to the empty set
-	void Clear();
-
-	/// get/set individual bits, based on index of the challenge in the schema
-	void SetMissionBySchemaIndex( int iChallengeSchemaIndex, bool flag );
-	bool GetMissionBySchemaIndex( int iChallengeSchemaIndex ) const;
-
-	/// Intersect this set with the other set.  Use IsEmpty()
-	/// to see if this produced the empty set.
-	void Intersect( const CMvMMissionSet &x );
-
-	/// Return true if the two sets have a nonzero intersection.  (Neither object is modified)
-	bool HasIntersection( const CMvMMissionSet &x ) const;
-
-	/// Return true if any challenges are selected
-	bool IsEmpty() const;
-private:
-
-	COMPILE_TIME_ASSERT( MAX_MVM_CHALLENGES <= 64 );
-
-	// Just use a plain old uint64 for now.  We can make this into a proper bitfield class at some point
-	uint64 m_bits;
-};
-
 // Player Skill Ratings
 const int k_nDrilloRating_MinRatingAdjust              = 1;
 const int k_nDrilloRating_MaxRatingAdjust              = 100;
