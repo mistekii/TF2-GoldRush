@@ -206,8 +206,6 @@ protected:
 	void			UpdateItemStatsLabel( void );
 	void			CancelUpgrades( void );
 	void			AddItemStatText( const locchar_t *loc_AttrDescText, attrib_colors_t eColor, wchar_t *out_wszAttribDesc, int iAttribDescSize );
-	CEconItemView*	GetLocalPlayerBottleFromInventory( void );
-	bool			QuickEquipBottle( void );
 
 protected:
 	vgui::EditablePanel *m_pTipPanel;

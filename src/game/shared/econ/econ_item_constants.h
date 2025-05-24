@@ -718,7 +718,6 @@ enum kill_eater_event_t
 	kKillEaterEvent_HalloweenSouls,				// Halloween
 	kKillEaterEvent_HalloweenContractsCompleted,
 	kKillEaterEvent_HalloweenOfferings,
-	kKillEaterEvent_PowerupBottlesUsed,
 	kKillEaterEvent_ContractPointsEarned, // = 110
 	kKillEaterEvent_ContractPointsContributedToFriends,
 

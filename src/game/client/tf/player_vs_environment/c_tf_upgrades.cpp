@@ -1307,10 +1307,6 @@ void CHudUpgradePanel::UpdateJoystickControls( void )
 			{
 				OnCommand( VarArgs( "mvm_upgrade%03d_%i", m_pActiveUpgradeBuyPanel->m_nUpgradeIndex, m_pActiveUpgradeBuyPanel->m_nPrice ) );
 			}
-			else if ( m_iWeaponSlotBeingUpgraded == LOADOUT_POSITION_ACTION && GetLocalPlayerBottleFromInventory() != NULL )
-			{
-				OnCommand( "quick_equip_bottle" );
-			}
 		}
 		else if ( bBack )
 		{
@@ -1506,7 +1502,6 @@ void CHudUpgradePanel::UpdateButtonStates( int nCurrentMoney, int nUpgrade /*= 0
 		}
 
 		bool bSellAllowed = ( TFObjectiveResource()->GetMannVsMachineWaveCount() <= 1 );
-		bool bHideBottleHintText = true;
 
 		if ( m_iWeaponSlotBeingUpgraded == LOADOUT_POSITION_ACTION || ( TFGameRules() && TFGameRules()->GetUpgradeTier( nUpgrade ) ) )
 		{
@@ -1555,34 +1550,6 @@ void CHudUpgradePanel::UpdateButtonStates( int nCurrentMoney, int nUpgrade /*= 0
 					}
 				}
 			}
-
-			if ( pItemSlotBuyPanel->upgradeBuyPanels.Count() <= 0 && !m_bInspectMode && m_iWeaponSlotBeingUpgraded == LOADOUT_POSITION_ACTION )
-			{
-				bHideBottleHintText = false;
-
-				bool bHasBottle = ( GetLocalPlayerBottleFromInventory() != NULL );
-
-				wchar_t wszFinalLabel[ 512 ] = L"";
-				const wchar_t *pLocalized = g_pVGuiLocalize->Find( bHasBottle ? "#TF_PVE_Unequipped_Powerup_Bottle" : "#TF_PVE_No_Powerup_Bottle" );
-				if ( pLocalized )
-				{
-					wchar_t wszLabel[ 512 ];
-					V_wcsncpy( wszLabel, pLocalized, sizeof( wszLabel ) );
-
-					UTIL_ReplaceKeyBindings( wszLabel, 0, wszFinalLabel, sizeof( wszFinalLabel ) );
-				}
-
-				m_pSelectWeaponPanel->SetDialogVariable( "powerup_hint", wszFinalLabel );
-				m_pSelectWeaponPanel->SetControlVisible( "QuickEquipButton", bHasBottle );
-				m_pSelectWeaponPanel->SetControlVisible( "LoadoutButton", bHasBottle );
-			}
-		}
-
-		if ( bHideBottleHintText )
-		{
-			m_pSelectWeaponPanel->SetDialogVariable( "powerup_hint", "" );
-			m_pSelectWeaponPanel->SetControlVisible( "QuickEquipButton", false );
-			m_pSelectWeaponPanel->SetControlVisible( "LoadoutButton", false );
 		}
 
 		bool bSoldFinalPowerUp = false;
@@ -1886,53 +1853,6 @@ void CHudUpgradePanel::AddItemStatText( const locchar_t *loc_AttrDescText, attri
 	wcsncat( out_wszAttribDesc, L"\n", iAttribDescSize );
 }
 
-CEconItemView* CHudUpgradePanel::GetLocalPlayerBottleFromInventory( void )
-{
-	// to be removed
-
-	return NULL;
-}
-
-bool CHudUpgradePanel::QuickEquipBottle( void )
-{
-	if ( !m_hPlayer )
-		return false;
-
-	if ( m_bInspectMode )
-		return false;
-
-	CPlayerInventory *pPlayerInventory = TFInventoryManager()->GetLocalInventory();
-	if ( !pPlayerInventory )
-		return false;
-
-	GCSDK::CGCClientSharedObjectCache *pSOCache = pPlayerInventory->GetSOC();
-	if ( !pSOCache )
-		return false;
-
-	int nClass = m_hPlayer->GetPlayerClass()->GetClassIndex();
-
-	CEconItemView *pBottle = GetLocalPlayerBottleFromInventory();
-	if ( !pBottle )
-		return false;
-
-	itemid_t iItemId = pBottle->GetItemID();
-	if ( iItemId == INVALID_ITEM_ID )
-		return false;
-
-	// This clears any in-progress purchases, otherwise they could lose money and upgrades
-	m_bShowUpgradeMenu = false;
-	m_bCancelUpgrades = true;
-	m_bOpenLoadout = false;
-	m_bInspectMode = false;
-	m_hPlayer = NULL;
-
-	TFInventoryManager()->EquipItemInLoadout( nClass, LOADOUT_POSITION_ACTION, iItemId );
-
-	// Tell the GC to tell server that we should respawn if we're in a respawn room
-
-	return true;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -2034,12 +1954,6 @@ void CHudUpgradePanel::OnCommand( const char *command )
 				UpgradeItemInSlot( nLoadoutSlot );
 			}
 		}
-	}
-	else if ( V_strcmp( command, "quick_equip_bottle" ) == 0 )
-	{
-		QuickEquipBottle();
-
-		return;
 	}
 	else if ( V_strcmp( command, "open_charinfo_direct" ) == 0 )
 	{

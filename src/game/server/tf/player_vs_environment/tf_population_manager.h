@@ -80,7 +80,6 @@ public:
 	void SetCheckpoint( int waveNumber );
 	void RestoreCheckpoint( void );
 	void RestoreItemToCheckpointState( CTFPlayer *player, CEconItemView *item );
-	void ForgetOtherBottleUpgrades ( CTFPlayer *player, CEconItemView *pItem, int upgradeToKeep );
 	void RestorePlayerCurrency ();
 
 	CUtlVector< CUpgradeInfo > *GetPlayerUpgradeHistory ( CTFPlayer *player );	// Returns the Upgrade vector for a given player

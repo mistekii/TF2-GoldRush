@@ -1281,29 +1281,6 @@ void CPopulationManager::RestoreItemToCheckpointState( CTFPlayer *player, CEconI
 	player->EndPurchasableUpgrades();
 }
 
-//-------------------------------------------------------------------------
-void CPopulationManager::ForgetOtherBottleUpgrades ( CTFPlayer *player, CEconItemView *pItem, int upgradeToKeep )
-{
-	PlayerUpgradeHistory *history = FindOrAddPlayerUpgradeHistory( player );
-	
-	// This only applies to the current class, skip bottle upgrades for other classes
-	int iClass = player->GetPlayerClass()->GetClassIndex();
-	for( int i = 0; i < history->m_upgradeVector.Count(); ++i )
-	{
-		if ( iClass != history->m_upgradeVector[i].m_iPlayerClass )
-		{
-			continue;
-		}
-
-		// remove upgrades that do NOT match the target
-		if ( history->m_upgradeVector[i].m_itemDefIndex == pItem->GetItemDefIndex() && history->m_upgradeVector[i].m_upgrade != upgradeToKeep )		// item upgrade
-		{
-			history->m_upgradeVector.FastRemove( i );
-			--i;
-		}
-	}
-}
-
 // ----------------------------------------------------------------------------------
 void CPopulationManager::RestorePlayerCurrency ()
 {

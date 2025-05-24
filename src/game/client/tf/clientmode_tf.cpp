@@ -446,7 +446,6 @@ void ClientModeTFNormal::Init()
 	ListenForGameEvent( "player_upgraded" );
 	ListenForGameEvent( "player_buyback" );
 	ListenForGameEvent( "player_death" );
-	ListenForGameEvent( "player_used_powerup_bottle" );
 
 	ListenForGameEvent( "pve_win_panel" );
 
@@ -775,35 +774,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 						}
 					}
 				}
-			}
-		}
-	}
-	else if ( FStrEq( "player_used_powerup_bottle", eventname ) )
-	{
-		int idxPlayer = event->GetInt( "player" );
-		KeyValuesAD pKeyValues( "data" );
-		if ( g_TF_PR )
-		{
-			pKeyValues->SetString( "player", g_TF_PR->GetPlayerName( idxPlayer ) );
-			const char *pText = NULL;
-			switch ( event->GetInt( "type" ) )
-			{
-			case POWERUP_BOTTLE_CRITBOOST: pText = "#TF_PVE_Player_UsedCritsBottle"; break;
-			case POWERUP_BOTTLE_UBERCHARGE: pText = "#TF_PVE_Player_UsedUberBottle"; break;
-			case POWERUP_BOTTLE_RECALL: pText = "#TF_PVE_Player_UsedRecallBottle"; break;
-			case POWERUP_BOTTLE_REFILL_AMMO: pText = "#TF_PVE_Player_UsedRefillAmmoBottle"; break;
-			case POWERUP_BOTTLE_BUILDINGS_INSTANT_UPGRADE: pText = "#TF_PVE_Player_UsedBuildingUpgrade"; break;
-			case POWERUP_BOTTLE_RADIUS_STEALTH: pText = "#TF_PVE_Player_UsedRadiusStealth"; break;
-			}
-			if ( pText != NULL )
-			{
-				PrintTextToChatPlayer( idxPlayer, pText, pKeyValues );
-			}
-
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				pLocalPlayer->EmitSound( "MVM.PlayerUsedPowerup" );
 			}
 		}
 	}
