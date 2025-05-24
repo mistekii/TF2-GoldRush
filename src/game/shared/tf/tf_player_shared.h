@@ -820,8 +820,6 @@ private:
 	void  SetChargeEffect( medigun_charge_types iCharge, bool bState, bool bInstant, const struct MedigunEffects_t& effects, float flWearOffTime, CTFPlayer *pProvider = NULL );
 	void  SetCritBoosted( bool bState );
 
-	void RadiusSpyScan( void );
-
 	// Attr for Conditions
 	void ApplyAttributeToPlayer( const char* pszAttribName, float flValue );
 	void RemoveAttributeFromPlayer( const char* pszAttribName );
@@ -1090,8 +1088,6 @@ private:
 	CUtlVector<CTFDamageEvent> m_DamageEvents;
 
 	CHandle<CTFPlayer>	m_hPeeAttacker;
-
-	float m_flRadiusSpyScanTime;
 
 #else
 	float	m_flGotTeleEffectAt;

@@ -797,8 +797,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_flHealedPerSecondTimer = -1000;
 	m_bPulseRadiusHeal = false;
 
-	m_flRadiusSpyScanTime = 0;
-
 	m_flCloakStartTime = -1.0f;
 
 	ListenForGameEvent( "player_disconnect" );
@@ -2700,12 +2698,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 
 	{
 		m_flSpyTranqBuffDuration = 0;
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && m_pOuter->IsPlayerClass( TF_CLASS_SPY) )
-	{
-		// In MvM, Spies reveal other spies in a radius around them
-		RadiusSpyScan();
 	}
 
 #endif // GAME_DLL
@@ -7508,58 +7500,6 @@ void CTFPlayerShared::SetChargeEffect( medigun_charge_types iCharge, bool bState
 			}
 			m_flChargeEffectOffTime[iCharge] = gpGlobals->curtime + flWearOffTime;
 		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Scan for and reveal spies in a radius around the player
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::RadiusSpyScan( void )
-{
-	if ( m_pOuter->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS )
-		return;
-
-	if ( !m_pOuter->IsAlive() )
-		return;
-
-	if ( m_flRadiusSpyScanTime <= gpGlobals->curtime )
-	{
-//		bool bRevealed = false;
-		const int iRange = 750;
-
-		CUtlVector<CTFPlayer *> vecPlayers;
-		CollectPlayers( &vecPlayers, TF_TEAM_PVE_INVADERS, true );
-		FOR_EACH_VEC( vecPlayers, i )
-		{
-
-			if ( !vecPlayers[i] )
-				continue;
-
-			if ( vecPlayers[i]->GetPlayerClass()->GetClassIndex() != TF_CLASS_SPY )
-				continue;
-			
-			if ( !vecPlayers[i]->m_Shared.InCond( TF_COND_STEALTHED ) )
-				continue;
-
-			if ( m_pOuter->FVisible( vecPlayers[i], MASK_OPAQUE ) == false )
-				continue;
-
-			Vector vDist = vecPlayers[i]->GetAbsOrigin() - m_pOuter->GetAbsOrigin();
-			if ( vDist.LengthSqr() <= iRange * iRange )
-			{
-				vecPlayers[i]->m_Shared.OnSpyTouchedByEnemy();
-//				bRevealed = true;
-			}
-		}
-
-// 		if ( bRevealed )
-// 		{
-// 			bRevealed = false;
-// 			CSingleUserRecipientFilter filter( m_pOuter );
-// 			m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Recon.Ping" );
-// 		}
-
-		m_flRadiusSpyScanTime = gpGlobals->curtime + 0.3f;
 	}
 }
 
