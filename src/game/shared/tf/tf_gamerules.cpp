@@ -123,7 +123,6 @@
 #include "tf_mann_vs_machine_stats.h"
 #include "tf_upgrades_shared.h"
 
-#include "tf_item_powerup_bottle.h"
 #include "tf_weaponbase_gun.h"
 #include "tf_weaponbase_melee.h"
 #include "tf_wearable_weapons.h"
@@ -19316,34 +19315,6 @@ bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, at
 	CEconItemView *pCurItemData = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pPlayer, iWeaponSlot, &pEntity );
 	if ( !pCurItemData || !pEntity )
 		return false;
-
-	// bottles can only hold things in the appropriate ui group
-	if ( dynamic_cast< CTFPowerupBottle *>( pEntity ) )
-	{
-		if ( pUpgrade->nUIGroup == UIGROUP_POWERUPBOTTLE )
-		{
-			switch ( iAttribIndex )
-			{
-			case 327:	// "building instant upgrade"
-				{
-					return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) );
-				}
-#ifndef _DEBUG
-			case 480:	// "radius stealth"
-				{
-					return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) );
-				}
-#endif // !_DEBUG
-		}
-			return true;
-		}
-
-		return false;
-	}
-	else if ( pUpgrade->nUIGroup == UIGROUP_POWERUPBOTTLE )
-	{
-		return false;
-	}
 
 	CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase* > ( pEntity );
 	CTFWeaponBaseGun *pWeaponGun = dynamic_cast< CTFWeaponBaseGun* > ( pEntity );

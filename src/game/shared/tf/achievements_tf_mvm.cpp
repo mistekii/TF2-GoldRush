@@ -18,7 +18,6 @@
 #include "c_tf_objective_resource.h"
 #include "tf_gamerules.h"
 #include "achievements_tf.h"
-#include "tf_item_powerup_bottle.h"
 
 //----------------------------------------------------------------------------------------------------------------
 class CAchievementTF_MvM_CompletePopFile : public CBaseTFAchievementSimple

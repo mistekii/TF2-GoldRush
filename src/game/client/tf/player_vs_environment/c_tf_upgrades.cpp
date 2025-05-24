@@ -17,7 +17,6 @@
 #include "econ_item_system.h"
 #include "tf_weaponbase_gun.h"
 #include "c_tf_buff_banner.h"
-#include "tf_item_powerup_bottle.h"
 #include "vgui_controls/TextImage.h"
 #include "vgui_controls/Image.h"
 #include "tf_hud_playerstatus.h"
@@ -930,7 +929,7 @@ void CHudUpgradePanel::CreateItemModelPanel( int iLoadoutSlot )
 	pItemPanel->SetGreyedOut( NULL );
 
 	bool bVisible = pCurItemData && pCurItemData->IsValid();
-	if ( iLoadoutSlot == LOADOUT_POSITION_ACTION && ( !bVisible || !dynamic_cast< CTFPowerupBottle* >( m_hPlayer->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION ) ) ) )
+	if ( iLoadoutSlot == LOADOUT_POSITION_ACTION && !bVisible )
 	{
 
 	}
@@ -1092,7 +1091,7 @@ void CHudUpgradePanel::UpdateUpgradeButtons( void )
 				// Don't create button if it belongs to the wrong group
 				int nUIGroup = pUpgrade->nUIGroup;
 
-				if ( ( pItemSlotBuyPanel->nSlot == -1 && ( nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM || nUIGroup == UIGROUP_POWERUPBOTTLE ) ) || 
+				if ( ( pItemSlotBuyPanel->nSlot == -1 && nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM ) || 
 					 ( pItemSlotBuyPanel->nSlot != -1 && nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER ) )
 				{
 					continue;

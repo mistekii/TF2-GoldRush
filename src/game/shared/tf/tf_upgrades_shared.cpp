@@ -12,8 +12,6 @@
 #include "filesystem.h"
 #include "econ_item_system.h"
 #include "tf_gamerules.h"
-#include "tf_item_powerup_bottle.h"
-
 
 CMannVsMachineUpgradeManager g_MannVsMachineUpgrades;
 
@@ -197,21 +195,6 @@ int GetUpgradeStepData( CTFPlayer *pPlayer, int nWeaponSlot, int nUpgradeIndex, 
 	CEconItemAttributeDefinition *pAttribDef = ItemSystem()->GetStaticDataForAttributeByName( pMannVsMachineUpgrade->szAttrib );
 	if ( !pAttribDef )
 		return 0;
-
-	// Special-case short-circuit logic for the powerup bottle. I don't know why we do this, but
-	// we did before so this seems like the safest way of not breaking anything.
-	const CTFPowerupBottle *pPowerupBottle = dynamic_cast< CTFPowerupBottle* >( pEntity );
-	if ( pPowerupBottle )
-	{
-		Assert( pMannVsMachineUpgrade->nUIGroup == UIGROUP_POWERUPBOTTLE );
-
-		nCurrentStep = ::FindAttribute( pItemData, pAttribDef )
-					 ? pPowerupBottle->GetNumCharges()
-					 : 0;
-		bOverCap = nCurrentStep == pPowerupBottle->GetMaxNumCharges();
-		
-		return pPowerupBottle->GetMaxNumCharges();
-	}
 
 	Assert( pAttribDef->IsStoredAsFloat() );
 	Assert( !pAttribDef->IsStoredAsInteger() );

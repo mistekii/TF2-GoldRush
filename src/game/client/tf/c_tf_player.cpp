@@ -102,7 +102,6 @@
 #include "filesystem.h"
 #include "debugoverlay_shared.h"
 #include "tf_hud_chat.h"
-#include "tf_item_powerup_bottle.h"
 #include <vgui_controls/AnimationController.h>
 #include "econ_paintkit.h"
 #include "soundstartparams.h"
@@ -10689,27 +10688,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 				else
 				{
 					NotificationQueue_Remove( &CEquipSpellbookNotification::IsNotificationType );
-				}
-			}
-			// Add EconNotification to equip Canteen here
-			else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				int iCount = NotificationQueue_Count( &CEquipMvMCanteenNotification::IsNotificationType );
-				CEconItemView *pItem = TFInventoryManager()->GetItemInLoadoutForClass( event->GetInt( "class" ), LOADOUT_POSITION_ACTION );
-				// no spell book
-				if ( !pItem || !pItem->GetStaticData()->GetItemClass() || !FStrEq( pItem->GetStaticData()->GetItemClass(), "tf_powerup_bottle" ) )
-				{
-					if ( iCount == 0 )
-					{
-						CEquipMvMCanteenNotification *pNotification = new CEquipMvMCanteenNotification();
-						pNotification->SetText( "#TF_Canteen_EquipAction" );
-						pNotification->SetLifetime( 10.0f );
-						NotificationQueue_Add( pNotification );
-					}
-				}
-				else
-				{
-					NotificationQueue_Remove( &CEquipMvMCanteenNotification::IsNotificationType );
 				}
 			}
 		}

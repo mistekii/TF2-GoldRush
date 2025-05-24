@@ -71,7 +71,6 @@
 #include "ilagcompensationmanager.h"
 #include "dt_utlvector_send.h"
 #include "tf_item_wearable.h"
-#include "tf_item_powerup_bottle.h"
 #include "nav_mesh/tf_nav_mesh.h"
 #include "tier0/vprof.h"
 #include "econ_gcmessages.h"
@@ -4234,15 +4233,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 	CBaseEntity *pActionSlotEntity = GetEntityForLoadoutSlot( LOADOUT_POSITION_ACTION );
 	if ( !pActionSlotEntity )
 		return;
-
-	// get the equipped item and see what it is
-	CTFPowerupBottle *pPowerupBottle = dynamic_cast< CTFPowerupBottle* >( pActionSlotEntity );
-	if ( pPowerupBottle )
-	{
-		// @todo send event to clients so that they know what's going on
-		pPowerupBottle->Use();
-		return;
-	}
 
 	// is it a throwable?
 	CTFThrowable *pThrowable = dynamic_cast< CTFThrowable* >( pActionSlotEntity );

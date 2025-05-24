@@ -19,7 +19,6 @@
 #include "tf_weapon_revolver.h"
 #include "tf_weapon_flamethrower.h"
 #include "tf_weapon_knife.h"
-#include "tf_item_powerup_bottle.h"
 #include "tf_imagepanel.h"
 #include "c_tf_weapon_builder.h"
 #include "tf_weapon_minigun.h"
@@ -338,15 +337,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		outMeters.AddToHead( hNewMeter );
 		hNewMeter->SetVisible( false );
 	}*/
-
-	// Mvm canteen
-	hNewMeter = new CHudItemEffectMeter_Weapon< CTFPowerupBottle >( pszElementName, pPlayer, TF_WEAPON_NONE, true, "resource/UI/HudItemEffectMeter_PowerupBottle.res" );
-	if ( hNewMeter )
-	{
-		gHUD.AddHudElement( hNewMeter );
-		outMeters.AddToHead( hNewMeter );
-		hNewMeter->SetVisible( false );
-	}
 
 }
 
@@ -1125,70 +1115,6 @@ bool CHudItemEffectMeter_Weapon<C_TFWeaponBuilder>::ShouldFlash( void )
 	{
 		return false;
 	}
-}
-
-template <>
-CTFPowerupBottle* CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetWeapon( void )
-{
-	if ( m_bEnabled && m_pPlayer && !m_hWeapon )
-	{
-		for ( int i = 0; i < m_pPlayer->GetNumWearables(); ++i )
-		{
-			m_hWeapon = dynamic_cast<CTFPowerupBottle*>( m_pPlayer->GetWearable( i ) );
-			if ( m_hWeapon )
-			{
-				break;
-			}
-		}
-
-		if ( !m_hWeapon )
-		{
-			m_bEnabled = false;
-		}
-	}
-
-	return m_hWeapon;
-}
-
-template <>
-bool CHudItemEffectMeter_Weapon<CTFPowerupBottle>::IsEnabled( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return ( pPowerupBottle->GetNumCharges() > 0 );
-	}
-
-	return false;
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetCount( void )
-{
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return pPowerupBottle->GetNumCharges();
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-template <>
-const char* CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetIconName( void )
-{
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return pPowerupBottle->GetEffectIconName();
-	}
-
-	return CHudItemEffectMeter::GetIconName();
 }
 
 //-----------------------------------------------------------------------------

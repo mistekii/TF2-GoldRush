@@ -14,7 +14,6 @@
 #include "tf_objective_resource.h"
 #include "econ_entity_creation.h"
 #include "econ_wearable.h"
-#include "tf_item_powerup_bottle.h"
 #include "tf_gc_server.h"
 #include "vote_controller.h"
 #include "tf_gamestats.h"
@@ -1461,14 +1460,6 @@ void CPopulationManager::RestoreCheckpoint( void )
 		// Clear sentry danger
 		player->ResetAccumulatedSentryGunDamageDealt();
 		player->ResetAccumulatedSentryGunKillCount();
-
-		// Bottles must be purged separately, charges will be restored with other items
-		CTFWearable *pWearable = player->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION );
-		CTFPowerupBottle *pPowerupBottle = dynamic_cast< CTFPowerupBottle* >( pWearable );
-		if ( pPowerupBottle )
-		{
-			pPowerupBottle->Reset();
-		}
 
 		SendUpgradesToPlayer( player );
 	}
