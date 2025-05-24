@@ -649,20 +649,10 @@ void CTFHudPlayerHealth::SetHealth( int iNewHealth, int iMaxHealth, int	iMaxBuff
 	if ( m_nHealth > 0 )
 	{
 		SetDialogVariable( "Health", m_nHealth );
-
-		if ( m_nMaxHealth - m_nHealth >= 5 )
-		{
-			SetDialogVariable( "MaxHealth", m_nMaxHealth );
-		}
-		else
-		{
-			SetDialogVariable( "MaxHealth", "" );
-		}
 	}
 	else
 	{
 		SetDialogVariable( "Health", "" );
-		SetDialogVariable( "MaxHealth", "" );
 	}	
 }
 
