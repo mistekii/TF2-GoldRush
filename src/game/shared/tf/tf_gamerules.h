@@ -87,7 +87,6 @@ extern ConVar tf_gamemode_boss_battle;
 
 #endif // TF_RAID_MODE
 
-class CMannVsMachineLogic;
 class CMannVsMachineUpgrades;
 
 //extern ConVar tf_populator_health_multiplier;

@@ -98,7 +98,6 @@
 
 	#include "raid/tf_raid_logic.h"
 	#include "player_vs_environment/tf_boss_battle_logic.h"
-	#include "player_vs_environment/tf_mann_vs_machine_logic.h"
 	#include "player_vs_environment/tf_upgrades.h"
 
 	#include "tf_wheel_of_doom.h"
@@ -4048,17 +4047,10 @@ void CTFGameRules::Activate()
 	{
 		tf_gamemode_tc.SetValue( 1 );
 	}
-	
-	CMannVsMachineLogic *pMannVsMachineLogic = dynamic_cast< CMannVsMachineLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_mann_vs_machine" ) );
+
 	CTeamTrainWatcher *pTrainWatch = dynamic_cast<CTeamTrainWatcher*> ( gEntList.FindEntityByClassname( NULL, "team_train_watcher" ) );
 	bool bFlag = ICaptureFlagAutoList::AutoList().Count() > 0;
-	if ( pMannVsMachineLogic )
-	{
-		m_bPlayingMannVsMachine.Set( true );
-		tf_gamemode_mvm.SetValue( 1 );
-		m_nGameType.Set( TF_GAMETYPE_MVM );
-	}
-	else if ( StringHasPrefix( STRING( gpGlobals->mapname ), "sd_" ) )
+	if ( StringHasPrefix( STRING( gpGlobals->mapname ), "sd_" ) )
 	{
 		m_bPlayingSpecialDeliveryMode.Set( true );
 		tf_gamemode_sd.SetValue( 1 );
@@ -4571,14 +4563,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 		}
 	}
 #endif // TF_RAID_MODE
-
-	if ( IsMannVsMachineMode() )
-	{
-		if ( g_hMannVsMachineLogic )
-		{
-			g_hMannVsMachineLogic->SetupOnRoundStart();
-		}
-	}
 
 	m_redPayloadToPush = NULL;
 	m_bluePayloadToPush = NULL;
