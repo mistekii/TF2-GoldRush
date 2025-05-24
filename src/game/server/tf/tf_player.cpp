@@ -114,7 +114,6 @@
 #include "raid/tf_raid_logic.h"
 #endif
 
-#include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/tf_population_manager.h"
 #include "tf_logic_halloween_2014.h"
 #include "func_croc.h"
@@ -2699,7 +2698,6 @@ void CTFPlayer::ResetScores( void )
 	m_Shared.ResetScores();
 	CTF_GameStats.ResetPlayerStats( this );
 	RemoveNemesisRelationships();
-	MannVsMachineStats_ResetPlayerEvents( this );
 
 	BaseClass::ResetScores();
 }
@@ -4104,12 +4102,6 @@ void CTFPlayer::ManageRegularWeapons( TFPlayerClassData_t *pData )
 				}
 			}
 		}
-
-		CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-		if ( pStats )
-		{
-			pStats->NotifyPlayerActiveUpgradeCosts( this, nSpending );
-		}
 	}
 
 
@@ -5176,41 +5168,6 @@ int CTFPlayer::GetAutoTeam( int nPreferedTeam /*= TF_TEAM_AUTOASSIGN*/ )
 
 			if ( bReturnDefenders )
 			{
-				// If joining a MVM game that's in-progress, give us the max per-player collected value
-				if ( TFGameRules()->IsMannVsMachineMode() && g_pPopulationManager )
-				{
-					int nRoundCurrency = MannVsMachineStats_GetAcquiredCredits();
-					nRoundCurrency += g_pPopulationManager->GetStartingCurrency();
-
-					// Check to see if this player has an upgrade history and apply it to them
-					// deduct any cash that has already been spent
-					int spentCurrency = g_pPopulationManager->GetPlayerCurrencySpent( this );
-
-					if ( m_nCurrency < nRoundCurrency )
-					{
-						SetCurrency( nRoundCurrency - spentCurrency );
-					}
-
-					if ( g_pPopulationManager )
-					{
-						// See if the team's earned any respec credits
-						if ( TFGameRules()->IsMannVsMachineRespecEnabled() && !g_pPopulationManager->GetNumRespecsAvailableForPlayer( this ) )
-						{
-							uint16 nRespecs = g_pPopulationManager->GetNumRespecsEarned();
-							if ( nRespecs )
-							{
-								g_pPopulationManager->SetNumRespecsForPlayer( this, nRespecs );
-							}
-						}
-
-						// Set buyback credits - if they aren't reconnecting
-						if ( !g_pPopulationManager->IsPlayerBeingTrackedForBuybacks( this ) )
-						{
-							g_pPopulationManager->SetBuybackCreditsForPlayer( this, tf_mvm_buybacks_per_wave.GetInt() );
-						}
-					}
-				}
-
 				return TFGameRules()->GetTeamAssignmentOverride( this, TF_TEAM_PVE_DEFENDERS );
 			}
 		}
@@ -6621,7 +6578,6 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 				{
 					bSuccess = true;
 					RemoveCurrency( iCost );
-					MannVsMachineStats_PlayerEvent_BoughtInstantRespawn( this, iCost );
 				}
 			}
 
@@ -10652,76 +10608,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		DropHealthPack( info, true );
 	}
 
-#ifdef TF_RAID_MODE
-	// Bots sometimes drop health kits in Raid Mode
-	if ( TFGameRules()->IsRaidMode() && GetTeamNumber() == TF_TEAM_RED )
-	{
-		if ( RandomInt( 1, 100 ) <= tf_raid_drop_healthkit_chance.GetInt() )
-		{
-			DropHealthPack( info, true );
-		}
-	}
-#endif // TF_RAID_MODE
-
-	// PvE mode credits/currency
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		MannVsMachineStats_PlayerEvent_Died( this );
-
-		if ( IsBot() )
-		{
-			m_nCurrency = 0;
-			if ( !IsMissionEnemy() && m_pWaveSpawnPopulator )
-			{
-				m_nCurrency = m_pWaveSpawnPopulator->GetCurrencyAmountPerDeath();
-			}
-
-			if ( !m_bIsSupportEnemy )
-			{
-				unsigned int iFlags = m_bIsMissionEnemy ? MVM_CLASS_FLAG_MISSION : MVM_CLASS_FLAG_NORMAL;
-				if ( IsMiniBoss() )
-				{
-					iFlags |= MVM_CLASS_FLAG_MINIBOSS;
-				}
-
-				TFObjectiveResource()->DecrementMannVsMachineWaveClassCount( GetPlayerClass()->GetClassIconName(), iFlags );
-			}
-
-			if ( m_bIsLimitedSupportEnemy )
-			{
-				TFObjectiveResource()->DecrementMannVsMachineWaveClassCount( GetPlayerClass()->GetClassIconName(), MVM_CLASS_FLAG_SUPPORT_LIMITED );
-			}
-
-			// Electrical effect whenever a bot dies
-			CPVSFilter filter( WorldSpaceCenter() );
-			TE_TFParticleEffect( filter, 0.f, "bot_death", GetAbsOrigin(), vec3_angle );
-		}
-		else
-		{
-			// Players lose money for dying
-			RemoveCurrency( tf_mvm_death_penalty.GetInt() );
-		}
-
-		// tell the population manager a player died
-		// THIS MUST HAPPEN AFTER THE CURRENCY CALCULATION (ABOVE)
-		// NOW THAT WE'RE CALCULATING CURRENCY ON-DEATH INSTEAD OF ON-SPAWN
-		if ( g_pPopulationManager )
-		{
-			g_pPopulationManager->OnPlayerKilled( this );
-		}
-
-		if ( IsBot() && HasTheFlag() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			int nLevel = TFObjectiveResource()->GetFlagCarrierUpgradeLevel();
-			IGameEvent *event = gameeventmanager->CreateEvent( "mvm_bomb_carrier_killed" );
-			if ( event )
-			{
-				event->SetInt( "level", nLevel );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-
 	// This system is designed to coarsely measure a player's skill in public pvp games.
 //	UpdateSkillRatingData();
 
@@ -10838,8 +10724,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	
 	SetGibbedOnLastDeath( bGib );
 
-	bool bIsMvMRobot = TFGameRules()->IsMannVsMachineMode() && IsBot();
-	if ( bGib && !bIsMvMRobot && IsPlayerClass( TF_CLASS_SCOUT ) && RandomInt( 1, 100 ) <= SCOUT_ADD_BIRD_ON_GIB_CHANCE )
+	if ( bGib && IsPlayerClass( TF_CLASS_SCOUT ) && RandomInt( 1, 100 ) <= SCOUT_ADD_BIRD_ON_GIB_CHANCE )
 	{
 		Vector vecPos = WorldSpaceCenter();
 		SpawnClientsideFlyingBird( vecPos );
@@ -11156,41 +11041,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// Have teammates announce my death
-		if ( GetTeamNumber() == TF_TEAM_PVE_DEFENDERS )
-		{
-			// have the last player on the defenders speak the last_man_standing line
-			CUtlVector< CTFPlayer * > playerVector;
-			CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS, true );
-			if ( playerVector.Count() == 1 )
-			{
-				CTFPlayer *pAlivePlayer = playerVector[0];
-				if ( pAlivePlayer )
-				{
-					pAlivePlayer->SpeakConceptIfAllowed( MP_CONCEPT_MVM_LAST_MAN_STANDING );
-				}
-			}
-			else
-			{
-				if ( pPlayerAttacker && pPlayerAttacker->IsMiniBoss() )
-				{
-					TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_GIANT_KILLED_TEAMMATE, TF_TEAM_PVE_DEFENDERS );
-				}
-
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_DEFENDER_DIED, TF_TEAM_PVE_DEFENDERS, CFmtStr( "victimclass:%s", g_aPlayerClassNames_NonLocalized[ GetPlayerClass()->GetClassIndex() ] ).Access() );
-			}
-		}
-		else
-		{
-			if ( IsMiniBoss() )
-			{
-				TFGameRules()->HaveAllPlayersSpeakConceptIfAllowed( MP_CONCEPT_MVM_GIANT_KILLED, TF_TEAM_PVE_DEFENDERS );
-			}
-		}
-	}
-
 	// Reset Streaks to zero
 	m_Shared.ResetStreaks();
 	for ( int i = 0; i < WeaponCount(); i++) 
@@ -11210,21 +11060,17 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	}
 
 	// Is the player inside a respawn time override volume?
-	// don't do this for MvM bots
-	if ( !TFGameRules()->IsMannVsMachineMode() || !IsBot() )
+	FOR_EACH_VEC( ITriggerPlayerRespawnOverride::AutoList(), i )
 	{
-		FOR_EACH_VEC( ITriggerPlayerRespawnOverride::AutoList(), i )
+		CTriggerPlayerRespawnOverride *pTriggerRespawn = static_cast< CTriggerPlayerRespawnOverride* >( ITriggerPlayerRespawnOverride::AutoList()[i] );
+		if ( !pTriggerRespawn->m_bDisabled && pTriggerRespawn->IsTouching( this ) )
 		{
-			CTriggerPlayerRespawnOverride *pTriggerRespawn = static_cast< CTriggerPlayerRespawnOverride* >( ITriggerPlayerRespawnOverride::AutoList()[i] );
-			if ( !pTriggerRespawn->m_bDisabled && pTriggerRespawn->IsTouching( this ) )
-			{
-				SetRespawnOverride( pTriggerRespawn->GetRespawnTime(), pTriggerRespawn->GetRespawnName() );
-				break;
-			}
-			else
-			{
-				SetRespawnOverride( -1.f, NULL_STRING );
-			}
+			SetRespawnOverride( pTriggerRespawn->GetRespawnTime(), pTriggerRespawn->GetRespawnName() );
+			break;
+		}
+		else
+		{
+			SetRespawnOverride( -1.f, NULL_STRING );
 		}
 	}
 

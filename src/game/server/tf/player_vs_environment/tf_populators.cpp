@@ -2248,66 +2248,6 @@ void CWave::WaveIntermissionUpdate ( void )
 		m_bFiredInitWaveOutput = true;
 	}
 
-	if ( m_GetUpgradesAlertTimer.HasStarted() && m_GetUpgradesAlertTimer.IsElapsed() )
-	{
-		// Monitor for full wave currency collection bonus
-		if ( ( m_bCheckBonusCreditsMin || m_bCheckBonusCreditsMax ) && gpGlobals->curtime > m_flBonusCreditsTime )
-		{
-			int nWaveNum = GetManager()->GetWaveNumber() - 1;
-			int nDropped = MannVsMachineStats_GetDroppedCredits( nWaveNum );
-			int nAcquired = MannVsMachineStats_GetAcquiredCredits( nWaveNum, false );
-			float flRatioCollected = clamp( ( (float)nAcquired / (float)nDropped ), 0.1f, 1.f );
-
-			float flMinBonus = tf_mvm_currency_bonus_ratio_min.GetFloat();
-			float flMaxBonus = tf_mvm_currency_bonus_ratio_max.GetFloat();
-
-			Assert( flMinBonus <= flMaxBonus );
-			if ( flMinBonus > flMaxBonus )
-				flMinBonus = flMaxBonus;
-
-			// Max bonus
-			if ( m_bCheckBonusCreditsMax && nDropped > 0 && flRatioCollected >= flMaxBonus )
-			{
-				int nAmount = (float)TFGameRules()->CalculateCurrencyAmount_ByType( TF_CURRENCY_WAVE_COLLECTION_BONUS ) * 0.5f;
-				TFGameRules()->DistributeCurrencyAmount( nAmount, NULL, true, false, true );
-
-				TFGameRules()->BroadcastSound( 255, "Announcer.MVM_Bonus" );
-				IGameEvent *event = gameeventmanager->CreateEvent( "mvm_creditbonus_wave" );
-				if ( event )
-				{
-					gameeventmanager->FireEvent( event );
-				}
-
-				m_bCheckBonusCreditsMax = false;
-				m_GetUpgradesAlertTimer.Reset();
-			}
-			// Min bonus
-			if ( m_bCheckBonusCreditsMin && nDropped > 0 && flRatioCollected >= flMinBonus )
-			{
-				int nAmount = (float)TFGameRules()->CalculateCurrencyAmount_ByType( TF_CURRENCY_WAVE_COLLECTION_BONUS ) * 0.5f;
-				TFGameRules()->DistributeCurrencyAmount( nAmount, NULL, true, false, true );
-
-				TFGameRules()->BroadcastSound( 255, "Announcer.MVM_Bonus" );
-				IGameEvent *event = gameeventmanager->CreateEvent( "mvm_creditbonus_wave" );
-				if ( event )
-				{
-					gameeventmanager->FireEvent( event );
-				}
-
-				m_bCheckBonusCreditsMin = false;
-			}
-			else if ( !m_bPlayedUpgradeAlert )
-			{
-				TFGameRules()->BroadcastSound( 255, "Announcer.MVM_Get_To_Upgrade" );
-
-				m_bPlayedUpgradeAlert = true;
-				m_GetUpgradesAlertTimer.Reset();
-			}
-
-			m_flBonusCreditsTime = gpGlobals->curtime + 0.25f;
-		}
-	}
-
 	// When we use a timer between waves, start it here
 	if ( m_doneTimer.HasStarted() && m_doneTimer.IsElapsed() )
 	{

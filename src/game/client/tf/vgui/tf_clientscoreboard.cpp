@@ -53,7 +53,6 @@
 #endif
 
 #include "econ_item_system.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/c_tf_upgrades.h"
 #include "tf_badge_panel.h"
 

@@ -17,7 +17,6 @@
 
 #include "tf_gcmessages.h"
 #include "player_vs_environment/tf_population_manager.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_objective_resource.h"
 #include "gc_clientsystem.h"
 #include "tf_gc_server.h"

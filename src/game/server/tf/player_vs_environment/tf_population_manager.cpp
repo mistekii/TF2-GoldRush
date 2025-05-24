@@ -7,7 +7,6 @@
 
 #include "tf_population_manager.h"
 #include "tf_team.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_shareddefs.h"
 #include "filesystem.h"
 #include "tf_obj_sentrygun.h"
@@ -277,7 +276,6 @@ CPopulationManager::CPopulationManager( void )
 	SetNextThink( gpGlobals->curtime );
 
 	g_pPopulationManager = this;
-	m_pMVMStats = MannVsMachineStats_GetInstance();
 
 	m_pKvpMvMMapCycle = NULL;
 	
@@ -440,18 +438,10 @@ bool CPopulationManager::Initialize( void )
 		ClearCheckpoint();
 		m_iCurrentWaveIndex = 0;
 		m_nNumConsecutiveWipes = 0;
-		m_pMVMStats->SetCurrentWave( m_iCurrentWaveIndex );
 	}
 	else
 	{
  		RestoreCheckpoint();
-
-		// Restore Check Point is being called on RoundStart so this check is currently needed
-		// Report loss to Stats
-		if ( m_bIsInitialized && ( m_iCurrentWaveIndex > 0 || m_nNumConsecutiveWipes > 1 ) )
-		{
-			m_pMVMStats->RoundEvent_WaveEnd( false );
-		}
 
 		IGameEvent *event = gameeventmanager->CreateEvent( "mvm_wave_failed" );
 		if ( event )
@@ -713,22 +703,6 @@ void CPopulationManager::Update( void )
 			engine->ServerCommand( "kickall #TF_PVE_Disconnect\n" );
 			CycleMission();
 		}
-
-		// See if the team got the bonus on every wave
-		if ( m_bCheckForCurrencyAchievement )
-		{
-			if ( ( MannVsMachineStats_GetDroppedCredits() > 0 ) && ( MannVsMachineStats_GetMissedCredits() == 0 ) )
-			{
-				const char *pszName = IsAdvancedPopFile() ? "mvm_creditbonus_all_advanced" : "mvm_creditbonus_all";
-				IGameEvent *event = gameeventmanager->CreateEvent( pszName );
-				if ( event )
-				{
-					gameeventmanager->FireEvent( event );
-				}
-
-				m_bCheckForCurrencyAchievement = false;
-			}
-		}
 	}
 	else if ( TFGameRules()->State_Get() == GR_STATE_STARTGAME )
 	{
@@ -844,8 +818,6 @@ void CPopulationManager::ResetMap( void )
 		pPlayer->ResetScores();
 	}
 
-	// Reset Stats and go to wave 0 clean
-	m_pMVMStats->ResetStats( );
 	ResetRespecPoints();
 	ClearCheckpoint();
 
@@ -1059,7 +1031,6 @@ void CPopulationManager::StartCurrentWave( void )
 	}
 
 	UpdateObjectiveResource();
-	m_pMVMStats->RoundEvent_WaveStart();
 
 	TFGameRules()->State_Transition( GR_STATE_RND_RUNNING );
 
@@ -1118,23 +1089,6 @@ void CPopulationManager::JumpToWave( uint32 waveNumber, float fCleanMoneyPercent
 		ClearCheckpoint();
 
 		Initialize();
-		m_pMVMStats->ResetStats( );
-
-		for ( m_iCurrentWaveIndex = 0; m_iCurrentWaveIndex < waveNumber; ++m_iCurrentWaveIndex )
-		{
-			pWave = GetCurrentWave();
-			if ( pWave )
-			{
-				int nCurrency = pWave->GetTotalCurrency();
-				m_pMVMStats->SetCurrentWave( m_iCurrentWaveIndex );
-
-				if ( m_iCurrentWaveIndex < waveNumber )
-				{
-					m_pMVMStats->RoundEvent_CreditsDropped( m_iCurrentWaveIndex, nCurrency );
-					m_pMVMStats->RoundEvent_AcquiredCredits( m_iCurrentWaveIndex, nCurrency * fCleanMoneyPercent, false );
-				}
-			}
-		}
 	}
 
 	// Reset the new wave
@@ -1144,7 +1098,7 @@ void CPopulationManager::JumpToWave( uint32 waveNumber, float fCleanMoneyPercent
 	{
 		pWave->ForceReset();
 	}
-	m_pMVMStats->SetCurrentWave( m_iCurrentWaveIndex );
+
 	if ( IsInEndlessWaves() )
 	{
 		EndlessRollEscalation();
@@ -1173,8 +1127,6 @@ void CPopulationManager::JumpToWave( uint32 waveNumber, float fCleanMoneyPercent
 // Report that a wave has been completed
 void CPopulationManager::WaveEnd( bool bSuccess ) 
 {
-	m_pMVMStats->RoundEvent_WaveEnd( bSuccess );
-
 	// Save off round stats before we reset them
 	IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
 	if ( event )
@@ -1204,7 +1156,6 @@ void CPopulationManager::WaveEnd( bool bSuccess )
 		{
 			m_iCurrentWaveIndex++;
 		}
-		m_pMVMStats->SetCurrentWave( m_iCurrentWaveIndex );
 
 		// get Current Wave
 		CWave *nextWave = GetCurrentWave();
@@ -1357,8 +1308,7 @@ void CPopulationManager::ForgetOtherBottleUpgrades ( CTFPlayer *player, CEconIte
 void CPopulationManager::RestorePlayerCurrency ()
 {
 	// Set the players money on round start
-	int nRoundCurrency = m_pMVMStats->GetAcquiredCredits( -1 );
-	nRoundCurrency += GetStartingCurrency();
+
 
 	CUtlVector< CTFPlayer * > playerVector;
 	CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
@@ -1367,7 +1317,7 @@ void CPopulationManager::RestorePlayerCurrency ()
 	{
 		// deduct any cash that has already been spent
 		int spentCurrency = GetPlayerCurrencySpent( playerVector[i] );
-		playerVector[i]->SetCurrency( nRoundCurrency - spentCurrency );
+		playerVector[i]->SetCurrency( spentCurrency ); // temp
 	}
 }
 
@@ -1413,7 +1363,6 @@ void CPopulationManager::AddPlayerCurrencySpent ( CTFPlayer *player, int cost )
 void CPopulationManager::SendUpgradesToPlayer ( CTFPlayer *player )
 {
 	CUtlVector< CUpgradeInfo > *upgrades = GetPlayerUpgradeHistory ( player );
-	m_pMVMStats->SendUpgradesToPlayer( player, upgrades );
 }
 
 //-----------------------------------------------------------------------------------
@@ -1465,9 +1414,6 @@ void CPopulationManager::RestoreCheckpoint( void )
 	}
 
 	m_nNumConsecutiveWipes++;
-
-	// players are restored to their checkpoint state after they spawn
-	m_pMVMStats->SetCurrentWave( m_iCurrentWaveIndex );
 
 	UpdateObjectiveResource();
 
@@ -1528,12 +1474,6 @@ void CPopulationManager::OnCurrencyCollected( int nAmount, bool bCountAsDropped,
 		iWaveNumber--;
 	}
 
-	if ( bCountAsDropped ) 
-	{
-		m_pMVMStats->RoundEvent_CreditsDropped( iWaveNumber, nAmount );
-	}
-	m_pMVMStats->RoundEvent_AcquiredCredits( iWaveNumber, nAmount, bIsBonus );
-
 	// Respec
 	int nRespecLimit = tf_mvm_respec_limit.GetInt();
 	if ( nRespecLimit )
@@ -1570,14 +1510,6 @@ void CPopulationManager::OnCurrencyCollected( int nAmount, bool bCountAsDropped,
 					// i.e. "Respec Goal: 100 of 100"
 					m_nCurrencyCollectedForRespec = nCreditGoal;
 				}
-			}
-
-			// Send down to clients
-			CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-			if ( pStats )
-			{
-				pStats->SetNumRespecsEarnedInWave( m_nRespecsAwardedInWave );
-				pStats->SetAcquiredCreditsForRespec( m_nCurrencyCollectedForRespec );
 			}
 		}
 	}
@@ -1652,7 +1584,6 @@ void CPopulationManager::MvMVictory()
 	// Set Game state
 	TFGameRules()->BroadcastSound( 255, "Game.YourTeamWon" );
 
-	m_pMVMStats->RoundOver( true );
 	ClearCheckpoint();
 
 	// Notify Players of Victory
@@ -2311,18 +2242,6 @@ void CPopulationManager::RemovePlayerAndItemUpgradesFromHistory( CTFPlayer *pPla
 			}
 		}
 	}
-
-	// Only do this step in MvM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && m_pMVMStats )
-	{
-		// This should put us at the right currency, given that we've removed item and player upgrade tracking by this point
-		int nTotalAcquiredCurrency = m_pMVMStats->GetAcquiredCredits( -1 ) + GetStartingCurrency();
-		int nSpentCurrency = GetPlayerCurrencySpent( pPlayer );
-		pPlayer->SetCurrency( nTotalAcquiredCurrency - nSpentCurrency );
-
-		// Reset the stat that tracks upgrade purchases
-		m_pMVMStats->ResetUpgradeSpending( pPlayer );
-	}
 };
 
 //-----------------------------------------------------------------------------
@@ -2516,17 +2435,6 @@ void CPopulationManager::ResetRespecPoints( void )
 	m_nRespecsAwarded = 0;
 	m_nRespecsAwardedInWave = 0;
 	m_nCurrencyCollectedForRespec = 0;
-
-	// Send down to clients
-	if ( tf_mvm_respec_limit.GetBool() )
-	{
-		CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-		if ( pStats )
-		{
-			pStats->SetNumRespecsEarnedInWave( m_nRespecsAwardedInWave );
-			pStats->SetAcquiredCreditsForRespec( m_nCurrencyCollectedForRespec );
-		}
-	}
 }
 
 // ----------------------------------------------------------------------------------

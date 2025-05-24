@@ -31,7 +31,6 @@
 #include "gc_clientsystem.h"
 #include "achievementmgr.h"
 #include "tf_hud_statpanel.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "c_tf_playerresource.h"
 
 #define UPGRADE_PANEL_LEVEL_LABEL_COUNT 10

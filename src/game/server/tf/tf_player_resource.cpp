@@ -13,7 +13,6 @@
 #include <coordsize.h>
 #include "tf_matchmaking_shared.h"
 
-#include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/tf_population_manager.h"
 #include "tf_gc_server.h"
 
@@ -243,16 +242,9 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 	if ( m_iTotalScore.Get( iIndex ) != iTotalScore )
 	{
 		int nDelta = iTotalScore -  m_iTotalScore.Get( iIndex );
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			MannVsMachineStats_PlayerEvent_PointsChanged( pTFPlayer, nDelta );
-		}
-		else
-		{
-			// Kill eater points-scored tracking.  Increment all equipped items with this kill eater type.  
-			// We only do this when we're NOT in MvM
-			HatAndMiscEconEntities_OnOwnerKillEaterEventNoParter( pTFPlayer, kKillEaterEvent_PointsScored, nDelta );
-		}
+
+		// Kill eater points-scored tracking.  Increment all equipped items with this kill eater type.  
+		HatAndMiscEconEntities_OnOwnerKillEaterEventNoParter( pTFPlayer, kKillEaterEvent_PointsScored, nDelta );
 	}
 		
 	m_iTotalScore.Set( iIndex, iTotalScore );

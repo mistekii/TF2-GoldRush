@@ -8,9 +8,7 @@
 
 
 #include "bot/tf_bot.h"
-#include "tf_mann_vs_machine_stats.h"
 
-class CMannVsMachineStats;
 class KeyValues;
 class IPopulator;
 class CPopulationManager;

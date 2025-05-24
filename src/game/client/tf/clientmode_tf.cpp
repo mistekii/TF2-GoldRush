@@ -62,7 +62,6 @@
 #include "tf_partyclient.h"
 
 #include "econ_item_system.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "player_vs_environment/c_tf_upgrades.h"
 
 #include "steam/isteamfriends.h"

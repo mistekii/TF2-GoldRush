@@ -21,7 +21,6 @@
 #include "team_control_point_master.h"
 #include "steamworks_gamestats.h"
 #include "vote_controller.h"
-#include "tf_mann_vs_machine_stats.h"
 
 #include "tf_matchmaking_shared.h"
 
@@ -1086,26 +1085,6 @@ void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDama
 		if ( round )
 		{
 			round->m_Summary.iDamageDone += iDamageTaken;
-		}
-
-		//Report MvM damage to bots
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-			if ( pStats )
-			{
-				if ( pTarget && pTarget->IsBot() )
-				{
-					if ( pTarget->IsMiniBoss() )
-					{
-						pStats->PlayerEvent_DealtDamageToGiants( pAttacker, iDamageTaken );
-					}
-					else
-					{
-						pStats->PlayerEvent_DealtDamageToBots( pAttacker, iDamageTaken );
-					}
-				}
-			}
 		}
 	}
 

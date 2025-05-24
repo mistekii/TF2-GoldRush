@@ -119,7 +119,6 @@
 	#include "player_voice_listener.h"
 #endif
 
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_upgrades_shared.h"
 
 #include "tf_weaponbase_gun.h"
@@ -3907,11 +3906,6 @@ static const char *s_PreserveEnts[] =
 	"tf_viewmodel",
 	"tf_logic_training",
 	"tf_logic_training_mode",
-#ifdef TF_RAID_MODE
-	"tf_logic_raid",
-#endif // TF_RAID_MODE
-	"tf_powerup_bottle",
-	"tf_mann_vs_machine_stats",
 	"tf_wearable",
 	"tf_wearable_demoshield",
 	"tf_wearable_vm",
@@ -3921,8 +3915,6 @@ static const char *s_PreserveEnts[] =
 	"tf_logic_medieval",
 	"tf_logic_cp_timer",
 	"tf_logic_tower_defense",	// legacy
-	"tf_logic_mann_vs_machine",
-	"func_upgradestation",
 	"entity_rocket",
 	"entity_carrier",
 	"entity_sign",
@@ -10933,8 +10925,6 @@ void CTFGameRules::CreateStandardEntities()
 
 	// Create the monster resource for PvE battles
 	g_pMonsterResource = (CMonsterResource *)CBaseEntity::Create( "monster_resource", vec3_origin, vec3_angle );
-
-	MannVsMachineStats_Init();
 
 	// Create the entity that will send our data to the client.
 	m_hGamerulesProxy = assert_cast<CTFGameRulesProxy*>(CBaseEntity::Create( "tf_gamerules", vec3_origin, vec3_angle ));
@@ -19068,60 +19058,7 @@ int CTFGameRules::GetTeamAssignmentOverride( CTFPlayer *pTFPlayer, int iDesiredT
 	int nMatchPlayers = pMatch ? pMatch->GetNumActiveMatchPlayers() : 0;
 	CMatchInfo::PlayerMatchData_t *pMatchPlayer = ( pMatch && steamID.IsValid() ) ? pMatch->GetMatchDataForPlayer( steamID ) : NULL;
 
-	if ( IsMannVsMachineMode() )
-	{
-		if ( !pTFPlayer->IsBot() && iTeam != TEAM_SPECTATOR )
-		{
-			if ( pMatchPlayer && !pMatchPlayer->bDropped )
-			{
-				// Part of the lobby match
-				Log( "MVM assigned %s to defending team (player is in lobby)\n", pTFPlayer->GetPlayerName() );
-				return TF_TEAM_PVE_DEFENDERS;
-			}
-
-			// Count ad-hoc players on defenders team
-			int nAdHocDefenders = 0;
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-				if ( !pPlayer || ( pPlayer->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS ) )
-					{ continue; }
-
-				CSteamID steamID;
-				if ( pPlayer->GetSteamID( &steamID ) && GTFGCClientSystem()->GetLiveMatchPlayer( steamID ) )
-					{ continue; }
-
-				// Player on defenders that doesn't have a live match entry
-				nAdHocDefenders++;
-			}
-
-			// Bootcamp mode can mix a lobby with ad-hoc joins
-			int nSlotsLeft = tf_mvm_defenders_team_size.GetInt() - nMatchPlayers - nAdHocDefenders;
-			if ( nSlotsLeft >= 1 )
-			{
-				Log( "MVM assigned %s to defending team (%d more slots remaining after us)\n", pTFPlayer->GetPlayerName(), nSlotsLeft-1 );
-
-				// Set Their Currency
-				int nRoundCurrency = MannVsMachineStats_GetAcquiredCredits();
-				nRoundCurrency += g_pPopulationManager->GetStartingCurrency();
-
-				// deduct any cash that has already been spent
-				int spentCurrency = g_pPopulationManager->GetPlayerCurrencySpent( pTFPlayer );
-				pTFPlayer->SetCurrency( nRoundCurrency - spentCurrency );
-
-				iTeam = TF_TEAM_PVE_DEFENDERS;
-			}
-			else
-			{
-				// no room
-				Log( "MVM assigned %s to spectator, all slots for defending team are in use, or reserved for lobby members\n",
-				     pTFPlayer->GetPlayerName() );
-				iTeam = TEAM_SPECTATOR;
-			}
-		}
-	}
-	else if ( pMatch )
+	if ( pMatch )
 	{
 		if ( !bAutoBalance )
 		{

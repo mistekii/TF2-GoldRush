@@ -1620,61 +1620,6 @@ int g_nNumUpgradeIconsForLastHint = 0;
 //-----------------------------------------------------------------------------
 void CTFClassMenu::CheckMvMUpgrades()
 {
-	// Set MvM Icons invisible
-	for ( int icons = 0; icons < ARRAYSIZE( m_pMvmUpgradeImages ); ++icons )
-	{
-		if ( m_pMvmUpgradeImages[icons] == NULL )
-			continue;
-		m_pMvmUpgradeImages[icons]->SetVisible( false );
-	}
-
-	if ( !TFGameRules() || !TFGameRules()->IsMannVsMachineMode() )
-		return;
-
-	CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-	if ( !pStats )
-		return;
-
-	CUtlVector< CUpgradeInfo > *upgrades = pStats->GetLocalPlayerUpgrades();
-
-	int nShowUpgradingHint = -1;
-	int nNumUpgradeIconsForHint = 0;
-
-	for ( int i = 0; i < upgrades->Count(); ++i )
-	{
-		vgui::Panel *pUpgradeImage = m_pMvmUpgradeImages[upgrades->Element(i).m_iPlayerClass];
-
-		if ( !pUpgradeImage )
-			continue;
-
-		if ( !pUpgradeImage->IsVisible() )
-		{
-			pUpgradeImage->SetVisible( true );
-			nNumUpgradeIconsForHint++;
-
-			// Only show the hint if we've shown it 3 or less times ever
-			if ( nShowUpgradingHint == -1 && tf_mvm_classupgradehelpcount.GetInt() < 3 )
-			{
-				int nY;
-				pUpgradeImage->GetPos( nShowUpgradingHint, nY );
-				nShowUpgradingHint += pUpgradeImage->GetWide() / 2;
-			}
-		}
-	}
-
-	// Only show the hint if there are more upgrade icon than the last time we openned the menu
-	if ( nShowUpgradingHint != -1 && g_nNumUpgradeIconsForLastHint < nNumUpgradeIconsForHint )
-	{
-		CExplanationPopup *pPopup = dynamic_cast< CExplanationPopup* >( FindChildByName("StartExplanation") );
-		if ( pPopup )
-		{
-			pPopup->SetCalloutInParentsX( nShowUpgradingHint );
-			pPopup->Popup();
-
-			g_nNumUpgradeIconsForLastHint = nNumUpgradeIconsForHint;
-			tf_mvm_classupgradehelpcount.SetValue( tf_mvm_classupgradehelpcount.GetInt() + 1 );
-		}
-	}
 }
 
 

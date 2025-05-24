@@ -18,7 +18,6 @@
 #include "tier1/convar.h"
 #include "tf_matchmaking_shared.h"
 #include "tf_quickplay_shared.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_objective_resource.h"
 #include "tf_player.h"
 #include "tf_voteissues.h"
@@ -3474,13 +3473,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 			      CMsgGameServerMatchmakingStatus_Event_Name( msg.Body().event() ).c_str(),
 			      ( tf_mm_trusted.GetBool() ? ", trusted=true" : "" )
 			);
-		}
-
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			msg.Body().set_mvm_credits_acquired( MannVsMachineStats_GetAcquiredCredits( -1 ) );
-			msg.Body().set_mvm_credits_dropped( MannVsMachineStats_GetAcquiredCredits( -1 ) );
-			msg.Body().set_mvm_wave( MannVsMachineStats_GetCurrentWave() );
 		}
 
 		ETFMatchGroup eCurrentGroup = k_eTFMatchGroup_Invalid;

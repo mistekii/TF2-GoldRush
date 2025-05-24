@@ -25,7 +25,6 @@
 #include "GameEventListener.h"
 #include "c_tf_playerresource.h"
 #include "tf_playermodelpanel.h"
-#include "tf_mann_vs_machine_stats.h"
 
 using namespace vgui;
 

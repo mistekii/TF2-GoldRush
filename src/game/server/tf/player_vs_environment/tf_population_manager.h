@@ -8,11 +8,9 @@
 
 
 #include "bot/tf_bot.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_populator_spawners.h"
 #include "tf_populators.h"
 
-class CMannVsMachineStats;
 class KeyValues;
 class IPopulator;
 class CPopulationManager;
@@ -226,7 +224,6 @@ private:
 	bool m_bAdvancedPopFile;
 	bool m_bCheckForCurrencyAchievement;
 
-	CMannVsMachineStats *m_pMVMStats;
 	KeyValues *m_pKvpMvMMapCycle;
 
 	bool m_bSpawningPaused;
