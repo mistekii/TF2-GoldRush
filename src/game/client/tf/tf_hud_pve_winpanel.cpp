@@ -23,7 +23,6 @@
 #include "vgui_avatarimage.h"
 #include "fmtstr.h"
 #include "teamplayroundbased_gamerules.h"
-#include "tf_hud_mann_vs_machine_status.h"
 #include "tf_gamerules.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -152,55 +151,6 @@ void CTFPVEWinPanel::OnTick()
 		if ( TFGameRules() && TFGameRules()->State_Get() != GR_STATE_TEAM_WIN )
 		{
 			m_bShouldBeVisible = false;
-		}
-
-		// Respec
-		if ( m_pRespecContainerPanel && m_pRespecBackground && m_pRespecCountLabel && m_pRespecTextLabel )
-		{
-			CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-			if ( pStats )
-			{
-				uint16 nRespecs = pStats->GetNumRespecsEarnedInWave();
-
-				bool bRespecVisible = nRespecs > 0;
-
-				// Do this only once
-				if ( bRespecVisible && !m_pRespecBackground->IsVisible() )
-				{
-					g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "RespecEarnedPulseLoss" );
-				
-					C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-					if ( pLocalTFPlayer )
-					{
-						pLocalTFPlayer->EmitSound( "MVM.RespecAwarded" );
-					}
-				}
-
-				if ( m_pRespecContainerPanel->IsVisible() != bRespecVisible )
-				{
-					m_pRespecContainerPanel->SetVisible( bRespecVisible );
-				}
-
-				if (  m_pRespecBackground->IsVisible() != bRespecVisible )
-				{
-					m_pRespecBackground->SetVisible( bRespecVisible );
-				}
-
-				if ( m_pRespecCountLabel->IsVisible() != bRespecVisible )
-				{
-					m_pRespecCountLabel->SetVisible( bRespecVisible );
-				}
-
-				if ( m_pRespecTextLabel->IsVisible() != bRespecVisible )
-				{
-					m_pRespecTextLabel->SetVisible( bRespecVisible );
-				}
-
-				if ( bRespecVisible )
-				{
-					m_pRespecContainerPanel->SetDialogVariable( "respeccount", nRespecs );
-				}
-			}
 		}
 	}
 

@@ -24,7 +24,6 @@
 	#include "dt_utlvector_recv.h"
 	#include "c_tf_player.h"
 	#include "hud_macros.h"
-	#include "tf_hud_mann_vs_machine_status.h"
 	#include "c_tf_objective_resource.h"	
 	#include "player_vs_environment/c_tf_upgrades.h"
 #endif

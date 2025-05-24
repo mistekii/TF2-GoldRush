@@ -63,7 +63,6 @@
 
 #include "econ_item_system.h"
 #include "tf_mann_vs_machine_stats.h"
-#include "tf_hud_mann_vs_machine_status.h"
 #include "player_vs_environment/c_tf_upgrades.h"
 
 #include "steam/isteamfriends.h"
@@ -1773,7 +1772,6 @@ void ClientModeTFNormal::Update()
 	NotificationQueue_Update();
 
 	// CHudVote *pHudVote = GET_HUDELEMENT( CHudVote );
-	// CTFHudMannVsMachineStatus *pMannVsMachineStatus = GET_HUDELEMENT( CTFHudMannVsMachineStatus );
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
 	// Update steam controller stuff if one is active

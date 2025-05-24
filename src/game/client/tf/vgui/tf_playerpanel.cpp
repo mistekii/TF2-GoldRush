@@ -15,7 +15,6 @@
 #include "iclientmode.h"
 #include "c_playerresource.h"
 #include "tf_hud_building_status.h"
-#include "tf_hud_mann_vs_machine_status.h"
 #include "tf_hud_tournament.h"
 #include "tf_hud_winpanel.h"
 #include "tf_tips.h"
