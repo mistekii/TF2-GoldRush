@@ -10,7 +10,6 @@
 #include "bot/tf_bot.h"
 #include "bot/behavior/scenario/capture_the_flag/tf_bot_deliver_flag.h"
 #include "bot/behavior/tf_bot_taunt.h"
-#include "bot/behavior/tf_bot_mvm_deploy_bomb.h"
 
 #include "tf_objective_resource.h"
 #include "econ_item_system.h"
@@ -326,11 +325,6 @@ QueryResultType	CTFBotDeliverFlag::ShouldRetreat( const INextBot *me ) const
 //---------------------------------------------------------------------------------------------
 EventDesiredResult< CTFBot > CTFBotDeliverFlag::OnContact( CTFBot *me, CBaseEntity *other, CGameTrace *result )
 {
-	if ( TFGameRules()->IsMannVsMachineMode() && other && FClassnameIs( other, "func_capturezone" ) )
-	{
-		return TrySuspendFor( new CTFBotMvMDeployBomb, RESULT_CRITICAL, "Delivering the bomb!" );
-	}
-
 	return TryContinue();
 }
 
