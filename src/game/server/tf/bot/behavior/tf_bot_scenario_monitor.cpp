@@ -50,7 +50,6 @@
 
 #include "bot/behavior/missions/tf_bot_mission_suicide_bomber.h"
 #include "bot/behavior/squad/tf_bot_escort_squad_leader.h"
-#include "bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_idle.h"
 #include "bot/behavior/missions/tf_bot_mission_reprogrammed.h"
 
 #include "bot/behavior/tf_bot_scenario_monitor.h"
@@ -102,123 +101,6 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 	case CTFBot::MISSION_SNIPER:
 		return new CTFBotSniperLurk;
 
-	}
-
-#ifdef TF_RAID_MODE
-	if ( me->HasAttribute( CTFBot::IS_NPC ) )
-	{
-		// map-spawned guardians
-		return new CTFBotGuardian;
-	}
-#endif // TF_RAID_MODE
-
-#ifdef TF_RAID_MODE
-	if ( TFGameRules()->IsBossBattleMode() )
-	{
-		if ( me->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// bot teammates
-			return new CTFBotCompanion;
-		}
-		
-		if ( me->IsPlayerClass( TF_CLASS_SNIPER ) )
-		{
-			return new CTFBotSniperLurk;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_SPY ) )
-		{
-			return new CTFBotSpyInfiltrate;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			return new CTFBotMedicHeal;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			return new CTFBotEngineerBuild;
-		}
-
-		return new CTFBotEscort( TFGameRules()->GetActiveBoss() );
-	}
-	else if ( TFGameRules()->IsRaidMode() )
-	{
-		if ( me->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// bot teammates
-			return new CTFBotCompanion;
-		}
-
-		if ( me->IsInASquad() )
-		{
-			// squad behavior
-			return new CTFBotSquadAttack;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_SCOUT ) || me->HasAttribute( CTFBot::AGGRESSIVE ) )
-		{
-			return new CTFBotWander;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_SNIPER ) )
-		{
-			return new CTFBotSniperLurk;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_SPY ) )
-		{
-			return new CTFBotSpyInfiltrate;
-		}
-
-		return new CTFBotGuardArea;
-	}
-#endif // TF_RAID_MODE	
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( me->IsPlayerClass( TF_CLASS_SPY ) )
-		{
-			return new CTFBotSpyLeaveSpawnRoom;
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			// if I'm being healed by another medic, I should do something else other than healing
-			bool bIsBeingHealedByAMedic = false;
-			int nNumHealers = me->m_Shared.GetNumHealers();
-			for ( int i=0; i<nNumHealers; ++i )
-			{
-				CBaseEntity *pHealer = me->m_Shared.GetHealerByIndex(i);
-				if ( pHealer && pHealer->IsPlayer() )
-				{
-					bIsBeingHealedByAMedic = true;
-					break;
-				}
-			}
-
-			if ( !bIsBeingHealedByAMedic )
-			{
-				return new CTFBotMedicHeal;
-			}
-		}
-
-		if ( me->IsPlayerClass( TF_CLASS_ENGINEER ) )
-		{
-			return new CTFBotMvMEngineerIdle;
-		}
-
-		// NOTE: Snipers are intentionally left out so they go after the flag. Actual sniping behavior is done as a mission.
-
-		if ( me->HasAttribute( CTFBot::AGGRESSIVE ) )
-		{
-			// push for the point first, then attack
-			return new CTFBotPushToCapturePoint( new CTFBotFetchFlag );
-		}
-
-		// capture the flag
-		return new CTFBotFetchFlag;
 	}
 
 	if ( me->IsPlayerClass( TF_CLASS_SPY ) )
