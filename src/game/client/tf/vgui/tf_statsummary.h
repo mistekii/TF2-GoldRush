@@ -66,11 +66,11 @@ private:
 	void SetDefaultSelections();
 	void UpdateDialog();
 	void UpdateBarCharts();
-	void UpdateClassDetails( bool bIsMVM = false );
+	void UpdateClassDetails();
 	void UpdateTip();
 	void UpdateControls();
 	void ClearMapLabel();
-	void ShowMapInfo( bool bShowMapInfo, bool bIsMVM = false, bool bBackgroundOverride = false );
+	void ShowMapInfo( bool bShowMapInfo, bool bBackgroundOverride = false );
 	void UpdateLeaderboard();
 	void InitBarChartComboBox( vgui::ComboBox *pComboBox );
 	void SetValueAsClass( const char *pDialogVariable, int iValue, int iPlayerClass );

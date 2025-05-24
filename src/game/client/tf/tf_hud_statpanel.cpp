@@ -79,8 +79,6 @@ BEGIN_DMXELEMENT_UNPACK( ClassStats_t )
 	// RoundStats_t		accumulated;
 	// RoundStats_t		max;
 	// RoundStats_t		currentRound;
-	// RoundStats_t		accumulatedMVM;
-	// RoundStats_t		maxMVM;
 END_DMXELEMENT_UNPACK( ClassStats_t, s_ClassStatsUnpack )
 
 BEGIN_DMXELEMENT_UNPACK( MapStats_t )
@@ -281,21 +279,10 @@ void CTFStatPanel::UpdateStats( int iClass, const RoundStats_t &stats, bool bAli
 		return;
 
 	ClassStats_t &classStats = GetClassStats( iClass );
-
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
-	if ( bMVM )
-	{
-		classStats.AccumulateMVMRound( stats );
-	}
-	else
-	{
-		classStats.AccumulateRound( stats );
-	}
+	classStats.AccumulateRound( stats );
 
 	// sentry kills is a max value rather than a count, meaningless to accumulate
 	classStats.accumulated.m_iStat[TFSTAT_MAXSENTRYKILLS] = 0;	
-	classStats.accumulatedMVM.m_iStat[TFSTAT_MAXSENTRYKILLS] = 0;
 
 	ResetDisplayedStat();
 	m_iCurStatClass = iClass;
@@ -309,18 +296,11 @@ void CTFStatPanel::UpdateStats( int iClass, const RoundStats_t &stats, bool bAli
 			continue;
 
 		int iCur = stats.m_iStat[statType];
-		int iMax = ( bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType] );
+		int iMax = ( classStats.max.m_iStat[statType] );
 		if ( iCur > iMax )
 		{
 			// Record was set, remember what stat set a record.
-			if ( bMVM )
-			{
-				classStats.maxMVM.m_iStat[statType] = iCur;
-			}
-			else
-			{
-				classStats.max.m_iStat[statType] = iCur;
-			}
+			classStats.max.m_iStat[statType] = iCur;
 
 			m_iCurStatValue = iCur;
 			m_statType = statType;
@@ -416,11 +396,9 @@ void CTFStatPanel::TestStatPanel( TFStatType_t statType, RecordBreakType_t recor
 		return;
 	}
 
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
 	m_iCurStatClass = pPlayer->GetPlayerClass()->GetClassIndex();
 	ClassStats_t &classStats = GetClassStats( m_iCurStatClass );
-	m_iCurStatValue = bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType];
+	m_iCurStatValue = classStats.max.m_iStat[statType];
 	m_iCurStatTeam = pPlayer->GetTeamNumber();
 
 	ShowStatPanel( m_iCurStatClass, m_iCurStatTeam, m_iCurStatValue, statType, recordType, false );
@@ -484,14 +462,6 @@ void CTFStatPanel::WriteStats( void )
 		CDmxElement *pMax = CreateDmxElement( "RoundStats_t" );
 		pMax->AddAttributesFromStructure( &stat.max, s_RoundStatsUnpack );
 		pClass->SetValue( "max", pMax );
-
-		CDmxElement *pAccumulatedMVM = CreateDmxElement( "RoundStats_t" );
-		pAccumulatedMVM->AddAttributesFromStructure( &stat.accumulatedMVM, s_RoundStatsUnpack );
-		pClass->SetValue( "accumulatedmvm", pAccumulatedMVM );
-
-		CDmxElement *pMaxMVM = CreateDmxElement( "RoundStats_t" );
-		pMaxMVM->AddAttributesFromStructure( &stat.maxMVM, s_RoundStatsUnpack );
-		pClass->SetValue( "maxmvm", pMaxMVM );
 	}
 
 	CDmxAttribute *pMapStatsList = pPlayerStats->AddAttribute( "aMapStats" );
@@ -617,18 +587,6 @@ bool CTFStatPanel::ReadStats( void )
 		if ( pMax )
 		{
 			pMax->UnpackIntoStructure( &stat.max, sizeof( stat.max ), s_RoundStatsUnpack );
-		}
-
-		CDmxElement *pAccumulatedMVM = pClass->GetValue< CDmxElement * >( "accumulatedMVM" );
-		if ( pAccumulatedMVM )
-		{
-			pAccumulatedMVM->UnpackIntoStructure( &stat.accumulatedMVM, sizeof( stat.accumulatedMVM ), s_RoundStatsUnpack );
-		}
-
-		CDmxElement *pMaxMVM = pClass->GetValue< CDmxElement * >( "maxMVM" );
-		if ( pMaxMVM )
-		{
-			pMaxMVM->UnpackIntoStructure( &stat.maxMVM, sizeof( stat.maxMVM ), s_RoundStatsUnpack );
 		}
 	}
 
@@ -1008,7 +966,7 @@ float CTFStatPanel::GetTotalHoursPlayed( void )
 
 	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; iClass++ )
 	{		
-		totalTimePlayed += GetClassStats( iClass ).accumulated.m_iStat[ TFSTAT_PLAYTIME ] + GetClassStats( iClass ).accumulatedMVM.m_iStat[ TFSTAT_PLAYTIME ];
+		totalTimePlayed += GetClassStats( iClass ).accumulated.m_iStat[ TFSTAT_PLAYTIME ];
 	}
 	
 	return totalTimePlayed / ( 60.0f * 60.0f );

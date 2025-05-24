@@ -541,9 +541,6 @@ struct ClassStats_t
 	RoundStats_t		max;
 	RoundStats_t		currentRound;
 
-	RoundStats_t		accumulatedMVM;
-	RoundStats_t		maxMVM;
-
 	ClassStats_t()
 	{
 		iPlayerClass	= TF_CLASS_UNDEFINED;
@@ -560,7 +557,6 @@ struct ClassStats_t
 	void AccumulateMVMRound( const RoundStats_t &other )
 	{
 		iNumberOfRounds++;
-		accumulatedMVM.AccumulateRound( other );
 		currentRound = other;
 	}
 };
