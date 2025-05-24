@@ -7965,66 +7965,12 @@
 			"prefab"	"weapon_invis"
 			"baseitem" "1"
 		}
-
-		
 		"735"
 		{
 			"name"	"TF_WEAPON_BUILDER_SPY"
 			"prefab" "weapon_sapper"
 			"item_quality"	"normal"
 			"baseitem" "1"
-		}
-		"736"
-		{
-			"name"	"Upgradeable TF_WEAPON_BUILDER_SPY"
-			"prefab" "weapon_sapper"
-			"first_sale_date"	"2010/09/29"
-			"show_in_armory"	"1"
-			"armory_desc"	"stockitem"
-		}
-		"737"
-		{
-			"name"	"Upgradeable TF_WEAPON_PDA_ENGINEER_BUILD"
-			"prefab"	"weapon_pda"
-			"capabilities"
-			{
-				"nameable"		"1"
-			}
-			"first_sale_date"	"2010/09/29"
-			"item_class"	"tf_weapon_pda_engineer_build"
-			"craft_class"	"weapon"
-			"craft_material_type"	"weapon"
-			"item_name"	"#TF_Weapon_PDA_Engineer_Builder"
-			"item_type_name"	"#TF_Weapon_PDA_Engineer"
-			"show_in_armory"	"1"
-			"armory_desc"	"stockitem"
-			"item_slot"	"pda"
-			"item_quality"	"unique"
-			"min_ilevel"	"1"
-			"max_ilevel"	"1"
-			"attach_to_hands" "1"
-			"image_inventory"	"backpack/weapons/w_models/w_builder"
-			"image_inventory_size_w"		"128"
-			"image_inventory_size_h"		"82"
-			"model_player"	"models/weapons/c_models/c_builder/c_builder.mdl"
-			"used_by_classes"
-			{
-				"engineer"	"1"
-			}
-			"static_attrs"
-			{
-				"min_viewmodel_offset"					"10 0 -10"				
-			}
-			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
-			"drop_sound"		"ui/item_metal_weapon_drop.wav"
-			"visuals"
-			{
-				"animation_replacement"
-				{
-					"ACT_VM_IDLE"	"ACT_ENGINEER_PDA2_VM_IDLE"
-					"ACT_VM_DRAW"	"ACT_ENGINEER_PDA2_VM_DRAW"
-				}
-			}
 		}
 
 
