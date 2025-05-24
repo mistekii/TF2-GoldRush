@@ -10,7 +10,6 @@
 #include "tf_team.h"
 #include "tf_obj_sentrygun.h"
 #include "tf_weapon_medigun.h"
-#include "tf_tank_boss.h"
 #include "bot/behavior/engineer/mvm_engineer/tf_bot_mvm_engineer_idle.h"
 
 #include "etwprof.h"
@@ -69,19 +68,6 @@ bool IsSpaceToSpawnHere( const Vector &where )
 		}
 
 		return botSpawner;
-	}
-	else if ( !Q_stricmp( name, "Tank" ) )
-	{
-		CTankSpawner *tankSpawner = new CTankSpawner( populator );
-
-		if ( tankSpawner->Parse( data ) == false )
-		{
-			Warning( "Warning reading Tank spawner definition\n" );
-			delete tankSpawner;
-			return NULL;
-		}
-
-		return tankSpawner;
 	}
 	else if ( !Q_stricmp( name, "SentryGun" ) )
 	{
@@ -1317,110 +1303,6 @@ bool CTFBotSpawner::HasEventChangeAttributes( const char* pszEventName ) const
 		}
 	}
 
-	return false;
-}
-
-
-//-----------------------------------------------------------------------
-// CTankSpawner
-//-----------------------------------------------------------------------
-CTankSpawner::CTankSpawner( IPopulator *populator ) : IPopulationSpawner( populator )
-{
-	m_health = 50000;
-	m_speed = 75;
-	m_name = "Tank";
-	m_skin = 0;
-	m_startingPathTrackNodeName = NULL;
-	m_onKilledOutput = NULL;
-	m_onBombDroppedOutput = NULL;
-}
-
-
-//-----------------------------------------------------------------------
-bool CTankSpawner::Parse( KeyValues *values )
-{
-	for ( KeyValues *data = values->GetFirstSubKey(); data != NULL; data = data->GetNextKey() )
-	{
-		const char *name = data->GetName();
-
-		if ( Q_strlen( name ) <= 0 )
-		{
-			continue;
-		}
-
-		if ( !Q_stricmp( name, "Health" ) )
-		{
-			m_health = data->GetInt();
-		}
-		else if ( !Q_stricmp( name, "Speed" ) )
-		{
-			m_speed = data->GetFloat();
-		}
-		else if ( !Q_stricmp( name, "Name" ) )
-		{
-			m_name = data->GetString();
-		}
-		else if ( !Q_stricmp( name, "Skin" ) )
-		{
-			m_skin = data->GetInt();
-		}
-		else if ( !Q_stricmp( name, "StartingPathTrackNode" ) )
-		{
-			m_startingPathTrackNodeName = data->GetString();
-		}
-		else if ( !Q_stricmp( name, "OnKilledOutput" ) )
-		{
-			m_onKilledOutput = ParseEvent( data );
-		}
-		else if ( !Q_stricmp( name, "OnBombDroppedOutput" ) )
-		{
-			m_onBombDroppedOutput = ParseEvent( data );
-		}
-		else
-		{
-			Warning( "Invalid attribute '%s' in Tank definition\n", name );
-			return false;
-		}
-	}
-
-	return true;
-}
-
-
-//-----------------------------------------------------------------------
-bool CTankSpawner::Spawn( const Vector &here, EntityHandleVector_t *result )
-{
-	CTFTankBoss *tank = (CTFTankBoss *)CreateEntityByName( "tank_boss" );
-	if ( tank )
-	{
-		tank->SetAbsOrigin( here );
-		tank->SetAbsAngles( vec3_angle );
-
-		int nHealth = m_health * g_pPopulationManager->GetHealthMultiplier( true );
-		tank->SetInitialHealth( nHealth );
-
-		tank->SetMaxSpeed( m_speed );
-		tank->SetName( MAKE_STRING( m_name ) );
-		tank->SetSkin( m_skin );
-		tank->SetStartingPathTrackNode( m_startingPathTrackNodeName.GetForModify() );
-
-		tank->Spawn();
-
-		tank->DefineOnKilledOutput( m_onKilledOutput );
-		tank->DefineOnBombDroppedOutput( m_onBombDroppedOutput );
-
-		if ( result )
-		{
-			result->AddToTail( tank );
-		}
-
-		return true;
-	}
-
-	if ( tf_populator_debug.GetBool() )
-	{
-		DevMsg( "CTankSpawner: %3.2f: Failed to create base_boss\n", gpGlobals->curtime );
-	}
 	return false;
 }
 

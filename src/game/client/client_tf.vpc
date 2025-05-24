@@ -733,8 +733,6 @@ $Project "Client (TF)"
 			{
 				$File	"tf\player_vs_environment\c_tf_base_boss.cpp"
 				$File	"tf\player_vs_environment\c_tf_base_boss.h"
-				$File	"tf\player_vs_environment\c_tf_tank_boss.cpp"
-				$File	"tf\player_vs_environment\c_tf_tank_boss.h"
 				$File	"tf\player_vs_environment\c_tf_upgrades.cpp"
 				$File	"tf\player_vs_environment\c_tf_upgrades.h"
 				$File	"$SRCDIR\game\shared\tf\tf_mann_vs_machine_stats.cpp"

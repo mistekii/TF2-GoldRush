@@ -10,7 +10,6 @@
 #include "c_tf_player.h"
 #include "view.h"
 #include "tf_gamerules.h"
-#include "player_vs_environment/c_tf_tank_boss.h"
 #include "decals.h"
 #include "clientsideeffects.h"
 #include "fx_quad.h"
@@ -112,20 +111,6 @@ void ImpactCallback( const CEffectData &data )
 					C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, "MVM_Robot.BulletImpact", &vecOrigin );
 				}
 				g_MvMRobotImpactCount++;
-			}
-			else if ( bIsMVM && dynamic_cast< C_TFTankBoss* >( pEntity ) )
-			{
-				//pEntity->EmitSound( "MVM_Robot.BulletImpact" );
-				CLocalPlayerFilter filter;
-				if ( g_MvMTankImpactCount % 4 == 0 )
-				{
-					C_BaseEntity::EmitSound( filter, pEntity->entindex(), "MVM_Tank.BulletImpact", &vecOrigin );
-				}
-				else
-				{
-					C_BaseEntity::EmitSound( filter, SOUND_FROM_WORLD, "MVM_Tank.BulletImpact", &vecOrigin );
-				}
-				g_MvMTankImpactCount++;
 			}
 			else
 			{

@@ -1,9 +1,9 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 #include "cbase.h"
 
-#include "c_tf_tank_boss.h"
 #include "tf_hud_boss_health.h"
 #include "tf_gamerules.h"
+#include "c_tf_base_boss.h"
 
 
 IMPLEMENT_CLIENTCLASS_DT(C_TFBaseBoss, DT_TFBaseBoss, CTFBaseBoss)

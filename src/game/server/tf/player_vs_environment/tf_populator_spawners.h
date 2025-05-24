@@ -190,37 +190,6 @@ public:
 };
 
 //-----------------------------------------------------------------------
-class CTankSpawner : public IPopulationSpawner
-{
-public:
-	CTankSpawner( IPopulator *populator );
-
-	virtual string_t GetClassIcon( int nSpawnNum = -1 ) { return MAKE_STRING( "tank" ); }
-	virtual int GetHealth( int nSpawnNum = -1  ){ return m_health; }
-
-	virtual bool Parse( KeyValues *data );
-	virtual bool Spawn( const Vector &here, EntityHandleVector_t *result = NULL );
-
-	virtual bool IsWhereRequired( void ) const		// does this spawner need a valid Where parameter?
-	{
-		// the Tank spawns at a given path node
-		return false;
-	}
-
-	virtual bool IsMiniBoss( int nSpawnNum = -1 ) OVERRIDE { return true; }
-
-	virtual bool HasEventChangeAttributes( const char* pszEventName ) const OVERRIDE { return false; }
-
-	int m_health;
-	float m_speed;
-	CUtlString m_name;
-	CUtlString m_startingPathTrackNodeName;		// which path_track we start at
-	int m_skin;
-	EventInfo *m_onKilledOutput;
-	EventInfo *m_onBombDroppedOutput;
-};
-
-//-----------------------------------------------------------------------
 class CSentryGunSpawner : public IPopulationSpawner
 {
 public:

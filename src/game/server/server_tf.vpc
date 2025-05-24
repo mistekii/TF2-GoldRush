@@ -824,10 +824,6 @@ $Project "Server (TF)"
 				$File	"tf\player_vs_environment\tf_boss_battle_logic.h"
 				$File	"tf\player_vs_environment\tf_base_boss.cpp"
 				$File	"tf\player_vs_environment\tf_base_boss.h"
-				$File	"tf\player_vs_environment\tf_tank_boss.cpp"
-				$File	"tf\player_vs_environment\tf_tank_boss.h"
-				$File	"tf\player_vs_environment\tf_tank_boss_body.cpp"
-				$File	"tf\player_vs_environment\tf_tank_boss_body.h"
 				$File	"tf\player_vs_environment\tf_point_weapon_mimic.cpp"
 			}
 

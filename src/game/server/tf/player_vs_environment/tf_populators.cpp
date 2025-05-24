@@ -12,7 +12,6 @@
 #include "tf_obj_sentrygun.h"
 #include "tf_objective_resource.h"
 #include "eventqueue.h"
-#include "tf_tank_boss.h"
 #include "tf_gc_server.h"
 #include "tf_gamerules.h"
 #include "etwprof.h"
@@ -1643,17 +1642,6 @@ void CWaveSpawnPopulator::Update( void )
 						if ( bTeleported )
 						{
 							OnBotTeleported( bot );
-						}
-					}
-					else
-					{
-						CTFTankBoss *tank = dynamic_cast< CTFTankBoss * >( m_justSpawnedVector[i].Get() );
-						if ( tank )
-						{
-							tank->SetCurrencyValue( 0 );
-							tank->SetWaveSpawnPopulator( this );
-
-							m_pParent->IncrementTanksSpawned();
 						}
 					}
 				}
