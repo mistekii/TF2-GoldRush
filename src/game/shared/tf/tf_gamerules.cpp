@@ -10562,7 +10562,6 @@ void CTFGameRules::CreateStandardEntities()
 	NewGlobalIssue< CNextLevelIssue >();
 	NewGlobalIssue< CExtendLevelIssue >();
 	NewGlobalIssue< CScrambleTeams >();
-	NewGlobalIssue< CMannVsMachineChangeChallengeIssue >();
 	NewGlobalIssue< CEnableTemporaryHalloweenIssue >();
 	NewGlobalIssue< CTeamAutoBalanceIssue >();
 	NewGlobalIssue< CClassLimitsIssue >();
