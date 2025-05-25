@@ -23,9 +23,6 @@
 #define DISPENSER_MINS			Vector( -20, -20,  0 )
 #define DISPENSER_MAXS			Vector(  20,  20, 55 )	// tweak me
 
-#define MINI_DISPENSER_MINS		Vector( -20, -20,  0 )
-#define MINI_DISPENSER_MAXS		Vector(  20,  20, 20 )
-
 #define DISPENSER_TRIGGER_MINS			Vector( -70, -70,  0 )
 #define DISPENSER_TRIGGER_MAXS			Vector(  70,  70, 50 )	// tweak me
 
@@ -186,11 +183,7 @@ void CObjectDispenser::FirstSpawn()
 {
 	SetSolid( SOLID_BBOX );
 
-	bool bShouldBeMini = ShouldBeMiniBuilding( GetOwner() );
-
-	UTIL_SetSize(this,
-		bShouldBeMini ? MINI_DISPENSER_MINS : DISPENSER_MINS,
-		bShouldBeMini ? MINI_DISPENSER_MAXS : DISPENSER_MAXS );
+	UTIL_SetSize( this, DISPENSER_MINS, DISPENSER_MAXS );
 
 	m_takedamage = DAMAGE_YES;
 	m_iAmmoMetal = 0;
@@ -259,7 +252,7 @@ const char* CObjectDispenser::GetFinishedModel( int iLevel )
 
 const char* CObjectDispenser::GetPlacementModel()
 {
-	return /*IsMiniBuilding() ? MINI_DISPENSER_MODEL_PLACEMENT :*/ DISPENSER_MODEL_PLACEMENT;
+	return DISPENSER_MODEL_PLACEMENT;
 }
 
 void CObjectDispenser::StartPlacement( CTFPlayer *pPlayer )
@@ -273,10 +266,6 @@ void CObjectDispenser::StartPlacement( CTFPlayer *pPlayer )
 bool CObjectDispenser::StartBuilding( CBaseEntity *pBuilder )
 {
 	SetStartBuildingModel();
-
-	// Have to re-call this in case the player changed their weapon
-	// between StartPlacement and StartBuilding.
-	MakeMiniBuilding( GetBuilder() );
 
 	CreateBuildPoints();
 
@@ -297,22 +286,6 @@ bool CObjectDispenser::StartBuilding( CBaseEntity *pBuilder )
 void CObjectDispenser::SetStartBuildingModel( void )
 {
 	SetModel( GetBuildingModel( 1 ) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CObjectDispenser::MakeMiniBuilding( CTFPlayer* pPlayer )
-{
-	if ( !ShouldBeMiniBuilding( pPlayer ) || IsMiniBuilding() )
-		return;
-
-	BaseClass::MakeMiniBuilding( pPlayer );
-
-	int iHealth = GetMaxHealthForCurrentLevel();
-
-	SetMaxHealth( iHealth );
-	SetHealth( iHealth );
 }
 
 //-----------------------------------------------------------------------------
@@ -373,11 +346,6 @@ void CObjectDispenser::InitializeMapPlacedObject( void )
 	BaseClass::InitializeMapPlacedObject();
 }
 
-bool CObjectDispenser::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
-{
-	return false;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -399,7 +367,7 @@ void CObjectDispenser::OnGoActive( void )
 	ReattachChildren();
 
 	// Put some ammo in the Dispenser
-	if ( !m_bCarryDeploy && !IsMiniBuilding() )
+	if ( !m_bCarryDeploy )
 	{
 		m_iAmmoMetal = TFGameRules()->IsQuickBuildTime() ? DISPENSER_MAX_METAL_AMMO : 25;
 	}

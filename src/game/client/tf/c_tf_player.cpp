@@ -8519,11 +8519,7 @@ Vector C_TFPlayer::GetChaseCamViewOffset( CBaseEntity *target )
 {
 	if ( target->IsBaseObject() )
 	{
-		CBaseObject* pObj = dynamic_cast<CBaseObject*>( target );
-		if ( pObj && pObj->IsMiniBuilding() )
-			return Vector(0,0,40);
-		else
-			return Vector(0,0,64);
+		return Vector(0,0,64);
 	}
 
 	return BaseClass::GetChaseCamViewOffset( target );

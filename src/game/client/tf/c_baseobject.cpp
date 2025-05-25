@@ -54,7 +54,6 @@ IMPLEMENT_CLIENTCLASS_DT(C_BaseObject, DT_BaseObject, CBaseObject)
 	RecvPropBool(RECVINFO(m_bPlacing)),
 	RecvPropBool(RECVINFO(m_bCarried)),
 	RecvPropBool(RECVINFO(m_bCarryDeploy)),
-	RecvPropBool(RECVINFO(m_bMiniBuilding)),
 	RecvPropFloat(RECVINFO(m_flPercentageConstructed)),
 	RecvPropInt(RECVINFO(m_fObjectFlags)),
 	RecvPropEHandle(RECVINFO(m_hBuiltOnEntity)),
@@ -97,8 +96,6 @@ C_BaseObject::C_BaseObject(  )
 
 	m_bCarryDeploy = false;
 	m_bOldCarryDeploy = false;
-
-	m_bMiniBuilding = false;
 
 	m_vecBuildForward = vec3_origin;
 	m_flBuildDistance = 0.0f;
@@ -897,11 +894,6 @@ void C_BaseObject::GetTargetIDString( OUT_Z_BYTECAP( iMaxLenInBytes ) wchar_t *s
 		bool bHasMode = false;
 		const char *printFormatString = "#TF_playerid_object";
 
-		if ( IsMiniBuilding() )
-		{
-			printFormatString = "#TF_playerid_object_mini";
-		}
-
 		const wchar_t *wszModeName = L"";
 		const CObjectInfo* pObjectInfo = GetObjectInfo( GetType() );
 		if ( pObjectInfo && (pObjectInfo->m_iNumAltModes > 0) )
@@ -998,23 +990,20 @@ void C_BaseObject::GetTargetIDDataString( OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t 
 	}
 
 	// level 1 and 2 show upgrade progress
-	if ( !IsMiniBuilding() )
+	_snwprintf( wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, GetUpgradeMetalRequired() );
+	wszUpgradeProgress[ ARRAYSIZE(wszUpgradeProgress)-1 ] = '\0';
+	if ( bShowLevel )
 	{
-		_snwprintf( wszUpgradeProgress, ARRAYSIZE(wszUpgradeProgress) - 1, L"%d / %d", m_iUpgradeMetal, GetUpgradeMetalRequired() );
-		wszUpgradeProgress[ ARRAYSIZE(wszUpgradeProgress)-1 ] = '\0';
-		if ( bShowLevel )
-		{
-			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find("#TF_playerid_object_upgrading_level"),
-				2,
-				wszLevel,
-				wszUpgradeProgress );
-		}
-		else
-		{
-			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find("#TF_playerid_object_upgrading"),
-				1,
-				wszUpgradeProgress );
-		}
+		g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find("#TF_playerid_object_upgrading_level"),
+			2,
+			wszLevel,
+			wszUpgradeProgress );
+	}
+	else
+	{
+		g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find("#TF_playerid_object_upgrading"),
+			1,
+			wszUpgradeProgress );
 	}
 }
 

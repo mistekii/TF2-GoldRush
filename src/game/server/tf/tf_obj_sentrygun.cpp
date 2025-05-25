@@ -62,8 +62,6 @@ extern ConVar tf_nav_in_combat_range;
 
 #define SENTRYGUN_SAPPER_OWNER_DAMAGE_MODIFIER	0.66f
 
-#define SENTRYGUN_MAX_LEVEL_MINI			1
-#define MINI_SENTRY_SCALE			0.75f
 #define SMALL_SENTRY_SCALE			0.80f
 
 #define WRANGLER_DISABLE_TIME		3.0f
@@ -302,7 +300,6 @@ void CObjectSentrygun::StartPlacement( CTFPlayer *pPlayer )
 	m_vecBuildMins -= Vector( 4,4,0 );
 	m_vecBuildMaxs += Vector( 4,4,0 );
 
-	MakeMiniBuilding( pPlayer );
 	MakeScaledBuilding( GetBuilder() );
 }
 
@@ -315,13 +312,7 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 
 	// Have to re-call this in case the player changed their weapon
 	// between StartPlacement and StartBuilding.
-	MakeMiniBuilding( GetBuilder() );
 	MakeScaledBuilding( GetBuilder() );
-
-	if ( IsMiniBuilding() )
-	{
-		SetBodygroup( FindBodygroupByName( "mini_sentry_light" ), 1 );
-	}
 
 	CreateBuildPoints();
 
@@ -338,29 +329,8 @@ void CObjectSentrygun::SetStartBuildingModel( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CObjectSentrygun::MakeMiniBuilding( CTFPlayer* pPlayer )
-{
-	if ( !ShouldBeMiniBuilding( pPlayer ) || IsMiniBuilding() )
-		return;
-
-	BaseClass::MakeMiniBuilding( pPlayer );
-	SetModelScale( MINI_SENTRY_SCALE );
-
-	int iHealth = GetMaxHealthForCurrentLevel();
-
-	SetMaxHealth( iHealth );
-	SetHealth( iHealth / 2.0f );
-	SetBuildingSize();
-}
-
-//-----------------------------------------------------------------------------
 int CObjectSentrygun::GetMaxUpgradeLevel( )
 { 
-	if ( IsMiniBuilding() )
-		return SENTRYGUN_MAX_LEVEL_MINI;
-
 	return BaseClass::GetMaxUpgradeLevel(); 
 }
 
@@ -370,11 +340,6 @@ int CObjectSentrygun::GetMaxUpgradeLevel( )
 void CObjectSentrygun::OnGoActive( void )
 {
 	SetModel( SENTRY_MODEL_LEVEL_1 );
-
-	if ( IsMiniBuilding() )
-	{
-		SetBodygroup( FindBodygroupByName( "mini_sentry_light" ), 1 );
-	}
 
 	m_iState.Set( SENTRY_STATE_SEARCHING );
 
@@ -1234,11 +1199,6 @@ void CObjectSentrygun::Attack()
 		{
 			m_flFireRate *= 0.5f;
 		}
-			
-		if ( IsMiniBuilding() )
-		{
-			m_flFireRate *= 0.75f;
-		}
 
 		if ( GetBuilder() && GetBuilder()->m_Shared.InCond( TF_COND_CRITBOOSTED_USER_BUFF ) )
 		{
@@ -1484,15 +1444,7 @@ bool CObjectSentrygun::Fire()
 		info.m_flDistance = flDistToTarget + 100;
 		info.m_iAmmoType = m_iAmmoType;
 
-		if ( IsMiniBuilding() )
-		{
-			info.m_flDamage = tf_sentrygun_mini_damage.GetFloat();
-			info.m_flDamageForceScale = 0.0f;
-		}
-		else
-		{
-			info.m_flDamage = tf_sentrygun_damage.GetFloat();
-		}
+		info.m_flDamage = tf_sentrygun_damage.GetFloat();
 
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), info.m_flDamage, mult_engy_sentry_damage );
 
@@ -1511,48 +1463,35 @@ bool CObjectSentrygun::Fire()
 		data.m_vOrigin = vecSrc;
 		DispatchEffect( "TF_3rdPersonMuzzleFlash_SentryGun", data );
 
-		if ( IsMiniBuilding() )
+		if ( !m_bPlayerControlled )
 		{
-			EmitSound_t params;
-			params.m_pSoundName = "Building_MiniSentrygun.Fire";
-			params.m_flSoundTime = 0;
-			params.m_pflSoundDuration = 0;
-			params.m_bWarnOnDirectWaveReference = true;
-			CPASAttenuationFilter filter( this, "Building_MiniSentrygun.Fire" );
-			EmitSound( filter, entindex(), params );
+			switch( m_iUpgradeLevel )
+			{
+			case 1:
+			default:
+				EmitSentrySound( "Building_Sentrygun.Fire" );
+				break;
+			case 2:
+				EmitSentrySound( "Building_Sentrygun.Fire2" );
+				break;
+			case 3:
+				EmitSentrySound( "Building_Sentrygun.Fire3" );
+				break;
+			}
 		}
 		else
 		{
-			if ( !m_bPlayerControlled )
+			switch ( m_iUpgradeLevel )
 			{
-				switch( m_iUpgradeLevel )
-				{
-				case 1:
-				default:
-					EmitSentrySound( "Building_Sentrygun.Fire" );
-					break;
-				case 2:
-					EmitSentrySound( "Building_Sentrygun.Fire2" );
-					break;
-				case 3:
-					EmitSentrySound( "Building_Sentrygun.Fire3" );
-					break;
-				}
-			}
-			else
-			{
-				switch ( m_iUpgradeLevel )
-				{
-				case 1:
-					EmitSentrySound( "Building_Sentrygun.ShaftFire" );
-					break;
-				case 2:
-					EmitSentrySound( "Building_Sentrygun.ShaftFire2" );
-					break;
-				case 3:
-					EmitSentrySound( "Building_Sentrygun.ShaftFire3" );
-					break;
-				}
+			case 1:
+				EmitSentrySound( "Building_Sentrygun.ShaftFire" );
+				break;
+			case 2:
+				EmitSentrySound( "Building_Sentrygun.ShaftFire2" );
+				break;
+			case 3:
+				EmitSentrySound( "Building_Sentrygun.ShaftFire3" );
+				break;
 			}
 		}
 
@@ -1600,10 +1539,7 @@ void CObjectSentrygun::ModifyFireBulletsDamage( CTakeDamageInfo* dmgInfo )
 //-----------------------------------------------------------------------------
 float CObjectSentrygun::GetPushMultiplier()
 {
-	if ( IsMiniBuilding() )
-		return 8.f;
-	else
-		return 16.f;
+	return 16.f;
 }
 
 //-----------------------------------------------------------------------------
@@ -1762,11 +1698,6 @@ bool CObjectSentrygun::MoveTurret( void )
 	bool bMoved = false;
 
 	int iBaseTurnRate = GetBaseTurnRate();
-	
-	if ( IsMiniBuilding() )
-	{
-		iBaseTurnRate *= 1.35f;
-	}
 
 	// any x movement?
 	if ( m_vecCurAngles.x != m_vecGoalAngles.x )
@@ -2091,13 +2022,6 @@ void CObjectSentrygun::EmitSentrySound( IRecipientFilter& filter, int iEntIndex,
 	params.m_flSoundTime = 0;
 	params.m_pflSoundDuration = 0;
 	params.m_bWarnOnDirectWaveReference = true;
-	
-	if ( IsMiniBuilding() )
-	{
-		StopSound( soundname );
-		params.m_nPitch = PITCH_HIGH;
-		params.m_nFlags = SND_CHANGE_PITCH;
-	}
 
 	EmitSound( filter, entindex(), params );
 }
@@ -2115,10 +2039,10 @@ void CObjectSentrygun::EmitSentrySound( const char* soundname )
 	params.m_pflSoundDuration = 0;
 	params.m_bWarnOnDirectWaveReference = true;
 	
-	if ( IsMiniBuilding() || m_flFireRate != 1.f )
+	if (  m_flFireRate != 1.f )
 	{
 		StopSound( soundname );
-		params.m_nPitch = IsMiniBuilding() ? PITCH_HIGH : RemapValClamped( m_flFireRate, 1.0f, 0.5f, 100.f, 120.f );
+		params.m_nPitch = RemapValClamped( m_flFireRate, 1.0f, 0.5f, 100.f, 120.f );
 		params.m_nFlags = SND_CHANGE_PITCH;
 	}
 

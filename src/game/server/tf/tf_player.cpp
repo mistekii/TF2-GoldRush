@@ -9033,15 +9033,7 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		}
 		else if ( info.GetInflictor() && info.GetInflictor()->IsBaseObject() )
 		{
-			CBaseObject* pObj = dynamic_cast<CBaseObject*>( info.GetInflictor() );
-			if ( pObj->IsMiniBuilding() )
-			{
-				pszCustomDeath = "customdeath:minisentrygun";
-			}
-			else
-			{
-				pszCustomDeath = "customdeath:sentrygun";
-			}
+			pszCustomDeath = "customdeath:sentrygun";
 		}
 		else if ( IsHeadshot( info.GetDamageCustom() ) )
 		{				

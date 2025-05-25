@@ -111,7 +111,6 @@ public:
 	virtual int		DrawDebugTextOverlays(void) OVERRIDE;
 	virtual void	SetModel( const char *pModel ) OVERRIDE;
 	virtual void	InitializeMapPlacedObject( void ) OVERRIDE;
-	virtual bool	ShouldBeMiniBuilding( CTFPlayer* pPlayer ) OVERRIDE;
 
 	virtual bool	IsUpgrading( void ) const OVERRIDE { return ( m_iState == DISPENSER_STATE_UPGRADING ); }
 	virtual void	StartUpgrading( void ) OVERRIDE;
@@ -154,14 +153,11 @@ public:
 
 	CUtlVector< EHANDLE >	m_hHealingTargets;
 
-	virtual void	MakeMiniBuilding( CTFPlayer* pPlayer ) OVERRIDE;
 	virtual void	MakeCarriedObject( CTFPlayer *pCarrier );
 
 	virtual int		GetBaseHealth( void ) { return DISPENSER_MAX_HEALTH; }
 
 	virtual int		GetMaxUpgradeLevel( void ) OVERRIDE;
-
-	virtual int		GetMiniBuildingStartingHealth( void ) OVERRIDE { return DISPENSER_MINI_MAX_HEALTH; }
 
 	CBaseEntity		*GetTouchTrigger() const { return m_hTouchTrigger; }
 	void			DisableAmmoPickupSound() { m_bPlayAmmoPickupSound = false; }
@@ -172,9 +168,6 @@ private:
 	void ResetHealingTargets( void );
 
 protected:
-
-	// The regular and mini dispenser can be repaired
-	virtual bool CanBeRepaired() const OVERRIDE { return true; }
 
 	CNetworkVar( int, m_iState );
 	CNetworkVar( int, m_iAmmoMetal );

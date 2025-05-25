@@ -1199,7 +1199,6 @@ enum
 
 // Dispenser's maximum carrying capability
 #define DISPENSER_MAX_METAL_AMMO		400
-#define MINI_DISPENSER_MAX_METAL	200
 
 //--------------------------------------------------------------------------
 // OBJECTS

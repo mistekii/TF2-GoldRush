@@ -9388,14 +9388,6 @@ int CTFPlayerShared::CalculateObjectCost( CTFPlayer* pBuilder, int iObjectType )
 {
 	int nCost = InternalCalculateObjectCost( iObjectType );
 
-	// Mini sentires are 30 metal cheaper
-	CTFWrench* pWrench = dynamic_cast<CTFWrench*>( pBuilder->Weapon_OwnsThisID( TF_WEAPON_WRENCH ) );
-	if ( pWrench && pWrench->IsPDQ() && ( iObjectType == OBJ_SENTRYGUN ) )
-	{
-		nCost -= 30;
-	}
-	
-
 	if ( iObjectType == OBJ_TELEPORTER )
 	{
 		float flCostMod = 1.f;
