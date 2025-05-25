@@ -48,7 +48,11 @@ ActionResult< CTFBot >	CTFBotUseItem::Update( CTFBot *me, float interval )
 		if ( m_cooldownTimer.IsElapsed() )
 		{
 			// use it
-			me->PressFireButton();
+			if ( myCurrentWeapon->GetWeaponID() == TF_WEAPON_BAT_WOOD )
+				me->PressAltFireButton();
+			else
+				me->PressFireButton();
+
 			m_cooldownTimer.Invalidate();
 		}
 	}

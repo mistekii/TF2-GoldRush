@@ -240,6 +240,13 @@ extern ConVar sv_vote_allow_spectators;
 ConVar sv_vote_late_join_time( "sv_vote_late_join_time", "90", FCVAR_NONE, "Grace period after the match starts before players who join the match receive a vote-creation cooldown" );
 ConVar sv_vote_late_join_cooldown( "sv_vote_late_join_cooldown", "300", FCVAR_NONE, "Length of the vote-creation cooldown when joining the server after the grace period has expired" );
 
+// Goldrush
+ConVar tf_bot_random_weapons( "tf_bot_random_weapons", "1", FCVAR_GAMEDLL, "Gives bots random weapon items." );
+ConVar tf_bot_random_weapons_chance( "tf_bot_random_weapons_chance", "25", FCVAR_GAMEDLL, "Percent chance a bot will get a random weapon." );
+
+ConVar tf_bot_random_hats( "tf_bot_random_hats", "1", FCVAR_GAMEDLL, "Gives bots random hat items." );
+ConVar tf_bot_random_hats_chance( "tf_bot_random_hats_chance", "16", FCVAR_GAMEDLL, "Percent chance a bot will get a random hat." );
+
 extern ConVar tf_voice_command_suspension_mode;
 extern ConVar tf_feign_death_duration;
 extern ConVar spec_freeze_time;
@@ -11946,6 +11953,106 @@ void CTFPlayer::ForceRespawn( void )
 
 		GetPlayerClass()->Init( iDesiredClass );
 
+		// Are we a bot?
+		if ( m_bIsABot && IsBotOfType(TF_BOT_TYPE) )
+		{
+			CTFBot* pBot = ToTFBot( this );
+
+			// This is a new class, so start it all null
+			pBot->SetRandomPrimary(NULL);
+			pBot->SetRandomSecondary(NULL);
+			pBot->SetRandomMelee(NULL);
+			pBot->SetRandomHat(NULL);
+
+			// Set random weapons for this class
+			if ( RandomInt(0, 100) < tf_bot_random_weapons_chance.GetInt() )
+			{
+				pBot->SetRandomPrimary( pBot->GiveRandomItemName( LOADOUT_POSITION_PRIMARY ) );
+
+				// Sandvich is broken right now
+				if ( GetPlayerClass()->GetClassIndex() != TF_CLASS_HEAVYWEAPONS )
+					pBot->SetRandomSecondary( pBot->GiveRandomItemName( LOADOUT_POSITION_SECONDARY ) );
+
+				pBot->SetRandomMelee( pBot->GiveRandomItemName( LOADOUT_POSITION_MELEE ) );
+			}
+
+			// Set a random hat for this class.
+			// FIXME: Evil hack because GiveRandomItemName doesn't work for hats! why???
+			if ( RandomInt(0, 100) < tf_bot_random_hats_chance.GetInt() )
+			{
+				if ( RandomInt( 0, 100 ) < 3 )
+					pBot->SetRandomHat( "Honest Halo" );
+				else
+				{
+					int iClass = this->GetPlayerClass()->GetClassIndex();
+
+					if ( iClass == TF_CLASS_SCOUT )
+					{
+						if ( RandomInt( 0, 100 ) < 25 )
+							pBot->SetRandomHat( "Batter's Helmet" );
+						else
+							pBot->SetRandomHat( "Ye Olde Baker Boy" );
+					}
+					else if ( iClass == TF_CLASS_SOLDIER )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Tyrant's Helm" );
+						else
+							pBot->SetRandomHat( "Soldier's Stash" );
+					}
+					else if ( iClass == TF_CLASS_PYRO )
+					{
+						if ( RandomInt( 0, 100 ) < 25 )
+							pBot->SetRandomHat( "Respectless Rubber Glove" );
+						else
+							pBot->SetRandomHat( "Brigade Helm" );
+					}
+					else if ( iClass == TF_CLASS_DEMOMAN )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Glengarry Bonnet" );
+						else
+							pBot->SetRandomHat( "Demoman's Fro" );
+					}
+					else if ( iClass == TF_CLASS_HEAVYWEAPONS )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Officer's Ushanka" );
+						else
+							pBot->SetRandomHat( "Football Helmet" );
+					}
+					else if ( iClass == TF_CLASS_ENGINEER )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Texas Ten Gallon" );
+						else
+							pBot->SetRandomHat( "Mining Light" );
+					}
+					else if ( iClass == TF_CLASS_MEDIC )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Prussian Pickelhaube" );
+						else
+							pBot->SetRandomHat( "Otolaryngologist's Mirror" );
+					}
+					else if ( iClass == TF_CLASS_SNIPER )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Master's Yellow Belt" );
+						else
+							pBot->SetRandomHat( "Trophy Belt" );
+					}
+					else if ( iClass == TF_CLASS_SPY )
+					{
+						if ( RandomInt(0, 100) < 25 )
+							pBot->SetRandomHat( "Backbiter's Billycock" );
+						else
+							pBot->SetRandomHat( "Fancy Fedora" );
+					}
+				}
+			}
+		}
+
 		// Don't report class changes if we're random, because it's not a player choice
 		if ( !bRandom )
 		{
@@ -12029,6 +12136,65 @@ void CTFPlayer::ForceRespawn( void )
 	}
 
 	m_bSwitchedClass = false;
+
+	if ( m_bIsABot && IsBotOfType( TF_BOT_TYPE ) )
+	{
+		CTFBot* pBot = ToTFBot( this );
+
+		// Should we equip a random weapon?
+		if ( tf_bot_random_weapons.GetBool() == true )
+		{
+			const char *primaryName = pBot->GetRandomPrimary();
+			const char *secondaryName = pBot->GetRandomSecondary();
+			const char *meleeName = pBot->GetRandomMelee();
+
+			if ( primaryName != NULL )
+			{ 
+				CBaseCombatWeapon * myWeapon = this->Weapon_GetSlot( TF_WPN_TYPE_PRIMARY );
+				if ( myWeapon )
+				{
+					this->Weapon_Detach( myWeapon );
+					UTIL_Remove( myWeapon );
+				}
+
+				BotGenerateAndWearItem( this, (const char*)primaryName );
+			}
+
+			if ( secondaryName != NULL )
+			{
+				CBaseCombatWeapon *myWeapon = this->Weapon_GetSlot( TF_WPN_TYPE_SECONDARY );
+				if ( myWeapon )
+				{
+					this->Weapon_Detach( myWeapon );
+					UTIL_Remove( myWeapon );
+				}
+
+				BotGenerateAndWearItem( this, (const char*)secondaryName );
+			}
+
+			if ( meleeName != NULL )
+			{
+				CBaseCombatWeapon *myWeapon = this->Weapon_GetSlot( TF_WPN_TYPE_MELEE );
+				if ( myWeapon )
+				{
+					this->Weapon_Detach( myWeapon );
+					UTIL_Remove( myWeapon );
+				}
+
+				BotGenerateAndWearItem( this, meleeName );
+			}
+		}
+
+		// Should we equip a random hat?
+		if ( tf_bot_random_hats.GetBool() == true )
+		{
+			const char *hatName = pBot->GetRandomHat();
+			if ( hatName )
+			{ 
+				BotGenerateAndWearItem( this, hatName );
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------

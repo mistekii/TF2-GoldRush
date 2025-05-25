@@ -4075,6 +4075,36 @@ void CTFBot::GiveRandomItem( loadout_positions_t loadoutPosition )
 	}
 }
 
+//---------------------------------------------------------------------------------------------
+const char *CTFBot::GiveRandomItemName( loadout_positions_t loadoutPosition )
+{
+	CUtlVector< const CEconItemDefinition * > itemVector;
+
+	const CEconItemSchema::ItemDefinitionMap_t& mapItemDefs = ItemSystem()->GetItemSchema()->GetItemDefinitionMap();
+	FOR_EACH_MAP_FAST( mapItemDefs, i )
+	{
+		const CTFItemDefinition *pItemDef = dynamic_cast< const CTFItemDefinition * >( mapItemDefs[i] );
+
+		// No base items
+		if ( pItemDef->IsBaseItem() )
+			continue;
+
+		if ( pItemDef && pItemDef->CanBePlacedInSlot( loadoutPosition ) && pItemDef->CanBeUsedByClass( this->GetPlayerClass()->GetClassIndex() ) )
+		{
+			itemVector.AddToTail( pItemDef );
+		}
+	}
+
+	if ( itemVector.Count() > 0 )
+	{
+		int which = RandomInt( 0, itemVector.Count()-1 );
+
+		const char* itemName = itemVector[which]->GetDefinitionName();
+		return itemName;
+	}
+
+	return NULL;
+}
 
 //---------------------------------------------------------------------------------------------
 bool CTFBot::IsSquadmate( CTFPlayer *who ) const
@@ -4228,6 +4258,9 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 		if ( !weapon )
 			continue;
 
+		int iMaxHealth = this->GetPlayerClass()->GetMaxHealth();
+		int iCurHealth = this->GetHealth();
+
 		// if I have some kind of buff banner - use it!
 		if ( weapon->GetWeaponID() == TF_WEAPON_BUFF_ITEM )
 		{
@@ -4244,7 +4277,7 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 			if ( lunchbox->HasAmmo() )
 			{
 				// scout lunchboxes are also gated by their energy drink meter
-				if ( !IsPlayerClass( TF_CLASS_SCOUT ) || m_Shared.GetScoutEnergyDrinkMeter() >= 100 )
+				if ( !IsPlayerClass( TF_CLASS_SCOUT || TF_CLASS_HEAVYWEAPONS ) || m_Shared.GetScoutEnergyDrinkMeter() >= 100 && ( RandomInt( 0, 100 ) < 25 ) )
 				{
 					return new CTFBotUseItem( lunchbox );
 				}
@@ -4259,7 +4292,7 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 				if ( threat && threat->IsVisibleInFOVNow() )
 				{
 					// hit a stunball
-					PressAltFireButton();			
+					return new CTFBotUseItem( weapon );
 				}
 			}
 		}
