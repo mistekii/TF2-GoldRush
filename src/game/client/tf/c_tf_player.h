@@ -287,7 +287,7 @@ public:
 	bool			ShouldAutoRezoom( void ){ return cl_autorezoom.GetBool(); }
 	bool			ShouldAutoReload( void ){ return cl_autoreload.GetBool(); }
 
-	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsAmmoData, bool &bIsKillStreakData );
+	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData );
 
 	void			RemoveDisguise( void );
 	bool			CanDisguise( void );

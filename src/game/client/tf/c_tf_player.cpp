@@ -9282,7 +9282,7 @@ CON_COMMAND_F( spectate_random_server_extend_time, "extend the timer we're spect
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsAmmoData, bool &bIsKillStreakData )
+void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData )
 {
 	Assert( iMaxLenInBytes >= sizeof(sDataString[0]) );
 	// Make sure the output string is always initialized to a null-terminated string,
@@ -9362,32 +9362,16 @@ void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLen
 						g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_noheal_unknown" ), 0 );
 					}
 				}
-
-				// Show target's clip state to attached medics
-				if ( !sDataString[0] && m_nActiveWpnClip >= 0 )
-				{
-					C_TFPlayer *pTFHealTarget = ToTFPlayer( pLocalPlayer->MedicGetHealTarget() );
-					if ( pTFHealTarget && pTFHealTarget == this )
-					{
-						wchar_t wszClip[10];
-						V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_nActiveWpnClip );
-						g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
-						bIsAmmoData = true;
-					}
-				}
 			}
 		}
 
-		if ( !bIsAmmoData )
+		// Check for kill streak data
+		if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
 		{
-			// Check for kill streak data
-			if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
-			{
-				bIsKillStreakData = true;
-				wchar_t wszClip[10];
-				V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
-				g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
-			}
+			bIsKillStreakData = true;
+			wchar_t wszClip[10];
+			V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
+			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
 		}
 	}
 }
