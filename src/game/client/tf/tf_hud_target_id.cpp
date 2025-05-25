@@ -21,7 +21,6 @@
 #include "tf_weapon_bonesaw.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "tf_revive.h"
-#include "tf_logic_robot_destruction.h"
 #include "entity_capture_flag.h"
 #include "vgui_avatarimage.h"
 
@@ -768,16 +767,6 @@ void CTargetID::UpdateID( void )
 							break;
 						}
 					}
-				}
-			}
-			// Generic
-			else if ( pEnt->IsVisibleToTargetID() )
-			{
-				CCaptureFlag *pFlag = dynamic_cast< CCaptureFlag * >( pEnt );
-				if ( pFlag && pFlag->GetPointValue() > 0 )
-				{
-					bShowHealth = false;
-					g_pVGuiLocalize->ConvertANSIToUnicode( CFmtStr("%d Points", pFlag->GetPointValue() ), sIDString, sizeof(sIDString) );
 				}
 			}
 		}

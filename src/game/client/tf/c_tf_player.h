@@ -36,8 +36,6 @@ class C_TFWearable;
 class C_CaptureZone;
 class C_MerasmusBombEffect;
 class CTFReviveDialog;
-class C_PasstimePlayerReticle;
-class C_PasstimeAskForBallReticle;
 
 extern ConVar tf_medigun_autoheal;
 extern ConVar cl_autorezoom;
@@ -918,9 +916,6 @@ private:
 	CNetworkVar( int, m_iCampaignMedals );
 	CNetworkVar( float, m_flHelpmeButtonPressTime );
 	CNetworkVar( bool, m_bRegenerating );
-
-	C_PasstimePlayerReticle *m_pPasstimePlayerReticle;
-	C_PasstimeAskForBallReticle *m_pPasstimeAskForBallReticle;
 
 	CUtlMap< const char *, HPARTICLEFFECT > m_mapOverheadEffects;
 	float m_flOverheadEffectStartTime;
