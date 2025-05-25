@@ -708,12 +708,6 @@ $Project "Client (TF)"
 				$File	"tf\bot_npc\c_bot_npc.h"
 				$File	"tf\bot_npc\c_bot_npc_minion.cpp"
 				$File	"tf\bot_npc\c_bot_npc_minion.h"
-
-				$Folder "MapEntities"
-				{
-					$File	"tf\bot_npc\map_entities\c_tf_bot_hint_engineer_nest.cpp"
-					$File	"tf\bot_npc\map_entities\c_tf_bot_hint_engineer_nest.h"
-				}
 			}
 
 			$Folder	"NextBot"
