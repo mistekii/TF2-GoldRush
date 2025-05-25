@@ -773,7 +773,6 @@ void CTFHudPlayerHealth::OnThink()
 			m_pSlowedImage->SetVisible( false );
 			
 			// Old method for goofy color manipulation
-			int nBloodX = nXOffset;
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_BLEEDING,					m_pBleedImage,					nXOffset,	Color( color_fade, 0, 0, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH,			m_pMarkedForDeathImage,			nXOffset,	Color( 255 - color_fade, 245 - color_fade, 245 - color_fade, 255 ) );
 			SetPlayerHealthImagePanelVisibility( pPlayer, TF_COND_MARKEDFORDEATH_SILENT,	m_pMarkedForDeathImageSilent,	nXOffset,	Color( 125 - color_fade, 255 - color_fade, 255 - color_fade, 255 ) );

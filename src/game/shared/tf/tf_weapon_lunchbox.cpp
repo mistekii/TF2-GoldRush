@@ -256,8 +256,6 @@ void CTFLunchBox::DrainAmmo( bool bForceCooldown )
 
 #ifdef GAME_DLL
 
-	int iLunchboxType = GetLunchboxType();
-
 	// If we're damaged while eating/taunting, bForceCooldown will be true
 	if ( pOwner->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) )
 	{

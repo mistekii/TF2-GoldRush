@@ -8027,7 +8027,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 	if ( ( info.GetDamageType() & DMG_FALL ) )
 	{
-		float flOriginalVelocity = m_Local.m_flFallVelocity;
 
 		bool bHitEnemy = false;
 
@@ -8495,7 +8494,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 			m_rgbTimeBasedDamage[i] = 0;
 		}
 	}
-	const char* pzsTeam = GetTeamNumber() == TF_TEAM_RED ? "red" : "blue";
 
 	// Display any effect associate with this damage type
 	DamageEffect( info.GetDamage(),bitsDamage );
@@ -11637,7 +11635,6 @@ void CTFPlayer::DropAmmoPack( const CTakeDamageInfo &info, bool bEmpty, bool bDi
 	if( !CalculateAmmoPackPositionAndAngles( pWeapon, vecPackOrigin, vecPackAngles ) )
 		return;
 
-	CEconItemView *pItem = pDropWeaponProps->GetAttributeContainer()->GetItem();
 	bool bIsSuicide = info.GetAttacker() ? info.GetAttacker()->GetTeamNumber() == GetTeamNumber() : false;
 
 	// Create the ammo pack.

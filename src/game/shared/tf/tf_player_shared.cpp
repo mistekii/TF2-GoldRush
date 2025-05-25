@@ -2162,7 +2162,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 				bHealDisguise = false;
 			}
 
-			CTFPlayer *pTFHealer = ToTFPlayer( m_aHealers[i].pHealer );
 			if ( !bHealActual && !bHealDisguise )
 			{
 				continue;
@@ -10671,7 +10670,6 @@ bool CTFPlayer::CanPickupBuilding( CBaseObject *pPickupObject )
 
 	// Check it's within range
 	int nPickUpRangeSq = TF_BUILDING_PICKUP_RANGE * TF_BUILDING_PICKUP_RANGE;
-	int iIncreasedRangeCost = 0;
 	int nSqrDist = (EyePosition() - pPickupObject->GetAbsOrigin()).LengthSqr();
 
 	if ( nSqrDist > nPickUpRangeSq )

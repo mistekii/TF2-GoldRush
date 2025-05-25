@@ -1335,7 +1335,6 @@ void CWeaponMedigun::RemoveHealingTarget( bool bStopHealingSelf )
 	}
 
 #ifdef GAME_DLL
-	int nMedigunType = GetMedigunType();
 
 	if ( m_hHealingTarget )
 	{
