@@ -14,6 +14,7 @@
 #include "shareddefs.h"
 #include "filesystem.h"
 #include "econ_item_description.h"				// only for CSteamAccountIDAttributeCollector
+#include "achievementmgr.h"
 
 #ifdef CLIENT_DLL
 #include <igameevents.h>
@@ -1022,6 +1023,12 @@ void CInventoryManager::VerifyAckFileLoaded( void )
 
 	m_pkvItemClientAckFile = new KeyValues( ITEM_CLIENTACK_FILE );
 
+	if ( g_pFullFileSystem->FileExists( ITEM_CLIENTACK_FILE, "MOD" ) )
+	{
+		m_pkvItemClientAckFile->LoadFromFile( g_pFullFileSystem, ITEM_CLIENTACK_FILE, "MOD" );
+	}
+
+	/*
 	ISteamRemoteStorage *pRemoteStorage = SteamClient()?(ISteamRemoteStorage *)SteamClient()->GetISteamGenericInterface(
 		SteamAPI_GetHSteamUser(), SteamAPI_GetHSteamPipe(), STEAMREMOTESTORAGE_INTERFACE_VERSION ):NULL;
 
@@ -1049,6 +1056,8 @@ void CInventoryManager::VerifyAckFileLoaded( void )
 			}
 		}
 	}
+	*/
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1097,6 +1106,9 @@ void CInventoryManager::SaveAckFile( void )
 		return;
 	m_bClientAckDirty = false;
 
+	m_pkvItemClientAckFile->SaveToFile( g_pFullFileSystem, ITEM_CLIENTACK_FILE, "MOD" );
+
+	/*
 	ISteamRemoteStorage *pRemoteStorage = SteamClient()?(ISteamRemoteStorage *)SteamClient()->GetISteamGenericInterface(
 		SteamAPI_GetHSteamUser(), SteamAPI_GetHSteamPipe(), STEAMREMOTESTORAGE_INTERFACE_VERSION ):NULL;
 
@@ -1113,6 +1125,7 @@ void CInventoryManager::SaveAckFile( void )
 		}
 #endif
 	}
+	*/
 }
 
 //-----------------------------------------------------------------------------
@@ -1517,6 +1530,55 @@ bool CPlayerInventory::AddEconItem( CEconItem * pItem, bool bUpdateAckFile, bool
 	return true;
 }
 
+#ifdef CLIENT_DLL
+//-----------------------------------------------------------------------------
+// Purpose: Add an achievement award item to this inventory
+//-----------------------------------------------------------------------------
+bool CPlayerInventory::AddEconItemFromAchievement( CBaseAchievement* pAchievement )
+{
+	const AchievementAward_t* pAchAward = GetItemSchema()->GetAchievementRewardByName( pAchievement->GetName() );
+	if ( pAchAward && !pAchAward->m_vecDefIndex.IsEmpty() )
+	{
+		// Find the item shared object cache
+		CSharedObjectTypeCache* pTypeCache = m_pSOCache->FindTypeCache( CEconItem::k_nTypeID );
+		if ( !pTypeCache )
+			return false;
+
+		FOR_EACH_VEC( pAchAward->m_vecDefIndex, i )
+		{
+			CEconItemDefinition* pItemDef = GetItemSchema()->GetItemDefinition( pAchAward->m_vecDefIndex[i] );
+			if ( !pItemDef )
+				continue;
+
+			// Create the item
+			CEconItem* pItem = new CEconItem();
+			pItem->SetAccountID( GetOwner().GetAccountID() );
+			pItem->SetItemID( pAchAward->m_vecDefIndex[i] );
+			pItem->SetDefinitionIndex( pAchAward->m_vecDefIndex[i] );
+
+			// Set item properties
+			pItem->SetQuality( pItemDef->GetQuality() );						// set quality
+			pItem->SetItemLevel( RandomInt( 1, 100 ) );							// roll the item level
+			pItem->SetOrigin( eEconItemOrigin::kEconItemOrigin_Achievement );		// set the item's origin
+			pItem->SetFlags( 0 );													// remove any extra description text
+			pItem->SetQuantity( 1 );												// item quantity
+			pItem->SetInventoryToken( kBackendPosition_Unacked );
+
+			// Add the item to the so cache
+			pTypeCache->AddObject( pItem );
+
+			if ( !AddEconItem( pItem, true, true, true ) )
+				return false;
+
+			SendInventoryUpdateEvent();
+		}
+
+		return true;
+	}
+
+	return false;
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: Creates a script item and associates it with this econ item
@@ -1657,7 +1719,6 @@ void CPlayerInventory::SODestroyed( const CSteamID & steamIDOwner, const GCSDK::
 	SendInventoryUpdateEvent();
 }
 
-
 //-----------------------------------------------------------------------------
 // Purpose: This is our initial notification that this cache has been received
 //			from the server.
@@ -1686,14 +1747,70 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 		return;
 	}
 
-	// add all the items already in the inventory
-	CSharedObjectTypeCache *pTypeCache = m_pSOCache->FindTypeCache( CEconItem::k_nTypeID );
+	// Find or create the item shared object cache
+	CSharedObjectTypeCache *pTypeCache = m_pSOCache->CreateTypeCache( CEconItem::k_nTypeID );
+	if ( !pTypeCache )
+		return;
+
+	// Get the mod's item definition map
+	const CEconItemSchema::ItemDefinitionMap_t& itemMap = GetItemSchema()->GetItemDefinitionMap();
+
+	// Clear the shared object cache (this removes unwanted items)
+	pTypeCache->RemoveAllObjectsWithoutDeleting();
+
+	FOR_EACH_MAP_FAST( itemMap, i )
+	{
+		GameItemDefinition_t* pItemDef = dynamic_cast<GameItemDefinition_t*>( itemMap[i] );
+
+		CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );
+		const AchievementAward_t* pAchievementAward = GetItemSchema()->GetAchievementRewardByDefIndex( pItemDef->GetDefinitionIndex() );
+
+		// Ignore hidden items
+		if ( pItemDef->IsHidden() )
+			continue;
+
+		// No base items
+		if ( pItemDef->IsBaseItem() )
+			continue;
+
+		// Must show up in the armory
+		if ( !pItemDef->ShouldShowInArmory() ) 
+			continue;
+
+		// Is this an achievement item?
+		if ( pAchievementAward != NULL )
+		{
+			const char* cAchName = pAchievementAward->m_sNativeName.String();
+			CBaseAchievement* pAchievement = pAchievementMgr->GetAchievementByName( cAchName );
+
+			// We haven't earned this item yet, skip it.
+			if ( !pAchievement->IsAchieved() )
+				continue;
+		}
+
+		// Create the item
+		CEconItem* pItem = new CEconItem();
+		pItem->SetAccountID( GetOwner().GetAccountID() );
+		pItem->SetItemID( pItemDef->GetDefinitionIndex() );
+		pItem->SetDefinitionIndex( pItemDef->GetDefinitionIndex() );
+
+		// Set item properties
+		pItem->SetQuality( pItemDef->GetQuality() );						// set quality
+		pItem->SetItemLevel( RandomInt( 1, 100 ) );							// roll the item level
+		pItem->SetOrigin( eEconItemOrigin::kEconItemOrigin_Drop );			// set the item's origin
+		pItem->SetFlags(0);													// remove any extra description text
+		pItem->SetQuantity(1);												// item quantity
+
+		// Add the item to the so cache
+		pTypeCache->AddObject( pItem );
+	}
+
 	if( pTypeCache )
 	{
 		for( uint32 unItem = 0; unItem < pTypeCache->GetCount(); unItem++ )
 		{
 			CEconItem *pItem = (CEconItem *)pTypeCache->GetObject( unItem );
-			AddEconItem(pItem, true, false, true );
+			AddEconItem( pItem, true, false, true );
 		}
 	}
 
@@ -1719,6 +1836,15 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 		InventoryManager()->CleanAckFile();
 		InventoryManager()->SaveAckFile();
 	}
+
+	// Ensure all items are visible in the inventory
+	for ( int i = 0; i < GetItemCount(); i++ )
+	{
+		C_EconItemView* viewItem = GetItem(i);
+		InventoryManager()->AcknowledgeItem( viewItem, true );
+		viewItem->SetInventoryPosition( i + 1 );
+	}
+
 #endif
 }
 

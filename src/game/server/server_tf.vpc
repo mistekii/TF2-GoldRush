@@ -349,8 +349,6 @@ $Project "Server (TF)"
 
 			$Folder	"Weapon"
 			{
-				$File	"$SRCDIR\game\shared\tf\tf_dropped_weapon.cpp"
-				$File	"$SRCDIR\game\shared\tf\tf_dropped_weapon.h"
 				$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.cpp"
 				$File	"$SRCDIR\game\shared\tf\tf_weapon_bat.h"
 				$File	"$SRCDIR\game\shared\tf\tf_weapon_bonesaw.cpp"

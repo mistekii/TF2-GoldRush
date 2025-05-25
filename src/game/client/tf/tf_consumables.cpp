@@ -1065,14 +1065,6 @@ static void StartUseActionSlotItem( const CCommand &args )
 		}
 	}
 
-	// trying to pick up a dropped weapon?
-	if ( pLocalPlayer->GetDroppedWeaponInRange() != NULL )
-	{
-		KeyValues *kv = new KeyValues( "+use_action_slot_item_server" );
-		engine->ServerCmdKeyValues( kv );
-		return;
-	}
-
 	// send a request to the GC to use the item
 	g_bUsedGCItem = false;
 	CEconItemView *pItem = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pLocalPlayer, LOADOUT_POSITION_ACTION );

@@ -104,7 +104,6 @@
 #include "tf_gc_server.h"
 #include "tf_logic_halloween_2014.h"
 #include "tf_weapon_knife.h"
-#include "tf_dropped_weapon.h"
 #include "tf_passtime_logic.h"
 #include "tf_weapon_passtime_gun.h"
 #include "player_resource.h"
@@ -4273,9 +4272,6 @@ void CTFPlayer::UseActionSlotItemPressed( void )
 {
 	m_bUsingActionSlot = true;
 
-	if ( TryToPickupDroppedWeapon() )
-		return;
-
 	int iNoiseMaker = 0;
 	CALL_ATTRIB_HOOK_INT( iNoiseMaker, enable_misc2_noisemaker );
 	if ( iNoiseMaker )
@@ -4465,29 +4461,6 @@ void CTFPlayer::ValidateWeapons( TFPlayerClassData_t *pData, bool bResetWeapons 
 			if ( GetActiveTFWeapon() == pWeapon )
 			{
 				SwitchToNextBestWeapon( pWeapon );
-			}
-
-			// drop weapon that belongs to other player, unless we're not regenerating
-			// which happens at round restart
-			if ( !bForceRemoved && m_bRegenerating )
-			{
-				CEconItemView *pDroppedItem = pWeapon->GetAttributeContainer()->GetItem();
-				CSteamID steamID;
-				GetSteamID( &steamID );
-				if ( pDroppedItem->GetAccountID() != steamID.GetAccountID() )
-				{
-					// Find the position and angle of the weapons so the "ammo box" matches.
-					Vector vecPackOrigin;
-					QAngle vecPackAngles;
-					if( !CalculateAmmoPackPositionAndAngles( pWeapon, vecPackOrigin, vecPackAngles ) )
-						return;
-
-					CTFDroppedWeapon *pDroppedWeapon = CTFDroppedWeapon::Create( this, vecPackOrigin, vecPackAngles, pWeapon->GetWorldModel(), pDroppedItem );
-					if ( pDroppedWeapon )
-					{
-						pDroppedWeapon->InitDroppedWeapon( this, pWeapon, false );
-					}
-				}
 			}
 
 			// We shouldn't have this weapon. Remove it.
@@ -11790,14 +11763,8 @@ void CTFPlayer::DropAmmoPack( const CTakeDamageInfo &info, bool bEmpty, bool bDi
 	CEconItemView *pItem = pDropWeaponProps->GetAttributeContainer()->GetItem();
 	bool bIsSuicide = info.GetAttacker() ? info.GetAttacker()->GetTeamNumber() == GetTeamNumber() : false;
 
-	CTFDroppedWeapon *pDroppedWeapon = CTFDroppedWeapon::Create( this, vecPackOrigin, vecPackAngles, pszWorldModel, pItem );
-	if ( pDroppedWeapon )
-	{
-		pDroppedWeapon->InitDroppedWeapon( this, pDropWeaponProps, false, bIsSuicide );
-	}
-
 	// Create the ammo pack.
-	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, "models/items/ammopack_medium.mdl" );
+	CTFAmmoPack *pAmmoPack = CTFAmmoPack::Create( vecPackOrigin, vecPackAngles, this, pszWorldModel );
 	Assert( pAmmoPack );
 	if ( pAmmoPack )
 	{
@@ -20998,126 +20965,6 @@ bool CTFPlayer::CanScorePointForPD( void ) const
 
 	// Rate limit
 	return ( ( m_flNextScorePointForPD < 0 ) || ( m_flNextScorePointForPD < gpGlobals->curtime ) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::PickupWeaponFromOther( CTFDroppedWeapon *pDroppedWeapon )
-{
-	const CEconItemView *pItem = pDroppedWeapon->GetItem();
-	if ( !pItem )
-		return false;
-
-	if ( pItem->IsValid() )
-	{
-		int iClass = GetPlayerClass()->GetClassIndex();
-		int iItemSlot = pItem->GetStaticData()->GetLoadoutSlot( iClass );
-		CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase* >( GetEntityForLoadoutSlot( iItemSlot ) );
-
-		if ( !pWeapon )
-		{
-			AssertMsg( false, "No weapon to put down when picking up a dropped weapon!" );
-			return false;
-		}
-		
-		// we need to force translating the name here.
-		// GiveNamedItem will not translate if we force creating the item
-		const char *pTranslatedWeaponName = TranslateWeaponEntForClass( pItem->GetStaticData()->GetItemClass(), iClass );
-		CTFWeaponBase *pNewItem = dynamic_cast<CTFWeaponBase*>( GiveNamedItem( pTranslatedWeaponName, 0, pItem, true ));
-		Assert( pNewItem );
-		if ( pNewItem )
-		{
-			CTFWeaponBuilder *pBuilder = dynamic_cast<CTFWeaponBuilder*>( (CBaseEntity*)pNewItem );
-			if ( pBuilder )
-			{
-				pBuilder->SetSubType( GetPlayerClass()->GetData()->m_aBuildable[0] );
-			}
-
-			// make sure we removed our current weapon				
-			if ( pWeapon )
-			{
-				// drop current weapon
-				Vector vecPackOrigin;
-				QAngle vecPackAngles;
-				CalculateAmmoPackPositionAndAngles( pWeapon, vecPackOrigin, vecPackAngles );
-
-				bool bShouldThrowHeldWeapon = true;
-
-				// When in the spawn room, you won't throw down your held weapon if you own that weapon.
-				// This is to prevent folks from standing near a supply closet and spawning their items
-				// over and over and over.
-				if ( PointInRespawnRoom( this, WorldSpaceCenter() ) )
-				{
-					CSteamID playerSteamID;
-					GetSteamID( &playerSteamID );
-					uint32 nItemAccountID = pWeapon->GetAttributeContainer()->GetItem()->GetAccountID();
-					// Stock weapons have accountID 0
-					if ( playerSteamID.GetAccountID() == nItemAccountID || nItemAccountID == 0 )
-					{
-						bShouldThrowHeldWeapon = false;
-					}
-				}
-
-				if ( bShouldThrowHeldWeapon )
-				{
-					CTFDroppedWeapon *pNewDroppedWeapon = CTFDroppedWeapon::Create( this, vecPackOrigin, vecPackAngles, pWeapon->GetWorldModel(), pWeapon->GetAttributeContainer()->GetItem() );
-					if ( pNewDroppedWeapon )
-					{
-						pNewDroppedWeapon->InitDroppedWeapon( this, pWeapon, true );
-					}
-				}
-
-				Weapon_Detach( pWeapon );
-				UTIL_Remove( pWeapon );
-			}
-				
-			CBaseCombatWeapon *pLastWeapon = GetLastWeapon();
-			pNewItem->MarkAttachedEntityAsValidated();
-			pNewItem->GiveTo( this );
-			Weapon_SetLast( pLastWeapon );
-			
-			pDroppedWeapon->InitPickedUpWeapon( this, pNewItem );
-
-			// can't use the weapon we just picked up?
-			if ( !Weapon_CanSwitchTo( pNewItem ) )
-			{
-				// try next best thing we can use
-				SwitchToNextBestWeapon( pNewItem );
-			}
-
-			// delay pickup weapon message
-			m_flSendPickupWeaponMessageTime = gpGlobals->curtime + 0.1f;
-
-			return true;
-		}
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::TryToPickupDroppedWeapon()
-{
-	if ( !CanAttack() )
-		return false;
-
-	if ( GetActiveWeapon() && ( GetActiveWeapon()->m_flNextPrimaryAttack > gpGlobals->curtime ) )
-		return false;
-
-	CTFDroppedWeapon *pDroppedWeapon = GetDroppedWeaponInRange();
-	if ( pDroppedWeapon && !pDroppedWeapon->IsMarkedForDeletion() )
-	{
-		if ( PickupWeaponFromOther( pDroppedWeapon ) )
-		{
-			UTIL_Remove( pDroppedWeapon );
-			return true;
-		}
-	}
-	
-	return false;
 }
 
 //-----------------------------------------------------------------------------

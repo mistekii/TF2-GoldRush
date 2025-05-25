@@ -10,9 +10,6 @@
 #include "toolframework_client.h"
 #include "econ_gcmessages.h"
 #include "econ_item_inventory.h"
-#if defined( TF_CLIENT_DLL )
-#include "tf_dropped_weapon.h"
-#endif // TF_CLIENT_DLL
 
 #include "VGuiMatSurface/IMatSystemSurface.h"
 #include "bitmap/bitmap.h"
@@ -720,16 +717,6 @@ void CCustomTextureOnItemProxy::OnBind( void *pC_BaseEntity )
 			{
 				pScriptItem = pItem->GetAttributeContainer()->GetItem();
 			}
-#if defined( TF_CLIENT_DLL )
-			else
-			{
-				CTFDroppedWeapon *pDroppedWeapon = dynamic_cast<CTFDroppedWeapon *>( pEntity );
-				if ( pDroppedWeapon )
-				{
-					pScriptItem = pDroppedWeapon->GetItem();
-				}
-			}
-#endif // TF_CLIENT_DLL
 		}
 		else
 		{
