@@ -35,7 +35,6 @@ ConVar tf_show_mesh_decoration_manual( "tf_show_mesh_decoration_manual", "0", FC
 ConVar tf_show_sentry_danger( "tf_show_sentry_danger", "0", FCVAR_CHEAT, "Show sentry danger areas. 1:Use m_sentryAreas. 2:Check all nav areas." );
 ConVar tf_show_actor_potential_visibility( "tf_show_actor_potential_visibility", "0", FCVAR_CHEAT );
 ConVar tf_show_control_points( "tf_show_control_points", "0", FCVAR_CHEAT );
-ConVar tf_show_bomb_drop_areas( "tf_show_bomb_drop_areas", "0", FCVAR_CHEAT );
 
 ConVar tf_bot_min_setup_gate_defend_range( "tf_bot_min_setup_gate_defend_range", "750", FCVAR_CHEAT, "How close from the setup gate(s) defending bots can take up positions. Areas closer than this will be in cover to ambush." );
 ConVar tf_bot_max_setup_gate_defend_range( "tf_bot_max_setup_gate_defend_range", "2000", FCVAR_CHEAT, "How far from the setup gate(s) defending bots can take up positions" );
@@ -1734,19 +1733,6 @@ void CTFNavMesh::UpdateDebugDisplay( void ) const
 		}
 	}
 
-	if ( tf_show_bomb_drop_areas.GetBool() )
-	{
-		FOR_EACH_VEC( TheNavAreas, it )
-		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ it ] );
-
-			if ( area->HasAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE ) )
-			{
-				area->DrawFilled( 0, 255, 0, 255, NDEBUG_PERSIST_TILL_NEXT_SERVER, true );
-			}
-		}
-	}
-
 	if ( tf_show_blocked_areas.GetBool() )
 	{
 		FOR_EACH_VEC( TheNavAreas, it )
@@ -2253,24 +2239,6 @@ void CTFNavMesh::CollectSpawnRoomThresholdAreas( CUtlVector< CTFNavArea * > *spa
 		if ( exitArea )
 		{
 			spawnExitAreaVector->AddToTail( exitArea );
-		}
-	}
-}
-
-
-//--------------------------------------------------------------------------------------------------------
-// Populate the given vector with areas that have a bomb travel distance within the given range
-void CTFNavMesh::CollectAreaWithinBombTravelRange( CUtlVector< CTFNavArea * > *spawnExitAreaVector, float minTravel, float maxTravel ) const
-{
-	for( int i=0; i<TheNavAreas.Count(); ++i )
-	{
-		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-		float travelDistance = area->GetTravelDistanceToBombTarget();
-
-		if ( travelDistance >= minTravel && travelDistance <= maxTravel )
-		{
-			spawnExitAreaVector->AddToTail( area );
 		}
 	}
 }

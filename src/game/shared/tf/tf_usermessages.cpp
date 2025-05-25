@@ -97,20 +97,6 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerGodRayEffect", -1 );
 	usermessages->Register( "PlayerTeleportHomeEffect", -1 );
 
-	usermessages->Register( "MVMStatsReset", -1 );
-	usermessages->Register( "MVMPlayerEvent", -1 );
-	usermessages->Register( "MVMResetPlayerStats", -1 );
-	usermessages->Register( "MVMWaveFailed", 0 );
-	usermessages->Register( "MVMAnnouncement", 2 );	// Send an enumerated message
-	usermessages->Register( "MVMPlayerUpgradedEvent", 9 );	// PlayerIdx(1), WaveIdx(1), ItemDef(2), AttributeDef(2), Quality(1), cost(2)
-	usermessages->Register( "MVMWaveChange", 15 ); // ServerWaveID(2), deaths(1), damageBot(4), damageGiant(4), damageTank(4)
-	usermessages->Register( "MVMLocalPlayerUpgradesClear", 1 );	// Count(1)
-	usermessages->Register( "MVMLocalPlayerUpgradesValue", 6 );	// Class(1), ItemDef(2), Upgrade(1), cost(2)
-	usermessages->Register( "MVMResetPlayerWaveSpendingStats", 1 );	// Wave(1)
-	usermessages->Register( "MVMLocalPlayerWaveSpendingValue", 12 );	// PlayerIdx(8), Wave(1), Type(1), Cost(2)
-	usermessages->Register( "MVMResetPlayerUpgradeSpending", -1 );
-	usermessages->Register( "MVMServerKickTimeUpdate", 1 );	// time(1) (seconds)
-
 	usermessages->Register( "PlayerLoadoutUpdated", -1 );
 
 	usermessages->Register( "PlayerTauntSoundLoopStart", -1 );

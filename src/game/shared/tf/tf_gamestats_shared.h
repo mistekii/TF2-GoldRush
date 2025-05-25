@@ -553,12 +553,6 @@ struct ClassStats_t
 		accumulated.AccumulateRound( other );
 		currentRound = other;
 	}
-
-	void AccumulateMVMRound( const RoundStats_t &other )
-	{
-		iNumberOfRounds++;
-		currentRound = other;
-	}
 };
 
 struct MapStats_t

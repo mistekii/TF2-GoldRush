@@ -720,7 +720,6 @@ public:
 	float				m_flLastResistTime;
 
 	HPARTICLEFFECT m_pSappedPlayerEffect;
-	HPARTICLEFFECT m_pMVMEyeGlowEffect[ 2 ];
 
 	// KillStreak Weapons
 	char m_pszEyeGlowEffectName[MAX_PATH];

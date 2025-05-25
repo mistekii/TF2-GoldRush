@@ -177,7 +177,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseObject, DT_BaseObject)
 	SendPropInt( SENDINFO(m_iUpgradeMetalRequired), 10 ),
 	SendPropInt( SENDINFO(m_iHighestUpgradeLevel), 3 ),
 	SendPropInt( SENDINFO(m_iObjectMode), 2, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bDisposableBuilding ) ),
 	SendPropBool( SENDINFO( m_bWasMapPlaced ) ),
 	SendPropBool( SENDINFO( m_bPlasmaDisable ) ),
 END_SEND_TABLE();
@@ -252,8 +251,6 @@ CBaseObject::CBaseObject()
 	m_bMiniBuilding = false;
 	m_flPlasmaDisableTime = 0;
 	m_bPlasmaDisable = false;
-
-	m_bDisposableBuilding = false;
 
 	m_vecBuildForward = vec3_origin;
 	m_flBuildDistance = 0.0f;
@@ -1368,11 +1365,7 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	}
 	else if ( IsMiniBuilding() )
 	{
-		int iHealth = GetMaxHealthForCurrentLevel();
-		if ( !IsDisposableBuilding() )
-		{
-			iHealth /= 2.0f;
-		}
+		int iHealth = GetMaxHealthForCurrentLevel() / 2;
 		SetHealth( iHealth );
 	}
 	else
@@ -1481,14 +1474,6 @@ void CBaseObject::MakeMiniBuilding( CTFPlayer* pPlayer )
 		return;
 
 	m_bMiniBuilding = true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CBaseObject::MakeDisposableBuilding( CTFPlayer *pPlayer )
-{
-	m_bDisposableBuilding = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -2847,7 +2832,7 @@ bool CBaseObject::CanBeUpgraded( CTFPlayer *pPlayer )
 	if ( IsUpgrading() )
 		return false;
 
-	if ( IsMiniBuilding() || IsDisposableBuilding() )
+	if ( IsMiniBuilding() )
 		return false;
 
 	// only engineers
@@ -3695,7 +3680,7 @@ void CBaseObject::InputDisable( inputdata_t &inputdata )
 int CBaseObject::GetMaxHealthForCurrentLevel( void )
 {
 	int iMaxHealth = IsMiniBuilding() ? GetMiniBuildingStartingHealth() : GetBaseHealth();
-	if ( GetOwner() && !m_bDisposableBuilding )
+	if ( GetOwner() )
 	{
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), iMaxHealth, mult_engy_building_health );
 	}

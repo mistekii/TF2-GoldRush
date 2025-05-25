@@ -161,7 +161,6 @@ const int k_InvalidState_Timeout_Without_Match = 5;
       - Match result message provides canonical record of match, is queued to send to GC when available.
       - GameServerKickingLobby message dissolves live match if GC is available/tracking it. Queued similarly.
         - ** This can happen before or after the match result.
-        - In MvM, we send potentially multiple victory messages per match -- they can cycle missions and keep winning.
         - As of right now, in competitive, we end the match coincident with sending a match result.
       - Match ended doesn't necessarily kick players, so a dead/finished match will stick around on our end until
         everyone Disconnects, (or the game logic kicks them, e.g. MatchInfo->BEnded + a timeout)
@@ -229,8 +228,6 @@ CTFGCServerSystem *GTFGCClientSystem() { return &s_TFGCServerSystem; }
 
 //bool g_bServerReceivedGCWelcome = false;
 int g_gcServerVersion = 0; // Version from the GC
-
-static bool g_bWarnedAboutMaxplayersInMVM = false;
 
 extern ConVar tf_mm_servermode;
 extern ConVar tf_mm_trusted;
@@ -1225,8 +1222,6 @@ CTFGCServerSystem::CTFGCServerSystem()
 	m_flTimeBecameEmptyWithLobby = 0.0f;
 	m_timeLastConnectedToGC = 0.f;
 	m_pMatchInfo = NULL;
-
-	g_bWarnedAboutMaxplayersInMVM = false;
 }
 
 
@@ -1247,7 +1242,6 @@ bool CTFGCServerSystem::Init()
 	ListenForGameEvent( "player_disconnect" );
 	ListenForGameEvent( "player_score_changed" );
 
-	g_bWarnedAboutMaxplayersInMVM = false;
 	return true;
 }
 

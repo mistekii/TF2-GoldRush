@@ -169,12 +169,6 @@ void CTFMinigun::Precache( void )
 {
 	PrecacheScriptSound( "Halloween.HeadlessBossAxeHitWorld" );
 
-	// FIXME: Do we still need these??
-	PrecacheScriptSound( "MVM.GiantHeavyGunWindUp" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunWindDown" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunFire" );
-	PrecacheScriptSound( "MVM.GiantHeavyGunSpin" );
-
 	BaseClass::Precache();
 }
 

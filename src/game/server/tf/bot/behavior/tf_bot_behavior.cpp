@@ -698,55 +698,6 @@ Vector CTFBotMainAction::SelectTargetPoint( const INextBot *meBot, const CBaseCo
 QueryResultType CTFBotMainAction::IsPositionAllowed( const INextBot *me, const Vector &pos ) const
 {
 	return ANSWER_YES;
-
-	// This is causing bots to get hung up on drop-downs, particularly in MvM. MSB 6/11/2012
-	/*
-	if ( me->GetLocomotionInterface()->IsScrambling() )
-	{
-		// anything goes when we're in the air/etc
-		return ANSWER_YES;
-	}
-
-	// if we are at a DROP_DOWN segment of our path, allow us to drop
-	const PathFollower *path = me->GetCurrentPath();
-	if ( path && path->IsValid() )
-	{
-		const Path::Segment *goal = path->GetCurrentGoal();
-		if ( goal )
-		{ 
-			if ( goal->type == Path::DROP_DOWN || me->GetLocomotionInterface()->GetFeet().z - goal->pos.z >= me->GetLocomotionInterface()->GetMaxJumpHeight() )
-			{
-				// our goal requires us to drop down
-				return ANSWER_YES;
-			}
-		}
-	}
-
-	// do not fall off someplace we can't get back up from!
-	trace_t result;
-	NextBotTraceFilterIgnoreActors filter( me->GetEntity(), COLLISION_GROUP_PLAYER_MOVEMENT );
-	ILocomotion *mover = me->GetLocomotionInterface();
-	IBody *body = me->GetBodyInterface();
-
-	// slightly smaller to allow skirting the edge
-	float halfWidth = 0.4f * body->GetHullWidth();
-
-	mover->TraceHull( pos + Vector( 0, 0, mover->GetStepHeight() ),	// start up a bit to handle rough terrain
-					  pos + Vector( 0, 0, -mover->GetMaxJumpHeight() ), 
-					  Vector( -halfWidth, -halfWidth, 0 ), 
-					  Vector( halfWidth, halfWidth, body->GetHullHeight() ), 
-					  body->GetSolidMask(), 
-					  &filter, 
-					  &result );
-
-	if ( result.DidHit() )
-	{
-		// there is ground safe beneath us
-		return ANSWER_YES;
-	}
-
-	return ANSWER_NO;
-	*/
 }
 
 

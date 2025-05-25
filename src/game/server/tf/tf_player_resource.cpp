@@ -51,8 +51,6 @@ LINK_ENTITY_TO_CLASS( tf_player_manager, CTFPlayerResource );
 //-----------------------------------------------------------------------------
 CTFPlayerResource::CTFPlayerResource( void )
 {
-	ListenForGameEvent( "mvm_wave_complete" );
-
 	m_flNextDamageAndHealingSend = 0.f;
 
 	m_iPartyLeaderRedTeamIndex = 0;
@@ -65,14 +63,6 @@ CTFPlayerResource::CTFPlayerResource( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerResource::FireGameEvent( IGameEvent * event )
 {
-	const char *pszEvent = event->GetName();
-
-	if ( !Q_strcmp( pszEvent, "mvm_wave_complete" ) )
-	{
-		// Force a re-send on wave complete
-		m_flNextDamageAndHealingSend = 0.f;
-		UpdatePlayerData();
-	}
 }
 
 //-----------------------------------------------------------------------------

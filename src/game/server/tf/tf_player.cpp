@@ -2119,62 +2119,6 @@ void CTFPlayer::PostThink()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::PrecacheMvM()
-{
-	for ( int i = TF_FIRST_NORMAL_CLASS; i < TF_LAST_NORMAL_CLASS; ++i )
-	{
-		COMPILE_TIME_ASSERT( ARRAYSIZE( g_szBotModels ) == TF_LAST_NORMAL_CLASS );
-		int iModelIndex = PrecacheModel( g_szBotModels[ i ] );
-		PrecacheGibsForModel( iModelIndex );
-
-		COMPILE_TIME_ASSERT( ARRAYSIZE( g_szBotBossModels ) == TF_LAST_NORMAL_CLASS );
-		iModelIndex = PrecacheModel( g_szBotBossModels[ i ] );
-		PrecacheGibsForModel( iModelIndex );
-	}
-
-	int iModelIndex = PrecacheModel( g_szBotBossSentryBusterModel );
-	PrecacheGibsForModel( iModelIndex );
-
-	PrecacheModel( "models/bots/tw2/boss_bot/twcarrier_addon.mdl" );
-
-	PrecacheParticleSystem( "bot_impact_light" );
-	PrecacheParticleSystem( "bot_impact_heavy" );
-	PrecacheParticleSystem( "bot_death" );
-	PrecacheParticleSystem( "bot_radio_waves" );
-
-	PrecacheScriptSound( "MVM.BotStep" );
-	PrecacheScriptSound( "MVM.GiantHeavyStep" );
-	PrecacheScriptSound( "MVM.GiantSoldierStep" );
-	PrecacheScriptSound( "MVM.GiantDemomanStep" );
-	PrecacheScriptSound( "MVM.GiantScoutStep" );
-	PrecacheScriptSound( "MVM.GiantPyroStep" );
-	PrecacheScriptSound( "MVM.GiantHeavyLoop" );
-	PrecacheScriptSound( "MVM.GiantSoldierLoop" );
-	PrecacheScriptSound( "MVM.GiantDemomanLoop" );
-	PrecacheScriptSound( "MVM.GiantScoutLoop" );
-	PrecacheScriptSound( "MVM.GiantPyroLoop" );
-	PrecacheScriptSound( "MVM.GiantHeavyExplodes" );
-	PrecacheScriptSound( "MVM.GiantCommonExplodes" );
-	PrecacheScriptSound( "MVM.SentryBusterExplode" );
-	PrecacheScriptSound( "MVM.SentryBusterLoop" );
-	PrecacheScriptSound( "MVM.SentryBusterIntro" );
-	PrecacheScriptSound( "MVM.SentryBusterStep" );
-	PrecacheScriptSound( "MVM.SentryBusterSpin" );
-	PrecacheScriptSound( "MVM.DeployBombSmall" );
-	PrecacheScriptSound( "MVM.DeployBombGiant" );
-	PrecacheScriptSound( "Weapon_Upgrade.ExplosiveHeadshot" );
-	PrecacheScriptSound( "Spy.MVM_Chuckle" );
-	PrecacheScriptSound( "Spy.MVM_TeaseVictim" );
-	PrecacheScriptSound( "MVM.Robot_Engineer_Spawn" );
-	PrecacheScriptSound( "MVM.Robot_Teleporter_Deliver" );
-	PrecacheScriptSound( "MVM.MoneyPickup" );
-
-	PrecacheMaterial( "effects/circle_nocull" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::PrecacheKart()
 {
 	PrecacheModel( "models/player/items/taunts/bumpercar/parts/bumpercar.mdl" );
@@ -2636,8 +2580,6 @@ void CTFPlayer::InitialSpawn( void )
 	StateEnter( TF_STATE_WELCOME );
 	UpdateInventory( true );
 
-	ResetAccumulatedSentryGunDamageDealt();
-	ResetAccumulatedSentryGunKillCount();
 	ResetDamagePerSecond();
 
 	IGameEvent * event = gameeventmanager->CreateEvent( "player_initial_spawn" );
@@ -3064,8 +3006,6 @@ void CTFPlayer::Spawn()
 
 	m_purgatoryPainMultiplier = 1;
 	m_purgatoryPainMultiplierTimer.Invalidate();
-
-	m_playerMovementStuckTimer.Invalidate();
 
 	m_bUseBossHealthBar = false;
 
@@ -8775,21 +8715,6 @@ int CTFPlayer::OnTakeDamage_Alive( const CTakeDamageInfo &info )
 				}
 			}
 		}
-
-		// track accumulated sentry gun damage dealt by players
-		if ( pTFAttacker )
-		{
-			// track amount of damage dealt by defender's sentry guns
-			CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( info.GetInflictor() );
-			CTFProjectile_SentryRocket *sentryRocket = dynamic_cast< CTFProjectile_SentryRocket * >( info.GetInflictor() );
-
-			if ( ( sentry && !sentry->IsDisposableBuilding() ) || sentryRocket )
-			{
-				int flooredHealth = clamp( m_iHealth, 0, m_iHealth );
-
-				pTFAttacker->AccumulateSentryGunDamageDealt( iOldHealth - flooredHealth );
-			}
-		}
 	}
 
 	m_flLastDamageTime = gpGlobals->curtime; // not networked
@@ -9480,15 +9405,6 @@ void CTFPlayer::Event_KilledOther( CBaseEntity *pVictim, const CTakeDamageInfo &
 		}
 
 		OnKilledOther_Effects( pVictim, info );
-
-		// track accumulated sentry gun kills on owning player for Sentry Busters in MvM (so they can't clear this by rebuilding their sentry)
-		CObjectSentrygun *sentry = dynamic_cast< CObjectSentrygun * >( info.GetInflictor() );
-		CTFProjectile_SentryRocket *sentryRocket = dynamic_cast< CTFProjectile_SentryRocket * >( info.GetInflictor() );
-
-		if ( ( sentry && !sentry->IsDisposableBuilding() ) || sentryRocket )
-		{
-			IncrementSentryGunKillCount();
-		}
 
 		// Check for Halloween Death Ghosts
 		CheckSpellHalloweenDeathGhosts( info, pTFVictim );
@@ -12293,9 +12209,6 @@ CBaseObject	*CTFPlayer::GetObjectOfType( int iObjectType, int iObjectMode ) cons
 			continue;
 
 		if ( pObj->GetObjectMode() != iObjectMode )
-			continue;
-
-		if ( pObj->IsDisposableBuilding() )
 			continue;
 
 		return pObj;

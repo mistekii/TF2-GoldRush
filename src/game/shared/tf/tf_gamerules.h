@@ -79,9 +79,6 @@ const int kLadder_TeamSize_6v6 = 6;
 const int kLadder_TeamSize_9v9 = 9;
 const int kLadder_TeamSize_12v12 = 12;
 
-//#define TF_MVM_FCVAR_CHEAT 0 /* Cheats enabled */
-#define TF_MVM_FCVAR_CHEAT FCVAR_CHEAT /* Cheats disabled */
-
 extern bool TF_IsHolidayActive( /*EHoliday*/ int eHoliday );
 #ifdef CLIENT_DLL
 bool BInEndOfMatch();
@@ -553,11 +550,6 @@ bool IsCreepWaveMode( void ) const;
 
 	bool GameModeUsesEscortPushLogic( void );
 
-#ifdef GAME_DLL
-	// Managed competitive matches should go through the End/StopCompetitiveMatch path
-	void EndManagedMvMMatch( bool bKickPlayersToParties );
-#endif
-
 	// Competitive games
 	bool IsCommunityGameMode( void ) const;
 	bool IsCompetitiveMode( void ) const;			// means we're using competitive/casual matchmaking
@@ -591,7 +583,7 @@ bool IsCreepWaveMode( void ) const;
 	void PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bool bState );
 #endif // GAME_DLL
 
-	bool IsDefaultGameMode( void );		// The absence of arena, mvm, tournament mode, etc
+	bool IsDefaultGameMode( void );		// The absence of arena, tournament mode, etc
 
 //=============================================================================
 // HPE_BEGIN:
@@ -1310,7 +1302,6 @@ private:
 
 	CNetworkVar( int, m_nForceEscortPushLogic );
 
-// MvM Helpers
 #ifdef GAME_DLL
 public:
 	virtual void BalanceTeams( bool bRequireSwitcheesToBeDead );

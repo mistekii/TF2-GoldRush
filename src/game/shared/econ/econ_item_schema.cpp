@@ -78,7 +78,6 @@ const char *g_TeamVisualSections[TEAM_VISUAL_SECTIONS] =
 	NULL,			// TF_TEAM_SPECTATOR. Unused.
 	"visuals_red",	// TF_TEAM_RED
 	"visuals_blu",	// TF_TEAM_BLUE
-	"visuals_mvm_boss",	// Hack to override things in MvM at a general level
 };
 
 int GetTeamVisualsFromString( const char *pszString )

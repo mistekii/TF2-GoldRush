@@ -34,7 +34,6 @@ public:
 	const wchar_t *GetNextClassTip( int iClass );
 	const wchar_t *GetArenaTip( void );
 	const wchar_t *GetAbuseReportTip( void );
-	const wchar_t *GetRandomMvMTip( int &iClassUsed ); // iClassUsed will be filled in with the class that was selected
 	void GetRandomCaptainCanteenImages( const char **ppchBody, const char **ppchMisc, const char **ppchHat );
 
 private:
@@ -46,7 +45,6 @@ private:
 	int m_iCurrentClassTip;							// index of current per-class tip
 	bool m_bInited;									// have we been initialized
 	int	m_iArenaTipCount;
-	int m_iMvMTipCount;
 
 	CUtlVector< CaptainCanteenAsset_t > m_CaptainCanteenBody;
 	CUtlVector< CaptainCanteenAsset_t > m_CaptainCanteenMisc;

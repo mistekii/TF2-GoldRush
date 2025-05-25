@@ -151,8 +151,6 @@ private:
 	virtual void ModifyFireBulletsDamage( CTakeDamageInfo* dmgInfo );
 
 	int GetBaseTurnRate( void );
-	
-	virtual void	MakeDisposableBuilding( CTFPlayer *pPlayer );
 
 	CNetworkVar( int, m_iState );
 

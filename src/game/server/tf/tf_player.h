@@ -145,7 +145,6 @@ public:
 	void				ForceRegenerateAndRespawn( void );
 	virtual CBaseEntity	*EntSelectSpawnPoint( void );
 	virtual void		InitialSpawn();
-	static void			PrecacheMvM();
 	static void			PrecacheKart();
 private:
 	static void			PrecachePlayerModels();
@@ -1012,14 +1011,6 @@ public:
 
 	void				PlayReadySound( void );
 
-	void				AccumulateSentryGunDamageDealt( float damage );
-	void				ResetAccumulatedSentryGunDamageDealt();
-	float				GetAccumulatedSentryGunDamageDealt();
-
-	void				IncrementSentryGunKillCount( void );
-	void				ResetAccumulatedSentryGunKillCount();
-	int					GetAccumulatedSentryGunKillCount();
-
 	bool				PlaySpecificSequence( const char *pSequenceName );
 
 	void				SetWaterExitTime( float flTime ){ m_flWaterExitTime = flTime; }
@@ -1275,8 +1266,6 @@ public:
 	// Marking for death.
 	CHandle<CTFPlayer>	m_pMarkedForDeathTarget;
 
-	CountdownTimer m_playerMovementStuckTimer;			// for destroying stuck bots in MvM
-
 	QAngle				m_qPreviousChargeEyeAngle;		// Previous EyeAngles to compute deltas for legal mouse movement
 private:
 
@@ -1353,9 +1342,6 @@ private:
 	CNetworkVar( float, m_flHandScale );
 
 	//CountdownTimer		m_fireproofTimer;		// if active, we're fireproof
-
-	float				m_accumulatedSentryGunDamageDealt;	// for Sentry Buster missions in MvM
-	int					m_accumulatedSentryGunKillCount;	// for Sentry Buster missions in MvM
 
 	static const int	DPS_Period = 90;					// The duration of the sliding window for calculating DPS, in seconds
 	int					*m_damageRateArray;					// One array element per second, for accumulating damage done during that time
@@ -1580,36 +1566,6 @@ inline void CTFPlayer::NoteMedicCall( void )
 inline bool CTFPlayer::IsInPurgatory( void ) const
 {
 	return m_Shared.InCond( TF_COND_PURGATORY );
-}
-
-inline void CTFPlayer::AccumulateSentryGunDamageDealt( float damage )
-{
-	m_accumulatedSentryGunDamageDealt += damage;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunDamageDealt()
-{
-	m_accumulatedSentryGunDamageDealt = 0.0f;
-}
-
-inline float CTFPlayer::GetAccumulatedSentryGunDamageDealt()
-{
-	return m_accumulatedSentryGunDamageDealt;
-}
-
-inline void CTFPlayer::IncrementSentryGunKillCount( void )
-{
-	++m_accumulatedSentryGunKillCount;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunKillCount()
-{
-	m_accumulatedSentryGunKillCount = 0;
-}
-
-inline int CTFPlayer::GetAccumulatedSentryGunKillCount()
-{
-	return m_accumulatedSentryGunKillCount;
 }
 
 inline int CTFPlayer::GetDamagePerSecond( void ) const

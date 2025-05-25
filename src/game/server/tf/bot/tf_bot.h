@@ -46,8 +46,6 @@ extern void BotGenerateAndWearItem( CTFPlayer *pBot, const char *itemName );
 
 #define TFBOT_ALL_BEHAVIOR_FLAGS		0xFFFF
 
-#define TFBOT_MVM_MAX_PATH_LENGTH		0.0f // 7000.0f			// in MvM, all pathfinds are limited to this (0 == no limit)
-
 
 //----------------------------------------------------------------------------
 class CTFBot: public NextBotPlayer< CTFPlayer >, public CGameEventListener

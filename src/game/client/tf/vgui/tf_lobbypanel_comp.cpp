@@ -43,7 +43,6 @@ CLobbyPanel_Comp::~CLobbyPanel_Comp()
 void CLobbyPanel_Comp::ApplyChatUserSettings( const CBaseLobbyPanel::LobbyPlayerInfo &player, KeyValues *pKV ) const
 {
 	pKV->SetInt( "has_ticket", 0 );
-	pKV->SetInt( "squad_surplus", 0 );
 }
 
 

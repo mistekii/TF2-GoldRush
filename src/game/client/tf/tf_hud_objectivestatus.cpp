@@ -163,7 +163,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 	bool bCPVisible = TFGameRules()->IsPlayingHybrid_CTF_CP();
 	if ( !bCPVisible )
 	{
-		bCPVisible = ( iGameType == TF_GAMETYPE_CP || iGameType == TF_GAMETYPE_ARENA || iHudType == TF_HUDTYPE_CP || iGameType == TF_GAMETYPE_MVM ) && ( iHudType != TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_ESCORT ) && !TFGameRules()->IsPlayingHybrid_CTF_CP();
+		bCPVisible = ( iGameType == TF_GAMETYPE_CP || iGameType == TF_GAMETYPE_ARENA || iHudType == TF_HUDTYPE_CP ) && ( iHudType != TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_ESCORT ) && !TFGameRules()->IsPlayingHybrid_CTF_CP();
 	}
 
 	if ( m_pControlPointIconsPanel && m_pControlPointIconsPanel->IsVisible() != bCPVisible )

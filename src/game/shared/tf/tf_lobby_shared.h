@@ -84,12 +84,6 @@ public:
 	const char *GetConnect() const { return GSObj().connect().c_str(); }
 	uint32_t GetLobbyMMVersion() const { return GSObj().lobby_mm_version(); }
 
-#ifdef USE_MVM_TOUR
-	// Returns name of tour that we are playing for.  Returns NULL if we are not playing for bragging rights!
-	bool BHasMannUpTourName() const { return GSObj().has_mannup_tour_name(); }
-	const char *GetMannUpTourName() const;
-#endif // USE_MVM_TOUR
-
 	// invites
 	virtual int GetNumPendingPlayers() const OVERRIDE;
 	// Not meaningful for lobbies
@@ -118,7 +112,6 @@ public:
 	CSteamID                         GetSteamID() const { return CSteamID( Proto().id() ); }
 	RTime32                          GetLastConnectTime() const { return RTime32( Proto().last_connect_time() ); }
 	TF_GC_TEAM                       GetTeam() const { return Proto().team(); }
-	bool                             GetSquadSurplus() const { return Proto().squad_surplus(); }
 	uint32_t                         GetBadgeLevel() const { return Proto().badge_level(); }
 	CTFLobbyPlayerProto_ConnectState GetConnectState() const { return Proto().connect_state(); };
 	double                           GetNormalizedRating() const { return Proto().normalized_rating(); };

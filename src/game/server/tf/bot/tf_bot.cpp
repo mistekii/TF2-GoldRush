@@ -1418,9 +1418,7 @@ void CTFBot::AvoidPlayers( CUserCmd *pCmd )
 
 		if ( HasTheFlag() )
 		{
-			// Don't push around the flag (bomb) carrier.
-			// We need this for MvM mode so friendly bots don't
-			// move the bomb jumper and cause him to restart.
+			// Don't push around the flag carrier.
 			continue;
 		}
 
@@ -3599,7 +3597,6 @@ void CTFBot::RealizeSpy( CTFPlayer *pPlayer )
 				if( !pOtherBot->IsKnownSpy( pPlayer ) )
 				{
 					// I was suspicious that they were a spy, make my friend suspicious as well.
-					// This will cause them to attack a disguised spy in MvM for a bit.
 					pOtherBot->SuspectSpy( pPlayer );
 
 					// Tell them about it
@@ -4219,7 +4216,7 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 		}
 	}
 
-	// don't use items if we have the flag, since most of them are unusable (unless we're a bomb carrier in MvM)
+	// don't use items if we have the flag, since most of them are unusable
 	if ( HasTheFlag() )
 	{
 		return NULL;

@@ -255,11 +255,6 @@ inline bool EMatchMode_InProgressMatch( EMatchMode eMatchMode )
 // Try to parse some input as a matchgroup
 ETFMatchGroup ETFMatchGroup_FuzzyParse( const char *pArg );
 
-inline bool IsMvMMatchGroup( ETFMatchGroup eMatchGroup )
-{
-	return ( eMatchGroup == k_eTFMatchGroup_MvM_Practice ) || ( eMatchGroup == k_eTFMatchGroup_MvM_MannUp );
-}
-
 inline bool IsLadderGroup( ETFMatchGroup eMatchGroup )
 {
 	return ( eMatchGroup >= k_eTFMatchGroup_Ladder_First && eMatchGroup <= k_eTFMatchGroup_Ladder_Last )
@@ -276,10 +271,6 @@ inline bool IsMannUpGroup( ETFMatchGroup eMatchGroup )
 {
 	switch ( eMatchGroup )
 	{
-		case k_eTFMatchGroup_MvM_Practice:
-			return false;
-		case k_eTFMatchGroup_MvM_MannUp:
-			return true;
 		case k_eTFMatchGroup_Ladder_6v6:
 		case k_eTFMatchGroup_Ladder_9v9:
 		case k_eTFMatchGroup_Ladder_12v12:

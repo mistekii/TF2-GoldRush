@@ -71,22 +71,6 @@ ClassDetails_t g_PerClassStatDetails[15] =
 	{ TFSTAT_BACKSTABS,				MAKESTATFLAG(TF_CLASS_SPY),			"#TF_ClassRecord_MostBackstabs", "#TF_ClassRecord_Alt_MostBackstabs" },
 };
 
-ClassDetails_t g_PerClassMVMStatDetails[12] =
-{
-	{ TFSTAT_POINTSSCORED,			ALL_CLASSES,					"#TF_ClassRecord_MostPoints", "#TF_ClassRecord_Alt_MostPoints" },
-	{ TFSTAT_KILLS,					ALL_CLASSES,					"#TF_ClassRecord_MostKills", "#TF_ClassRecord_Alt_MostKills" },
-	{ TFSTAT_KILLASSISTS,			ALL_CLASSES,					"#TF_ClassRecord_MostAssists", "#TF_ClassRecord_Alt_MostAssists" },
-	{ TFSTAT_DEFENSES,				ALL_CLASSES,					"#TF_ClassRecord_MostDefenses", "#TF_ClassRecord_Alt_MostDefenses" },
-	{ TFSTAT_DAMAGE,				ALL_CLASSES,					"#TF_ClassRecord_MostDamage", "#TF_ClassRecord_Alt_MostDamage" },
-	{ TFSTAT_PLAYTIME,				ALL_CLASSES,					"#TF_ClassRecord_LongestLife", "#TF_ClassRecord_Alt_LongestLife" },
-	{ TFSTAT_HEALING,				MAKESTATFLAG(TF_CLASS_MEDIC) | MAKESTATFLAG(TF_CLASS_ENGINEER) | MAKESTATFLAG(TF_CLASS_HEAVYWEAPONS),	"#TF_ClassRecord_MostHealing", "#TF_ClassRecord_Alt_MostHealing" },
-	{ TFSTAT_INVULNS,				MAKESTATFLAG(TF_CLASS_MEDIC),		"#TF_ClassRecord_MostInvulns", "#TF_ClassRecord_Alt_MostInvulns" },
-	{ TFSTAT_MAXSENTRYKILLS,		MAKESTATFLAG(TF_CLASS_ENGINEER),	"#TF_ClassRecord_MostSentryKills", "#TF_ClassRecord_Alt_MostSentryKills" },
-	{ TFSTAT_TELEPORTS,				MAKESTATFLAG(TF_CLASS_ENGINEER),	"#TF_ClassRecord_MostTeleports", "#TF_ClassRecord_Alt_MostTeleports" },
-	{ TFSTAT_HEADSHOTS,				MAKESTATFLAG(TF_CLASS_SNIPER) | MAKESTATFLAG(TF_CLASS_SPY),		"#TF_ClassRecord_MostHeadshots", "#TF_ClassRecord_Alt_MostHeadshots" },
-	{ TFSTAT_BACKSTABS,				MAKESTATFLAG(TF_CLASS_SPY),			"#TF_ClassRecord_MostBackstabs", "#TF_ClassRecord_Alt_MostBackstabs" },
-};
-
 CTFStatsSummaryPanel *g_pTFStatsSummaryPanel = NULL;
 
 CUtlVector<CTFStatsSummaryPanel *> g_vecStatPanels;

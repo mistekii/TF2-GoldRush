@@ -890,20 +890,12 @@ void CTFSpectatorGUI::RecalculatePlayerPanels( void )
 			if ( !g_TF_PR->IsConnected( iPlayer ) )
 				continue;
 
-			bool bHideBots = false;
-
-	#ifndef _DEBUG 
-			if ( bMvM )
-			{
-				bHideBots = true;
-			}
-	#endif
 			int iTeam = g_TF_PR->GetTeam( iPlayer );
 			if ( iTeam != iLocalTeam && iLocalTeam != TEAM_SPECTATOR )
 				continue;
 			if ( iTeam != TF_TEAM_RED && iTeam != TF_TEAM_BLUE )
 				continue;
-			if ( g_TF_PR->IsFakePlayer( iPlayer ) && bHideBots )
+			if ( g_TF_PR->IsFakePlayer( iPlayer ) )
 				continue;
 			if ( g_TF_PR->GetPlayerClass( iPlayer ) != nCurrentClass )
 				continue;

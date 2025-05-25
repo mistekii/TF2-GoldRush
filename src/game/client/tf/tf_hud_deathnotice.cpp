@@ -54,7 +54,6 @@ ConVar cl_hud_killstreak_display_fontsize( "cl_hud_killstreak_display_fontsize",
 ConVar cl_hud_killstreak_display_alpha( "cl_hud_killstreak_display_alpha", "120", FCVAR_ARCHIVE, "Adjusts font alpha value of killstreak notices.  Range is from 0 to 255 (default is 200)." );
 
 const int STREAK_MIN = 5;
-const int STREAK_MIN_MVM = 20;
 const int STREAK_MIN_DUCKS = 10;
 
 static int MinStreakForType( CTFPlayerShared::ETFStreak eStreakType )

@@ -21,9 +21,6 @@
 	#define MDEBUG(x)
 #endif
 
-		   
-#define	MAX_MVM_WAVE_STRING 256
-
 
 //-----------------------------------------------------------------------------
 // Teams.
@@ -45,11 +42,6 @@ enum
 #define TF_TEAM_AUTOASSIGN (TF_TEAM_COUNT + 1 )
 
 #define TF_TEAM_HALLOWEEN	TF_TEAM_AUTOASSIGN
-
-#define TF_TEAM_PVE_INVADERS	TF_TEAM_BLUE		// invading bot team in mann vs machine
-#define TF_TEAM_PVE_DEFENDERS	TF_TEAM_RED			// defending player team in mann vs machine
-
-#define TF_TEAM_PVE_INVADERS_GIANTS 4				// hack for replacing visuals via itemdef
 
 extern const char *g_aTeamNames[TF_TEAM_COUNT];
 extern color32 g_aTeamColors[TF_TEAM_COUNT];
@@ -251,7 +243,6 @@ enum ETFGameType
 	TF_GAMETYPE_CP,
 	TF_GAMETYPE_ESCORT,
 	TF_GAMETYPE_ARENA,
-	TF_GAMETYPE_MVM,
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -1701,33 +1692,6 @@ enum EAttackBonusEffects_t
 
 	kBonusEffect_Count, // Must be 2nd to last
 };
-
-
-//-----------------------------------------------------------------------------
-// PVE MODE
-//-----------------------------------------------------------------------------
-enum mvm_announcement_t
-{
-	TF_MVM_ANNOUNCEMENT_WAVE_COMPLETE,
-	TF_MVM_ANNOUNCEMENT_WAVE_FAILED,
-
-	TF_MVM_ANNOUNCEMENT_TOTAL
-};
-
-#define MVM_BUYBACK_COST_PER_SEC		5
-
-#define MVM_CLASS_TYPES_PER_WAVE_MAX			12
-// this is ugly, but we need to increase the max types per wave and changing the old define will break demos
-#define MVM_CLASS_TYPES_PER_WAVE_MAX_NEW		( MVM_CLASS_TYPES_PER_WAVE_MAX * 2 )
-
-#define MVM_CLASS_FLAG_NONE				0
-#define MVM_CLASS_FLAG_NORMAL			(1<<0)
-#define MVM_CLASS_FLAG_SUPPORT			(1<<1)
-#define MVM_CLASS_FLAG_MISSION			(1<<2)
-#define MVM_CLASS_FLAG_ALWAYSCRIT		(1<<4)
-#define MVM_CLASS_FLAG_SUPPORT_LIMITED	(1<<5)
-
-
 
 enum MedicCallerType
 {

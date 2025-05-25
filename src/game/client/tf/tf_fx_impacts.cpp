@@ -17,8 +17,6 @@
 //-----------------------------------------------------------------------------
 // Purpose: Handle weapon impacts
 //-----------------------------------------------------------------------------
-static int g_MvMRobotImpactCount = 0;
-static int g_MvMTankImpactCount = 0;
 void ImpactCallback( const CEffectData &data )
 {
 	trace_t tr;

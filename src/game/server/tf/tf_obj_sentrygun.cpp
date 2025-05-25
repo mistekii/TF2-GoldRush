@@ -64,7 +64,6 @@ extern ConVar tf_nav_in_combat_range;
 
 #define SENTRYGUN_MAX_LEVEL_MINI			1
 #define MINI_SENTRY_SCALE			0.75f
-#define DISPOSABLE_SCALE			0.65f
 #define SMALL_SENTRY_SCALE			0.80f
 
 #define WRANGLER_DISABLE_TIME		3.0f
@@ -188,14 +187,8 @@ void CObjectSentrygun::Spawn()
 	m_iAmmoShells = 0;
 	m_iAmmoRockets = 0;
 
-	float flMaxAmmoMult = 1.f;
-	if ( GetOwner() )
-	{
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMaxAmmoMult, mvm_sentry_ammo );
-	}
-
-	m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_1 * flMaxAmmoMult;
-	m_iMaxAmmoRockets = SENTRYGUN_MAX_ROCKETS * flMaxAmmoMult;
+	m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_1;
+	m_iMaxAmmoRockets = SENTRYGUN_MAX_ROCKETS;
 
 	m_iAmmoType = GetAmmoDef()->Index( "TF_AMMO_PRIMARY" );
 
@@ -269,10 +262,7 @@ Vector CObjectSentrygun::GetEnemyAimPosition( CBaseEntity* pEnemy ) const
 void CObjectSentrygun::SentryThink( void )
 {
 	m_flSentryRange = SENTRY_MAX_RANGE;
-	if ( !IsDisposableBuilding() )
-	{
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), m_flSentryRange, mult_sentry_range );
-	}
+	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), m_flSentryRange, mult_sentry_range );
 
 	switch( m_iState )
 	{
@@ -313,7 +303,6 @@ void CObjectSentrygun::StartPlacement( CTFPlayer *pPlayer )
 	m_vecBuildMaxs += Vector( 4,4,0 );
 
 	MakeMiniBuilding( pPlayer );
-	MakeDisposableBuilding( pPlayer );
 	MakeScaledBuilding( GetBuilder() );
 }
 
@@ -327,7 +316,6 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 	// Have to re-call this in case the player changed their weapon
 	// between StartPlacement and StartBuilding.
 	MakeMiniBuilding( GetBuilder() );
-	MakeDisposableBuilding( GetBuilder() );
 	MakeScaledBuilding( GetBuilder() );
 
 	if ( IsMiniBuilding() )
@@ -339,8 +327,6 @@ bool CObjectSentrygun::StartBuilding( CBaseEntity *pBuilder )
 
 	SetPoseParameter( m_iPitchPoseParameter, 0.0 );
 	SetPoseParameter( m_iYawPoseParameter, 0.0 );
-
-	SetObjectMode( IsDisposableBuilding() ? MODE_SENTRYGUN_DISPOSABLE : MODE_SENTRYGUN_NORMAL );
 
 	return BaseClass::StartBuilding( pBuilder );
 }
@@ -372,7 +358,7 @@ void CObjectSentrygun::MakeMiniBuilding( CTFPlayer* pPlayer )
 //-----------------------------------------------------------------------------
 int CObjectSentrygun::GetMaxUpgradeLevel( )
 { 
-	if ( IsDisposableBuilding() || IsMiniBuilding() )
+	if ( IsMiniBuilding() )
 		return SENTRYGUN_MAX_LEVEL_MINI;
 
 	return BaseClass::GetMaxUpgradeLevel(); 
@@ -521,19 +507,13 @@ void CObjectSentrygun::StartUpgrading( void )
 {
 	BaseClass::StartUpgrading();
 
-	float flMaxAmmoMult = 1.f;
-	if ( GetOwner() )
-	{
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( GetOwner(), flMaxAmmoMult, mvm_sentry_ammo );
-	}
-
 	switch( m_iUpgradeLevel )
 	{
 	case 2:
 		SetModel( SENTRY_MODEL_LEVEL_2_UPGRADE );
 		m_flHeavyBulletResist = SENTRYGUN_MINIGUN_RESIST_LVL_2;
 		SetViewOffset( SENTRYGUN_EYE_OFFSET_LEVEL_2 );
-		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_2 * flMaxAmmoMult;
+		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_2;
 		break;
 	case 3:
 		SetModel( SENTRY_MODEL_LEVEL_3_UPGRADE );
@@ -543,7 +523,7 @@ void CObjectSentrygun::StartUpgrading( void )
 		}
 		m_flHeavyBulletResist = SENTRYGUN_MINIGUN_RESIST_LVL_3;
 		SetViewOffset( SENTRYGUN_EYE_OFFSET_LEVEL_3 );
-		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_3 * flMaxAmmoMult;
+		m_iMaxAmmoShells = SENTRYGUN_MAX_SHELLS_3;
 		break;
 	default:
 		Assert(0);
@@ -597,9 +577,6 @@ void CObjectSentrygun::FinishUpgrading( void )
 //-----------------------------------------------------------------------------
 bool CObjectSentrygun::OnWrenchHit( CTFPlayer *pPlayer, CTFWrench *pWrench, Vector hitLoc )
 {
-	if ( IsDisposableBuilding() )
-		return false;
-
 	bool bDidWork = false;
 
 	// If the player repairs it at all, we're done
@@ -856,7 +833,7 @@ bool CObjectSentrygun::FindTarget()
 		// CTFLaserPointer* pPointer = static_cast<CTFLaserPointer*>( pBuilder->Weapon_OwnsThisID( TF_WEAPON_LASER_POINTER ) );
 		// FIX ME:  Temp fix until we find out why the pointer thinks its deployed after spawn
 		CTFLaserPointer* pPointer = dynamic_cast<CTFLaserPointer*>( pBuilder->GetActiveWeapon() );
-		if ( pPointer && pPointer->HasLaserDot() && !IsDisposableBuilding() )
+		if ( pPointer && pPointer->HasLaserDot() )
 		{
 			m_bPlayerControlled = true;
 			m_nShieldLevel.Set( SHIELD_NORMAL );
@@ -1258,7 +1235,7 @@ void CObjectSentrygun::Attack()
 			m_flFireRate *= 0.5f;
 		}
 			
-		if ( IsMiniBuilding() && !IsDisposableBuilding() )
+		if ( IsMiniBuilding() )
 		{
 			m_flFireRate *= 0.75f;
 		}
@@ -1597,12 +1574,6 @@ bool CObjectSentrygun::Fire()
 
 		// Out of ammo, play a click
 		EmitSound( "Building_Sentrygun.Empty" );
-
-		// Disposable sentries blow up when their ammo runs out
-		if ( IsDisposableBuilding() )
-		{
-			DetonateObject();
-		}
 
 		m_flNextAttack = gpGlobals->curtime + 0.2;
 	}
@@ -2031,18 +2002,6 @@ void CObjectSentrygun::Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	// Engineers destroying their own sentry don't escape the buster.
-	// Destroying disposable sentries doesn't reset the buster.
-	if ( info.GetAttacker() != this && !IsDisposableBuilding() )
-	{
-		// Sentry Buster mission accomplished
-		if ( pOwner )
-		{
-			pOwner->ResetAccumulatedSentryGunDamageDealt();
-			pOwner->ResetAccumulatedSentryGunKillCount();
-		}
-	}
-
 	// do normal handling
 	BaseClass::Killed( info );
 }
@@ -2106,30 +2065,6 @@ void CObjectSentrygun::MakeCarriedObject( CTFPlayer *pCarrier )
 	m_iOldAmmoRockets = m_iAmmoRockets;
 
 	m_nShieldLevel.Set( SHIELD_NONE );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CObjectSentrygun::MakeDisposableBuilding( CTFPlayer* pPlayer )
-{
-	// We don't have our main gun
-	if ( !( pPlayer->GetNumObjects( OBJ_SENTRYGUN ) && pPlayer->CanBuild( OBJ_SENTRYGUN ) == CB_CAN_BUILD ) )
-		return;
-
-	// We're carrying our main gun
-	if ( pPlayer->m_Shared.IsCarryingObject() && pPlayer->m_Shared.GetCarriedObject() && !pPlayer->m_Shared.GetCarriedObject()->IsDisposableBuilding() )
-		return;
-
-	if ( IsDisposableBuilding() )
-		return;
-
-	SetMaxHealth( SENTRYGUN_MINI_MAX_HEALTH );
-	SetHealth( SENTRYGUN_MINI_MAX_HEALTH );
-
-	SetModelScale( DISPOSABLE_SCALE );
-	
-	BaseClass::MakeDisposableBuilding( pPlayer );
 }
 
 

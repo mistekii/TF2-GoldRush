@@ -131,33 +131,6 @@ const char *g_szLocalizedRecordText[] =
 	"#StatPanel_BonusPoints"
 };
 
-const char *g_szLocalizedMVMRecordText[] =
-{
-	"",
-	"[shots hit]",
-	"[shots fired]",
-	"#StatPanel_MVM_Kills",	
-	"[deaths]",
-	"#StatPanel_MVM_DamageDealt",
-	"#StatPanel_MVM_Captures",
-	"#StatPanel_MVM_Defenses",
-	"#StatPanel_MVM_Dominations",
-	"#StatPanel_MVM_Revenge",
-	"#StatPanel_MVM_PointsScored",
-	"#StatPanel_MVM_BuildingsDestroyed",
-	"#StatPanel_MVM_Headshots",
-	"#StatPanel_MVM_PlayTime",
-	"#StatPanel_MVM_Healing",
-	"#StatPanel_MVM_Invulnerable",
-	"#StatPanel_MVM_KillAssists",
-	"#StatPanel_MVM_Backstabs",
-	"#StatPanel_MVM_HealthLeached",
-	"#StatPanel_MVM_BuildingsBuilt",
-	"#StatPanel_MVM_SentryKills",		
-	"#StatPanel_MVM_Teleports",
-	"#StatPanel_MVM_BonusPoints"
-};
-
 
 static CTFStatPanel *statPanel = NULL;
 extern CAchievementMgr g_AchievementMgrTF;

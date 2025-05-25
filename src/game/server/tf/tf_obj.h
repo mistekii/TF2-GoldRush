@@ -189,7 +189,6 @@ public:
 
 	virtual bool	ShouldBeMiniBuilding( CTFPlayer* pPlayer );
 	virtual void	MakeMiniBuilding( CTFPlayer* pPlayer );
-	virtual void	MakeDisposableBuilding( CTFPlayer *pPlayer );
 
 	virtual void	ChangeTeam( int iTeamNum ) OVERRIDE;			// Assign this entity to a team.
 
@@ -333,7 +332,6 @@ public:
 	virtual void	SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
 	
 	bool			IsMiniBuilding( void ) const { return m_bMiniBuilding; }
-	bool			IsDisposableBuilding( void ) const { return m_bDisposableBuilding; }
 
 	virtual bool ShouldBlockNav() const OVERRIDE { return false; }
 
@@ -341,13 +339,13 @@ public:
 
 	virtual int	GetShieldLevel() { return SHIELD_NONE; }
 
-	virtual bool CanBeRepaired() const { return !IsDisposableBuilding(); }
+	virtual bool CanBeRepaired() const { return true; }
 
 	Vector GetBuildOrigin() { return m_vecBuildOrigin; }
 	Vector GetBuildCenterOfMass() { return m_vecBuildCenterOfMass; }
 protected:
 
-	virtual bool CanBeUpgraded() const { return !( IsDisposableBuilding() || IsMiniBuilding() ); }
+	virtual bool CanBeUpgraded() const { return !IsMiniBuilding(); }
 	
 	virtual int  GetUpgradeMetalRequired();
 
@@ -459,7 +457,6 @@ protected:
 	CNetworkVar( bool, m_bCarryDeploy );
 
 	CNetworkVar( bool, m_bMiniBuilding );
-	CNetworkVar( bool, m_bDisposableBuilding );
 
 	float m_flPlasmaDisableTime;
 	CNetworkVar( bool, m_bPlasmaDisable );

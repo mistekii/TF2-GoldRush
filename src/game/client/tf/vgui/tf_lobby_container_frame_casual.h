@@ -9,7 +9,6 @@
 
 
 #include "cbase.h"
-//#include "tf_pvelobbypanel.h"
 #include "game/client/iviewport.h"
 #include "tf_shareddefs.h"
 #include "econ/confirm_dialog.h"

@@ -37,7 +37,6 @@ extern ConVar tf_gamemode_ctf;
 	extern ConVar lservercfgfile;
 	extern ConVar mp_tournament_stopwatch;
 
-#define MVM_REQUIRED_SCORE (ConVar*)NULL
 #define LADDER_REQUIRED_SCORE (ConVar*)NULL
 #define CASUAL_REQUIRED_SCORE (ConVar*)NULL
 

@@ -144,7 +144,6 @@ void CBaseLobbyContainerFrame::ShowPanel(bool bShow)
 		InvalidateLayout( true );
 		m_pContents->InvalidateLayout( true, true );
 
-		GTFPartyClient()->MutLocalPlayerCriteria().SetSquadSurplus( false );
 		WriteControls();
 		m_pContents->UpdateControls();
 

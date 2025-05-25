@@ -3752,9 +3752,6 @@ C_TFPlayer::C_TFPlayer() :
 	memset( m_pKartParticles, NULL, sizeof( m_pKartParticles ) );
 	memset( m_pKartSounds, NULL, sizeof( m_pKartSounds ) );
 
-	m_pMVMEyeGlowEffect[ 0 ] = NULL;
-	m_pMVMEyeGlowEffect[ 1 ] = NULL;
-
 	m_pEyeGlowEffect[ 0 ] = NULL;
 	m_pEyeGlowEffect[ 1 ] = NULL;
 	m_pszEyeGlowEffectName[0] = '\0';

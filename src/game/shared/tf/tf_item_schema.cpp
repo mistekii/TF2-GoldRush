@@ -1801,40 +1801,6 @@ RTime32 CTFItemSchema::GetCustomExpirationDate( const char *pszExpirationDate ) 
 	return CEconItemSchema::GetCustomExpirationDate( pszExpirationDate );
 }
 
-EMvMChallengeDifficulty GetMvMChallengeDifficultyByInternalName( const char *pszEnglishID )
-{
-	if ( !Q_stricmp( pszEnglishID, "normal" ) )
-		return k_EMvMChallengeDifficulty_Normal;
-	if ( !Q_stricmp( pszEnglishID, "intermediate" ) )
-		return k_EMvMChallengeDifficulty_Intermediate;
-	if ( !Q_stricmp( pszEnglishID, "advanced" ) )
-		return k_EMvMChallengeDifficulty_Advanced;
-	if ( !Q_stricmp( pszEnglishID, "expert" ) )
-		return k_EMvMChallengeDifficulty_Expert;
-	if ( !Q_stricmp( pszEnglishID, "haunted" ) )
-		return k_EMvMChallengeDifficulty_Haunted;
-	return k_EMvMChallengeDifficulty_Invalid;
-}
-
-const char *GetMvMChallengeDifficultyLocName( EMvMChallengeDifficulty eDifficulty )
-{
-	switch ( eDifficulty )
-	{
-		default:
-			AssertMsg( false, "Bogus challenge difficulty" );
-		case k_EMvMChallengeDifficulty_Normal:
-			return "#TF_MvM_Normal";
-		case k_EMvMChallengeDifficulty_Intermediate:
-			return "#TF_MvM_Intermediate";
-		case k_EMvMChallengeDifficulty_Advanced:
-			return "#TF_MvM_Advanced";
-		case k_EMvMChallengeDifficulty_Expert:
-			return "#TF_MvM_Expert";
-		case k_EMvMChallengeDifficulty_Haunted:
-			return "#TF_MvM_Haunted";
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

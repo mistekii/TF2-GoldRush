@@ -209,13 +209,6 @@ void TFPlayerClassData_t::ParseData( KeyValues *pKeyValuesData )
 //-----------------------------------------------------------------------------
 void TFPlayerClassData_t::AddAdditionalPlayerDeathSounds( void )
 {
-#ifdef GAME_DLL	
-	for ( int i = DEATH_SOUND_FIRST; i <= DEATH_SOUND_LAST; ++i )
-	{
-		CopySoundNameWithModifierToken( m_szDeathSound[ i + DEATH_SOUND_MVM_FIRST ], m_szDeathSound[ i ], ARRAYSIZE( m_szDeathSound[0] ), "MVM_" );
-		CopySoundNameWithModifierToken( m_szDeathSound[ i + DEATH_SOUND_GIANT_MVM_FIRST ], m_szDeathSound[ i ], ARRAYSIZE( m_szDeathSound[0] ), "M_MVM_" );
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------

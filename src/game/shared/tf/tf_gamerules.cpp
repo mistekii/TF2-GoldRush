@@ -2398,21 +2398,6 @@ bool CTFGameRules::IsAttackDefenseMode( void )
 	return bRetVal;
 }
 
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-void CTFGameRules::EndManagedMvMMatch( bool bKickPlayersToParties )
-{
-	// Primarily a pass through so we can ensure our match end state is sync'd -- CPopulationManager manages most of the
-	// MvM meta round state
-	if ( !IsManagedMatchEnded() )
-	{
-		GTFGCClientSystem()->EndManagedMatch();
-		Assert( IsManagedMatchEnded() );
-		m_bMatchEnded.Set( true );
-	}
-}
-#endif // GAME_DLL
-
 
 #endif // STAGING_ONLY
 
@@ -3035,11 +3020,6 @@ void CTFGameRules::Precache( void )
 		CGhost::PrecacheGhost();
 		CHeadlessHatman::PrecacheHeadlessHatman();
 		CMerasmus::PrecacheMerasmus();
-	}
-
-	if ( StringHasPrefix( STRING( gpGlobals->mapname ), "mvm_" ) )
-	{
-		CTFPlayer::PrecacheMvM();
 	}
 
 	CTFPlayer::m_bTFPlayerNeedsPrecache = true;
@@ -3825,12 +3805,6 @@ void CTFGameRules::Activate()
 // 	{
 // 		CExtraMapEntity::SpawnExtraModel();
 // 	}
-
-	// If leaving MvM for any other game mode, clean up any sticky UI/state
-	if ( IsInTournamentMode() && m_nGameType != TF_GAMETYPE_MVM && g_TFGameModeHistory.GetPrevState() == TF_GAMETYPE_MVM )
-	{
-		mp_tournament.SetValue( false );
-	}
 
 	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || m_bPlayingMedieval )
 	{
@@ -8233,17 +8207,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 	}
 
 	DuelMiniGame_AssignWinners();
-
-#ifdef TF_RAID_MODE
-	if ( !IsBossBattleMode() )
-	{
-		// Don't do a full reset in Raid mode if the defending team didn't win
-		if ( IsRaidMode() && team != TF_TEAM_PVE_DEFENDERS )
-		{
-			bForceMapReset = false;
-		}
-	}
-#endif // TF_RAID_MODE
 
 	SetBirthdayPlayer( NULL );
 
@@ -14751,7 +14714,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_BUILDINGSDESTROYED] * TF_SCORE_DESTROY_BUILDING ) + 
 					( pRoundStats->m_iStat[TFSTAT_HEADSHOTS] / TF_SCORE_HEADSHOT_DIVISOR ) + 
 					( pRoundStats->m_iStat[TFSTAT_BACKSTABS] * TF_SCORE_BACKSTAB ) + 
-					( iHealing / TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) +  // MvM values healing more than PvP
+					( iHealing / TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_KILLASSISTS] / TF_SCORE_KILL_ASSISTS_PER_POINT ) + 
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
@@ -16409,7 +16372,6 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_damage_disablespread", "dmgspread", NULL },
 	{ "mp_highlander", "highlander", NULL },
 	{ "tf_bot_count", "bots" },
-	{ "tf_pve_mode", "pve" },
 	{ "sv_registration_successful", "_registered", NULL },
 	{ "tf_server_identity_disable_quickplay", "noquickplay", NULL },
 	{ "tf_mm_strict", "hidden", NULL },
@@ -16555,21 +16517,6 @@ const char *CTFGameRules::FormatVideoName( const char *videoName, bool bWithExte
 			V_strncpy( strFullpath, "media/" "arena_intro", MAX_PATH );
 		}
 	}
-	else if ( Q_strstr( videoName, "mvm_" ) )
-	{
-		char strTempPath[MAX_PATH];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );	
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to mvm_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof(strFullpath), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "mvm_intro", MAX_PATH );
-		}
-	}
 	else
 	{
 		Q_strncat( strFullpath, videoName, MAX_PATH );
@@ -16688,10 +16635,6 @@ const char *GetMapDisplayName( const char *mapName, bool bTitleCase /* = false *
 		pszSrc +=  5;
 	}
 #endif // TF_RAID_MODE
-	else if ( !Q_strncmp( pszSrc, "mvm_", 4 ) )
-	{
-		pszSrc +=  4;
-	}
 	else if ( !Q_strncmp( pszSrc, "arena_", 6 ) )
 	{
 		pszSrc +=  6;
@@ -16794,10 +16737,6 @@ const char *GetMapType( const char *mapName )
 			return "#Gametype_Raid";
 		}
 #endif // TF_RAID_MODE
-		else if ( !Q_strnicmp( mapName, "mvm_", 4 ) )
-		{
-			return "#Gametype_MVM";
-		}
 		else
 		{
 			if ( TFGameRules() )
@@ -17649,15 +17588,6 @@ void CTFGameRules::BonusStateAbort( void )
 void CTFGameRules::BetweenRounds_Start( void )
 {
 	SetSetup( true );
-
-	for ( int i = 0; i < IBaseObjectAutoList::AutoList().Count(); ++i )
-	{
-		CBaseObject *pObj = static_cast<CBaseObject*>( IBaseObjectAutoList::AutoList()[i] );
-		if ( pObj->IsDisposableBuilding() || pObj->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			pObj->DetonateObject();
-		}
-	}
 
 	if ( m_hGamerulesProxy )
 	{
@@ -18588,7 +18518,7 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_HaveMinPlayersToEnable,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ArePlayersOnTeamReady,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ResetState,				"" );
-	TF_GAMERULES_SCRIPT_FUNC( IsDefaultGameMode,						"The absence of arena, mvm, tournament mode, etc" );
+	TF_GAMERULES_SCRIPT_FUNC( IsDefaultGameMode,						"The absence of arena, tournament mode, etc" );
 	TF_GAMERULES_SCRIPT_FUNC( AllowThirdPersonCamera,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetGravityMultiplier,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetGravityMultiplier,						"" );

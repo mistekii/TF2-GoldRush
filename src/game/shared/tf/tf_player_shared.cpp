@@ -9923,24 +9923,6 @@ const char *CTFPlayer::GetOverrideStepSound( const char *pszBaseStepSoundName )
 			{ kFootstepSoundSet_Octopus,	"Concrete.StepRight",	"Octopus.StepCommon" },
 
 			//
-			{ kFootstepSoundSet_HeavyGiant,		"",		"MVM.GiantHeavyStep" },
-
-			//
-			{ kFootstepSoundSet_SoldierGiant,	"",		"MVM.GiantSoldierStep" },
-
-			//
-			{ kFootstepSoundSet_DemoGiant,		"",		"MVM.GiantDemomanStep" },
-
-			//
-			{ kFootstepSoundSet_ScoutGiant,		"",		"MVM.GiantScoutStep" },
-
-			//
-			{ kFootstepSoundSet_PyroGiant,		"",		"MVM.GiantPyroStep" },
-
-			//
-			{ kFootstepSoundSet_SentryBuster,	"",		"MVM.SentryBusterStep" },
-
-			//
 			{ kFootstepSoundSet_TreasureChest,	"",		"Chest.Step" },
 		};
 

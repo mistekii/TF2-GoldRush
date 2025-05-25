@@ -614,16 +614,6 @@ void CBaseLobbyPanel::UpdatePlayerList()
 		LobbyPlayerInfo p;
 		p.m_steamID = steamapicontext->SteamUser()->GetSteamID();
 		p.m_sName = steamapicontext->SteamFriends()->GetPersonaName();
-		p.m_bHasTicket = GTFGCClientSystem()->BLocalPlayerInventoryHasMvmTicket();
-		p.m_bSquadSurplus = GTFPartyClient()->GetLocalPlayerCriteria().GetSquadSurplus();
-#ifdef USE_MVM_TOUR
-		int idxTour = GTFPartyClient()->GetEffectiveGroupCriteria().GetMannUpTourIndex();
-		if ( idxTour < 0 || !GTFGCClientSystem()->BGetLocalPlayerBadgeInfoForTour( idxTour, &p.m_nBadgeLevel, &p.m_nCompletedChallenges ) )
-		{
-			p.m_nBadgeLevel = 0;
-			p.m_nCompletedChallenges = 0;
-		}
-#endif // USE_MVM_TOUR
 		p.m_pAvatarImage = NULL;
 		p.m_bHasCompetitiveAccess = GTFGCClientSystem()->BHasCompetitiveAccess();
 		CSOTFLadderData *pData = GetLocalPlayerLadderData( eMatchGroup );
@@ -683,10 +673,8 @@ void CBaseLobbyPanel::UpdatePlayerList()
 			p.m_sName = steamapicontext->SteamFriends()->GetFriendPersonaName( p.m_steamID );
 			if ( p.m_sName.IsEmpty() )
 				continue;
-			p.m_bHasTicket = pParty->Obj().members( i ).owns_ticket();
 			p.m_nBadgeLevel = pParty->Obj().members( i ).badge_level();
 			p.m_nCompletedChallenges = pParty->Obj().members( i ).completed_missions();
-			p.m_bSquadSurplus = pParty->GetMemberMatchCriteria( i ).GetSquadSurplus();
 			p.m_pAvatarImage = nullptr;
 			p.m_bIsBanned = pParty->Obj().members( i ).is_banned();
 			p.m_bHasCompetitiveAccess = pParty->Obj().members( i ).competitive_access();

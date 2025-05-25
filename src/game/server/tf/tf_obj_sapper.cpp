@@ -254,48 +254,6 @@ void CObjectSapper::OnGoActive( void )
 	if ( pEntity )
 	{
 		SetModel( GetSapperModelName( SAPPER_MODEL_PLACED ) );
-		
-		if ( pEntity->IsPlayer() )	// Sapped bot in MvM mode, or player in bountymode
-		{
-			float flTime = 4.f;
-
-			if ( pBuilder )
-			{
-				int iRoboSapper = 0;
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBuilder, iRoboSapper, robo_sapper );
-
-				CTFPlayer *pTFParent = ToTFPlayer( GetParentEntity() );
-				if ( pTFParent && pTFParent->IsAlive() )
-				{	
-					int nRadius = 200;
-
-					switch( iRoboSapper )
-					{
-					case 2:
-						flTime = 5.5f;
-						nRadius = 225;
-						break;
-					case 3:
-						flTime = 7.f;
-						nRadius = 250;
-						break;
-					default:
-						break;
-					}
-
-					// Unlimited, single-target version of the RoboSapper
-					if ( GetObjectMode() == MODE_SAPPER_ANTI_ROBOT )
-					{
-						nRadius = 0;
-					}
-
-					ApplyRoboSapper( pTFParent, flTime, nRadius );
-				}
-			}
-
-			m_flSelfDestructTime = gpGlobals->curtime + flTime;
-		}
-
 	}
 
 	UTIL_SetSize( this, SAPPER_MINS, SAPPER_MAXS );
@@ -314,17 +272,10 @@ bool CObjectSapper::IsParentValid( void )
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
 	if ( pEntity )
 	{
-		if ( pEntity->IsPlayer() )	// sapped bot in MvM mode
+		CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
+		if ( pObject )
 		{
 			bValid = true;
-		}
-		else
-		{
-			CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
-			if ( pObject )
-			{
-				bValid = true;
-			}
 		}
 	}
 

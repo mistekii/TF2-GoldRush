@@ -422,8 +422,7 @@ static const char *s_aGameTypeNames[] =
 	"#Gametype_CTF",
 	"#Gametype_CP",
 	"#Gametype_Escort",
-	"#Gametype_Arena",
-	"#Gametype_MVM"
+	"#Gametype_Arena"
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aGameTypeNames ) );
 
@@ -438,8 +437,7 @@ static const char *s_aEnumGameTypeName[] =
 	"TF_GAMETYPE_CTF",
 	"TF_GAMETYPE_CP",
 	"TF_GAMETYPE_ESCORT",
-	"TF_GAMETYPE_ARENA",
-	"TF_GAMETYPE_MVM"
+	"TF_GAMETYPE_ARENA"
 };
 COMPILE_TIME_ASSERT( TF_GAMETYPE_COUNT == ARRAYSIZE( s_aEnumGameTypeName ) );
 

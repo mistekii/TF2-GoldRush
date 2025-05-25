@@ -256,14 +256,4 @@ void CTFLobbyShared::SpewDebugSummary() const
 	}
 }
 
-#ifdef USE_MVM_TOUR
-//-----------------------------------------------------------------------------
-const char *CTFLobbyShared::GetMannUpTourName() const
-{
-	if ( !IsMannUpGroup( GetMatchGroup() ) )
-		return NULL;
-	return GSObj().mannup_tour_name().c_str();
-}
-#endif // USE_MVM_TOUR
-
 //-----------------------------------------------------------------------------
