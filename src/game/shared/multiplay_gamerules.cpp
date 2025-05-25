@@ -1436,56 +1436,6 @@ ConVarRef suitcharger( "sk_suitcharger" );
 			g_pStringTableServerMapCycle->AddString( CBaseEntity::IsServer(), "ServerMapCycle", sFileList.Length() + 1, sFileList.String() );
 		}
 
-#if defined ( TF_DLL ) || defined ( TF_CLIENT_DLL )
-		if ( g_pStringTableServerMapCycleMvM )
-		{
-			ConVarRef tf_mvm_missioncyclefile( "tf_mvm_missioncyclefile" );
-			KeyValues *pKV = new KeyValues( tf_mvm_missioncyclefile.GetString() );
-			if ( pKV->LoadFromFile( g_pFullFileSystem, tf_mvm_missioncyclefile.GetString(), "MOD" ) )
-			{
-				CUtlVector<CUtlString> mapList;
-
-				// Parse the maps and send a list to each client for vote options
-				int iMaxCat = pKV->GetInt( "categories", 0 );
-				for ( int iCat = 1; iCat <= iMaxCat; iCat++ )
-				{
-					KeyValues *pCategory = pKV->FindKey( UTIL_VarArgs( "%d", iCat ), false );
-					if ( pCategory )
-					{
-						int iMapCount = pCategory->GetInt( "count", 0 );
-						for ( int iMap = 1; iMap <= iMapCount; ++iMap )
-						{
-							KeyValues *pMission = pCategory->FindKey( UTIL_VarArgs( "%d", iMap ), false );
-							if ( pMission )
-							{
-								const char *pszMap = pMission->GetString( "map", "" );
-								int iIdx = mapList.Find( pszMap );
-								if ( !mapList.IsValidIndex( iIdx ) )
-								{
-									mapList.AddToTail( pszMap );
-								}
-							}
-						}
-					}
-				}
-
-				if ( mapList.Count() )
-				{
-					CUtlString sFileList;
-					for ( int i = 0; i < mapList.Count(); i++ )
-					{
-						sFileList += mapList[i];
-						sFileList += '\n';
-					}
-
-					g_pStringTableServerMapCycleMvM->AddString( CBaseEntity::IsServer(), "ServerMapCycleMvM", sFileList.Length() + 1, sFileList.String() );
-				}
-
-				pKV->deleteThis();
-			}
-		}
-#endif
-
 		// If the current map is in the same location in the new map cycle, keep that index. This gives better behavior
 		// when reloading a map cycle that has the current map in it multiple times.
 		int nOldPreviousMap = ( nOldCycleIndex == 0 ) ? ( m_MapList.Count() - 1 ) : ( nOldCycleIndex - 1 );

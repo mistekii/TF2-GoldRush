@@ -21,10 +21,6 @@
 
 extern INetworkStringTable *g_pStringTableServerMapCycle;
 
-#ifdef TF_CLIENT_DLL
-extern INetworkStringTable *g_pStringTableServerMapCycleMvM;
-#endif
-
 static const int k_MAX_VOTE_NAME_LENGTH = 256;
 
 namespace vgui
