@@ -750,11 +750,6 @@ void C_ObjectSentrygun::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quat
 //-----------------------------------------------------------------------------
 const char* C_ObjectSentrygun::GetStatusName() const
 {
-	if ( IsDisposableBuilding() )
-	{
-		return "#TF_Object_Sentry_Disp";
-	}
-	
 	return "#TF_Object_Sentry";
 }
 

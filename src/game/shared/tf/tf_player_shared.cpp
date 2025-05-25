@@ -9460,9 +9460,6 @@ int CTFPlayer::GetNumObjects( int iObjectType, int iObjectMode /*= 0*/ )
 		if ( !GetObject(i) )
 			continue;
 
-		if ( GetObject(i)->IsDisposableBuilding() )
-			continue;
-
 		if ( GetObject(i)->GetType() == iObjectType && 
 			( GetObject(i)->GetObjectMode() == iObjectMode || iObjectMode == BUILDING_MODE_ANY ) )
 		{

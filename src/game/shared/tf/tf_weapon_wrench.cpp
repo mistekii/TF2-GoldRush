@@ -88,23 +88,15 @@ void CTFWrench::OnFriendlyBuildingHit( CBaseObject *pObject, CTFPlayer *pPlayer,
 
 	CDisablePredictionFiltering disabler;
 
-	if ( pObject->IsDisposableBuilding() )
+	if ( bUsefulHit )
 	{
-		CSingleUserRecipientFilter singleFilter( pPlayer );
-		EmitSound( singleFilter, pObject->entindex(), "Player.UseDeny" );
+		// play success sound
+		WeaponSound( SPECIAL1 );
 	}
 	else
 	{
-		if ( bUsefulHit )
-		{
-			// play success sound
-			WeaponSound( SPECIAL1 );
-		}
-		else
-		{
-			// play failure sound
-			WeaponSound( SPECIAL2 );
-		}
+		// play failure sound
+		WeaponSound( SPECIAL2 );
 	}
 }
 #endif
