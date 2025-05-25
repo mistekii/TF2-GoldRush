@@ -207,7 +207,6 @@ public:
 	virtual bool TestHitboxes( const Ray_t &ray, unsigned int fContentsMask, trace_t& tr );
 
 	bool				IsMiniBuilding() { return m_bMiniBuilding; }
-	bool				IsDisposableBuilding( void ) const { return m_bDisposableBuilding; }
 
 // ITargetIDProvidesHint
 public:
@@ -276,7 +275,6 @@ private:
 	bool			m_bCarryDeploy;
 	bool			m_bOldCarryDeploy;
 	bool			m_bMiniBuilding;
-	bool			m_bDisposableBuilding;
 	float			m_flPercentageConstructed;
 	EHANDLE			m_hBuiltOnEntity;
 	int				m_iObjectMode;

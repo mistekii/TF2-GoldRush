@@ -364,8 +364,6 @@ const char *g_pszItemPickupMethodStrings[] =
 	"#NewItemMethod_PreviewItem",		// UNACK_ITEM_PREVIEW_ITEM
 	"#NewItemMethod_PreviewItemPurchased", // UNACK_ITEM_PREVIEW_ITEM_PURCHASED
 	"#NewItemMethod_PeriodicScoreReward",// UNACK_ITEM_PERIODIC_SCORE_REWARD
-	"#NewItemMethod_MvMBadgeCompletionReward",// UNACK_ITEM_MVM_MISSION_COMPLETION_REWARD
-	"#NewItemMethod_MvMSquadSurplusReward",// UNACK_ITEM_MVM_SQUAD_SURPLUS_REWARD
 	"#NewItemMethod_HolidayGift",		// UNACK_ITEM_FOUND_HOLIDAY_GIFT
 	"#NewItemMethod_CommunityMarketPurchase",	// UNACK_ITEM_COMMUNITY_MARKET_PURCHASE
 	"#NewItemMethod_RecipeOutput",	// UNACK_ITEM_RECIPE_OUTPUT
@@ -402,8 +400,6 @@ const char *g_pszItemPickupMethodStringsUnloc[] =
 	"preview_item",		// UNACK_ITEM_PREVIEW_ITEM
 	"preview_item_purchased", // UNACK_ITEM_PREVIEW_ITEM_PURCHASED
 	"periodic_score_reward", // UNACK_ITEM_PERIODIC_SCORE_REWARD
-	"mvm_badge_completion_reward", // UNACK_ITEM_MVM_MISSION_COMPLETION_REWARD
-	"mvm_squad_surplus_reward", // UNACK_ITEM_MVM_SQUAD_SURPLUS_REWARD
 	"holiday_gift",		// UNACK_ITEM_FOUND_HOLIDAY_GIFT
 	"market_purchase",	// UNACK_ITEM_COMMUNITY_MARKET_PURCHASE
 	"recipe_output",	// UNACK_ITEM_RECIPE_OUTPUT
@@ -440,8 +436,6 @@ const char *g_pszItemFoundMethodStrings[] =
 	"#Item_PreviewItem",		// UNACK_ITEM_PREVIEW_ITEM
 	"#Item_PreviewItemPurchased",// UNACK_ITEM_PREVIEW_ITEM_PURCHASED
 	"#Item_PeriodicScoreReward",// UNACK_ITEM_PERIODIC_SCORE_REWARD
-	"#Item_MvMBadgeCompletionReward",// UNACK_ITEM_MVM_MISSION_COMPLETION_REWARD
-	"#Item_MvMSquadSurplusReward",// UNACK_ITEM_MVM_SQUAD_SURPLUS_REWARD
 	"#Item_HolidayGift",		// UNACK_ITEM_FOUND_HOLIDAY_GIFT
 	NULL,						// UNACK_ITEM_COMMUNITY_MARKET_PURCHASE
 	"#Item_RecipeOutput",		// UNACK_ITEM_RECIPE_OUTPUT

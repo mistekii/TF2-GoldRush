@@ -38,7 +38,6 @@
 #include "func_respawnroom.h"
 #endif
 
-#include "tf_revive.h"
 #include "tf_weapon_medigun.h"
 #include "tf_weapon_shovel.h"
 
@@ -267,7 +266,6 @@ void CWeaponMedigun::WeaponReset( void )
 	RemoveHealingTarget( true );
 
 	m_bAttack2Down	= false;
-	m_bAttack3Down	= false;
 	m_bReloadDown	= false;
 
 #if defined( GAME_DLL )
@@ -349,11 +347,6 @@ bool CWeaponMedigun::Deploy( void )
 		{
 			RecalcEffectOnTarget( pOwner );
 		}
-
-		if ( pOwner && pOwner->m_Shared.IsRageDraining() )
-		{
-			CreateMedigunShield();
-		}
 #endif
 
 #ifdef CLIENT_DLL
@@ -383,8 +376,6 @@ bool CWeaponMedigun::Holster( CBaseCombatWeapon *pSwitchingTo )
 	RecalcEffectOnTarget( ToTFPlayer( GetOwnerEntity() ), true );
 	StopHealingOwner();
 #endif
-
-	RemoveMedigunShield();
 
 #ifdef CLIENT_DLL
 	UpdateEffects();
@@ -417,8 +408,6 @@ void CWeaponMedigun::UpdateOnRemove( void )
 
 	UpdateEffects();
 #endif
-
-	RemoveMedigunShield();
 
 	BaseClass::UpdateOnRemove();
 }
@@ -508,21 +497,6 @@ bool CWeaponMedigun::AllowedToHealTarget( CBaseEntity *pTarget )
 			( pTFPlayer->InSameTeam( pOwner ) || 
 			( bDisguised && pTFPlayer->m_Shared.GetDisguiseTeam() == pOwner->GetTeamNumber() ) ) )
 		{
-			return true;
-		}
-	}
-	else
-	{
-		if ( !pTarget->InSameTeam( pOwner ) )
-			return false;
-
-		if ( pTarget->IsBaseObject() )
-			return false;
-
-		CTFReviveMarker *pReviveMarker = dynamic_cast< CTFReviveMarker* >( pTarget );
-		if ( pReviveMarker )
-		{
-			m_hReviveMarker = pReviveMarker;	// Store last marker we touched
 			return true;
 		}
 	}
@@ -775,40 +749,6 @@ void CWeaponMedigun::HealTargetThink( void )
 		}
 	}
 
-	if ( !pTarget->IsPlayer() )
-	{
-
-		CTFReviveMarker *pReviveMarker = dynamic_cast< CTFReviveMarker* >( pTarget );
-		if ( pReviveMarker )
-		{
-			CTFPlayer *pDeadPlayer = pReviveMarker->GetOwner();
-			if ( pDeadPlayer )
-			{
-				pReviveMarker->SetReviver( pOwner );
-
-				// Instantly revive players when deploying uber
-				float flHealRate = GetHealRate();
-				float flReviveRate = m_bChargeRelease ? flHealRate / 2.f : flHealRate / 8.f;
-				pReviveMarker->AddMarkerHealth( flReviveRate );
-
-				// Set observer target to reviver so they know they're being revived
-				if ( pDeadPlayer->GetObserverMode() > OBS_MODE_FREEZECAM )
-				{
-					if ( pReviveMarker->GetReviver() && pDeadPlayer->GetObserverTarget() != pReviveMarker->GetReviver() )
-					{
-						pDeadPlayer->SetObserverTarget( pReviveMarker->GetReviver() );
-					}
-				}
-
-				if ( !pReviveMarker->HasOwnerBeenPrompted() )
-				{
-					// This will give them a messagebox that has a Cancel button
-					pReviveMarker->PromptOwner();
-				}
-			}
-		}
-	}
-
 	SetNextThink( gpGlobals->curtime + 0.2f, s_pszMedigunHealTargetThink );
 }
 
@@ -907,49 +847,6 @@ const char *CWeaponMedigun::GetHealSound( void ) const
 	return pszRetVal;
 }
 #endif // CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CWeaponMedigun::CreateMedigunShield( void )
-{
-#ifdef GAME_DLL
-	if ( m_hMedigunShield )
-		return;
-
-	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( !pOwner )
-		return;
-
-	{
-		// check if we can activate the shield
-		if ( ( pOwner->m_Shared.GetRageMeter() < 100.f ) && !pOwner->m_Shared.IsRageDraining() )
-			return;
-	}
-
-	pOwner->SpeakConceptIfAllowed( MP_CONCEPT_MEDIC_HEAL_SHIELD );
-	m_hMedigunShield = CTFMedigunShield::Create( pOwner );
-	if ( m_hMedigunShield )
-	{
-		pOwner->m_Shared.StartRageDrain();
-		
-	}
-#endif // GAME_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CWeaponMedigun::RemoveMedigunShield( void )
-{
-#ifdef GAME_DLL
-	if ( m_hMedigunShield )
-	{
-		m_hMedigunShield->RemoveShield();
-		m_hMedigunShield.Set( NULL );
-	}
-#endif // GAME_DLL
-}
 
 
 
@@ -1261,16 +1158,6 @@ void CWeaponMedigun::ItemPostFrame( void )
 	else
 	{
 		m_bAttack2Down = false;
-	}
-
-	if( (pOwner->m_nButtons & IN_ATTACK3) && !m_bAttack3Down )
-	{
-		CreateMedigunShield();
-		m_bAttack3Down = true;
-	}
-	else if( !(pOwner->m_nButtons & IN_ATTACK3) && m_bAttack3Down )
-	{
-		m_bAttack3Down = false;
 	}
 
 	if ( pOwner->m_nButtons & IN_RELOAD && !m_bReloadDown )
@@ -1920,8 +1807,7 @@ void CWeaponMedigun::UpdateEffects( void )
 		if ( m_hHealingTargetEffect.pTarget == m_hHealingTarget )
 			return;
 
-		bool bReviveMarker = m_hReviveMarker && m_hReviveMarker == m_hHealingTarget;	// Hack to avoid another dynamic_cast here
-		bool bHealTargetMarker = hud_medichealtargetmarker.GetBool() && !bReviveMarker;
+		bool bHealTargetMarker = hud_medichealtargetmarker.GetBool();
 
 		const char *pszEffectName;
 		if ( IsAttachedToBuilding() )
@@ -1965,10 +1851,9 @@ void CWeaponMedigun::UpdateEffects( void )
 			}
 		}
 
-		// Attach differently if targeting a revive marker
-		float flVecHeightOffset = bReviveMarker ? 0.f : 50.f;
-		ParticleAttachment_t attachType = bReviveMarker ? PATTACH_POINT_FOLLOW : PATTACH_ABSORIGIN_FOLLOW;
-		const char *pszAttachName = bReviveMarker ? "healbeam" : NULL;
+		float flVecHeightOffset = 50.f;
+		ParticleAttachment_t attachType = PATTACH_ABSORIGIN_FOLLOW;
+		const char *pszAttachName = NULL;
 
 		CNewParticleEffect *pEffect = pEffectOwner->ParticleProp()->Create( pszEffectName, PATTACH_POINT_FOLLOW, "muzzle" );
 		pEffectOwner->ParticleProp()->AddControlPoint( pEffect, 1, m_hHealingTarget, attachType, pszAttachName, Vector(0.f,0.f,flVecHeightOffset) );
@@ -2231,448 +2116,3 @@ void CWeaponMedigun::HookAttributes( void )
 	m_flOverHealExpert = 0.f;
 	CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pOwner, m_flOverHealExpert, overheal_expert );
 }
-
-
-//-----------------------------------------------------------------------------
-// entity_medigun_shield
-//-----------------------------------------------------------------------------
-#define MEDIGUNSHIELD_THINK_CONTEXT		"CTFMedigunShield_ShieldThink"
-
-LINK_ENTITY_TO_CLASS( entity_medigun_shield, CTFMedigunShield );
-PRECACHE_WEAPON_REGISTER( entity_medigun_shield );
-
-// Network
-IMPLEMENT_NETWORKCLASS_ALIASED( TFMedigunShield, DT_TFMedigunShield )
-
-BEGIN_NETWORK_TABLE( CTFMedigunShield, DT_TFMedigunShield )
-END_NETWORK_TABLE()
-
-BEGIN_PREDICTION_DATA( CTFMedigunShield )
-END_PREDICTION_DATA()
-
-// Data
-BEGIN_DATADESC( CTFMedigunShield )
-#ifdef GAME_DLL
-DEFINE_FUNCTION( ShieldTouch ),
-DEFINE_THINKFUNC( ShieldThink ),
-#endif // GAME_DLL
-END_DATADESC()
-
-#ifdef GAME_DLL
-static const float PROJECTILE_SHIELD_ALPHA_BASE = 150.f;
-static const float PROJECTILE_SHIELD_ENERGY_REFILL_PULSE = 10.f;
-static const float PROJECTILE_SHIELD_ENERGY_MAX = 1000.f;
-#endif // GAME_DLL
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-CTFMedigunShield::CTFMedigunShield()
-{
-	m_nBlinkCount = 0;
-#ifdef GAME_DLL
-	m_pTouchLoop = NULL;
-
-
-#endif // GAME_DLL
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-CTFMedigunShield::~CTFMedigunShield()
-{
-#ifdef GAME_DLL
-	if ( m_pTouchLoop )
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy( m_pTouchLoop );
-		m_pTouchLoop = NULL;
-	}
-#endif // GAME_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::Spawn()
-{
-	BaseClass::Spawn();
-
-	SetModel( "models/props_mvm/mvm_player_shield.mdl" );
-	SetSolid( SOLID_VPHYSICS );
-	SetSolidFlags( FSOLID_TRIGGER );
-	SetCollisionGroup( TFCOLLISION_GROUP_COMBATOBJECT );
-	SetBlocksLOS( false );
-	AddEffects( EF_NOSHADOW );
-
-	m_takedamage = DAMAGE_EVENTS_ONLY;
-
-#ifdef GAME_DLL
-	m_flShieldEnergyLevel = PROJECTILE_SHIELD_ENERGY_MAX;
-
-	SetTouch( &CTFMedigunShield::ShieldTouch );
-	SetContextThink( &CTFMedigunShield::ShieldThink, gpGlobals->curtime, MEDIGUNSHIELD_THINK_CONTEXT );
-#else
-	SetNextClientThink( CLIENT_THINK_ALWAYS );
-#endif // GAME_DLL
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::Precache()
-{
-	PrecacheScriptSound( "WeaponMedi_Shield.Deploy" );
-	PrecacheScriptSound( "WeaponMedi_Shield.Protection" );
-	PrecacheScriptSound( "WeaponMedi_Shield.Retract" );
-	PrecacheScriptSound( "WeaponMedi_Shield.Burn" );
-	PrecacheScriptSound( "WeaponMedi_Shield.Burn_lp" );
-
-	PrecacheModel( "models/props_mvm/mvm_player_shield.mdl" );
-	PrecacheModel( "models/props_mvm/mvm_player_shield2.mdl" );
-
-	BaseClass::Precache();
-}
-
-#ifdef CLIENT_DLL
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::ClientThink()
-{
-	UpdateShieldPosition();
-}
-#endif // CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::UpdateShieldPosition( void )
-{
-	CBaseEntity *pOwner = GetOwnerEntity();
-	if ( !pOwner )
-		return;
-
-	// Positioning logic
-	Vector vecForward;
-	AngleVectors( pOwner->EyeAngles(), &vecForward );
-	vecForward.z = 0.f;
-	Vector vecShieldOrigin = pOwner->GetAbsOrigin() + vecForward * 145.f;
-	SetAbsOrigin( vecShieldOrigin );
-	SetAbsAngles( QAngle( 0.f, pOwner->EyeAngles().y, 0.f ) );	// Ignore pitch
-}
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CTFMedigunShield *CTFMedigunShield::Create( CTFPlayer *pOwner )
-{
-	if ( pOwner )
-	{
-		CTFMedigunShield *pShield = static_cast< CTFMedigunShield* >( CBaseEntity::Create( "entity_medigun_shield", pOwner->GetAbsOrigin() + Vector( 0, 0, 60 ), pOwner->GetAbsAngles() ) );
-		if ( pShield )
-		{
-			pShield->SetOwnerEntity( pOwner );
-			pShield->ChangeTeam( pOwner->GetTeamNumber() );
-
-			int nShieldLevel = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pOwner, nShieldLevel, generate_rage_on_heal );
-			if ( nShieldLevel > 1 )
-			{
-				pShield->SetModel( "models/props_mvm/mvm_player_shield2.mdl" );
-			}
-
-			pShield->m_nSkin = pShield->GetTeamNumber() == TF_TEAM_RED ? 0 : 1;
-
-			CPVSFilter filter( pOwner->WorldSpaceCenter() );
-			pOwner->EmitSound( filter, pOwner->entindex(), "WeaponMedi_Shield.Deploy" );
-
-			return pShield;
-		}
-	}
-
-	return NULL;
-}
-
-//------------------------------------------------------------------------------
-// Purpose: 
-//------------------------------------------------------------------------------
-// bool CTFMedigunShield::TestCollision( const Ray_t &ray, unsigned int mask, trace_t& trace )
-// {
-// 	switch( GetTeamNumber() )
-// 	{
-// 	case TF_TEAM_RED:
-// 		if ( ( mask & CONTENTS_REDTEAM ) )
-// 			return false;
-// 		break;
-// 
-// 	case TF_TEAM_BLUE:
-// 		if ( ( mask & CONTENTS_BLUETEAM ) )
-// 			return false;
-// 		break;
-// 	}
-// 
-// 	vcollide_t *pCollide = modelinfo->GetVCollide( GetModelIndex() );
-// 
-// 	UTIL_ClearTrace( trace );
-// 
-// 	physcollision->TraceBox( ray, pCollide->solids[0], GetAbsOrigin(), GetAbsAngles(), &trace );
-// 
-// 	if ( trace.fraction >= 1 )
-// 		return false;
-// 
-// 	// return owner as trace hit
-// 	trace.m_pEnt = this;
-// 	return true;
-// }
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFMedigunShield::ShouldCollide( int collisionGroup, int contentsMask ) const
-{
-	if ( collisionGroup == COLLISION_GROUP_PROJECTILE || 
-		 collisionGroup == TFCOLLISION_GROUP_ROCKETS || 
-		 collisionGroup == TFCOLLISION_GROUP_ROCKET_BUT_NOT_WITH_OTHER_ROCKETS )
-	{
-		switch( GetTeamNumber() )
-		{
-		case TF_TEAM_RED:
-			if ( ( contentsMask & CONTENTS_BLUETEAM ) )
-				return false;
-			break;
-
-		case TF_TEAM_BLUE:
-			if ( ( contentsMask & CONTENTS_REDTEAM ) )
-				return false;
-			break;
-		}
-	}
-
-	return BaseClass::ShouldCollide( collisionGroup, contentsMask );
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::StartTouch( CBaseEntity *pOther )
-{
-	BaseClass::StartTouch( pOther );
-
-	CBaseEntity *pOwner = GetOwnerEntity();
-	if ( !pOwner )
-		return;
-
-	if ( !InSameTeam( pOther ) )
-	{
-		CPVSFilter filter( WorldSpaceCenter() );
-		pOwner->EmitSound( filter, entindex(), "WeaponMedi_Shield.Burn" );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::ShieldTouch( CBaseEntity *pOther )
-{
-	if ( !pOther )
-		return;
-
-	if ( !InSameTeam( pOther ) )
-	{
-		// Drip pan for unknown projectiles
-		if ( !pOther->IsDeflectable() && pOther->GetCollisionGroup() == COLLISION_GROUP_PROJECTILE )
-		{
-			UTIL_Remove( pOther );
-			return;
-		}
-
-		CTFPlayer *pTFOwner = ToTFPlayer( GetOwnerEntity() );
-		if ( !pTFOwner )
-			return;
-
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && ( pTFOwner->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-			return;
-
-		int nShieldLevel = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFOwner, nShieldLevel, generate_rage_on_heal );
-
-		// Damage it
-		float flDamage = ( nShieldLevel > 1 ) ? 2.f : 1.f;
-		CTakeDamageInfo info;
-		info.SetAttacker( pTFOwner );
-		info.SetInflictor( this ); 
-		info.SetWeapon( pTFOwner->GetActiveTFWeapon() );
-		info.SetDamage( flDamage );
-		info.SetDamageType( DMG_ENERGYBEAM );
-		info.SetDamageCustom( TF_DMG_CUSTOM_PLASMA );
-		info.SetDamagePosition( pOther->EyePosition() );
-		pOther->TakeDamage( info );
-
-		// Slow enemy players
-		if ( pOther->IsPlayer() )
-		{
-			CTFPlayer *pTFVictim = ToTFPlayer( pOther );
-			if ( !pTFVictim )
-				return;
-
-			float flStun = ( nShieldLevel > 1 ) ? 0.5f : 0.3f;
-			pTFVictim->m_Shared.StunPlayer( 0.5f, flStun, TF_STUN_MOVEMENT, pTFOwner );
-		}
-
-		// Sound
-		if ( !m_pTouchLoop )
-		{
-			CPVSFilter filter( GetAbsOrigin() );
-			CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-			m_pTouchLoop = controller.SoundCreate( filter, entindex(), "WeaponMedi_Shield.Burn_lp" );
-			controller.Play( m_pTouchLoop, 1.0, 100 );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::EndTouch( CBaseEntity *pOther )
-{
-	BaseClass::EndTouch( pOther );
-
-	if ( m_pTouchLoop )
-	{
-		CSoundEnvelopeController::GetController().SoundDestroy( m_pTouchLoop );
-		m_pTouchLoop = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::ShieldThink( void )
-{
-	CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-	if ( !pOwner || !pOwner->m_Shared.IsRageDraining() )
-	{
-		RemoveShield();
-		return;
-	}
-
-	UpdateShieldPosition();
-	
-	// Regen shield
-	if ( m_flShieldEnergyLevel < PROJECTILE_SHIELD_ENERGY_MAX )
-	{
-		m_flShieldEnergyLevel += PROJECTILE_SHIELD_ENERGY_REFILL_PULSE;
-		m_flShieldEnergyLevel = Min( m_flShieldEnergyLevel, PROJECTILE_SHIELD_ENERGY_MAX );
-	}
-
-	// Visuals
-	SetRenderMode( kRenderTransAlpha );
-	int nShieldOpacity = PROJECTILE_SHIELD_ALPHA_BASE;
-
-	// Determine alpha
-	float flFadePoint = PROJECTILE_SHIELD_ENERGY_MAX / 2.f;
-	if ( m_flShieldEnergyLevel <= flFadePoint )
-	{
-		nShieldOpacity = (int)RemapValClamped( m_flShieldEnergyLevel, 0.f, flFadePoint, 255.f, PROJECTILE_SHIELD_ALPHA_BASE );
-	}
-
-	// Blink when we're about to expire
-	if ( pOwner->m_Shared.GetRageMeter() <= 25.f )
-	{
-		++m_nBlinkCount;
-
-		if ( m_nBlinkCount & 0x2 )
-		{
-			SetRenderColorA( PROJECTILE_SHIELD_ALPHA_BASE - 100 );
-		}
-		else
-		{
-			SetRenderColorA( nShieldOpacity );
-		}
-
-		// Play a retract sound
-		if ( m_nBlinkCount == 1 )
-		{
-			CPVSFilter filter( pOwner->WorldSpaceCenter() );
-			pOwner->EmitSound( filter, entindex(), "WeaponMedi_Shield.Retract" );
-		}
-	}
-	else
-	{
-		SetRenderColorA( nShieldOpacity );
-	}
-
-	SetContextThink( &CTFMedigunShield::ShieldThink, gpGlobals->curtime + 0.1f, MEDIGUNSHIELD_THINK_CONTEXT );
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::RemoveShield( void )
-{
-	SetTouch( NULL );
-	AddEffects( EF_NODRAW );
-
-	UTIL_Remove( this );
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-void CTFMedigunShield::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
-{
-	if ( !InSameTeam( info.GetAttacker() ) )
-	{
-		CEffectData	data;
-		data.m_vOrigin = ptr->endpos - (vecDir * 8);
-		data.m_vNormal = -vecDir;
-		data.m_flMagnitude = RemapValClamped( info.GetDamage(), 1.f, 50.f, 0.5f, 2.f );
-
-		CPVSFilter filter( GetAbsOrigin() );
-		te->DispatchEffect( filter, 0.f, data.m_vOrigin, "EnergyShieldImpact", data );
-
-		// g_pEffects->EnergySplash( ptr->endpos - (vecDir * 8), -vecDir, false );
-	}
-
-	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
-}
-
-//-----------------------------------------------------------------------------
-//
-//-----------------------------------------------------------------------------
-int	CTFMedigunShield::OnTakeDamage( const CTakeDamageInfo &info )
-{
-	if ( !InSameTeam( info.GetAttacker() ) )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-		if ( pOwner )
-		{
-			float flDamage = info.GetDamage();
-			m_flShieldEnergyLevel -= flDamage;
-			m_flShieldEnergyLevel = Max( m_flShieldEnergyLevel, 0.f );
-
-			// Add to blocked damage stat
-			CTF_GameStats.Event_PlayerBlockedDamage( pOwner, flDamage );
-
-// 			CPVSFilter filter( pOwner->WorldSpaceCenter() );
-// 			pOwner->EmitSound( filter, entindex(), "WeaponMedi_Shield.Protection" );
-
-			pOwner->PlayDamageResistSound( 100.f, RandomFloat( 0.85f, 1.f ) );
-
-			IGameEvent *event = gameeventmanager->CreateEvent( "medigun_shield_blocked_damage" );
-			if ( event )
-			{
-				event->SetInt( "userid", pOwner->GetUserID() );
-				event->SetFloat( "damage", flDamage );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-
-	return 0;
-}
-#endif // GAME_DLL
-
-

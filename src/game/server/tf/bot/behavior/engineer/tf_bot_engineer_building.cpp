@@ -210,10 +210,6 @@ bool CTFBotEngineerBuilding::IsMetalSourceNearby( CTFBot *me ) const
 //---------------------------------------------------------------------------------------------
 bool CTFBotEngineerBuilding::CheckIfSentryIsOutOfPosition( CTFBot *me ) const
 {
-	// Re-evaluate if MvM ever needs something more dynamic
-	if ( TFGameRules()->IsPVEModeActive() )
-		return false;
-
 	CObjectSentrygun *mySentry = (CObjectSentrygun *)me->GetObjectOfType( OBJ_SENTRYGUN );
 
 	if ( !mySentry )

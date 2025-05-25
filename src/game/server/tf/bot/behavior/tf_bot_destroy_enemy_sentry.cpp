@@ -190,14 +190,6 @@ bool CTFBotDestroyEnemySentry::IsPossible( CTFBot *me )
 	}
 #endif
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( me->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			return false;
-		}
-	}
-
 	return true;
 }
 

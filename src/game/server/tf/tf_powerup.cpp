@@ -167,12 +167,6 @@ bool CTFPowerup::ValidTouch( CBasePlayer *pPlayer )
 		return false;
 	}
 
-	// enemies in mann vs machine can't pick up any powerups
-	if ( TFGameRules()->IsMannVsMachineMode() && pPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		return false;
-	}
-
 	return true;
 }
 

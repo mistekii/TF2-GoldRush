@@ -502,14 +502,6 @@ void CTFWeaponBase::Precache()
 		PrecacheParticleSystem( pTracerEffectCrit );
 	}
 
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus1" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus2" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus3" );
-		CBaseEntity::PrecacheScriptSound( "Weapon_Upgrade.DamageBonus4" );
-	}
-
 	PrecacheModel( "models/weapons/c_models/stattrack.mdl" );
 }
 
@@ -791,11 +783,6 @@ void CTFWeaponBase::Equip( CBaseCombatCharacter *pOwner )
 
 #ifdef GAME_DLL
 		UpdateExtraWearables();
-		CTFPlayer *pTFPlayer = ToTFPlayer( pOwner );
-		if ( pTFPlayer )
-		{
-			pTFPlayer->ReapplyItemUpgrades(pItem);
-		}
 #endif // GAME_DLL
 	}
 }
@@ -1401,17 +1388,6 @@ void CTFWeaponBase::CalcIsAttackCritical( void)
 	m_iLastCritCheckFrame = gpGlobals->framecount;
 
 	m_bCurrentCritIsRandom = false;
-
-#if !defined( CLIENT_DLL )
-	if ( TFGameRules()->IsPVEModeActive() && TFGameRules()->IsPVEModeControlled( pPlayer ) )
-	{
-		// no crits for enemies in PvE
-
-		// Support critboosted even in no crit mode
-		m_bCurrentAttackIsCrit = CalcIsAttackCriticalHelperNoCrits();
-		return;
-	}
-#endif
 
 	if ( (TFGameRules()->State_Get() == GR_STATE_TEAM_WIN) && (TFGameRules()->GetWinningTeam() == pPlayer->GetTeamNumber()) )
 	{
@@ -4198,30 +4174,6 @@ bool CTFWeaponBase::CanAttack()
 //-----------------------------------------------------------------------------
 bool CTFWeaponBase::CanFireCriticalShot( bool bIsHeadshot, CBaseEntity *pTarget /*= NULL*/ )
 {
-#ifdef GAME_DLL
-	CTFPlayer *player = GetTFPlayerOwner();
-
-	if ( TFGameRules()->IsPVEModeControlled( player ) )
-	{
-		// scenario bots cant crit (unless they always do)
-		CTFBot *bot = ToTFBot( player );
-		return ( bot && bot->HasAttribute( CTFBot::ALWAYS_CRIT ) );
-	}
-
-#ifdef TF_CREEP_MODE
-	if ( TFGameRules()->IsCreepWaveMode() && player )
-	{
-		CTFBot *bot = ToTFBot( player );
-
-		if ( bot && bot->HasAttribute( CTFBot::IS_NPC ) )
-		{
-			// creeps can't crit
-			return false;
-		}
-	}
-#endif // TF_CREEP_MODE
-#endif
-
 	return true;
 }
 
@@ -4274,15 +4226,6 @@ char const *CTFWeaponBase::GetShootSound( int iIndex ) const
 	{
 		int nTeam = GetTeamNumber();
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && nTeam == TF_TEAM_PVE_INVADERS )
-		{
-			CTFPlayer *pPlayer = ToTFPlayer( GetOwner() );
-			if ( pPlayer && pPlayer->IsMiniBoss() )
-			{
-				// Not a real team - just a define used in replacing visuals via itemdefs ("visuals_mvm")
-				nTeam = TF_TEAM_PVE_INVADERS_GIANTS;
-			}
-		}
 		const char *pszSound = pItem->GetStaticData()->GetWeaponReplacementSound( nTeam, (WeaponSound_t)iIndex );
 		if ( pszSound )
 			return pszSound;
@@ -5008,27 +4951,10 @@ void CTFWeaponBase::ApplyOnHitAttributes( CBaseEntity *pVictimBaseEntity, CTFPla
 				pAttacker->m_pMarkedForDeathTarget->m_Shared.RemoveCond( TF_COND_MARKEDFORDEATH );
 			}
 
-			float flDuration = pVictim->IsMiniBoss() ? tf_dev_marked_for_death_lifetime.GetFloat() / 2 : tf_dev_marked_for_death_lifetime.GetFloat();
+			float flDuration = tf_dev_marked_for_death_lifetime.GetFloat();
 			pVictim->m_Shared.AddCond( TF_COND_MARKEDFORDEATH, flDuration, pAttacker );
 
 			pAttacker->m_pMarkedForDeathTarget = pVictim;
-
-			// ACHIEVEMENT_TF_MVM_SCOUT_MARK_FOR_DEATH
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( pAttacker->IsPlayerClass( TF_CLASS_SCOUT ) && ( GetWeaponID() == TF_WEAPON_BAT_WOOD ) )
-				{
-					if ( pVictim->IsBot() && ( pVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-					{
-						IGameEvent *event = gameeventmanager->CreateEvent( "mvm_scout_marked_for_death" );
-						if ( event )
-						{
-							event->SetInt( "player", pAttacker->entindex() );
-							gameeventmanager->FireEvent( event );
-						}
-					}
-				}
-			}
 		}
 
 		// Stun airborne enemies who are half a body length higher than attacker
@@ -5200,13 +5126,6 @@ void CTFWeaponBase::GetProjectileFireSetup( CTFPlayer *pPlayer, Vector vecOffset
 		CTraceFilterSimple traceFilter( pPlayer, COLLISION_GROUP_NONE );
 		ITraceFilter *pFilterChain = NULL;
 
-		CTraceFilterIgnoreFriendlyCombatItems traceFilterCombatItem( pPlayer, COLLISION_GROUP_NONE, GetTeamNumber() );
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			// Ignore teammates and their (physical) upgrade items in MvM
-			pFilterChain = &traceFilterCombatItem;
-		}
-
 		CTraceFilterChain traceFilterChain( &traceFilter, pFilterChain );
 		UTIL_TraceLine( vecShootPos, endPos, MASK_SOLID, &traceFilterChain, &tr );
 	}
@@ -5248,20 +5167,6 @@ QAngle CTFWeaponBase::GetSpreadAngles( void )
 	{
 		QAngle angSpread = RandomAngle( -flSpreadAngle, flSpreadAngle );
 		angSpread.z = 0.0f;
-
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			if ( CanOverload() && AutoFiresFullClip() && Clip1() == 1 && !m_bFiringWholeClip )
-			{
-				float flTimeSinceLastAttack = gpGlobals->curtime - GetLastPrimaryAttackTime();
-				if ( flTimeSinceLastAttack < 0.9f )
-				{
-					// Punish upgraded single-fire spam for this class of weapon
-					float flPenaltyAngle = RemapValClamped( flTimeSinceLastAttack, 0.4f, 0.9f, 6.f, 1.f );
-					angSpread += RandomAngle( -flPenaltyAngle, flPenaltyAngle );
-				}
-			}
-		}
 
 		angEyes += angSpread;
 	}
@@ -6089,41 +5994,6 @@ const CEconItemView *CTFWeaponBase::GetTauntItem() const
 	}
 
 	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:  This is an accent sound that plays in addition to the base shoot sound
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::PlayUpgradedShootSound( const char *pszSound )
-{
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CTFPlayer *pOwner = ToTFPlayer( GetOwnerEntity() );
-		if ( pOwner )
-		{
-			float flDmgMod = 1.f;
-			CALL_ATTRIB_HOOK_FLOAT( flDmgMod, mult_dmg );
-			if ( flDmgMod > 1.f )
-			{
-				// This is pretty hacky as it assumes a cap of +100% damage for picking
-				// sounds -- anything more and the 1-4 scale below falls apart.
-				int nLevel = RemapValClamped( flDmgMod, 1.f, 1.8f, 1.f, 4.f );
-				const char *pszSoundname = CFmtStr( "%s%d", pszSound, nLevel );
-
-				CSoundParameters params;
-				if ( !GetParametersForSound( pszSoundname, params, NULL ) )
-					return;
-
-				CPASAttenuationFilter filter( GetOwner(), params.soundlevel );
-				if ( IsPredicted() && CBaseEntity::GetPredictionPlayer() )
-				{
-					filter.UsePredictionRules();
-				}
-
-				EmitSound( filter, pOwner->entindex(), pszSoundname );
-			}
-		}
-	}
 }
 
 

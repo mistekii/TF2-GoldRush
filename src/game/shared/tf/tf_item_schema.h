@@ -22,10 +22,6 @@
 const int k_iMvmMissionIndex_Any = -1;
 const int k_iMvmMissionIndex_NotInSchema = -2;
 
-//#ifndef STAGING_ONLY
-#define USE_MVM_TOUR 1
-//#endif // !STAGING_ONLY
-
 const int k_iMvmTourIndex_Empty = -1; // empty tour name
 const int k_iMvmTourIndex_NotInSchema = -2;
 const int k_iMvmTourIndex_NotMannedUp = -3; // special value used when asking for the selected tour when not manned up
@@ -298,66 +294,6 @@ private:
 
 
 
-//-----------------------------------------------------------------------------
-// MvMMap_t
-//-----------------------------------------------------------------------------
-struct MvMMap_t
-{
-	CUtlConstString m_sMap; // name of the map file
-	CUtlConstString m_sDisplayName; // Localization tag starting with '#'
-	CUtlVector<int> m_vecMissions; // indexes into the schema's challenge list
-};
-
-enum EMvMChallengeDifficulty
-{
-	k_EMvMChallengeDifficulty_Invalid = -1,
-	k_EMvMChallengeDifficulty_Normal = 1,
-	k_EMvMChallengeDifficulty_Intermediate = 2,
-	k_EMvMChallengeDifficulty_Advanced = 3,
-	k_EMvMChallengeDifficulty_Expert = 4,
-	k_EMvMChallengeDifficulty_Haunted = 5,
-
-	k_EMvMChallengeDifficultyFirstValid = k_EMvMChallengeDifficulty_Normal,
-	k_EMvMChallengeDifficultyLastValid = k_EMvMChallengeDifficulty_Haunted
-};
-
-extern EMvMChallengeDifficulty GetMvMChallengeDifficultyByInternalName( const char *pszEnglishID );
-extern const char *GetMvMChallengeDifficultyLocName( EMvMChallengeDifficulty eDifficulty );
-
-//-----------------------------------------------------------------------------
-// MvMMission_t
-//-----------------------------------------------------------------------------
-struct MvMMission_t
-{
-	int m_iDisplayMapIndex; // Index into the schema's map list, for UI purposes
-	CUtlConstString m_sPop; // name of the pop file
-	CUtlConstString m_sDisplayName; // Localization tag starting with '#'
-	CUtlConstString m_sMode; // Localization tag starting with '#'
-	CUtlConstString m_sMapNameActual; // name of the map file to really load
-	EMvMChallengeDifficulty m_eDifficulty;
-	uint32 m_unMannUpPoints; // points for completing mission
-};
-
-//-----------------------------------------------------------------------------
-// MvMTour_t
-//-----------------------------------------------------------------------------
-struct MvMTourMission_t
-{
-	int m_iMissionIndex; // index to the schema's challenge list
-	int m_iBadgeSlot; // *index* (0...31) of the slot on the badge.  -1 if not assigned a slot.  (No bragging rights for this challenge.)
-};
-
-struct MvMTour_t
-{
-	CUtlConstString m_sTourInternalName;
-	CUtlConstString m_sTourNameLocalizationToken; // Localization tag starting with '#', shown to clients
-	CUtlConstString m_sLootImageName;
-	const CEconItemDefinition *m_pBadgeItemDef; // can be NULL if there is no badge reward. Implies all badge slots will be -1. Only really valid for practice tours.
-	CCopyableUtlVector<MvMTourMission_t> m_vecMissions; // indexes into the schema's challenge list
-	uint32 m_nAllChallengesBits;
-	EMvMChallengeDifficulty m_eDifficulty;
-	bool m_bIsNew;
-};
 
 //-----------------------------------------------------------------------------
 // Maps

@@ -30,8 +30,6 @@ ConVar tf_bot_sniper_patience_duration( "tf_bot_sniper_patience_duration", "10",
 ConVar tf_bot_sniper_target_linger_duration( "tf_bot_sniper_target_linger_duration", "2", FCVAR_CHEAT, "How long a Sniper bot will keep toward at a target it just lost sight of" );
 ConVar tf_bot_sniper_allow_opportunistic( "tf_bot_sniper_allow_opportunistic", "1", FCVAR_NONE, "If set, Snipers will stop on their way to their preferred lurking spot to snipe at opportunistic targets" );
 
-ConVar tf_mvm_bot_sniper_target_by_dps( "tf_mvm_bot_sniper_target_by_dps", "1", FCVAR_CHEAT, "If set, Snipers in MvM mode target the victim that has the highest DPS" );
-
 
 //---------------------------------------------------------------------------------------------
 ActionResult< CTFBot >	CTFBotSniperLurk::OnStart( CTFBot *me, Action< CTFBot > *priorAction )
@@ -61,15 +59,6 @@ ActionResult< CTFBot >	CTFBotSniperLurk::OnStart( CTFBot *me, Action< CTFBot > *
 	}
 
 	m_priorHint = NULL;
-
-	if ( TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		// mann vs machine snipers shouldn't stop until they reach their home
-		//m_isOpportunistic = false;
-
-		// mann vs machine snipers should ignore the scenario and just snipe
-		me->SetMission( CTFBot::MISSION_SNIPER, MISSION_DOESNT_RESET_BEHAVIOR_SYSTEM );
-	}
 
 
 	return Continue();
@@ -505,12 +494,6 @@ QueryResultType CTFBotSniperLurk::ShouldAttack( const INextBot *bot, const CKnow
 
 	CTFNavArea *area = me->GetLastKnownArea();
 
-	if ( TFGameRules()->IsMannVsMachineMode() && area && area->HasAttributeTF( TF_NAV_SPAWN_ROOM_BLUE ) )
-	{
-		// don't fire while in the spawn area
-		return ANSWER_NO;
-	}
-
 	// take the shot if you've got it
 	return ANSWER_YES;
 }
@@ -519,11 +502,6 @@ QueryResultType CTFBotSniperLurk::ShouldAttack( const INextBot *bot, const CKnow
 //---------------------------------------------------------------------------------------------
 QueryResultType CTFBotSniperLurk::ShouldRetreat( const INextBot *me ) const
 {
-	if ( TFGameRules()->IsMannVsMachineMode() && me->GetEntity()->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		return ANSWER_NO;
-	}
-
 	return ANSWER_UNDEFINED;
 }
 
@@ -534,82 +512,6 @@ const CKnownEntity *CTFBotSniperLurk::SelectMoreDangerousThreat( const INextBot 
 																 const CKnownEntity *threat1, 
 																 const CKnownEntity *threat2 ) const
 {
-	if ( TFGameRules()->IsMannVsMachineMode() && tf_mvm_bot_sniper_target_by_dps.GetBool() )
-	{
-		CTFBot *me = ToTFBot( meBot->GetEntity() );
-
-		// If one threat is visible and the other not, always pick the visible one
-		if ( !threat1->IsVisibleRecently() )
-		{
-			if ( threat2->IsVisibleRecently() )
-			{
-				return threat2;
-			}
-		}
-		else if ( !threat2->IsVisibleRecently() )
-		{
-			return threat1;
-		}
-
-		// At this point, threat1 and threat2 are either both visible, or both not
-
-		CTFPlayer *playerThreat1 = ToTFPlayer( threat1->GetEntity() );
-		CTFPlayer *playerThreat2 = ToTFPlayer( threat2->GetEntity() );
-
-		if ( playerThreat1 && playerThreat2 )
-		{
-			float rangeSq1 = me->GetRangeSquaredTo( playerThreat1 );
-			float rangeSq2 = me->GetRangeSquaredTo( playerThreat2 );
-
-			if ( me->HasWeaponRestriction( CTFBot::MELEE_ONLY ) )
-			{
-				// Melee-only bots just use closest threat
-				if ( rangeSq1 < rangeSq2 )
-				{
-					return threat1;
-				}
-				return threat2;
-			}
-
-			// Very near threats are always immediately dangerous
-			const float nearbyRangeSq = 500.0f * 500.0f;
-			if ( rangeSq1 < nearbyRangeSq )
-			{
-				if ( rangeSq2 > nearbyRangeSq )
-				{
-					return threat1;
-				}
-			}
-			else if ( rangeSq2 < nearbyRangeSq )
-			{
-				return threat2;
-			}
-
-			// At this point, both threats are either both very near or both "far"
-
-			// Choose the threat that has the highest DPS
-			const int equalTolerance = 50;
-
-			if ( playerThreat1->GetDamagePerSecond() > playerThreat2->GetDamagePerSecond() + equalTolerance )
-			{
-				return threat1;
-			}
-			else if ( playerThreat2->GetDamagePerSecond() > playerThreat1->GetDamagePerSecond() + equalTolerance )
-			{
-				return threat2;
-			}
-			else
-			{
-				// approximately equal DPS, choose closest
-				if ( rangeSq1 < rangeSq2 )
-				{
-					return threat1;
-				}
-				return threat2;
-			}
-		}
-	}
-
 	// Use normal threat selection
 	return NULL;
 }

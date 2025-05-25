@@ -168,17 +168,8 @@ void CTFKnife::PrimaryAttack( void )
 
 	if ( ShouldDisguiseOnBackstab() && bSuccessfulBackstab && !pPlayer->HasTheFlag() )
 	{
-		// Different rules in MvM when stabbing bots
-		bool bDropDisguise = m_hBackstabVictim->IsBot() && ( ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() ) 
-			);
-		if ( bDropDisguise )
-		{
-			// Remove the disguise first, otherwise this attribute is overpowered
-			pPlayer->RemoveDisguise();
-		}
-
 		// We should very quickly disguise as our victim.
-		const float flDelay = ( bDropDisguise ) ? 1.5f : 0.2f;
+		const float flDelay = 0.2f;
 		SetContextThink( &CTFKnife::DisguiseOnKill, gpGlobals->curtime + flDelay, "DisguiseOnKill" );
 	}
 	else
@@ -274,26 +265,8 @@ float CTFKnife::GetMeleeDamage( CBaseEntity *pTarget, int* piDamageType, int* pi
 	{
 		if ( IsBackstab() )
 		{
-			CTFPlayer *pTFTarget = ToTFPlayer( pTarget );
-			// Special rules in modes where player power grows significantly
-			if ( !pTFOwner->IsBot() && pTFTarget && pTFTarget->IsMiniBoss() )
-			{
-				// MvM: Cap damage against bots and check for a damage upgrade
-				float flBonusDmg = 1.f;
-				CALL_ATTRIB_HOOK_FLOAT( flBonusDmg, mult_dmg );
-				flBaseDamage = 250.f * flBonusDmg; 
-
-				// Minibosses:  Adjust damage when backstabbing based on level of armor piercing
-				// Base amount is 25% of normal damage.  Each level adds 25% to a cap of 125%.
-				float flArmorPiercing = 25.f;
-				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pTFOwner, flArmorPiercing, armor_piercing );
-				flBaseDamage *= clamp( flArmorPiercing / 100.0f, 0.25f, 1.25f );	
-			}
-			else // Regular game mode, or the attacker is a bot
-			{
-				// Do twice the target's health so that random modification will still kill him.
-				flBaseDamage = pTarget->GetHealth() * 2; 
-			}
+			// Do twice the target's health so that random modification will still kill him.
+			flBaseDamage = pTarget->GetHealth() * 2; 
 
 			// Declare a backstab.
 			*piCustomDamage = TF_DMG_CUSTOM_BACKSTAB;
@@ -328,16 +301,6 @@ bool CTFKnife::CanPerformBackstabAgainstTarget( CTFPlayer *pTarget )
 	// Behind and facing target's back?
 	if ( IsBehindAndFacingTarget( pTarget ) )
 		return true;
-
-	// Is target (bot) disabled via a sapper?
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pTarget->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		if ( pTarget->m_Shared.InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
-			return true;
-
-		if ( pTarget->m_Shared.InCond( TF_COND_SAPPED ) && !pTarget->IsMiniBoss() )
-			return true;
-	}
 
 	return false;
 }

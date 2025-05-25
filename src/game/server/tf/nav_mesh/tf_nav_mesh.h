@@ -88,9 +88,6 @@ public:
 	// populate the given vector with areas that are just outside of the given team's spawn room(s)
 	void CollectSpawnRoomThresholdAreas( CUtlVector< CTFNavArea * > *spawnExitAreaVector, int team ) const;
 
-	// populate the given vector with areas that have a bomb travel distance within the given range
-	void CollectAreaWithinBombTravelRange( CUtlVector< CTFNavArea * > *spawnExitAreaVector, float minTravel, float maxTravel ) const;
-
 	const CUtlVector< CTFNavArea * > *GetSetupGateDefenseAreas( void ) const;	// return vector of areas that are good for defending enemies coming out of the blue setup gates
 	const CUtlVector< CTFNavArea * > *GetControlPointAreas( int pointIndex ) const;		// return vector of areas overlapping the given control point
 	CTFNavArea *GetControlPointCenterArea( int pointIndex ) const;				// return area overlapping the center of the given control point
@@ -119,8 +116,6 @@ private:
 	void ComputeIncursionDistances( void );					// recompute travel distance from each team's spawn room for each nav area
 	void ComputeIncursionDistances( CTFNavArea *spawnArea, int team );
 	void ComputeInvasionAreas( void );
-	void ComputeLegalBombDropAreas( void );
-	void ComputeBombTargetDistance();
 
 	void UpdateDebugDisplay( void ) const;
 

@@ -522,16 +522,11 @@ void CTFBaseRocket::CheckForStunOnImpact( CTFPlayer* pTarget )
 		return;
 
 	// Stun
-	float flStunAmount = pTarget->IsMiniBoss() ? 0.85f : 1.f;
+	float flStunAmount = 1.f;
 	float flStunTime = RemapValClamped( iRocketSpecialist, 1.f, 4.f, 0.5f, 0.75f );
 
 	pTarget->SetAbsVelocity( vec3_origin );
 	pTarget->m_Shared.StunPlayer( flStunTime, flStunAmount, TF_STUN_MOVEMENT | TF_STUN_NO_EFFECTS, pAttacker );
-
-	if ( TFGameRules()->IsMannVsMachineMode() && pTarget->IsBot() && ( pAttacker->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) )
-	{
-		pAttacker->AwardAchievement( ACHIEVEMENT_TF_MVM_ROCKET_SPECIALIST_STUN_GRIND );
-	}
 
 
 	// Effect

@@ -45,8 +45,6 @@
 #include "tf_weapon_grenade_pipebomb.h"
 #include "tf_weapon_builder.h"
 
-#include "player_vs_environment/tf_population_manager.h"
-
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
@@ -179,7 +177,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseObject, DT_BaseObject)
 	SendPropInt( SENDINFO(m_iUpgradeMetalRequired), 10 ),
 	SendPropInt( SENDINFO(m_iHighestUpgradeLevel), 3 ),
 	SendPropInt( SENDINFO(m_iObjectMode), 2, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bDisposableBuilding ) ),
 	SendPropBool( SENDINFO( m_bWasMapPlaced ) ),
 	SendPropBool( SENDINFO( m_bPlasmaDisable ) ),
 END_SEND_TABLE();
@@ -254,8 +251,6 @@ CBaseObject::CBaseObject()
 	m_bMiniBuilding = false;
 	m_flPlasmaDisableTime = 0;
 	m_bPlasmaDisable = false;
-
-	m_bDisposableBuilding = false;
 
 	m_vecBuildForward = vec3_origin;
 	m_flBuildDistance = 0.0f;
@@ -1212,25 +1207,6 @@ bool CBaseObject::FindSnapToBuildPos( CBaseObject *pObjectOverride )
 			CTFTeam *pTeam = ( CTFTeam * )GetGlobalTeam( iTeam );
 			if ( !pTeam )
 				continue;
-			
-			// See if we're allowed to build on Robots
-			if ( TFGameRules() && TFGameRules()->GameModeUsesMiniBosses() && 
-				 GetType() == OBJ_ATTACHMENT_SAPPER && !pPlayer->IsBot() )
-			{
-				CUtlVector< CTFPlayer * > playerVector;
-				CollectPlayers( &playerVector, pPlayer->GetOpposingTFTeam()->GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-				FOR_EACH_VEC( playerVector, i )
-				{
-					if ( !playerVector[i]->IsBot() )
-						continue;
-
-					if ( FindBuildPointOnPlayer( playerVector[i], pPlayer, flNearestPoint, vecNearestBuildPoint ) )
-					{
-						bSnappedToPoint = true;
-						bShouldAttachToParent = true;
-					}
-				}
-			}
 
 			// look for nearby buildpoints on other objects
 			for ( i = 0; i < pTeam->GetNumObjects(); i++ )
@@ -1389,11 +1365,7 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	}
 	else if ( IsMiniBuilding() )
 	{
-		int iHealth = GetMaxHealthForCurrentLevel();
-		if ( !IsDisposableBuilding() )
-		{
-			iHealth /= 2.0f;
-		}
+		int iHealth = GetMaxHealthForCurrentLevel() / 2;
 		SetHealth( iHealth );
 	}
 	else
@@ -1487,12 +1459,6 @@ bool CBaseObject::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
 	if ( !pWrench )
 		return false;
 
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		if ( pPlayer->GetNumObjects( OBJ_SENTRYGUN ) && pPlayer->CanBuild( OBJ_SENTRYGUN ) == CB_CAN_BUILD && !IsCarried() )
-			return true;	
-	}
-
 	if ( !pWrench->IsPDQ() )
 		return false;
 
@@ -1508,14 +1474,6 @@ void CBaseObject::MakeMiniBuilding( CTFPlayer* pPlayer )
 		return;
 
 	m_bMiniBuilding = true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CBaseObject::MakeDisposableBuilding( CTFPlayer *pPlayer )
-{
-	m_bDisposableBuilding = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -2834,22 +2792,6 @@ bool CBaseObject::CheckUpgradeOnHit( CTFPlayer *pPlayer )
 			pPlayer->RemoveAmmo( iAmountToAdd, TF_AMMO_METAL );
 		}
 
-		// testing quick builds for engineers in Raid mode
-		if ( TFGameRules() && !TFGameRules()->IsPVEModeControlled( pPlayer ) )
-		{
-#ifdef TF_RAID_MODE
-			if ( TFGameRules()->IsRaidMode() )
-			{
-				iAmountToAdd = 200;
-			}
-#endif
-			
-			if ( TFGameRules()->GameModeUsesUpgrades() && TFGameRules()->IsQuickBuildTime() )
-			{
-				iAmountToAdd = 200;
-			}
-		}
-
 		m_iUpgradeMetal += iAmountToAdd;
 
 		bool bDidWork = false;
@@ -2890,7 +2832,7 @@ bool CBaseObject::CanBeUpgraded( CTFPlayer *pPlayer )
 	if ( IsUpgrading() )
 		return false;
 
-	if ( IsMiniBuilding() || IsDisposableBuilding() )
+	if ( IsMiniBuilding() )
 		return false;
 
 	// only engineers
@@ -3646,16 +3588,6 @@ bool CBaseObject::ShouldQuickBuild( void )
 
 		if ( TFGameRules()->IsQuickBuildTime() )
 			return true;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-				// Engineer bots in MvM deploy pre-built sentries that build up at the normal rate
-				return m_bForceQuickBuild;
-
-			if ( m_bCarryDeploy || TFGameRules()->State_Get() == GR_STATE_BETWEEN_RNDS )
-				return true;
-		}
 	}
 
 	return m_bForceQuickBuild;
@@ -3748,7 +3680,7 @@ void CBaseObject::InputDisable( inputdata_t &inputdata )
 int CBaseObject::GetMaxHealthForCurrentLevel( void )
 {
 	int iMaxHealth = IsMiniBuilding() ? GetMiniBuildingStartingHealth() : GetBaseHealth();
-	if ( GetOwner() && !m_bDisposableBuilding )
+	if ( GetOwner() )
 	{
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), iMaxHealth, mult_engy_building_health );
 	}

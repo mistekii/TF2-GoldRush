@@ -1093,41 +1093,6 @@ int CTFGameMovement::CheckStuck( void )
 
 		TracePlayerBBox( originalPos, originalPos, PlayerSolidMask(), COLLISION_GROUP_PLAYER_MOVEMENT, traceresult );
 
-#ifdef GAME_DLL
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && m_pTFPlayer && m_pTFPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			if ( traceresult.startsolid )
-			{
-				if ( m_pTFPlayer->m_playerMovementStuckTimer.HasStarted() && m_pTFPlayer->m_playerMovementStuckTimer.IsElapsed() )
-				{
-					DevMsg( "%3.2f: A robot is interpenetrating a solid - killed!\n", gpGlobals->curtime );
-
-					UTIL_LogPrintf( "\"%s<%i><%s><%s>\" startsolid killed (position \"%3.2f %3.2f %3.2f\")\n",
-						m_pTFPlayer->GetPlayerName(),
-						m_pTFPlayer->GetUserID(),
-						m_pTFPlayer->GetNetworkIDString(),
-						m_pTFPlayer->GetTeam()->GetName(),
-						m_pTFPlayer->GetAbsOrigin().x, m_pTFPlayer->GetAbsOrigin().y, m_pTFPlayer->GetAbsOrigin().z );
-
-					m_pTFPlayer->CommitSuicide( false, true );
-				}
-				else
-				{
-					if ( traceresult.m_pEnt )
-					{
-						Warning( "Robot's getting stuck with %s\n", traceresult.m_pEnt->GetClassname() );
-					}
-				}
-			}
-			else
-			{
-				// Bot is *not* stuck right now. Continually restart timer, so if we become stuck it will count down and expire.
-				const float stuckTooLongTime = 10.0f;
-				m_pTFPlayer->m_playerMovementStuckTimer.Start( stuckTooLongTime );
-			}
-		}
-#endif
-
 		if ( traceresult.startsolid && traceresult.DidHitNonWorldEntity() )
 		{
 			if ( traceresult.m_pEnt->IsPlayer() )
@@ -1931,10 +1896,6 @@ bool CTraceFilterObject::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 				if ( pOwner->IsBotOfType( TF_BOT_TYPE ) )
 				{
 					bool bHitObjectType = pObject->GetType() == OBJ_SENTRYGUN || pObject->GetType() == OBJ_DISPENSER;
-					if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-					{
-						bHitObjectType |= pObject->GetType() == OBJ_TELEPORTER;
-					}
 
 					if ( bHitObjectType )
 					{
@@ -1948,27 +1909,6 @@ bool CTraceFilterObject::ShouldHitEntity( IHandleEntity *pHandleEntity, int cont
 			}
 		}
 #ifdef GAME_DLL
-		else if ( pEntity->IsPlayer() )
-		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				CTFBot *bot = ToTFBot( pEntity );
-
-				if ( bot && ( bot->HasMission( CTFBot::MISSION_DESTROY_SENTRIES ) || bot->HasMission( CTFBot::MISSION_REPROGRAMMED ) ) )
-				{
-					// Don't collide with sentry busters since they don't collide with us
-					return false;
-				}
-
-				CTFBot *meBot = ToTFBot( pMe );
-
-				if ( meBot && ( meBot->HasMission( CTFBot::MISSION_DESTROY_SENTRIES ) || meBot->HasMission( CTFBot::MISSION_REPROGRAMMED ) ) )
-				{
-					// Sentry Busters don't collide with enemies (so they can't be body-blocked)
-					return false;
-				}
-			}
-		}
 		else if ( pEntity->MyNextBotPointer() && !pEntity->MyNextBotPointer()->GetLocomotionInterface()->ShouldCollideWith( pMe ) )
 		{
 			return false;

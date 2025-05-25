@@ -72,8 +72,6 @@ const char *GetMatchGroupLeaderboardName( EMatchGroupLeaderboard eMatchGroupLead
 	#define GCConVar ConVar
 	#define FCVAR_MATCHSIZE_THING ( FCVAR_REPLICATED )
 
-GCConVar tf_mm_match_size_mvm( "tf_mm_match_size_mvm", "6", FCVAR_MATCHSIZE_THING,
-                               "How many players in an MvM matchmade group?" );
 GCConVar tf_mm_match_size_ladder_6v6( "tf_mm_match_size_ladder_6v6", "12", FCVAR_MATCHSIZE_THING,
                                       "Number of players required to play a 6v6 ladder game.", true, 1, true, 12 );
 
@@ -274,8 +272,6 @@ const char *GetMatchGroupName( ETFMatchGroup eMatchGroup )
 	switch ( eMatchGroup )
 	{
 		case k_eTFMatchGroup_Invalid: return "(Invalid)";
-		case k_eTFMatchGroup_MvM_Practice: return "MvM Practice";
-		case k_eTFMatchGroup_MvM_MannUp: return "MvM MannUp";
 		case k_eTFMatchGroup_Ladder_6v6: return "6v6 Ladder Match";
 		case k_eTFMatchGroup_Ladder_9v9: return "9v9 Ladder Match";
 		case k_eTFMatchGroup_Ladder_12v12: return "12v12 Ladder Match";
@@ -295,14 +291,10 @@ const char *GetServerPoolName( int iServerPool )
 {
 	switch ( iServerPool )
 	{
-		case k_nGameServerPool_MvM_Practice_Incomplete_Match: return "MvM Boot Camp Active";
-		case k_nGameServerPool_MvM_MannUp_Incomplete_Match: return "MvM MannUp Active";
 		case k_nGameServerPool_Casual_6v6_Incomplete_Match: return "Casual 6v6 Active";
 		case k_nGameServerPool_Casual_9v9_Incomplete_Match: return "Casual 9v9 Active";
 		case k_nGameServerPool_Casual_12v12_Incomplete_Match: return "Casual 12v12 Active";
 
-		case k_nGameServerPool_MvM_Practice_Full: return "MvM Boot Camp Full";
-		case k_nGameServerPool_MvM_MannUp_Full: return "MvM MannUp Full";
 		case k_nGameServerPool_Casual_6v6_Full: return "Casual 6v6 Full";
 		case k_nGameServerPool_Casual_9v9_Full: return "Casual 9v9 Full";
 		case k_nGameServerPool_Casual_12v12_Full: return "Casual 12v12 Full";

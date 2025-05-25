@@ -71,22 +71,6 @@ ClassDetails_t g_PerClassStatDetails[15] =
 	{ TFSTAT_BACKSTABS,				MAKESTATFLAG(TF_CLASS_SPY),			"#TF_ClassRecord_MostBackstabs", "#TF_ClassRecord_Alt_MostBackstabs" },
 };
 
-ClassDetails_t g_PerClassMVMStatDetails[12] =
-{
-	{ TFSTAT_POINTSSCORED,			ALL_CLASSES,					"#TF_ClassRecord_MostPoints", "#TF_ClassRecord_Alt_MostPoints" },
-	{ TFSTAT_KILLS,					ALL_CLASSES,					"#TF_ClassRecord_MostKills", "#TF_ClassRecord_Alt_MostKills" },
-	{ TFSTAT_KILLASSISTS,			ALL_CLASSES,					"#TF_ClassRecord_MostAssists", "#TF_ClassRecord_Alt_MostAssists" },
-	{ TFSTAT_DEFENSES,				ALL_CLASSES,					"#TF_ClassRecord_MostDefenses", "#TF_ClassRecord_Alt_MostDefenses" },
-	{ TFSTAT_DAMAGE,				ALL_CLASSES,					"#TF_ClassRecord_MostDamage", "#TF_ClassRecord_Alt_MostDamage" },
-	{ TFSTAT_PLAYTIME,				ALL_CLASSES,					"#TF_ClassRecord_LongestLife", "#TF_ClassRecord_Alt_LongestLife" },
-	{ TFSTAT_HEALING,				MAKESTATFLAG(TF_CLASS_MEDIC) | MAKESTATFLAG(TF_CLASS_ENGINEER) | MAKESTATFLAG(TF_CLASS_HEAVYWEAPONS),	"#TF_ClassRecord_MostHealing", "#TF_ClassRecord_Alt_MostHealing" },
-	{ TFSTAT_INVULNS,				MAKESTATFLAG(TF_CLASS_MEDIC),		"#TF_ClassRecord_MostInvulns", "#TF_ClassRecord_Alt_MostInvulns" },
-	{ TFSTAT_MAXSENTRYKILLS,		MAKESTATFLAG(TF_CLASS_ENGINEER),	"#TF_ClassRecord_MostSentryKills", "#TF_ClassRecord_Alt_MostSentryKills" },
-	{ TFSTAT_TELEPORTS,				MAKESTATFLAG(TF_CLASS_ENGINEER),	"#TF_ClassRecord_MostTeleports", "#TF_ClassRecord_Alt_MostTeleports" },
-	{ TFSTAT_HEADSHOTS,				MAKESTATFLAG(TF_CLASS_SNIPER) | MAKESTATFLAG(TF_CLASS_SPY),		"#TF_ClassRecord_MostHeadshots", "#TF_ClassRecord_Alt_MostHeadshots" },
-	{ TFSTAT_BACKSTABS,				MAKESTATFLAG(TF_CLASS_SPY),			"#TF_ClassRecord_MostBackstabs", "#TF_ClassRecord_Alt_MostBackstabs" },
-};
-
 CTFStatsSummaryPanel *g_pTFStatsSummaryPanel = NULL;
 
 CUtlVector<CTFStatsSummaryPanel *> g_vecStatPanels;
@@ -516,13 +500,13 @@ void CTFStatsSummaryPanel::ClearMapLabel()
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFStatsSummaryPanel::ShowMapInfo( bool bShowMapInfo, bool bIsMVM /*= false*/, bool bBackgroundOverride /*= false*/ )
+void CTFStatsSummaryPanel::ShowMapInfo( bool bShowMapInfo, bool bBackgroundOverride /*= false*/ )
 {
 	if ( m_pMainBackground )
 	{
 		m_pMainBackground->SetVisible( !bShowMapInfo );
 	}
-	m_pPlayerData->SetVisible( bIsMVM || !bShowMapInfo );
+	m_pPlayerData->SetVisible( !bShowMapInfo );
 	m_pNextTipButton->SetVisible( m_bInteractive && !bShowMapInfo );
 	m_pResetStatsButton->SetVisible( m_bInteractive && !bShowMapInfo );
 
@@ -532,7 +516,7 @@ void CTFStatsSummaryPanel::ShowMapInfo( bool bShowMapInfo, bool bIsMVM /*= false
 		vgui::Panel* pInfoBG = m_pMapInfoPanel->FindChildByName( "InfoBG" );
 		if ( pInfoBG )
 		{
-			pInfoBG->SetVisible( bShowMapInfo && !bIsMVM && !bBackgroundOverride );
+			pInfoBG->SetVisible( bShowMapInfo && !bBackgroundOverride );
 		}
 	}
 }
@@ -547,8 +531,6 @@ void CTFStatsSummaryPanel::OnMapLoad( const char *pMapName )
 
 	bool bWidescreenBackground = false;
 
-	bool bIsMVM = ( pMapName && !Q_strncmp( pMapName, "mvm_", 4 ) );
-	bool bIsMVMBackground = false;
 	const char *pszBackgroundOverride = NULL;
 	const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( GTFGCClientSystem()->GetLiveMatchGroup() );
 	if ( pMatchDesc )
@@ -575,13 +557,6 @@ void CTFStatsSummaryPanel::OnMapLoad( const char *pMapName )
 		}
 		
 	}
-	
-	if ( bIsMVM && !pszBackgroundOverride )
-	{
-		// this will preserve the current behavior for non-matchmaking servers
-		pszBackgroundOverride = "mvm_background_map";
-		bIsMVMBackground = true;
-	}
 
 	bool bIsCommunityMap = false;
 	const char *pAuthors = NULL;
@@ -593,7 +568,7 @@ void CTFStatsSummaryPanel::OnMapLoad( const char *pMapName )
 		pAuthors = pMapInfo->pszAuthorsLocKey;
 	}
 	
-	ShowMapInfo( true, bIsMVM, ( pszBackgroundOverride != NULL ) );
+	ShowMapInfo( true, pszBackgroundOverride != NULL );
 
 	m_xStartLeaderboard = 0;
 	m_yStartLeaderboard = 0;
@@ -634,7 +609,7 @@ void CTFStatsSummaryPanel::OnMapLoad( const char *pMapName )
 			Q_strlower( szMapImage );
 
 			IMaterial *pMapMaterial = materials->FindMaterial( szMapImage, TEXTURE_GROUP_VGUI, false );
-			if ( pMapMaterial && !IsErrorMaterial( pMapMaterial ) && ( !pszBackgroundOverride || bIsMVMBackground ) )
+			if ( pMapMaterial && !IsErrorMaterial( pMapMaterial ) && ( !pszBackgroundOverride ) )
 			{
 				// take off the vgui/ at the beginning when we set the image
 				Q_snprintf( szMapImage, sizeof( szMapImage ), "maps/menu_photos_%s", pMapName );
@@ -667,73 +642,54 @@ void CTFStatsSummaryPanel::OnMapLoad( const char *pMapName )
 
 		}
 
-		if ( bIsMVM )
+		m_pLeaderboardTitle = NULL;
+		// add authors
+		if ( m_pMapInfoPanel )
 		{
-			UpdateClassDetails( true );
-			m_pMapInfoPanel->SetDialogVariable( "map_leaderboard_title", "" );
-			m_pMapInfoPanel->SetDialogVariable( "title", "" );
-			m_pMapInfoPanel->SetDialogVariable( "authors", "" );
-
-			FOR_EACH_VEC( m_vecLeaderboardEntries, i )
-			{
-				EditablePanel *pContainer = dynamic_cast< EditablePanel* >( m_vecLeaderboardEntries[i] );
-				if ( pContainer )
-				{
-					pContainer->SetVisible( false );
-				}
-			}
-		}
-		else
-		{
-			m_pLeaderboardTitle = NULL;
-			// add authors
-			if ( m_pMapInfoPanel )
-			{
-				if ( bIsCommunityMap )
-				{
-					m_pMapInfoPanel->SetDialogVariable( "title", g_pVGuiLocalize->Find( "#TF_MapAuthors_Community_Title" ) );
-					m_pMapInfoPanel->SetDialogVariable( "map_leaderboard_title", "" );
-					m_pMapInfoPanel->SetDialogVariable( "authors", g_pVGuiLocalize->Find( pAuthors ) ); 
-					m_pLeaderboardTitle = m_pMapInfoPanel->FindChildByName( "MapLeaderboardTitle" );
-				}
-				else
-				{
-					m_pMapInfoPanel->SetDialogVariable( "title", g_pVGuiLocalize->Find( "#TF_DuelLeaderboard_Title" ) );
-					m_pMapInfoPanel->SetDialogVariable( "map_leaderboard_title", "" );
-					m_pMapInfoPanel->SetDialogVariable( "authors", "" );
-					m_pLeaderboardTitle = m_pMapInfoPanel->FindChildByName( "Title" );
-				}
-			}
-			if ( m_pLeaderboardTitle )
-			{
-				m_pLeaderboardTitle->GetPos( m_xStartLeaderboard, m_yStartLeaderboard );
-				m_yStartLeaderboard += m_pLeaderboardTitle->GetTall();
-			}
-
-			//  request leaderboard data
-			m_bShowingLeaderboard = true;
 			if ( bIsCommunityMap )
 			{
-				MapInfo_RefreshLeaderboard( pMapName );
+				m_pMapInfoPanel->SetDialogVariable( "title", g_pVGuiLocalize->Find( "#TF_MapAuthors_Community_Title" ) );
+				m_pMapInfoPanel->SetDialogVariable( "map_leaderboard_title", "" );
+				m_pMapInfoPanel->SetDialogVariable( "authors", g_pVGuiLocalize->Find( pAuthors ) ); 
+				m_pLeaderboardTitle = m_pMapInfoPanel->FindChildByName( "MapLeaderboardTitle" );
 			}
 			else
 			{
-				Leaderboards_Refresh();
+				m_pMapInfoPanel->SetDialogVariable( "title", g_pVGuiLocalize->Find( "#TF_DuelLeaderboard_Title" ) );
+				m_pMapInfoPanel->SetDialogVariable( "map_leaderboard_title", "" );
+				m_pMapInfoPanel->SetDialogVariable( "authors", "" );
+				m_pLeaderboardTitle = m_pMapInfoPanel->FindChildByName( "Title" );
 			}
-			m_bLoadingCommunityMap = bIsCommunityMap;
-
-			if ( m_pContributedPanel && steamapicontext && steamapicontext->SteamUser() && steamapicontext->SteamFriends() )
-			{
-				int iDonationAmount = MapInfo_GetDonationAmount( steamapicontext->SteamUser()->GetSteamID().GetAccountID(), pMapName );
-				m_pContributedPanel->SetVisible( iDonationAmount != 0 );
-				if ( iDonationAmount != 0 )
-				{
-					m_pContributedPanel->SetDialogVariable( "playername", steamapicontext->SteamFriends()->GetPersonaName() );
-				}
-			}
-
-			UpdateLeaderboard();
 		}
+		if ( m_pLeaderboardTitle )
+		{
+			m_pLeaderboardTitle->GetPos( m_xStartLeaderboard, m_yStartLeaderboard );
+			m_yStartLeaderboard += m_pLeaderboardTitle->GetTall();
+		}
+
+		//  request leaderboard data
+		m_bShowingLeaderboard = true;
+		if ( bIsCommunityMap )
+		{
+			MapInfo_RefreshLeaderboard( pMapName );
+		}
+		else
+		{
+			Leaderboards_Refresh();
+		}
+		m_bLoadingCommunityMap = bIsCommunityMap;
+
+		if ( m_pContributedPanel && steamapicontext && steamapicontext->SteamUser() && steamapicontext->SteamFriends() )
+		{
+			int iDonationAmount = MapInfo_GetDonationAmount( steamapicontext->SteamUser()->GetSteamID().GetAccountID(), pMapName );
+			m_pContributedPanel->SetVisible( iDonationAmount != 0 );
+			if ( iDonationAmount != 0 )
+			{
+				m_pContributedPanel->SetDialogVariable( "playername", steamapicontext->SteamFriends()->GetPersonaName() );
+			}
+		}
+
+		UpdateLeaderboard();
 	}
 }
 
@@ -973,19 +929,19 @@ void CTFStatsSummaryPanel::UpdateBarCharts()
 //-----------------------------------------------------------------------------
 // Purpose: Updates class details
 //-----------------------------------------------------------------------------
-void CTFStatsSummaryPanel::UpdateClassDetails( bool bIsMVM )
+void CTFStatsSummaryPanel::UpdateClassDetails()
 {
 	vgui::Label *pTitle = assert_cast< vgui::Label* >( FindChildByName( "RecordsLabel1", true ) );
 	if ( pTitle )
 	{
-		pTitle->SetText( bIsMVM ? "#StatSummary_Label_BestMVMMoments" : "#StatSummary_Label_BestMoments" );
+		pTitle->SetText( "#StatSummary_Label_BestMoments" );
 	}
 
 	const wchar_t *wzWithClassFmt = g_pVGuiLocalize->Find( "#StatSummary_ScoreAsClassFmt" );
 	const wchar_t *wzWithoutClassFmt = L"%s1";
 
-	ClassDetails_t *pStatDetails = ( bIsMVM ? g_PerClassMVMStatDetails : g_PerClassStatDetails );
-	int nArraySize = ( bIsMVM ? ARRAYSIZE( g_PerClassMVMStatDetails ) : ARRAYSIZE( g_PerClassStatDetails ) );
+	ClassDetails_t *pStatDetails = ( g_PerClassStatDetails );
+	int nArraySize = ( ARRAYSIZE( g_PerClassStatDetails ) );
 
 	// display the record for each stat
 	int iRow = 0;
@@ -1005,7 +961,7 @@ void CTFStatsSummaryPanel::UpdateClassDetails( bool bIsMVM )
 			// if showing best from any class, look through all player classes to determine the max value of this stat
 			for ( int j = 0; j  < m_aClassStats.Count(); j++ )
 			{
-				RoundStats_t *pRoundStats = &( bIsMVM ? m_aClassStats[j].maxMVM : m_aClassStats[j].max );
+				RoundStats_t *pRoundStats = &( m_aClassStats[j].max );
 				if ( pRoundStats->m_iStat[statType] > iMaxVal )
 				{
 					// remember max value and class that has max value
@@ -1022,7 +978,7 @@ void CTFStatsSummaryPanel::UpdateClassDetails( bool bIsMVM )
 			{
 				if ( m_aClassStats[j].iPlayerClass == iClass )
 				{
-					RoundStats_t *pRoundStats = &( bIsMVM ? m_aClassStats[j].maxMVM : m_aClassStats[j].max );
+					RoundStats_t *pRoundStats = &( m_aClassStats[j].max );
 					iMaxVal = pRoundStats->m_iStat[statType];
 					break;
 				}

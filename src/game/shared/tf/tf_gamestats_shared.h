@@ -53,7 +53,6 @@ enum TFStatType_t
 	TFSTAT_CLASSCHANGES,
 	TFSTAT_CRITS,
 	TFSTAT_SUICIDES,
-	TFSTAT_CURRENCY_COLLECTED,
 	TFSTAT_DAMAGE_ASSIST,
 	TFSTAT_HEALING_ASSIST,
 	TFSTAT_DAMAGE_BOSS,
@@ -61,7 +60,6 @@ enum TFStatType_t
 	TFSTAT_DAMAGE_RANGED,
 	TFSTAT_DAMAGE_RANGED_CRIT_RANDOM,
 	TFSTAT_DAMAGE_RANGED_CRIT_BOOSTED,
-	TFSTAT_REVIVED,
 	TFSTAT_THROWABLEHIT,
 	TFSTAT_THROWABLEKILL,
 	TFSTAT_KILLSTREAK_MAX,
@@ -543,9 +541,6 @@ struct ClassStats_t
 	RoundStats_t		max;
 	RoundStats_t		currentRound;
 
-	RoundStats_t		accumulatedMVM;
-	RoundStats_t		maxMVM;
-
 	ClassStats_t()
 	{
 		iPlayerClass	= TF_CLASS_UNDEFINED;
@@ -556,13 +551,6 @@ struct ClassStats_t
 	{
 		iNumberOfRounds++;
 		accumulated.AccumulateRound( other );
-		currentRound = other;
-	}
-
-	void AccumulateMVMRound( const RoundStats_t &other )
-	{
-		iNumberOfRounds++;
-		accumulatedMVM.AccumulateRound( other );
 		currentRound = other;
 	}
 };

@@ -125,11 +125,6 @@ void CTFRocketLauncher::Precache()
 	BaseClass::Precache();
 	PrecacheParticleSystem( "rocketbackblast" );
 
-	// FIXME: DO WE STILL NEED THESE??
-	PrecacheScriptSound( "MVM.GiantSoldierRocketShoot" );
-	PrecacheScriptSound( "MVM.GiantSoldierRocketShootCrit" );
-	PrecacheScriptSound( "MVM.GiantSoldierRocketExplode" );
-
 	//Building_Sentrygun.FireRocket
 }
 #endif
@@ -259,11 +254,6 @@ CBaseEntity *CTFRocketLauncher::FireProjectile( CTFPlayer *pPlayer )
 	}
 	m_bIsOverloading = false;
 #endif
-
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
 
 
 	return pRocket;

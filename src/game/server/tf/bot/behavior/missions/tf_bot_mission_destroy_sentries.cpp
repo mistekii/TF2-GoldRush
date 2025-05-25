@@ -10,7 +10,6 @@
 #include "bot/behavior/spy/tf_bot_spy_sap.h"
 #include "bot/behavior/tf_bot_destroy_enemy_sentry.h"
 #include "bot/behavior/medic/tf_bot_medic_heal.h"
-#include "bot/behavior/missions/tf_bot_mission_suicide_bomber.h"
 #include "tf_obj_sentrygun.h"
 
 //
@@ -60,20 +59,8 @@ ActionResult< CTFBot > CTFBotMissionDestroySentries::Update( CTFBot *me, float i
 		{
 			// next destroy the most dangerous sentry
  			int iTeam = ( me->GetTeamNumber() == TF_TEAM_RED ) ? TF_TEAM_BLUE : TF_TEAM_RED;
-
-			if ( TFGameRules() && TFGameRules()->IsPVEModeActive() )
-			{
-				iTeam = TF_TEAM_PVE_DEFENDERS;
-			}
-
 			m_goalSentry = TFGameRules()->FindSentryGunWithMostKills( iTeam );
 		}
-	}
-
-	// for suicide bombers, we never want them to revert to normal behavior even if there is no sentry to kill
-	if ( me->IsPlayerClass( TF_CLASS_DEMOMAN ) )
-	{
-		return SuspendFor( new CTFBotMissionSuicideBomber, "On a suicide mission to blow up a sentry" );
 	}
 
 	if ( m_goalSentry == NULL )

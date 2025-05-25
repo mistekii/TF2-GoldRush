@@ -20,17 +20,6 @@ ConVar tf_bot_sniper_choose_target_interval( "tf_bot_sniper_choose_target_interv
 // Update internal state
 void CTFBotVision::Update( void )
 {
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		// Throttle vision update rate of robots in MvM for perf at the expense of reaction times
-		if ( !m_scanTimer.IsElapsed() )
-		{
-			return;
-		}
-
-		m_scanTimer.Start( RandomFloat( 0.9f, 1.1f ) );
-	}
-
 	IVision::Update();
 
 	CTFBot *me = (CTFBot *)GetBot()->GetEntity();
@@ -110,7 +99,6 @@ void CTFBotVision::UpdatePotentiallyVisibleNPCVector( void )
 		// collect list of active buildings
 		m_potentiallyVisibleNPCVector.RemoveAll();
 
-		bool bShouldSeeTeleporter = !TFGameRules()->IsMannVsMachineMode() || GetBot()->GetEntity()->GetTeamNumber() != TF_TEAM_PVE_INVADERS;
 		for ( int i=0; i<IBaseObjectAutoList::AutoList().Count(); ++i )
 		{
 			CBaseObject* pObj = static_cast< CBaseObject* >( IBaseObjectAutoList::AutoList()[i] );
@@ -122,7 +110,7 @@ void CTFBotVision::UpdatePotentiallyVisibleNPCVector( void )
 			{
 				m_potentiallyVisibleNPCVector.AddToTail( pObj );
 			}
-			else if ( bShouldSeeTeleporter && pObj->ObjectType() == OBJ_TELEPORTER )
+			else if ( pObj->ObjectType() == OBJ_TELEPORTER )
 			{
 				m_potentiallyVisibleNPCVector.AddToTail( pObj );
 			}
@@ -313,13 +301,6 @@ bool CTFBotVision::IsIgnored( CBaseEntity *subject ) const
 			// ignore sapped enemy objects
 			if ( object->HasSapper() )
 			{
-				// unless we're in MvM where buildings can have really large health pools,
-				// so an engineer can die and run back in time to repair their stuff
-				if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-				{
-					return false;
-				}
-
 				return true;
 			}
 			
@@ -386,34 +367,17 @@ bool CTFBotVision::IsVisibleEntityNoticed( CBaseEntity *subject ) const
 			return false;
 		}
 
-		if ( TFGameRules()->IsMannVsMachineMode() )	// in MvM mode, forget spies as soon as they are fully disguised
-		{
-			CTFBot::SuspectedSpyInfo_t* pSuspectInfo = me->IsSuspectedSpy( player );
-			// But only if we aren't suspecting them currently.  This happens when we bump into them.
-			if( !pSuspectInfo || !pSuspectInfo->IsCurrentlySuspected() )
-			{
-				if ( player->m_Shared.InCond( TF_COND_DISGUISED ) && player->m_Shared.GetDisguiseTeam() == me->GetTeamNumber() )
-				{
-					me->ForgetSpy( player );
-					return false;
-				}
-			}
-		}
-
 		if ( me->IsKnownSpy( player ) )
 		{
 			// always notice non-invisible revealed spies
 			return true;
 		}
 
-		if ( !TFGameRules()->IsMannVsMachineMode() )	// ignore in MvM mode
+		if ( player->IsPlacingSapper() )
 		{
-			if ( player->IsPlacingSapper() )
-			{
-				// spotted a spy!
-				me->RealizeSpy( player );
-				return true;
-			}
+			// spotted a spy!
+			me->RealizeSpy( player );
+			return true;
 		}
 
 		if ( player->m_Shared.InCond( TF_COND_DISGUISING ) )

@@ -47,8 +47,6 @@ enum TFNavAttributeType
 
  	TF_NAV_RESCUE_CLOSET				= 0x04000000,			// for respawning friends in Raid mode
 
- 	TF_NAV_BOMB_CAN_DROP_HERE			= 0x08000000,			// the bomb can be dropped here and reached by the invaders in MvM
-
 	TF_NAV_DOOR_NEVER_BLOCKS			= 0x10000000,
 	TF_NAV_DOOR_ALWAYS_BLOCKS			= 0x20000000,
 
@@ -125,9 +123,6 @@ public:
 
 	bool IsValidForWanderingPopulation( void ) const;
 	// Raid mode -------------------------------------------------
-
-	// Distance for MvM bomb delivery
-	float GetTravelDistanceToBombTarget( void ) const;
 
 	//- Script access to nav functions ------------------------------------------------------------------
 	DECLARE_ENT_SCRIPTDESC();
@@ -216,11 +211,6 @@ template <> ScriptClassDesc_t *GetScriptDesc<CTFNavArea>( CTFNavArea * );
 inline CTFNavArea *ToNavArea( HSCRIPT hScript )
 {
 	return ( IsValid( hScript ) ) ? (CTFNavArea *)g_pScriptVM->GetInstanceValue( hScript, GetScriptDescForClass(CTFNavArea) ) : NULL;
-}
-
-inline float CTFNavArea::GetTravelDistanceToBombTarget( void ) const
-{
-	return m_distanceToBombTarget;
 }
 
 inline void CTFNavArea::AddToWanderCount( int count )

@@ -16,9 +16,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
-extern ConVar tf_mvm_respec_limit;
-extern ConVar tf_mvm_buybacks_method;
-
 C_TF_PlayerResource *g_TF_PR;
 
 IMPLEMENT_CLIENTCLASS_DT( C_TF_PlayerResource, DT_TFPlayerResource, CTFPlayerResource )
@@ -36,12 +33,9 @@ IMPLEMENT_CLIENTCLASS_DT( C_TF_PlayerResource, DT_TFPlayerResource, CTFPlayerRes
 	RecvPropArray3( RECVINFO_ARRAY( m_iHealing ), RecvPropInt( RECVINFO( m_iHealing[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iHealingAssist ), RecvPropInt( RECVINFO( m_iHealingAssist[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iDamageBlocked ), RecvPropInt( RECVINFO( m_iDamageBlocked[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iCurrencyCollected ), RecvPropInt( RECVINFO( m_iCurrencyCollected[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iBonusPoints ), RecvPropInt( RECVINFO( m_iBonusPoints[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iPlayerLevel ), RecvPropInt( RECVINFO( m_iPlayerLevel[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iStreaks ), RecvPropInt( RECVINFO_ARRAY( m_iStreaks ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iUpgradeRefundCredits ), RecvPropInt( RECVINFO( m_iUpgradeRefundCredits[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iBuybackCredits ), RecvPropInt( RECVINFO( m_iBuybackCredits[0] ) ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderRedTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderBlueTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iEventTeamStatus ) ),
@@ -92,16 +86,6 @@ int C_TF_PlayerResource::GetTeam( int iIndex )
 
 	int iTeam = BaseClass::GetTeam( iIndex );
 
-	if ( iTeam == TEAM_UNASSIGNED )
-	{
-		// In MvM, force everybody to show as being on the defending team,
-		// even if they have not picked a team yet
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			iTeam = TF_TEAM_PVE_DEFENDERS;
-		}
-	}
-
 	return iTeam;
 }
 
@@ -136,34 +120,6 @@ int C_TF_PlayerResource::GetStreak( unsigned int iIndex, CTFPlayerShared::ETFStr
 		return 0;
 
 	return m_iStreaks[ iIndex * CTFPlayerShared::kTFStreak_COUNT + streak_type ];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_TF_PlayerResource::GetNumRespecCredits( uint32 unIndex )
-{
-	if ( !unIndex || unIndex > MAX_PLAYERS )
-		return 0;
-
-	if ( !tf_mvm_respec_limit.GetBool() )
-		return 1;
-
-	return GetArrayValue( unIndex, m_iUpgradeRefundCredits, 0 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_TF_PlayerResource::GetNumBuybackCredits( uint32 unIndex )
-{
-	if ( !unIndex || unIndex > MAX_PLAYERS )
-		return 0;
-
-	if ( !tf_mvm_buybacks_method.GetBool() )
-		return 0;
-
-	return GetArrayValue( unIndex, m_iBuybackCredits, 0 );
 }
 
 //-----------------------------------------------------------------------------
@@ -277,16 +233,6 @@ int C_TF_PlayerResource::GetDamageBlocked( unsigned int nIndex )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-int C_TF_PlayerResource::GetCurrencyCollected( unsigned int nIndex )
-{
-	Assert( nIndex < ARRAYSIZE( m_aPlayerScoreStats ) );
-
-	return GetArrayValue( nIndex, m_iCurrencyCollected, 0 ) + m_aPlayerScoreStats[nIndex].m_iPrevCurrencyCollected;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 int C_TF_PlayerResource::GetBonusPoints( unsigned int nIndex )
 {
 	Assert( nIndex < ARRAYSIZE( m_aPlayerScoreStats ) );
@@ -308,7 +254,6 @@ void C_TF_PlayerResource::UpdatePlayerScoreStats( void )
 		m_aPlayerScoreStats[playerIndex].m_iPrevHealing += GetArrayValue( playerIndex, m_iHealing, 0 );
 		m_aPlayerScoreStats[playerIndex].m_iPrevHealingAssist += GetArrayValue( playerIndex, m_iHealingAssist, 0 );
 		m_aPlayerScoreStats[playerIndex].m_iPrevDamageBlocked += GetArrayValue( playerIndex, m_iDamageBlocked, 0 );
-		m_aPlayerScoreStats[playerIndex].m_iPrevCurrencyCollected += GetArrayValue( playerIndex, m_iCurrencyCollected, 0 );
 		m_aPlayerScoreStats[playerIndex].m_iPrevBonusPoints += GetArrayValue( playerIndex, m_iBonusPoints, 0 );
 	}
 }
@@ -332,7 +277,6 @@ void C_TF_PlayerResource::ResetPlayerScoreStats( int playerIndex /*= -1*/ )
 		m_aPlayerScoreStats[playerIndex].m_iPrevHealing = 0;
 		m_aPlayerScoreStats[playerIndex].m_iPrevHealingAssist = 0;
 		m_aPlayerScoreStats[playerIndex].m_iPrevDamageBlocked = 0;
-		m_aPlayerScoreStats[playerIndex].m_iPrevCurrencyCollected = 0;
 		m_aPlayerScoreStats[playerIndex].m_iPrevBonusPoints = 0;
 	}
 }

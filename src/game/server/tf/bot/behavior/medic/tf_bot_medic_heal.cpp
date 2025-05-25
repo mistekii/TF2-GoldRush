@@ -263,24 +263,7 @@ CTFPlayer *CTFBotMedicHeal::SelectPatient( CTFBot *me, CTFPlayer *current )
 
 	CSelectPrimaryPatient choose( me, current );
 
-	if ( TFGameRules()->IsPVEModeActive() )
-	{
-		// assume perfect knowledge
-		CUtlVector< CTFPlayer * > livePlayerVector;
-		CollectPlayers( &livePlayerVector, me->GetTeamNumber(), COLLECT_ONLY_LIVING_PLAYERS );
-
-		for( int i=0; i<livePlayerVector.Count(); ++i )
-		{
-			CKnownEntity known( livePlayerVector[i] );
-			known.UpdatePosition();
-
-			choose.Inspect( known );
-		}
-	}
-	else
-	{
-		me->GetVisionInterface()->ForEachKnownEntity( choose );
-	}
+	me->GetVisionInterface()->ForEachKnownEntity( choose );
 
 	return choose.m_selected;
 }
@@ -438,10 +421,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	if ( me->IsInASquad() )
 	{
 		CTFBotSquad *squad = me->GetSquad();
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && squad->IsLeader( me ) )
-		{
-			return ChangeTo( new CTFBotFetchFlag, "I'm now a squad leader! Going for the flag!" );
-		}
 
 		if ( !squad->ShouldPreserveSquad() )
 		{
@@ -475,40 +454,8 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 
 	m_patient = SelectPatient( me, m_patient );
 
-	// prevent a group of medic healing each other in a loop. always heal the top guy in the chain
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && m_patient != NULL && m_patient->IsPlayerClass( TF_CLASS_MEDIC ) )
-	{
-		CUtlVector< CBaseEntity* > seenPatients;
-		seenPatients.AddToTail( m_patient );
-
-		while ( CBaseEntity* pTestPatient = m_patient->MedicGetHealTarget() )
-		{
-			if ( !pTestPatient->IsPlayer() || seenPatients.Find( pTestPatient ) != seenPatients.InvalidIndex() )
-			{
-				break;
-			}
-
-			seenPatients.AddToTail( pTestPatient );
-			m_patient = ToTFPlayer( pTestPatient );
-		}
-	}
-
 	if ( m_patient == NULL )
 	{
-		// no patients
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// no-one is left to heal - get the flag!
-			return ChangeTo( new CTFBotFetchFlag, "Everyone is gone! Going for the flag" );
-		}
-
-		if ( TFGameRules()->IsPVEModeActive() )
-		{
-			// don't retreat, just wait
-			return Continue();
-		}
-
 		// no patients - retreat to spawn to find another one
 		return SuspendFor( new CTFBotMedicRetreat, "Retreating to find another patient to heal" );
 	}
@@ -560,7 +507,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	CTFPlayer *actualHealTarget = m_patient;
 	bool isHealTargetBlocked = true;
 	bool isActivelyHealing = false;
-	bool isUsingProjectileShield = false;
 	const CKnownEntity *knownThreat = me->GetVisionInterface()->GetPrimaryKnownThreat();
 
 	CWeaponMedigun *medigun = dynamic_cast< CWeaponMedigun * >( me->m_Shared.GetActiveTFWeapon() );
@@ -624,7 +570,7 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 			// uber if I'm getting low and have recently taken damage
 			if ( me->GetHealth() < me->GetUberHealthThreshold() )
 			{
-				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || TFGameRules()->IsMannVsMachineMode() )
+				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f )
 				{
 					useUber = true;
 				}
@@ -634,16 +580,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 			if ( me->GetHealth() < 25 )
 			{
 				useUber = true;
-			}
-
-			// special case for bots in mvm spawn zones
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( m_patient->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && 
-						me->m_Shared.InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
-				{
-					useUber = false;
-				}
 			}
 
 			if ( useUber )
@@ -659,22 +595,6 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 
 					// start the uber
 					me->PressAltFireButton();
-				}
-			}
-		}
-		
-		// try to activate shield when I'm not using uber so I don't waste it
-		if ( TFGameRules()->IsMannVsMachineMode() && me->HasAttribute( CTFBot::PROJECTILE_SHIELD ) )
-		{
-			isUsingProjectileShield = me->m_Shared.IsRageDraining();
-			// when the rage is ready to deploy and we're not using uber
-			if ( me->m_Shared.GetRageMeter() >= 100.f && !isUsingProjectileShield && !useUber )
-			{
-				// use shield if me or my patient is getting attacked
-				if ( me->GetTimeSinceLastInjury( GetEnemyTeam( me->GetTeamNumber() ) ) < 1.0f || m_patient->GetTimeSinceLastInjury( GetEnemyTeam( m_patient->GetTeamNumber() ) ) < 1.0f )
-				{
-					me->PressSpecialFireButton();
-					isUsingProjectileShield = true;
 				}
 			}
 		}
@@ -698,7 +618,7 @@ ActionResult< CTFBot >	CTFBotMedicHeal::Update( CTFBot *me, float interval )
 	bool outOfHealRange = me->IsRangeGreaterThan( actualHealTarget, 1.1f * tf_bot_medic_max_heal_range.GetFloat() );
 	bool isPatientObscured = actualHealTarget ? !me->IsLineOfFireClear( actualHealTarget->EyePosition() ) : true;
 
-	if ( !IsReadyToDeployUber( medigun ) && !me->m_Shared.InCond( TF_COND_INVULNERABLE ) && !isActivelyHealing && !isUsingProjectileShield && ( isThreatened || outOfHealRange || isPatientObscured ) )
+	if ( !IsReadyToDeployUber( medigun ) && !me->m_Shared.InCond( TF_COND_INVULNERABLE ) && !isActivelyHealing && ( isThreatened || outOfHealRange || isPatientObscured ) )
 	{
 		// patient is too far to heal or obscured, equip combat weapon and defend ourselves while we move into position
 		me->EquipBestWeaponForThreat( knownThreat );
@@ -873,17 +793,7 @@ void CTFBotMedicHeal::ComputeFollowPosition( CTFBot *me )
 		return;
 	}
 
-	bool isExposed;
-
-	if ( TFGameRules()->IsMannVsMachineMode() && me->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		// robot medics in MvM don't care if the enemy sees them
-		isExposed = false;
-	}
-	else
-	{
-		isExposed = IsVisibleToEnemy( me, me->EyePosition() );
-	}
+	bool isExposed = IsVisibleToEnemy( me, me->EyePosition() );
 
 	Vector patientForward;
 	m_patient->EyeVectors( &patientForward );

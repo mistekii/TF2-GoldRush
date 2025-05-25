@@ -37,107 +37,6 @@ const int k_iPopIndex_AnyAdvanced = -1004;
 const int k_iPopIndex_AnyExpert = -1005;
 const int k_iPopIndex_AnyHaunted = -1006;
 
-static void GetMvmChallengeSet( int idxChallenge, CMvMMissionSet &result )
-{
-	result.Clear();
-
-	if ( idxChallenge >= 0 )
-	{
-		result.SetMissionBySchemaIndex( idxChallenge, true );
-		return;
-	}
-
-	auto &groupCriteria = GTFPartyClient()->GetEffectiveGroupCriteria();
-	bool bMannUP = IsMannUpGroup( groupCriteria.GetMatchGroup() );
-#ifdef USE_MVM_TOUR
-	int idxTour = groupCriteria.GetMannUpTourIndex();
-	Assert( bMannUP || idxTour < 0 );
-#endif // USE_MVM_TOUR
-
-#ifdef USE_MVM_TOUR
-	uint32 nNotCompletedChallenges = ~0U;
-	CTFParty *pParty = GTFGCClientSystem()->GetParty();
-	if ( pParty )
-	{
-		for ( int i = 0 ; i < pParty->GetNumMembers() ; ++i )
-		{
-			nNotCompletedChallenges &= ~pParty->Obj().members( i ).completed_missions();
-		}
-	}
-	else
-	{
-		if ( idxTour >= 0 )
-		{
-			uint32 nTours = 0, nCompletedChallenge = 0;
-			GTFGCClientSystem()->BGetLocalPlayerBadgeInfoForTour( idxTour, &nTours, &nCompletedChallenge );
-
-			nNotCompletedChallenges = ~nCompletedChallenge;
-		}
-	}
-#endif // USE_MVM_TOUR
-
-	for ( int i = 0 ; i < GetItemSchema()->GetMvmMissions().Count() ; ++i )
-	{
-		const MvMMission_t &chal = GetItemSchema()->GetMvmMissions()[ i ];
-
-		// Cannot select non-MannUp missions in mann up mode
-#ifdef USE_MVM_TOUR
-		int iBadgeSlot = (idxTour < 0) ? -1 : GetItemSchema()->GetMvmMissionBadgeSlotForTour( idxTour, i );
-		if ( bMannUP && iBadgeSlot < 0 )
-			continue;
-#else // new mm
-		bool bIsChallengeInMannUp = chal.m_unMannUpPoints > 0;
-		if ( bMannUP && !bIsChallengeInMannUp )
-			continue;
-#endif // USE_MVM_TOUR
-
-		// Does this challenge fit the search criteria?
-		bool bSelect = false;
-		switch ( idxChallenge )
-		{
-			case k_iPopIndex_Any:
-					bSelect = true;
-				break;
-			case k_iPopIndex_OnlyNotYetCompleted:
-#ifdef USE_MVM_TOUR
-				if ( iBadgeSlot >= 0 )
-				{
-					int iChallengeBit = ( 1 << iBadgeSlot );
-					if ( nNotCompletedChallenges & iChallengeBit )
-					{
-						bSelect = true;
-					}
-				}
-#endif // USE_MVM_TOUR
-				break;
-
-			case k_iPopIndex_AnyNormal:
-				bSelect = ( chal.m_eDifficulty == k_EMvMChallengeDifficulty_Normal );
-				break;
-
-			case k_iPopIndex_AnyIntermediate:
-				bSelect = ( chal.m_eDifficulty == k_EMvMChallengeDifficulty_Intermediate );
-				break;
-
-			case k_iPopIndex_AnyAdvanced:
-				bSelect = ( chal.m_eDifficulty == k_EMvMChallengeDifficulty_Advanced );
-				break;
-
-			case k_iPopIndex_AnyExpert:
-				bSelect = ( chal.m_eDifficulty == k_EMvMChallengeDifficulty_Expert );
-				break;
-
-			case k_iPopIndex_AnyHaunted:
-				bSelect = ( chal.m_eDifficulty == k_EMvMChallengeDifficulty_Haunted );
-				break;
-
-			default:
-				Assert( false );
-		}
-		result.SetMissionBySchemaIndex( i, bSelect );
-	}
-}
-
 #ifdef ENABLE_GC_MATCHMAKING
 
 Color s_colorBannedPlayerListItem( 250, 50, 45, 255 );
@@ -715,16 +614,6 @@ void CBaseLobbyPanel::UpdatePlayerList()
 		LobbyPlayerInfo p;
 		p.m_steamID = steamapicontext->SteamUser()->GetSteamID();
 		p.m_sName = steamapicontext->SteamFriends()->GetPersonaName();
-		p.m_bHasTicket = GTFGCClientSystem()->BLocalPlayerInventoryHasMvmTicket();
-		p.m_bSquadSurplus = GTFPartyClient()->GetLocalPlayerCriteria().GetSquadSurplus();
-#ifdef USE_MVM_TOUR
-		int idxTour = GTFPartyClient()->GetEffectiveGroupCriteria().GetMannUpTourIndex();
-		if ( idxTour < 0 || !GTFGCClientSystem()->BGetLocalPlayerBadgeInfoForTour( idxTour, &p.m_nBadgeLevel, &p.m_nCompletedChallenges ) )
-		{
-			p.m_nBadgeLevel = 0;
-			p.m_nCompletedChallenges = 0;
-		}
-#endif // USE_MVM_TOUR
 		p.m_pAvatarImage = NULL;
 		p.m_bHasCompetitiveAccess = GTFGCClientSystem()->BHasCompetitiveAccess();
 		CSOTFLadderData *pData = GetLocalPlayerLadderData( eMatchGroup );
@@ -784,10 +673,8 @@ void CBaseLobbyPanel::UpdatePlayerList()
 			p.m_sName = steamapicontext->SteamFriends()->GetFriendPersonaName( p.m_steamID );
 			if ( p.m_sName.IsEmpty() )
 				continue;
-			p.m_bHasTicket = pParty->Obj().members( i ).owns_ticket();
 			p.m_nBadgeLevel = pParty->Obj().members( i ).badge_level();
 			p.m_nCompletedChallenges = pParty->Obj().members( i ).completed_missions();
-			p.m_bSquadSurplus = pParty->GetMemberMatchCriteria( i ).GetSquadSurplus();
 			p.m_pAvatarImage = nullptr;
 			p.m_bIsBanned = pParty->Obj().members( i ).is_banned();
 			p.m_bHasCompetitiveAccess = pParty->Obj().members( i ).competitive_access();

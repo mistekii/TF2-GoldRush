@@ -214,17 +214,6 @@ enum EItemAction
 	k_EItemActionPeriodicScoreReward_Add	 = 170,
 	k_EItemActionPeriodicScoreReward_Remove	 = 171,
 
-	k_EItemActionMvM_ChallengeCompleted_RemoveTicket				= 180,			// we completed a challenge and consumed this ticket as the cost
-	k_EItemActionMvM_ChallengeCompleted_GrantBadge					= 181,			// we completed a challenge and granted the player a badge because they didn't have one
-	k_EItemActionMvM_ChallengeCompleted_UpdateBadgeStamps_Remove	= 182,			// we completed a challenge and we're crossing an entry off our badge checklist (this may also reset the badge back down to empty if this was the last line item)
-	k_EItemActionMvM_ChallengeCompleted_UpdateBadgeStamps_Add		= 183,			// (other half of the above)
-	k_EItemActionMvM_ChallengeCompleted_GrantMissionCompletionLoot	= 184,			// we completed a mission in MvM
-	k_EItemActionMvM_RemoveSquadSurplusVoucher						= 185,
-	k_EItemActionMvM_AwardSquadSurplus_Receiver						= 186,
-	k_EItemActionMvM_AwardSquadSurplus_Giver						= 187,
-	k_EItemActionMvM_ChallengeCompleted_GrantTourCompletionLoot		= 188,			// we completed a full tour in MvM
-	k_EItemActionMvM_AwardHelpANoobBonus_Helper						= 189,
-
 	k_EItemActionHalloween_UpdateMerasmusLootLevel_Add				= 200,			// set the level of the merasmus loot
 	k_EItemActionHalloween_UpdateMerasmusLootLevel_Remove			= 201,			
 
@@ -411,8 +400,6 @@ enum eEconItemOrigin
 	kEconItemOrigin_PreviewItem,
 	kEconItemOrigin_SteamWorkshopContribution,
 	kEconItemOrigin_PeriodicScoreReward,
-	kEconItemOrigin_MvMMissionCompletionReward,			// includes loot from both "mission completed" and "tour completed" events
-	kEconItemOrigin_MvMSquadSurplusReward,
 	kEconItemOrigin_RecipeOutput,
 	kEconItemOrigin_QuestDrop,
 	kEconItemOrigin_QuestLoanerItem,
@@ -648,14 +635,8 @@ enum kill_eater_event_t
 	kKillEaterEvent_SapperDestroyed,						// (part) we destroyed a sapper that was on a friendly building
 	kKillEaterEvent_InvisibleSpiesKilled,					// (part) we killed an invisible spy
 	kKillEaterEvent_MedicsWithFullUberKilled,				// (part) we killed a fully ubered medic
-	kKillEaterEvent_RobotsDestroyed,						// (part) we killed a robot in MvM
-	kKillEaterEvent_MinibossRobotsDestroyed,	// = 40		// (part) we killed a miniboss robot in MvM
-	kKillEaterEvent_RobotsDestroyedAfterPenetration,		// (part) we killed a robot with a shot that had already penetrated another robot
-	kKillEaterEvent_RobotHeadshotKills,						// (part) like kKillEaterEvent_HeadshotKill, but only for robots
-	kKillEaterEvent_RobotsSlowed,							// (part) we hit some robots with Jarate and now they're slow
 	kKillEaterEvent_KillWhileLowHealth,						// (part) we killed someone while we had <10% max health
 	kKillEaterEvent_HalloweenKill,							// (part) we killed someone during the Halloween holiday
-	kKillEaterEvent_HalloweenKillRobot,						// (part) we killed a robot in MvM during the Halloween holiday
 	kKillEaterEvent_DefenderKill,							// (part) we killed someone carrying the intel, pushing the cart, or capping a point
 	kKillEaterEvent_UnderwaterKill,							// (part) we killed someone who was completely submerged
 	kKillEaterEvent_KillWhileUbercharged,					// (part) we killed someone while we were invulnerable
@@ -670,22 +651,12 @@ enum kill_eater_event_t
 	kKillEaterEvent_TimeCloaked,							// Time we are cloaked
 	kKillEaterEvent_HealingProvided,						// Health Provided to Allies
 	kKillEaterEvent_TeleportsProvided,			// = 60		// Teleports Provided to Allies
-	kKillEaterEvent_TanksDestroyed,							// (part) we dealt the killing blow to a tank in MvM
 	kKillEaterEvent_LongDistanceKill,						// (part) we dealt the killing blow (while alive) from far away
 	kKillEaterEvent_UniqueEvent__KilledAccountWithItem,					// (part) (unique event) how many individual accounts have we killed?
 	kKillEaterEvent_PointsScored,						// How many score points we've accumulated
 	kKillEaterEvent_DoubleDonks,						// Double-Donks scored with the loose cannon
 	kKillEaterEvent_TeammatesWhipped,					// Whipped Teammates with the Disciplinary Action
 	kKillEaterEvent_VictoryTimeKill,					// Kills while in Victory / Bonus Time
-	kKillEaterEvent_RobotScoutKill,				// (part)
-	kKillEaterEvent_RobotSniperKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotSoldierKill,			// = 70 // (part) Not yet shipped
-	kKillEaterEvent_RobotDemomanKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotHeavyKill,				// (part) Not yet shipped
-	kKillEaterEvent_RobotPyroKill,				// (part) Not yet shipped
-	kKillEaterEvent_RobotSpyKill,				// (part)
-	kKillEaterEvent_RobotEngineerKill,			// (part) Not yet shipped
-	kKillEaterEvent_RobotMedicKill,				// (part) Not yet shipped
 	kKillEaterEvent_TauntKill,					// Taunt Kills
 	kKillEaterEvent_PlayersWearingUnusualKill,	// (part) we killed someone wearing an unusual hat (!)
 	kKillEaterEvent_BurningEnemyKill,			// (part) we killed someone who was on fire up until they died
@@ -693,7 +664,7 @@ enum kill_eater_event_t
 	kKillEaterEvent_KillcamTaunts,				// (cosmetic part) we appeared wearing this item in the killcam taunting
 	kKillEaterEvent_DamageDealt,				// (part) we have dealt this much damage to people
 	kKillEaterEvent_FiresSurvived,				// (cosmetic part) we were lit on fire wearing this item and then the fire went out and we were still alive
-	kKillEaterEvent_AllyHealingDone,			// (part) we have healed this much (directly, so doesn't count Mad Milk, etc. because we lose the item pointer at some point); also ignores self heal (ie., Concheror buff, MvM upgrades)
+	kKillEaterEvent_AllyHealingDone,			// (part) we have healed this much (directly, so doesn't count Mad Milk, etc. because we lose the item pointer at some point); also ignores self heal (ie., Concheror buff)
 	kKillEaterEvent_PointBlankKills,			// (part) we killed someone while standing right next to them
 	kKillEaterEvent_PlayerKillsByManualControlOfSentry,	// Kills from wrangled a sentry
 	kKillEaterEvent_CosmeticKills,				// (cosmetic part) kills
@@ -718,7 +689,6 @@ enum kill_eater_event_t
 	kKillEaterEvent_HalloweenSouls,				// Halloween
 	kKillEaterEvent_HalloweenContractsCompleted,
 	kKillEaterEvent_HalloweenOfferings,
-	kKillEaterEvent_PowerupBottlesUsed,
 	kKillEaterEvent_ContractPointsEarned, // = 110
 	kKillEaterEvent_ContractPointsContributedToFriends,
 
@@ -857,8 +827,6 @@ enum unacknowledged_item_inventory_positions_t
 	UNACK_ITEM_PREVIEW_ITEM,
 	UNACK_ITEM_PREVIEW_ITEM_PURCHASED,
 	UNACK_ITEM_PERIODIC_SCORE_REWARD,
-	UNACK_ITEM_MVM_MISSION_COMPLETION_REWARD,
-	UNACK_ITEM_MVM_SQUAD_SURPLUS_REWARD,
 	UNACK_ITEM_FOUND_HOLIDAY_GIFT,
 	UNACK_ITEM_COMMUNITY_MARKET_PURCHASE,
 	UNACK_ITEM_RECIPE_OUTPUT,

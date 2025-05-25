@@ -57,11 +57,6 @@ class CTFBot;
 #define TF_AD_ENEMY_DROPPED			"AttackDefend.EnemyDropped"
 #define TF_AD_ENEMY_CAPTURED		"AttackDefend.EnemyCaptured"
 #define TF_AD_ENEMY_RETURNED		"AttackDefend.EnemyReturned"
-
-#define TF_MVM_AD_ENEMY_STOLEN		"MVM.AttackDefend.EnemyStolen"
-#define TF_MVM_AD_ENEMY_DROPPED		"MVM.AttackDefend.EnemyDropped"
-#define TF_MVM_AD_ENEMY_CAPTURED	"MVM.AttackDefend.EnemyCaptured"
-#define TF_MVM_AD_ENEMY_RETURNED	"MVM.AttackDefend.EnemyReturned"
    
 #define TF_AD_TEAM_STOLEN			"AttackDefend.TeamStolen"
 #define TF_AD_TEAM_DROPPED			"AttackDefend.TeamDropped"
@@ -360,7 +355,6 @@ private:
 	int				m_nNeutralType; // Type of neutral flag (only used for Invade game type).
 	int				m_nScoringType; // Type of scoring for flag capture (only used for Invade game type).
 
-	bool			m_bReturnBetweenWaves; // Used in MvM mode to determine if the flag should return between waves.
 	bool			m_bUseShotClockMode; // Used to determine whether we should be using shot clock mode or not.
 	
 	EHANDLE		m_hReturnIcon;

@@ -39,12 +39,9 @@ public:
 	int GetHealing( unsigned int nIndex );
 	int GetHealingAssist( unsigned int nIndex );
 	int GetDamageBlocked( unsigned int nIndex );
-	int GetCurrencyCollected( unsigned int nIndex );
 	int GetBonusPoints( unsigned int nIndex );
 	int	GetPlayerLevel( unsigned int nIndex ) { return GetArrayValue( nIndex, m_iPlayerLevel, 0 ); }
 	int GetStreak( unsigned int nIndex, CTFPlayerShared::ETFStreak streak_type );
-	int GetNumRespecCredits( uint32 unIndex );
-	int GetNumBuybackCredits( uint32 unIndex );
 
 	void UpdatePlayerScoreStats( void );
 	void ResetPlayerScoreStats( int playerIndex = -1 );
@@ -95,13 +92,10 @@ private:
 	int		m_iHealing[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iHealingAssist[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iDamageBlocked[MAX_PLAYERS_ARRAY_SAFE];
-	int		m_iCurrencyCollected[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iBonusPoints[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iPlayerLevel[MAX_PLAYERS_ARRAY_SAFE];
 	// Pseudo multidimensional array [MAX_PLAYERS_ARRAY_SAFE][CTFPlayerShared::kTFStreak_COUNT]
 	int		m_iStreaks[(MAX_PLAYERS_ARRAY_SAFE) * CTFPlayerShared::kTFStreak_COUNT];
-	int		m_iUpgradeRefundCredits[MAX_PLAYERS_ARRAY_SAFE];
-	int		m_iBuybackCredits[MAX_PLAYERS_ARRAY_SAFE];
 
 	int		m_iPartyLeaderBlueTeamIndex;
 	int		m_iPartyLeaderRedTeamIndex;
@@ -119,7 +113,6 @@ private:
 		int	m_iPrevHealing;
 		int	m_iPrevHealingAssist;
 		int m_iPrevDamageBlocked;
-		int	m_iPrevCurrencyCollected;
 		int	m_iPrevBonusPoints;
 	};
 

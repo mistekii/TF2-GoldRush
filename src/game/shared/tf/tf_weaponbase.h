@@ -679,8 +679,6 @@ protected:
 
 protected:
 
-	void			PlayUpgradedShootSound( const char *pszSound );
-
 	int				m_iWeaponMode;
 	CNetworkVar(	int,	m_iReloadMode );
 	CNetworkVar( float, m_flReloadPriorNextFire );

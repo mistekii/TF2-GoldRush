@@ -492,13 +492,6 @@ const char* g_modelWhiteList[] =
 	"models/weapons/w_models/w_toolbox.mdl",
 	"models/weapons/w_models/w_sapper.mdl",
 
-	// Canteens can change model based on the powerup type... all of these alternates are ok!
-	"models/player/items/mvm_loot/all_class/mvm_flask_krit.mdl",
-	"models/player/items/mvm_loot/all_class/mvm_flask_uber.mdl",
-	"models/player/items/mvm_loot/all_class/mvm_flask_tele.mdl",
-	"models/player/items/mvm_loot/all_class/mvm_flask_ammo.mdl",
-	"models/player/items/mvm_loot/all_class/mvm_flask_build.mdl",
-
 	TF_WEAPON_TAUNT_FRONTIER_JUSTICE_GUITAR_MODEL,
 
 	"models/workshop/weapons/c_models/c_paratooper_pack/c_paratrooper_pack.mdl",
@@ -575,10 +568,6 @@ bool CEconEntity::ValidateEntityAttachedToPlayer( bool &bShouldRetry )
 
 	// We only need this in debug (for item_debug_validation) or PvE mode
 	bool bOwnerIsBot = pOwner->IsABot(); // THIS IS INSECURE -- DO NOT USE THIS OUTSIDE OF DEBUG OR PVE MODE
-
-	// Allow bots to use anything in PvE mode
-	if ( bOwnerIsBot && TFGameRules()->IsPVEModeActive() )
-		return true;
 
 	int iClass = pOwner->GetPlayerClass()->GetClassIndex();
 	int iTeam = pOwner->GetTeamNumber();

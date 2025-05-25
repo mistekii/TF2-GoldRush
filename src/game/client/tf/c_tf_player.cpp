@@ -84,7 +84,6 @@
 #include "gc_clientsystem.h"
 #include "c_entitydissolve.h"
 #include "tf_viewmodel.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 #include "sourcevr/isourcevirtualreality.h"
 #include "tempent.h"
 #include "confirm_dialog.h"
@@ -100,7 +99,6 @@
 #include "filesystem.h"
 #include "debugoverlay_shared.h"
 #include "tf_hud_chat.h"
-#include "tf_item_powerup_bottle.h"
 #include <vgui_controls/AnimationController.h>
 #include "econ_paintkit.h"
 #include "soundstartparams.h"
@@ -347,17 +345,6 @@ static ConVar tf_medieval_cam_idealdistup( "tf_medieval_cam_idealdistup", "-10",
 static ConVar tf_medieval_cam_idealpitch( "tf_medieval_cam_idealpitch", "0", FCVAR_CLIENTDLL | FCVAR_CHEAT );	 // thirdperson pitch
 extern ConVar cam_idealpitch;
 extern ConVar tf_allow_taunt_switch;
-
-static void PromptAcceptReviveCallback( bool bCancel, void *pContext )
-{
-	if ( bCancel )
-	{
-		KeyValues *kv = new KeyValues( "MVM_Revive_Response" );
-		kv->SetBool( "accepted", false );
-		engine->ServerCmdKeyValues( kv );
-	}
-}
-
 
 C_TFPlayerPreviewEffect g_PlayerPreviewEffect;
 
@@ -1180,12 +1167,10 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 		{
 			m_bBatted = true;
 		}
-		
-		bool bMiniBoss = ( pPlayer && pPlayer->IsMiniBoss() ) ? true : false;
 
 		if ( GetDamageCustom() == TF_DMG_CUSTOM_PLASMA )
 		{
-			if ( !m_bBecomeAsh && !bMiniBoss )
+			if ( !m_bBecomeAsh )
 			{
 				m_bDissolving = true;
 			}
@@ -1195,7 +1180,7 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 
 		if ( GetDamageCustom() == TF_DMG_CUSTOM_PLASMA_CHARGED )
 		{
-			if ( !m_bBecomeAsh && !bMiniBoss )
+			if ( !m_bBecomeAsh )
 			{
 				m_bDissolving = true;
 			}
@@ -1205,13 +1190,9 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 		}
 
 		// Don't gib zombies, always just ragdoll
-		if ( pPlayer )
+		if ( pPlayer && pPlayer->BRenderAsZombie() )
 		{
-			if ( pPlayer->BRenderAsZombie() )
-			{
-				m_bGib = false;
-			}
-			pPlayer->UpdateMVMEyeGlowEffect( false );
+			m_bGib = false;
 		}
 
 		if ( bCreateRagdoll )
@@ -1229,8 +1210,7 @@ void C_TFRagdoll::OnDataChanged( DataUpdateType_t type )
 					EmitSound( "TFPlayer.Decapitated" );
 
 					bool bBlood = true;
-					if ( TFGameRules() && ( TFGameRules()->UseSillyGibs() || 
-											( TFGameRules()->IsMannVsMachineMode() && pPlayer && pPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) ) )
+					if ( TFGameRules() && TFGameRules()->UseSillyGibs() )
 					{
 						bBlood = false;
 					}
@@ -3645,7 +3625,6 @@ BEGIN_RECV_TABLE_NOBASE( C_TFPlayer, DT_TFLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO( m_angEyeAngles[0] ) ),
 	RecvPropFloat( RECVINFO( m_angEyeAngles[1] ) ),
 
-	RecvPropInt( RECVINFO( m_nCurrency ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevel ) ),
 	RecvPropInt( RECVINFO( m_nExperienceLevelProgress ) ),
 	RecvPropInt( RECVINFO( m_bMatchSafeToLeave ) ),
@@ -3672,7 +3651,6 @@ END_RECV_TABLE()
 IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 
 	RecvPropBool(RECVINFO(m_bSaveMeParity)),
-	RecvPropBool(RECVINFO(m_bIsMiniBoss)),
 	RecvPropBool(RECVINFO(m_bIsABot)),
 	RecvPropInt(RECVINFO(m_nBotSkill)),
 
@@ -3766,9 +3744,6 @@ C_TFPlayer::C_TFPlayer() :
 	memset( m_pKartParticles, NULL, sizeof( m_pKartParticles ) );
 	memset( m_pKartSounds, NULL, sizeof( m_pKartSounds ) );
 
-	m_pMVMEyeGlowEffect[ 0 ] = NULL;
-	m_pMVMEyeGlowEffect[ 1 ] = NULL;
-
 	m_pEyeGlowEffect[ 0 ] = NULL;
 	m_pEyeGlowEffect[ 1 ] = NULL;
 	m_pszEyeGlowEffectName[0] = '\0';
@@ -3795,8 +3770,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_pPhaseStandingEffect = NULL;
 	m_pRadiusHealEffect = NULL;
 	m_pMegaHealEffect = NULL;
-
-	m_pMVMBotRadiowave = NULL;
 
 	m_aGibs.Purge();
 	m_aNormalGibs.PurgeAndDeleteElements();
@@ -3865,7 +3838,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flTorsoScale = 1.f;
 	m_flHandScale = 1.f;
 
-	m_bIsMiniBoss = false;
 	m_bUseBossHealthBar = false;
 	m_bUsingVRHeadset = false;
 
@@ -3873,8 +3845,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_nForcedSkin = 0;
 
 	m_flChangeClassTime = 0.f;
-
-	m_hRevivePrompt = NULL;
 
 	m_bIsDisplayingTranqMark = false;
 
@@ -3899,8 +3869,6 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "sticky_jump_landed" );
 	ListenForGameEvent( "player_spawn" );
 	ListenForGameEvent( "damage_resisted" );
-	ListenForGameEvent( "revive_player_notify" );
-	ListenForGameEvent( "revive_player_stopped" );
 	ListenForGameEvent( "player_changeclass" );
 	ListenForGameEvent( "player_abandoned_match" );
 	ListenForGameEvent( "rocketpack_launch" );
@@ -3969,8 +3937,6 @@ void C_TFPlayer::Spawn( void )
 
 	UpdateInventory( true );
 
-	UpdateMVMEyeGlowEffect( true );
-
 	SetShowHudMenuTauntSelection( false );
 
 	CleanUpAnimationOnSpawn();
@@ -3981,15 +3947,6 @@ void C_TFPlayer::Spawn( void )
 //-----------------------------------------------------------------------------
 void C_TFPlayer::InventoryUpdated( CPlayerInventory *pInventory )
 { 
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CHudUpgradePanel *pUpgradePanel = GET_HUDELEMENT( CHudUpgradePanel );
-		if ( pUpgradePanel && pUpgradePanel->IsVisible() )
-		{
-			pUpgradePanel->PlayerInventoryChanged( this );
-		}
-	}
-
 	return;
 }
 
@@ -4263,8 +4220,6 @@ void C_TFPlayer::OnPreDataChanged( DataUpdateType_t updateType )
 		m_hOldObserverTarget = GetObserverTarget();
 	}
 
-	m_nOldCurrency = m_nCurrency;
-
 	m_Shared.OnPreDataChanged();
 
 	m_bOldCustomModelVisible = m_PlayerClass.CustomModelIsVisibleToSelf();
@@ -4305,15 +4260,11 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 		if ( m_nOldBotSkill != m_nBotSkill )
 		{
-			UpdateMVMEyeGlowEffect( true );
-
 			m_nOldBotSkill = m_nBotSkill;
 		}
 
 		if ( m_nOldMaxHealth != GetMaxHealth() )
 		{
-			UpdateMVMEyeGlowEffect( true );
-
 			m_nOldMaxHealth = GetMaxHealth();
 		}
 
@@ -4413,18 +4364,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 
 			// Remove decals.
 			RemoveAllDecals();
-
-			if ( GetPlayerClass()->GetClassIndex() == TF_CLASS_SPY )
-			{
-				if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-				{
-					UpdateMVMEyeGlowEffect( false );
-				}
-				else
-				{
-					UpdateMVMEyeGlowEffect( true );
-				}
-			}
 		}
 	}
 
@@ -4635,16 +4574,6 @@ void C_TFPlayer::OnDataChanged( DataUpdateType_t updateType )
 			if ( event )
 			{
 				event->SetInt( "amount", m_iHealth - m_iOldHealth );
-				gameeventmanager->FireEventClientSide( event );
-			}
-		}
-
-		if ( m_nOldCurrency != m_nCurrency )
-		{
-			IGameEvent *event = gameeventmanager->CreateEvent( "player_currency_changed" );
-			if ( event )
-			{
-				event->SetInt( "currency", m_nCurrency );
 				gameeventmanager->FireEventClientSide( event );
 			}
 		}
@@ -4944,15 +4873,6 @@ void C_TFPlayer::UpdateRecentlyTeleportedEffect( void )
 				break;
 			default:
 				break;
-			}
-
-			if ( TFGameRules()->IsMannVsMachineMode() && IsABot() )
-			{
-#if 0 // Nice idea, but it's chewing into our particle budget, and because bots currently spawn in ubered it's nearly invisible.
-				pszEffectName = "bot_recent_teleport_blue";
-#else
-				pszEffectName = NULL;
-#endif
 			}
 
 			if ( pszEffectName )
@@ -5601,10 +5521,6 @@ bool C_TFPlayer::CanLightCigarette( void )
 		}
 	}
 
-	// don't light for MvM Spy robots
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		return false;
-
 	// Don't light if we are invis.
 	if ( GetPercentInvisible() > 0 )
 		return false;
@@ -6006,12 +5922,6 @@ void C_TFPlayer::AvoidPlayers( CUserCmd *pCmd )
 	C_TFTeam *pTeam = (C_TFTeam*)GetTeam();
 	if ( !pTeam )
 		return;
-	
-	CHudUpgradePanel *pHudVote = GET_HUDELEMENT( CHudUpgradePanel );
-	if ( pHudVote && pHudVote->IsActive() )
-	{
-		return;
-	}
 
 	// Up vector.
 	static Vector vecUp( 0.0f, 0.0f, 1.0f );
@@ -6757,14 +6667,6 @@ void C_TFPlayer::UpdateIDTarget()
 	}
 	else
 	{
-		// Add DEBRIS when a medic has revive (for tracing against revive markers)
-		int iReviveMedic = 0;
-		CALL_ATTRIB_HOOK_INT( iReviveMedic, revive );
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() && pLocalPlayer->IsPlayerClass( TF_CLASS_MEDIC ) )
-		{
-			iReviveMedic = 1;
-		}
-
 		int nMask = MASK_SOLID | CONTENTS_DEBRIS;
 		UTIL_TraceLine( vecStart, vecEnd, nMask, this, COLLISION_GROUP_NONE, &tr );
 	}
@@ -7562,10 +7464,6 @@ void C_TFPlayer::AddDecal( const Vector& rayStart, const Vector& rayEnd,
 		return;
 	}
 
-	// FIXME: Why do decals on giants crash clients?
-	if ( IsMiniBoss() )
-		return;
-
 	if ( m_Shared.IsInvulnerable() )
 	{ 
 		Vector vecDir = rayEnd - rayStart;
@@ -7636,12 +7534,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 		SetAppropriateCamera( this );
 
-		if ( m_hRevivePrompt )
-		{
-			m_hRevivePrompt->MarkForDeletion();
-			m_hRevivePrompt = NULL;
-		}
-
 		// make sure the chat window has been restored to the appropriate place
 		g_pClientMode->GetViewportAnimationController()->StartAnimationSequence( "CompetitiveGame_RestoreChatWindow", false );
 	}
@@ -7653,8 +7545,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 	UpdateDemomanEyeEffect( 0 );
 
 	UpdateKillStreakEffects( 0 );
-
-	UpdateMVMEyeGlowEffect( true );
 
 	m_hHeadGib = NULL;
 	m_hFirstGib = NULL;
@@ -7759,14 +7649,6 @@ int C_TFPlayer::GetVisionFilterFlags( bool bWeaponsCheck /*= false */  )
 	if ( TFGameRules()->IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
 	{
 		nVisionOptInFlags |= TF_VISION_FILTER_HALLOWEEN;
-	}
-
-	// opt-in for romevision?
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
-		 TFSharedContentManager() && TFSharedContentManager()->IsSharedVisionAvailable( TF_VISION_FILTER_ROME ) && 
-		 tf_romevision_opt_in.GetBool() )
-	{
-		nVisionOptInFlags |= TF_VISION_FILTER_ROME;
 	}
 
 	return nVisionOptInFlags;
@@ -9075,7 +8957,7 @@ bool C_TFPlayer::IsWeaponLowered( void )
 		return true;
 
 	// Hide all view models after the game is over
-	if ( pRules->State_Get() == GR_STATE_GAME_OVER && ( !pRules->IsInTournamentMode() || pRules->IsMannVsMachineMode() ) )
+	if ( pRules->State_Get() == GR_STATE_GAME_OVER && !pRules->IsInTournamentMode() )
 		return true;
 
 	if ( m_Shared.InCond( TF_COND_PHASE ) )
@@ -10257,46 +10139,6 @@ void C_TFPlayer::UpdateKillStreakEffects( int iCount, bool bKillScored /* = fals
 	}
 }
 
-void C_TFPlayer::UpdateMVMEyeGlowEffect( bool bVisible )
-{
-	if ( !TFGameRules() || !TFGameRules()->IsMannVsMachineMode() || GetTeamNumber() != TF_TEAM_PVE_INVADERS )
-	{
-		return;
-	}
-	
-	// Remove the eye glows
-	ParticleProp()->StopParticlesNamed( "bot_eye_glow", true );
-	m_pMVMEyeGlowEffect[ 0 ] = NULL;
-	m_pMVMEyeGlowEffect[ 1 ] = NULL;
-
-	if ( bVisible )
-	{
-		// Set color based on skill
-		Vector vColor = m_nBotSkill >= 2 ? Vector( 255, 180, 36 ) : Vector( 0, 240, 255 );
-
-		// Create the effects
-		int nAttachement = LookupAttachment( IsMiniBoss() ? "eye_boss_1" : "eye_1" );
-		if ( nAttachement > 0 )
-		{
-			m_pMVMEyeGlowEffect[ 0 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
-			if ( m_pMVMEyeGlowEffect[ 0 ] )
-			{
-				m_pMVMEyeGlowEffect[ 0 ]->SetControlPoint( 1, vColor );
-			}
-		}
-
-		nAttachement = LookupAttachment( IsMiniBoss() ? "eye_boss_2" : "eye_2" );
-		if ( nAttachement > 0 )
-		{
-			m_pMVMEyeGlowEffect[ 1 ] = ParticleProp()->Create( "bot_eye_glow", PATTACH_POINT_FOLLOW, nAttachement );
-			if ( m_pMVMEyeGlowEffect[ 1 ] )
-			{
-				m_pMVMEyeGlowEffect[ 1 ]->SetControlPoint( 1, vColor );
-			}
-		}
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Check if local player should see spy as disguised body
@@ -10378,46 +10220,9 @@ bool C_TFPlayer::ShouldTauntHintIconBeVisible() const
 //-----------------------------------------------------------------------------
 bool C_TFPlayer::IsHealthBarVisible( void ) const
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS || m_Shared.InCond( TF_COND_REPROGRAMMED ) )
-		{
-			float flRegenAmount = 0;
-			CALL_ATTRIB_HOOK_FLOAT( flRegenAmount, add_health_regen );
-			if ( (int)flRegenAmount != 0 )
-			{
-				return true;
-			}
-		}
-	}
-
-
-	return IsMiniBoss();
+	return false;
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-const char* C_TFPlayer::GetBossProgressImageName() const
-{
-	if ( m_bUseBossHealthBar )
-	{
-		return GetPlayerClass()->GetClassIconName();
-	}
-
-	return NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-float C_TFPlayer::GetBossStatusProgress() const
-{
-	float flProgress = float( GetHealth() ) / float( GetMaxHealth() );
-	return flProgress;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Handle karts.
@@ -10712,27 +10517,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 					NotificationQueue_Remove( &CEquipSpellbookNotification::IsNotificationType );
 				}
 			}
-			// Add EconNotification to equip Canteen here
-			else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				int iCount = NotificationQueue_Count( &CEquipMvMCanteenNotification::IsNotificationType );
-				CEconItemView *pItem = TFInventoryManager()->GetItemInLoadoutForClass( event->GetInt( "class" ), LOADOUT_POSITION_ACTION );
-				// no spell book
-				if ( !pItem || !pItem->GetStaticData()->GetItemClass() || !FStrEq( pItem->GetStaticData()->GetItemClass(), "tf_powerup_bottle" ) )
-				{
-					if ( iCount == 0 )
-					{
-						CEquipMvMCanteenNotification *pNotification = new CEquipMvMCanteenNotification();
-						pNotification->SetText( "#TF_Canteen_EquipAction" );
-						pNotification->SetLifetime( 10.0f );
-						NotificationQueue_Add( pNotification );
-					}
-				}
-				else
-				{
-					NotificationQueue_Remove( &CEquipMvMCanteenNotification::IsNotificationType );
-				}
-			}
 		}
 	}
 	else if ( FStrEq( event->GetName(), "rocket_jump_landed" ) 
@@ -10751,37 +10535,6 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		if ( index_ == entindex() )
 		{
 			m_flLastResistTime = gpGlobals->curtime;
-		}
-	}
-	else if ( FStrEq( event->GetName(), "revive_player_notify" ) )
-	{
-		if ( !pLocalPlayer )
-			return;
-
-		const int index_ = event->GetInt( "entindex" );
-		if ( pLocalPlayer == this && entindex() == index_ && !m_hRevivePrompt )
-		{
-			const int nMarkerIndex = event->GetInt( "marker_entindex" );
-			CBaseEntity *pMarker = ClientEntityList().GetEnt( nMarkerIndex );
-			if ( pMarker )
-			{
-				m_hRevivePrompt = ShowRevivePrompt( pMarker, "#TF_Prompt_Revive_Title", "#TF_Prompt_Revive_Message", "#TF_Prompt_Revive_Cancel", &PromptAcceptReviveCallback, NULL, NULL );
-				if ( m_hRevivePrompt )
-				{
-					m_hRevivePrompt->SetKeyBoardInputEnabled( false );
-				}
-			}
-		}
-	}
-	else if ( FStrEq( event->GetName(), "revive_player_stopped" ) )
-	{
-		if ( !pLocalPlayer )
-			return;
-
-		if ( m_hRevivePrompt )
-		{
-			m_hRevivePrompt->MarkForDeletion();
-			m_hRevivePrompt = NULL;
 		}
 	}
 	else if ( FStrEq( event->GetName(), "player_changeclass" ) )

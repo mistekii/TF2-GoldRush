@@ -117,8 +117,6 @@ extern ConVar tf_max_charge_speed;
 
 ConVar tf_always_loser( "tf_always_loser", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Force loserstate to true." );
 
-ConVar tf_mvm_bot_flag_carrier_movement_penalty( "tf_mvm_bot_flag_carrier_movement_penalty", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-
 //ConVar tf_scout_dodge_move_penalty_duration( "tf_scout_dodge_move_penalty_duration", "3.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );
 //ConVar tf_scout_dodge_move_penalty( "tf_scout_dodge_move_penalty", "0.5", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );
 
@@ -692,7 +690,7 @@ bool CTFPlayer::IsAllowedToTaunt( void )
 
 				if ( ( pLunchbox->GetLunchboxType() == LUNCHBOX_STANDARD ) )
 				{
-					if ( !TFGameRules()->IsMannVsMachineMode() && HasItem() )
+					if ( HasItem() )
 						return false;
 				}
 			}
@@ -795,9 +793,6 @@ CTFPlayerShared::CTFPlayerShared()
 
 	m_flHealedPerSecondTimer = -1000;
 	m_bPulseRadiusHeal = false;
-
-	m_flRadiusCurrencyCollectionTime = 0;
-	m_flRadiusSpyScanTime = 0;
 
 	m_flCloakStartTime = -1.0f;
 
@@ -1604,10 +1599,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 		OnAddSapped();
 		break;
 
-	case TF_COND_REPROGRAMMED:
-		OnAddReprogrammed();
-		break;
-
 	case TF_COND_MARKEDFORDEATH_SILENT:
 		OnAddMarkedForDeathSilent();
 		break;
@@ -1630,10 +1621,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnAddStealthedUserBuffFade();
-		break;
-
-	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
-		OnAddMVMBotRadiowave();
 		break;
 
 	case TF_COND_HALLOWEEN_SPEED_BOOST:
@@ -1852,10 +1839,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 		OnRemoveSapped();
 		break;
 
-	case TF_COND_REPROGRAMMED:
-		OnRemoveReprogrammed();
-		break;
-
 	case TF_COND_MARKEDFORDEATH_SILENT:
 		OnRemoveMarkedForDeathSilent();
 		break;
@@ -1878,10 +1861,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 
 	case TF_COND_STEALTHED_USER_BUFF_FADING:
 		OnRemoveStealthedUserBuffFade();
-		break;
-
-	case TF_COND_MVM_BOT_STUN_RADIOWAVE:
-		OnRemoveMVMBotRadiowave();
 		break;
 
 	case TF_COND_HALLOWEEN_SPEED_BOOST:
@@ -2292,11 +2271,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 								HandleRageGain( m_pOuter, kRageBuffFlag_OnMedicHealingReceived, flHealAmount / 2.f, 1.0f );
 								
 								float flRage = flHealAmount;
-								if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && 
-									 TFObjectiveResource() && TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-								{
-									flRage = Max( flHealAmount, 10.f );
-								}
 								HandleRageGain( pHealScorer, kRageBuffFlag_OnHeal, flRage, 1.0f );
 
 								// If it's been one second, or we know healing beyond this point will be overheal, generate an event
@@ -2720,17 +2694,6 @@ void CTFPlayerShared::ConditionGameRulesThink( void )
 
 	{
 		m_flSpyTranqBuffDuration = 0;
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		RadiusCurrencyCollectionCheck();
-	}
-
-	if ( TFGameRules()->IsMannVsMachineMode() && m_pOuter->IsPlayerClass( TF_CLASS_SPY) )
-	{
-		// In MvM, Spies reveal other spies in a radius around them
-		RadiusSpyScan();
 	}
 
 #endif // GAME_DLL
@@ -3624,28 +3587,13 @@ void CTFPlayerShared::OnRemoveBleeding( void )
 
 const char* CTFPlayerShared::GetSoldierBuffEffectName( void )
 {
-	if ( TFGameRules()->IsMannVsMachineMode() )
+	if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
 	{
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			// MVM robot version has fewer particles. Helps keep the framerate up.
-			return "soldierbuff_mvm";
-		}
-		else
-		{
-			return "soldierbuff_red_soldier";
-		}
+		return "soldierbuff_blue_soldier";
 	}
 	else
 	{
-		if ( m_pOuter->GetTeamNumber() == TF_TEAM_BLUE )
-		{
-			return "soldierbuff_blue_soldier";
-		}
-		else
-		{
-			return "soldierbuff_red_soldier";
-		}
+		return "soldierbuff_red_soldier";
 	}
 }
 
@@ -3893,20 +3841,6 @@ void CTFPlayerShared::OnRemoveSapped( void )
 #endif	// CLIENT_DLL
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Applied to bots
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddReprogrammed( void )
-{
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveReprogrammed( void )
-{
-}
-
 void CTFPlayerShared::OnAddDisguisedAsDispenser( void )
 {
 	m_pOuter->TeamFortress_SetSpeed();
@@ -4121,44 +4055,6 @@ static void RemoveUberScreenEffect( const CTFPlayer* pPlayer )
 	}
 }
 #endif // CLIENT_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnAddMVMBotRadiowave( void )
-{
-#ifdef CLIENT_DLL
-	if ( !m_pOuter->IsABot() )
-		return;
-
-	if ( !m_pOuter->m_pMVMBotRadiowave )
-	{
-		m_pOuter->m_pMVMBotRadiowave = m_pOuter->ParticleProp()->Create( "bot_radio_waves", PATTACH_POINT_FOLLOW, "head" );
-	}
-#else
-	if ( !m_pOuter->IsBot() )
-		return;
-
-	StunPlayer( GetConditionDuration( TF_COND_MVM_BOT_STUN_RADIOWAVE ), 1.0, TF_STUN_BOTH | TF_STUN_NO_EFFECTS );
-#endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::OnRemoveMVMBotRadiowave( void )
-{
-#ifdef CLIENT_DLL
-	if ( !m_pOuter->IsABot() )
-		return;
-
-	if ( m_pOuter->m_pMVMBotRadiowave )
-	{
-		m_pOuter->ParticleProp()->StopEmission( m_pOuter->m_pMVMBotRadiowave );
-		m_pOuter->m_pMVMBotRadiowave = NULL;
-	}
-#endif
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -7225,12 +7121,6 @@ bool CTFPlayerShared::CanRecieveMedigunChargeEffect( medigun_charge_types eType 
 	if ( pItem && pItem->GetItemID() == TF_ITEM_CAPTURE_FLAG )
 	{
 		bCanRecieve = false;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// allow bot flag carriers to be ubered
-			bCanRecieve = true;
-		}
 	}
 
 	return bCanRecieve;
@@ -7589,161 +7479,6 @@ void CTFPlayerShared::SetChargeEffect( medigun_charge_types iCharge, bool bState
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Collect currency packs in a radius around the scout
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::RadiusCurrencyCollectionCheck( void )
-{
-	if ( m_pOuter->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS && TFGameRules()->IsMannVsMachineMode() )
-		return;
-
-	if ( !m_pOuter->IsAlive() )
-		return;
-
-	if ( m_flRadiusCurrencyCollectionTime > gpGlobals->curtime )
-		return;
-	
-	bool bScout = m_pOuter->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT;
-	const int nRadiusSqr = bScout ? 288 * 288 : 72 * 72;
-	Vector vecPos = m_pOuter->GetAbsOrigin();
-
-	// NDebugOverlay::Sphere( vecPos, nRadius, 0, 255, 0, 40, 5 );
-
-	for ( int i = 0; i < ICurrencyPackAutoList::AutoList().Count(); ++i )
-	{
-		CCurrencyPack *pCurrencyPack = static_cast< CCurrencyPack* >( ICurrencyPackAutoList::AutoList()[i] );
-		if ( !pCurrencyPack )
-			continue;
-
-		if ( !pCurrencyPack->AffectedByRadiusCollection() )
-			continue;
-
-		if ( ( vecPos - pCurrencyPack->GetAbsOrigin() ).LengthSqr() > nRadiusSqr )
-			continue;
-
-		if ( pCurrencyPack->IsClaimed() )
-			continue;
-
-		if ( m_pOuter->FVisible( pCurrencyPack, MASK_OPAQUE ) == false )
-			continue;
-
-		if ( !pCurrencyPack->ValidTouch( m_pOuter ) )
-			continue;
-
-		// Currencypack's seek classes with a large collection radius
-		if ( bScout )
-		{
-			bool bFound = false;
-			FOR_EACH_VEC( m_CurrencyPacks, i )
-			{
-				pulledcurrencypacks_t packinfo = m_CurrencyPacks[i];
-				if ( packinfo.hPack == pCurrencyPack )
-					bFound = true;
-			}
-
-			if ( !bFound )
-			{
-				// Mark as claimed to prevent other players from grabbing
-				pCurrencyPack->SetClaimed();
-				pulledcurrencypacks_t packinfo;
-				packinfo.hPack = pCurrencyPack;
-				packinfo.flTime = gpGlobals->curtime + 1.f;
-				m_CurrencyPacks.AddToTail( packinfo );
-			}
-		}
-		else
-		{
-			pCurrencyPack->Touch( m_pOuter );
-		}
-	}
-
-	FOR_EACH_VEC_BACK( m_CurrencyPacks, i )
-	{
-		if ( m_CurrencyPacks[i].hPack )
-		{
-			// If the timeout hits, force a touch
-			if ( m_CurrencyPacks[i].flTime <= gpGlobals->curtime )
-			{
-				m_CurrencyPacks[i].hPack->Touch( m_pOuter );
-			}
-			else
-			{
-				// Seek the player
-				const float flForce = 550.0f;
-
-				Vector vToPlayer = m_pOuter->GetAbsOrigin() - m_CurrencyPacks[i].hPack->GetAbsOrigin();
-
-				vToPlayer.z = 0.0f;
-				vToPlayer.NormalizeInPlace();
-				vToPlayer.z = 0.25f;
-
-				Vector vPush = flForce * vToPlayer;
-
-				m_CurrencyPacks[i].hPack->RemoveFlag( FL_ONGROUND );
-				m_CurrencyPacks[i].hPack->ApplyAbsVelocityImpulse( vPush );
-			}
-		}
-		else
-		{
-			// Automatic clean-up
-			m_CurrencyPacks.Remove( i );
-		}
-	}
-
-	m_flRadiusCurrencyCollectionTime = bScout ? gpGlobals->curtime + 0.15f : gpGlobals->curtime + 0.25f;
-}
-//-----------------------------------------------------------------------------
-// Purpose: Scan for and reveal spies in a radius around the player
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::RadiusSpyScan( void )
-{
-	if ( m_pOuter->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS )
-		return;
-
-	if ( !m_pOuter->IsAlive() )
-		return;
-
-	if ( m_flRadiusSpyScanTime <= gpGlobals->curtime )
-	{
-//		bool bRevealed = false;
-		const int iRange = 750;
-
-		CUtlVector<CTFPlayer *> vecPlayers;
-		CollectPlayers( &vecPlayers, TF_TEAM_PVE_INVADERS, true );
-		FOR_EACH_VEC( vecPlayers, i )
-		{
-
-			if ( !vecPlayers[i] )
-				continue;
-
-			if ( vecPlayers[i]->GetPlayerClass()->GetClassIndex() != TF_CLASS_SPY )
-				continue;
-			
-			if ( !vecPlayers[i]->m_Shared.InCond( TF_COND_STEALTHED ) )
-				continue;
-
-			if ( m_pOuter->FVisible( vecPlayers[i], MASK_OPAQUE ) == false )
-				continue;
-
-			Vector vDist = vecPlayers[i]->GetAbsOrigin() - m_pOuter->GetAbsOrigin();
-			if ( vDist.LengthSqr() <= iRange * iRange )
-			{
-				vecPlayers[i]->m_Shared.OnSpyTouchedByEnemy();
-//				bRevealed = true;
-			}
-		}
-
-// 		if ( bRevealed )
-// 		{
-// 			bRevealed = false;
-// 			CSingleUserRecipientFilter filter( m_pOuter );
-// 			m_pOuter->EmitSound( filter, m_pOuter->entindex(), "Recon.Ping" );
-// 		}
-
-		m_flRadiusSpyScanTime = gpGlobals->curtime + 0.3f;
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFPlayerShared::ApplyAttributeToPlayer( const char* pszAttribName, float flValue )
@@ -8040,11 +7775,7 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 							if ( m_DamageEvents[iDamage].nDamageType == info.GetDamageType() &&
 								m_DamageEvents[iDamage].nDamageType == g_aWeaponDamageTypes[TF_WEAPON_PIPEBOMBLAUNCHER] )
 							{
-								if ( TFGameRules()->IsMannVsMachineMode() && m_DamageEvents[iDamage].nKills >= 10 )
-								{
-									m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_DEMO_GROUP_KILL );
-								}
-								else if ( m_DamageEvents[iDamage].nKills >= 3 )
+								if ( m_DamageEvents[iDamage].nKills >= 3 )
 								{
 									m_pOuter->AwardAchievement( ACHIEVEMENT_TF_DEMOMAN_KILL3_WITH_DETONATION );
 								}
@@ -8081,25 +7812,6 @@ void CTFPlayerShared::RecordDamageEvent( const CTakeDamageInfo &info, bool bKill
 	m_DamageEvents[iIndex].nKills = bKill;
 
 //	Msg( "Damage Event: D:%f, T:%f\n", m_DamageEvents[iIndex].flDamage, m_DamageEvents[iIndex].flTime );
-
-	if ( TFGameRules()->IsMannVsMachineMode() && m_pOuter->IsPlayerClass( TF_CLASS_SNIPER ) )
-	{
-		int nKillCount = 0;
-		int nDamageCount = m_DamageEvents.Count();
-		for ( int iDamage = 0; iDamage < nDamageCount; ++iDamage )
-		{
-			// Did it happen very recently?
-			if ( ( gpGlobals->curtime - m_DamageEvents[iDamage].flTime ) < CRIT_DAMAGE_TIME )
-			{
-				nKillCount += m_DamageEvents[iDamage].nKills;
-			}
-		}
-
-		if ( nKillCount >= 4 )
-		{
-			m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_SNIPER_KILL_GROUP );
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -8199,7 +7911,7 @@ void CTFPlayerShared::StunPlayer( float flTime, float flReductionAmount, int iSt
 	if ( InCond( TF_COND_PHASE ) )
 		return;
 
-	if ( InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) && !InCond( TF_COND_MVM_BOT_STUN_RADIOWAVE ) )
+	if ( InCond( TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED ) )
 		return;
 
 #ifdef GAME_DLL
@@ -8695,17 +8407,8 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 		ePenetrateType = (ETFDmgCustom)nCustomDamageType;
 	}
 
-	// Ignore teammates and their (physical) upgrade items when shooting in MvM
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		CTraceFilterIgnoreFriendlyCombatItems traceFilter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-		UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
-	}
-	else
-	{
-		CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
-		UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
-	}
+	CTraceFilterSimple traceFilter( this, COLLISION_GROUP_NONE );
+	UTIL_PlayerBulletTrace( vecStart, vecEnd, info.m_vecDirShooting, MASK_SOLID, &traceFilter, &trace );
 
 #ifndef CLIENT_DLL
 	CUtlVector<CBaseEntity *> vecTracedEntities;
@@ -8762,18 +8465,6 @@ void CTFPlayer::FireBullet( CTFWeaponBase *pWpn, const FireBulletsInfo_t &info, 
 		trace_t pen_trace;
 		FOR_EACH_VEC( vecTracedEntities, i )
 		{
-			// Limit the number of pen targets in MvM if we're not charge-based
-			if ( TFGameRules()->IsMannVsMachineMode() && iChargedPenetration == 0 )
-			{
-				// For sniper class, treat iPenetrationLimit as a bool
-				bool bIsSniper = IsPlayerClass( TF_CLASS_SNIPER );
-				if ( bIsSniper && iPenetrationLimit == 0 && iPenetratedPlayerCount > 0 )
-					break;
-
-				if ( !bIsSniper && iPenetratedPlayerCount > iPenetrationLimit )
-					break;
-			}
-
 			CBaseEntity *pTarget = vecTracedEntities[i];
 
 			if ( !pTarget )
@@ -9290,35 +8981,32 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		maxfbspeed = MIN( flMaxDisguiseSpeed, maxfbspeed );
 	}
 
-	if ( !TFGameRules()->IsMannVsMachineMode() || !IsMiniBoss() ) // No aiming slowdown penalties for MiniBoss players in MVM
+	// if they're a sniper, and they're aiming, their speed must be 80 or less
+	if ( m_Shared.InCond( TF_COND_AIMING ) )
 	{
-		// if they're a sniper, and they're aiming, their speed must be 80 or less
-		if ( m_Shared.InCond( TF_COND_AIMING ) )
-		{
-			float flAimMax = 0;
+		float flAimMax = 0;
 
-			// Heavies are allowed to move slightly faster than a sniper when spun-up
-			if ( playerclass == TF_CLASS_HEAVYWEAPONS )
+		// Heavies are allowed to move slightly faster than a sniper when spun-up
+		if ( playerclass == TF_CLASS_HEAVYWEAPONS )
+		{
 			{
-				{
-					flAimMax = 110;
-				}
+				flAimMax = 110;
+			}
+		}
+		else
+		{
+			if ( GetActiveTFWeapon() && (GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_COMPOUND_BOW) )
+			{
+				flAimMax = 160;
 			}
 			else
 			{
-				if ( GetActiveTFWeapon() && (GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_COMPOUND_BOW) )
-				{
-					flAimMax = 160;
-				}
-				else
-				{
-					flAimMax = 80;
-				}
+				flAimMax = 80;
 			}
-			
-			CALL_ATTRIB_HOOK_FLOAT( flAimMax, mult_player_aiming_movespeed );
-			maxfbspeed = MIN( maxfbspeed, flAimMax );
 		}
+			
+		CALL_ATTRIB_HOOK_FLOAT( flAimMax, mult_player_aiming_movespeed );
+		maxfbspeed = MIN( maxfbspeed, flAimMax );
 	}
 
 #ifdef GAME_DLL
@@ -9379,14 +9067,7 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 		}
 	}
 
-	bool bCarryPenalty = true;
-
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		bCarryPenalty = false;
-	}
-
-	if ( m_Shared.IsCarryingObject() && bCarryPenalty && bAllowSlowing )
+	if ( m_Shared.IsCarryingObject() && bAllowSlowing )
 	{
 		// STAGING_ENGY
 		maxfbspeed *= 0.90f;
@@ -9461,18 +9142,6 @@ float CTFPlayer::TeamFortress_CalculateMaxSpeed( bool bIgnoreSpecialAbility /*= 
 			{
 				// Prevent other speed modifiers like GRU from making berzerker mode too fast.
 				maxfbspeed = heavy_max_speed;
-			}
-		}
-	}
-
-	// Mann Vs Machine mode has a speed penalty for carrying the flag
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			if ( HasTheFlag() && !IsMiniBoss() )
-			{
-				maxfbspeed *= tf_mvm_bot_flag_carrier_movement_penalty.GetFloat();
 			}
 		}
 	}
@@ -9653,19 +9322,6 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	{
 		if ( TFGameRules()->IsTruceActive() && ( iObjectType == OBJ_ATTACHMENT_SAPPER ) )
 			return CB_CANNOT_BUILD;
-
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			// If a human is placing a sapper
-			if ( !IsBot() && iObjectType == OBJ_ATTACHMENT_SAPPER )
-			{
-				// Only allow one Sapper of any kind in MvM
-				if ( GetNumObjects( iObjectType, BUILDING_MODE_ANY ) )
-					return CB_LIMIT_REACHED;
-
-				return ( ( GetAmmoCount( TF_AMMO_GRENADES2 ) > 0 ) ? CB_CAN_BUILD : CB_CANNOT_BUILD );
-			}
-		}
 	}
 
 #ifndef CLIENT_DLL
@@ -9680,58 +9336,6 @@ int CTFPlayer::CanBuild( int iObjectType, int iObjectMode )
 	// We can redeploy the object if we are carrying it.
 	CBaseObject* pObjType = GetObjectOfType( iObjectType, iObjectMode );
 	if ( pObjType && pObjType->IsCarried() )
-	{
-		return CB_CAN_BUILD;
-	}
-
-	// Special handling of "disposable" sentries
-	if ( TFGameRules()->GameModeUsesUpgrades() && iObjectType == OBJ_SENTRYGUN )
-	{
-		// If we have our main sentry, see if we're allowed to build disposables
-		if ( GetNumObjects( iObjectType, iObjectMode ) )
-		{
-			bool bHasPrimary = false;
-			int nDisposableCount = 0;
-			int nMaxDisposableCount = 0;
-			CALL_ATTRIB_HOOK_INT( nMaxDisposableCount, engy_disposable_sentries );
-			if ( nMaxDisposableCount )
-			{
-
-				for ( int i = GetObjectCount()-1; i >= 0; i-- )
-				{
-					CBaseObject *pObj = GetObject( i );
-					if ( pObj )
-					{
-						if ( !pObj->IsDisposableBuilding() )
-						{
-							bHasPrimary = true;
-						}
-						else
-						{
-							nDisposableCount++;
-						}
-					}
-				}
-
-				if ( bHasPrimary )
-				{
-					if ( nDisposableCount < nMaxDisposableCount )
-					{
-						return CB_CAN_BUILD;
-					}
-					else
-					{
-						return CB_LIMIT_REACHED;
-					}
-				}
-			}
-		}
-	}
-
-	// Allow MVM engineer bots to have multiple sentries.  Currently they only need this so
-	// they can appear to be carrying a new building when advancing their nest rather than
-	// transporting an existing building.
-	if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && IsBot() )
 	{
 		return CB_CAN_BUILD;
 	}
@@ -9782,14 +9386,6 @@ bool CTFPlayerShared::ShouldSuppressPrediction( void )
 //-----------------------------------------------------------------------------
 int CTFPlayerShared::CalculateObjectCost( CTFPlayer* pBuilder, int iObjectType )
 {
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( TFGameRules()->InSetup() || TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-		{
-			return 0;
-		}
-	}
-
 	int nCost = InternalCalculateObjectCost( iObjectType );
 
 	// Mini sentires are 30 metal cheaper
@@ -9860,9 +9456,6 @@ int CTFPlayer::GetNumObjects( int iObjectType, int iObjectMode /*= 0*/ )
 	for (int i = 0; i < GetObjectCount(); i++)
 	{
 		if ( !GetObject(i) )
-			continue;
-
-		if ( GetObject(i)->IsDisposableBuilding() )
 			continue;
 
 		if ( GetObject(i)->GetType() == iObjectType && 
@@ -10287,12 +9880,6 @@ void CTFPlayer::SetStepSoundTime( stepsoundtimes_t iStepSoundTime, bool bWalking
 //-----------------------------------------------------------------------------
 const char *CTFPlayer::GetOverrideStepSound( const char *pszBaseStepSoundName )
 {
-
-	if( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS && !IsMiniBoss() && !m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-		return "MVM.BotStep";
-	}
-
 	Assert( pszBaseStepSoundName );
 
 	struct override_sound_entry_t { int iOverrideIndex; const char *pszBaseSoundName; const char *pszNewSoundName; };
@@ -10332,24 +9919,6 @@ const char *CTFPlayer::GetOverrideStepSound( const char *pszBaseStepSoundName )
 			{ kFootstepSoundSet_Octopus,	"Dirt.StepRight",		"Octopus.StepCommon" },
 			{ kFootstepSoundSet_Octopus,	"Concrete.StepLeft",	"Octopus.StepCommon" },
 			{ kFootstepSoundSet_Octopus,	"Concrete.StepRight",	"Octopus.StepCommon" },
-
-			//
-			{ kFootstepSoundSet_HeavyGiant,		"",		"MVM.GiantHeavyStep" },
-
-			//
-			{ kFootstepSoundSet_SoldierGiant,	"",		"MVM.GiantSoldierStep" },
-
-			//
-			{ kFootstepSoundSet_DemoGiant,		"",		"MVM.GiantDemomanStep" },
-
-			//
-			{ kFootstepSoundSet_ScoutGiant,		"",		"MVM.GiantScoutStep" },
-
-			//
-			{ kFootstepSoundSet_PyroGiant,		"",		"MVM.GiantPyroStep" },
-
-			//
-			{ kFootstepSoundSet_SentryBuster,	"",		"MVM.SentryBusterStep" },
 
 			//
 			{ kFootstepSoundSet_TreasureChest,	"",		"Chest.Step" },
@@ -11114,11 +10683,6 @@ int	CTFPlayer::GetMaxAmmo( int iAmmoIndex, int iClassIndex /*= -1*/ )
 	return iMax;
 }
 
-bool CTFPlayer::IsMiniBoss( void ) const
-{
-	return m_bIsMiniBoss;
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -11527,12 +11091,6 @@ int CTFPlayerShared::GetSequenceForDeath( CBaseAnimating* pRagdoll, bool bBurnin
 {
 	if ( !pRagdoll )
 		return -1;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( m_pOuter && ( m_pOuter->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-			return -1;
-	}
 
 	int iDeathSeq = -1;
 // 	if ( bBurning )
@@ -12124,18 +11682,6 @@ void CTFPlayerShared::PulseRageBuff( ERageBuffSlot eBuffSlot )
 	if ( nBuffedFriends >= 5 )
 	{
 		g_AchievementMgrTF.OnAchievementEvent( ACHIEVEMENT_TF_SOLDIER_BUFF_FRIENDS );
-	}
-#else
-	// ACHIEVEMENT_TF_MVM_SOLDIER_BUFF_TEAM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( ( m_pOuter->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS ) && m_pOuter->IsPlayerClass( TF_CLASS_SOLDIER ) )
-		{
-			if ( nBuffedPlayers >= 5 )
-			{
-				m_pOuter->AwardAchievement( ACHIEVEMENT_TF_MVM_SOLDIER_BUFF_TEAM );
-			}
-		}
 	}
 #endif
 }

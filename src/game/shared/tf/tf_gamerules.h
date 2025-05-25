@@ -40,8 +40,6 @@
 	#define CTFGameRulesProxy C_TFGameRulesProxy
 	#define CBonusRoundLogic C_BonusRoundLogic
 #else
-	extern CUtlString s_strNextMvMPopFile;
-
 	extern BOOL no_cease_fire_text;
 	extern BOOL cease_fire;
 
@@ -61,7 +59,6 @@ class CTeamTrainWatcher;
 class CPhysicsProp;
 class CObjectSentrygun;
 class CGhost;
-class CUpgrades;
 
 extern ConVar	tf_avoidteammates;
 extern ConVar	tf_avoidteammates_pushaway;
@@ -70,38 +67,17 @@ extern ConVar	mp_tournament_redteamname;
 extern ConVar	tf_arena_force_class;
 extern ConVar	tf_arena_change_limit;
 extern ConVar	tf_ctf_bonus_time;
-extern ConVar	tf_mvm_respec_enabled;
 
 #ifdef GAME_DLL
 extern ConVar mp_tournament_prevent_team_switch_on_readyup;
 #endif
 
-#ifdef TF_RAID_MODE
-
-class CRaidLogic;
-class CBossBattleLogic;
-
-extern ConVar tf_gamemode_raid;
-extern ConVar tf_gamemode_creep_wave;
-extern ConVar tf_gamemode_boss_battle;
-
-#endif // TF_RAID_MODE
-
-class CMannVsMachineLogic;
-class CMannVsMachineUpgrades;
-
 //extern ConVar tf_populator_health_multiplier;
 //extern ConVar tf_populator_damage_multiplier;
-
-extern ConVar tf_mvm_defenders_team_size;
-extern ConVar tf_mvm_max_invaders;
 
 const int kLadder_TeamSize_6v6 = 6;
 const int kLadder_TeamSize_9v9 = 9;
 const int kLadder_TeamSize_12v12 = 12;
-
-//#define TF_MVM_FCVAR_CHEAT 0 /* Cheats enabled */
-#define TF_MVM_FCVAR_CHEAT FCVAR_CHEAT /* Cheats disabled */
 
 extern bool TF_IsHolidayActive( /*EHoliday*/ int eHoliday );
 #ifdef CLIENT_DLL
@@ -151,7 +127,6 @@ public:
 	void	InputPlayVOBlue( inputdata_t &inputdata );
 	void	InputPlayVO( inputdata_t &inputdata );
 	void	InputHandleMapEvent( inputdata_t &inputdata );
-	void	InputSetCustomUpgradesFile( inputdata_t &inputdata );
 	void	InputSetRoundRespawnFreezeEnabled( inputdata_t &inputdata );
 	void	InputSetMapForcedTruceDuringBossFight( inputdata_t &inputdata );
 
@@ -351,7 +326,6 @@ public:
 	// Send the end of round info displayed in the win panel
 	virtual void	SendWinPanelInfo( bool bGameOver ) OVERRIDE;
 	void			SendArenaWinPanelInfo( void );
-	void			SendPVEWinPanelInfo( void );
 
 	// Setup spawn points for the current round before it starts
 	virtual void	SetupSpawnPointsForRound( void );
@@ -447,18 +421,11 @@ public:
 	// Client connection/disconnection
 	virtual bool ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen );
 
-	virtual bool ShouldSkipAutoScramble( void ) OVERRIDE
-	{
-		return IsPVEModeActive();
-	}
-
 	bool			ShouldMakeChristmasAmmoPack( void );
 
 	void			UpdatePeriodicEvent( CTFPlayer *pPlayer, eEconPeriodicScoreEvents eEvent, uint32 nCount );
 
 	void			HandleMapEvent( inputdata_t &inputdata );
-
-	void			SetCustomUpgradesFile( inputdata_t &inputdata );
 
 	virtual bool	ShouldWaitToStartRecording( void );
 
@@ -578,26 +545,10 @@ public:
 #ifdef TF_CREEP_MODE
 bool IsCreepWaveMode( void ) const;
 #endif
-
-	bool IsMannVsMachineMode( void ) const { return m_bPlayingMannVsMachine; }
-
-	void SetMannVsMachineAlarmStatus( bool bStatus ){ m_bMannVsMachineAlarmStatus.Set( bStatus ); }
-	bool GetMannVsMachineAlarmStatus( void ){ return m_bMannVsMachineAlarmStatus; }
 	
 	bool IsQuickBuildTime( void );
 
-	bool GameModeUsesUpgrades( void );
-	bool GameModeUsesCurrency( void ) { return GameModeUsesUpgrades(); }
-	bool GameModeUsesMiniBosses( void ) { return IsMannVsMachineMode() || IsBountyMode(); }
 	bool GameModeUsesEscortPushLogic( void );
-
-	bool IsMannVsMachineRespecEnabled( void ) { return IsMannVsMachineMode() && tf_mvm_respec_enabled.GetBool(); }
-	bool CanPlayerUseRespec( CTFPlayer *pTFPlayer );
-
-#ifdef GAME_DLL
-	// Managed competitive matches should go through the End/StopCompetitiveMatch path
-	void EndManagedMvMMatch( bool bKickPlayersToParties );
-#endif
 
 	// Competitive games
 	bool IsCommunityGameMode( void ) const;
@@ -632,16 +583,7 @@ bool IsCreepWaveMode( void ) const;
 	void PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bool bState );
 #endif // GAME_DLL
 
-	bool IsDefaultGameMode( void );		// The absence of arena, mvm, tournament mode, etc
-
-	// Upgrades
-	int	GetCostForUpgrade( CMannVsMachineUpgrades *pUpgrade, int iItemSlot, int nClass, CTFPlayer *pPurchaser = NULL );
-	bool CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, attrib_definition_index_t iAttribIndex, CMannVsMachineUpgrades *pUpgrade );
-	int GetUpgradeTier( int iUpgrade );
-	bool IsUpgradeTierEnabled( CTFPlayer *pTFPlayer, int iItemSlot, int iUpgrade );
-	bool IsPVEModeActive( void ) const;						// return true if we are playing a PvE mode
-	bool IsPVEModeControlled( CBaseEntity *who ) const;		// return true for PvE opponents (ie: enemy bot team)
-	const char*		GetCustomUpgradesFile() { return m_pszCustomUpgradesFile.Get(); }
+	bool IsDefaultGameMode( void );		// The absence of arena, tournament mode, etc
 
 //=============================================================================
 // HPE_BEGIN:
@@ -907,11 +849,6 @@ bool IsCreepWaveMode( void ) const;
 	CRaidLogic	*GetRaidLogic( void ) const		{ return m_hRaidLogic.Get(); }
 #endif // TF_RAID_MODE
 
-	// Currency awarding
-	int		CalculateCurrencyAmount_CustomPack( int nAmount );											// If we should drop a custom currency pack, and how much money to put in - 0 means don't drop
-	int		CalculateCurrencyAmount_ByType( CurrencyRewards_t nType );									// How much to give players for specific items and events, i.e. cash collection bonus, small packs
-	int		DistributeCurrencyAmount( int nAmount, CTFPlayer *pTFPlayer = NULL, bool bShared = true, bool bCountAsDropped = false, bool bIsBonus = false );	// Distributes nAmount to a specific player or team
-
 	virtual bool StopWatchShouldBeTimedWin( void ) OVERRIDE;
 
 public:
@@ -1056,14 +993,6 @@ private:
 
 	float	m_flMatchSummaryTeleportTime;
 
-#ifdef TF_RAID_MODE
-	CHandle< CRaidLogic >		m_hRaidLogic;
-	CHandle< CBossBattleLogic > m_hBossBattleLogic;
-#endif // TF_RAID_MODE
-	
-	int		m_nCurrencyAccumulator;
-	int		m_iCurrencyPool;
-
 	float	m_flCheckPlayersConnectingTime;
 
 	CountdownTimer m_helltowerTimer;		// used for Halloween 2013 Announcer VO in plr_hightower_event
@@ -1113,8 +1042,6 @@ private:
 	CNetworkVar( bool, m_bPlayingHybrid_CTF_CP );
 	CNetworkVar( bool, m_bPlayingSpecialDeliveryMode );
 
-	CNetworkVar( bool, m_bPlayingMannVsMachine );
-	CNetworkVar( bool, m_bMannVsMachineAlarmStatus );
 	CNetworkVar( bool, m_bHaveMinPlayersToEnableReady );
 
 	CNetworkVar( bool, m_bBountyModeEnabled );
@@ -1135,20 +1062,13 @@ private:
 	CNetworkVar( bool, m_bRopesHolidayLightsAllowed );
 
 #ifdef GAME_DLL
-	float	m_flNextFlagAlarm;
-	float	m_flNextFlagAlert;
-
 	float	m_flSafeToLeaveTimer;
-
-	CBaseEntity *m_pUpgrades;
 #endif
 
 	CNetworkHandle( CTeamRoundTimer, m_hRedKothTimer );
 	CNetworkHandle( CTeamRoundTimer, m_hBlueKothTimer );
 
 	CNetworkVar( int, m_nMapHolidayType ); // Used by map authors to indicate this is a holiday map
-
-	CNetworkString( m_pszCustomUpgradesFile, MAX_PATH );
 
 	CNetworkVar( bool, m_bShowMatchSummary );
 	CNetworkVar( bool, m_bMapHasMatchSummaryStage );
@@ -1346,7 +1266,6 @@ public:
 	bool BAttemptMapVoteRollingMatch();
 	bool BIsManagedMatchEndImminent( void );
 
-	void ForceEnableUpgrades( int nState ) { m_nForceUpgrades = nState; }
 	void ForceEscortPushLogic( int nState ) { m_nForceEscortPushLogic = nState; }
 
 private:
@@ -1381,15 +1300,10 @@ private:
 	CNetworkVar( float, m_fHalloweenEffectDuration );
 	CNetworkVar( HalloweenScenarioType, m_halloweenScenario );
 
-	CNetworkVar( int, m_nForceUpgrades );
 	CNetworkVar( int, m_nForceEscortPushLogic );
 
-// MvM Helpers
 #ifdef GAME_DLL
 public:
-	void SetNextMvMPopfile ( const char * next );
-	const char * GetNextMvMPopfile ();
-
 	virtual void BalanceTeams( bool bRequireSwitcheesToBeDead );
 #endif
 };
@@ -1416,26 +1330,6 @@ inline float CTFGameRules::ItemTesting_GetBotAnimSpeed( void )
 		return (m_flItemTesting_BotAnimSpeed * pHostTimescale->GetFloat());
 	return m_flItemTesting_BotAnimSpeed;
 }
-
-#ifdef TF_RAID_MODE
-
-inline bool CTFGameRules::IsRaidMode( void ) const
-{
-#ifdef GAME_DLL
-	return m_hRaidLogic != NULL; 
-#else
-	return tf_gamemode_raid.GetBool();
-#endif
-}
-
-
-
-inline bool CTFGameRules::IsBossBattleMode( void ) const
-{
-	return tf_gamemode_boss_battle.GetBool();
-}
-
-#endif // TF_RAID_MODE
 
 #ifdef TF_CREEP_MODE
 

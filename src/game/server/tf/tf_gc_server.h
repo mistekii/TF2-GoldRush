@@ -36,21 +36,6 @@ class CReliableMessageQueue;
 
 #ifdef ENABLE_GC_MATCHMAKING
 
-class CMvMVictoryInfo
-{
-public:
-	int m_nLobbyId;
-	CUtlString m_sChallengeName;
-#ifdef USE_MVM_TOUR
-	CUtlString m_sMannUpTourOfDuty;
-#endif // USE_MVM_TOUR
-	CUtlVector<uint64> m_vPlayerIds;
-	CUtlVector<bool> m_vSquadSurplus;
-	RTime32 m_tEventTime;
-
-	void Init ( CTFGSLobby *pLobby );
-};
-
 class CMatchInfo
 {
 	friend class CTFGCServerSystem;
@@ -449,9 +434,6 @@ public:
 
 	// Sends match results. Expects the managed match be ended.
 
-	/// MvM game rules processing lets us the players have won
-	void SendMvMVictoryResult();
-
 	// Takes ownership of matchResultMsg
 	void SendCompetitiveMatchResult( GCSDK::CProtoBufMsg< CMsgGC_Match_Result > *matchResultMsg );
 
@@ -548,7 +530,6 @@ private:
 	// Callbacks from the GC
 	void ChangeMatchPlayerTeamsResponse( bool bSuccess );
 	bool CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer );
-	bool CanKickPlayerMvM( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer );
 	void VoteKickPlayerRequestResponse( CSteamID voterSteamID,
 	                                    CSteamID targetSteamID,
 	                                    TFVoteKickReason eReason,
@@ -589,8 +570,6 @@ private:
 	bool m_bWaitingForNewMatchID;
 	float m_flWaitingForNewMatchTime;
 	bool m_bCreatingVoteKick = false;
-
-	CMvMVictoryInfo m_mvmVictoryInfo;
 
 	// Check for match players who have been disconnected for long enough to warrant an abandon and do so.
 	void MatchPlayerAbandonThink();

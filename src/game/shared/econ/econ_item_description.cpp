@@ -376,7 +376,6 @@ void CEconItemDescription::GenerateDescriptionLines( const CLocalizationProvider
 		Generate_MapContributor( pLocalizationProvider, pEconItem );
 		Generate_MapStampBundleTooltip( pLocalizationProvider, pEconItem );
 		Generate_FriendlyHat( pLocalizationProvider, pEconItem );
-		Generate_SquadSurplusClaimedBy( pLocalizationProvider, pEconItem );
 		Generate_DynamicRecipe( pLocalizationProvider, pEconItem );
 #endif // PROJECT_TF
 		Generate_XifierToolTargetItem( pLocalizationProvider, pEconItem );
@@ -2042,32 +2041,6 @@ void CEconItemDescription::Generate_SaxxyAwardDesc( const CLocalizationProvider 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CEconItemDescription::Generate_SquadSurplusClaimedBy( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
-{
-	Assert( pLocalizationProvider );
-	Assert( pEconItem );
-
-	static CSchemaAttributeDefHandle pAttrDef_SquadSurplusClaimer( "squad surplus claimer id" );
-	static CSchemaAttributeDefHandle pAttrDef_EventDate( "event date" );
-
-	attrib_value_t val_GifterId;
-	if ( pAttrDef_SquadSurplusClaimer&& pEconItem->FindAttribute( pAttrDef_SquadSurplusClaimer, &val_GifterId ) )
-	{
-		// Who gifted us this present?
-		AddAttributeDescription( pLocalizationProvider, pAttrDef_SquadSurplusClaimer, val_GifterId );
-
-		// Do we also have (optional) information about when it happened?
-		attrib_value_t val_EventData;
-		if ( pAttrDef_EventDate && pEconItem->FindAttribute( pAttrDef_EventDate, &val_EventData ) )
-		{
-			AddAttributeDescription( pLocalizationProvider, pAttrDef_EventDate, val_EventData );
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CEconItemDescription::Generate_DynamicRecipe( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
 {
 	// Gather our attributes we care about
@@ -3582,20 +3555,12 @@ void CEconItemDescription::AddAttributeDescription( const CLocalizationProvider 
 	enum
 	{
 		kUserGeneratedAttributeType_None				= 0,
-		kUserGeneratedAttributeType_MVMEngineering		= 1,
-		kUserGeneratedAttributeType_HalloweenSpell		= 2
+		kUserGeneratedAttributeType_HalloweenSpell		= 1
 	};
 
-	// On TF, these user-generated attributes can be from upgrade cards which only apply in MvM.
-	// We then colorize them based on whether they'll be active, with the caveat that out-of-game
-	// views always say yes (GC, loadout when not on a server, etc.).
-	if ( pAttribDef->GetUserGenerationType() == kUserGeneratedAttributeType_MVMEngineering && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
-	{
-		eDefaultAttribColor = ATTRIB_COL_ITEMSET_MISSING;
-	}
 	// They can also be from Halloween spells. These are intended to expire after Halloween in any
 	// event, but for display purposes they'll appear in grey unless the holiday is active.
-	else if ( pAttribDef->GetUserGenerationType() == kUserGeneratedAttributeType_HalloweenSpell && !EconHolidays_IsHolidayActive( kHoliday_Halloween, CRTime::RTime32TimeCur() ) )
+	if ( pAttribDef->GetUserGenerationType() == kUserGeneratedAttributeType_HalloweenSpell && !EconHolidays_IsHolidayActive( kHoliday_Halloween, CRTime::RTime32TimeCur() ) )
 	{
 		eDefaultAttribColor = ATTRIB_COL_ITEMSET_MISSING;
 	}

@@ -62,7 +62,6 @@ const char *s_pStatStrings[ TFSTAT_TOTAL ] =
 	"TFSTAT_DAMAGE_RANGED",
 	"TFSTAT_DAMAGE_RANGED_CRIT_RANDOM",
 	"TFSTAT_DAMAGE_RANGED_CRIT_BOOSTED",
-	"TFSTAT_REVIVED",
 };
 
 const char *s_pMapStatStrings[ TFMAPSTAT_TOTAL ] =
@@ -486,7 +485,6 @@ const char* GetGameTypeID()
 	ConVarRef tf_gamemode_ctf( "tf_gamemode_ctf" );
 	ConVarRef tf_gamemode_sd( "tf_gamemode_sd" );
 	ConVarRef tf_gamemode_payload( "tf_gamemode_payload" );
-	ConVarRef tf_gamemode_mvm( "tf_gamemode_mvm" );
 
 	const char* pszGameTypeID = NULL;
 	if ( tf_gamemode_arena.GetBool() )
@@ -508,10 +506,6 @@ const char* GetGameTypeID()
 	else if ( tf_gamemode_payload.GetBool() )
 	{
 		pszGameTypeID = "payload";
-	}
-	else if ( tf_gamemode_mvm.GetBool() )
-	{
-		pszGameTypeID = "mvm";
 	}
 	else
 	{

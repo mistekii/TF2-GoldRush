@@ -696,19 +696,6 @@ void CTFStunBall::ApplyBallImpactEffectOnVictim( CBaseEntity *pOther )
 			flStunDuration += 1.0;
 		}
 
-		// MvM bots
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() && pPlayer->IsBot() )
-		{
-			// Distance mod
-			flStunAmount = ( bMax ) ? 1.f : RemapValClamped( flLifeTimeRatio, 0.1f, 0.99f, 0.5f, 0.75 );
-
-			bool bBoss = TFGameRules() && TFGameRules()->GameModeUsesMiniBosses() && ( pPlayer->IsMiniBoss() || pPlayer->GetModelScale() > 1.0f );
-			if ( bMax && !bBoss )
-			{
-				iStunFlags |= TF_STUN_CONTROLS; 
-			}
-		}
-
 		CTF_GameStats.Event_PlayerStunBall( pOwner, ( bMax ) ? true : false );
 
 		if ( pPlayer->GetWaterLevel() != WL_Eyes )

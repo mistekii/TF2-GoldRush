@@ -13,8 +13,6 @@
 #include <coordsize.h>
 #include "tf_matchmaking_shared.h"
 
-#include "tf_mann_vs_machine_stats.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "tf_gc_server.h"
 
 #define STATS_SEND_FREQUENCY 1.f
@@ -35,12 +33,9 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayerResource, DT_TFPlayerResource )
 	SendPropArray3( SENDINFO_ARRAY3( m_iHealing ), SendPropInt( SENDINFO_ARRAY( m_iHealing ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iHealingAssist ), SendPropInt( SENDINFO_ARRAY( m_iHealingAssist ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iDamageBlocked ), SendPropInt( SENDINFO_ARRAY( m_iDamageBlocked ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iCurrencyCollected ), SendPropInt( SENDINFO_ARRAY( m_iCurrencyCollected ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iBonusPoints ), SendPropInt( SENDINFO_ARRAY( m_iBonusPoints ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iPlayerLevel ), SendPropInt( SENDINFO_ARRAY( m_iPlayerLevel ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iStreaks ), SendPropInt( SENDINFO_ARRAY( m_iStreaks ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iUpgradeRefundCredits ), SendPropInt( SENDINFO_ARRAY( m_iUpgradeRefundCredits ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iBuybackCredits ), SendPropInt( SENDINFO_ARRAY( m_iBuybackCredits ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropInt( SENDINFO( m_iPartyLeaderRedTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_iPartyLeaderBlueTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_iEventTeamStatus ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
@@ -56,8 +51,6 @@ LINK_ENTITY_TO_CLASS( tf_player_manager, CTFPlayerResource );
 //-----------------------------------------------------------------------------
 CTFPlayerResource::CTFPlayerResource( void )
 {
-	ListenForGameEvent( "mvm_wave_complete" );
-
 	m_flNextDamageAndHealingSend = 0.f;
 
 	m_iPartyLeaderRedTeamIndex = 0;
@@ -70,14 +63,6 @@ CTFPlayerResource::CTFPlayerResource( void )
 //-----------------------------------------------------------------------------
 void CTFPlayerResource::FireGameEvent( IGameEvent * event )
 {
-	const char *pszEvent = event->GetName();
-
-	if ( !Q_strcmp( pszEvent, "mvm_wave_complete" ) )
-	{
-		// Force a re-send on wave complete
-		m_flNextDamageAndHealingSend = 0.f;
-		UpdatePlayerData();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -224,7 +209,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 			m_iHealing.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING] );
 			m_iHealingAssist.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_HEALING_ASSIST] );
 			m_iDamageBlocked.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_BLOCKED] );
-			m_iCurrencyCollected.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_CURRENCY_COLLECTED] );
 			m_iBonusPoints.Set( iIndex, pTFPlayerStats->statsCurrentRound.m_iStat[TFSTAT_BONUS_POINTS] );
 			m_iPlayerLevel.Set( iIndex, pTFPlayer->GetExperienceLevel() );
 		}
@@ -243,16 +227,9 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 	if ( m_iTotalScore.Get( iIndex ) != iTotalScore )
 	{
 		int nDelta = iTotalScore -  m_iTotalScore.Get( iIndex );
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			MannVsMachineStats_PlayerEvent_PointsChanged( pTFPlayer, nDelta );
-		}
-		else
-		{
-			// Kill eater points-scored tracking.  Increment all equipped items with this kill eater type.  
-			// We only do this when we're NOT in MvM
-			HatAndMiscEconEntities_OnOwnerKillEaterEventNoParter( pTFPlayer, kKillEaterEvent_PointsScored, nDelta );
-		}
+
+		// Kill eater points-scored tracking.  Increment all equipped items with this kill eater type.  
+		HatAndMiscEconEntities_OnOwnerKillEaterEventNoParter( pTFPlayer, kKillEaterEvent_PointsScored, nDelta );
 	}
 		
 	m_iTotalScore.Set( iIndex, iTotalScore );
@@ -280,16 +257,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 	for ( int streak_type = 0; streak_type < CTFPlayerShared::kTFStreak_COUNT; streak_type++ )
 	{
 		m_iStreaks.Set( iIndex * CTFPlayerShared::kTFStreak_COUNT + streak_type, pTFPlayer->m_Shared.GetStreak( (CTFPlayerShared::ETFStreak)streak_type ) );
-	}
-
-	if ( g_pPopulationManager )
-	{
-		// Only update when we have new data
-		int nRespecs = g_pPopulationManager->GetNumRespecsAvailableForPlayer( pTFPlayer );
-		m_iUpgradeRefundCredits.Set( iIndex, nRespecs );
-
-		int nBuybacks = g_pPopulationManager->GetNumBuybackCreditsForPlayer( pTFPlayer );
-		m_iBuybackCredits.Set( iIndex, nBuybacks );
 	}
 
 	CSteamID steamID;

@@ -21,7 +21,6 @@
 #include "team_control_point_master.h"
 #include "steamworks_gamestats.h"
 #include "vote_controller.h"
-#include "tf_mann_vs_machine_stats.h"
 
 #include "tf_matchmaking_shared.h"
 
@@ -1027,7 +1026,7 @@ void CTFGameStats::Event_PlayerFiredWeapon( CTFPlayer *pPlayer, bool bCritical )
 void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDamageInfo &info, int iDamageTaken )
 {
 	// defensive guard against insanely huge damage values that apparently get into the stats system once in a while -- ignore insane values
-	const int INSANE_PLAYER_DAMAGE = TFGameRules()->IsMannVsMachineMode() ? 5000 : 1500;
+	const int INSANE_PLAYER_DAMAGE = 1500;
 
 	if ( sv_cheats && !sv_cheats->GetBool() )
 	{
@@ -1086,26 +1085,6 @@ void CTFGameStats::Event_PlayerDamage( CBasePlayer *pBasePlayer, const CTakeDama
 		if ( round )
 		{
 			round->m_Summary.iDamageDone += iDamageTaken;
-		}
-
-		//Report MvM damage to bots
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-			if ( pStats )
-			{
-				if ( pTarget && pTarget->IsBot() )
-				{
-					if ( pTarget->IsMiniBoss() )
-					{
-						pStats->PlayerEvent_DealtDamageToGiants( pAttacker, iDamageTaken );
-					}
-					else
-					{
-						pStats->PlayerEvent_DealtDamageToBots( pAttacker, iDamageTaken );
-					}
-				}
-			}
 		}
 	}
 
@@ -2778,20 +2757,6 @@ void CTFGameStats::Event_TeamChange( CTFPlayer* pPlayer, int oldTeam, int newTea
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Records players touching currency packs - primarily MvM, but future modes will likely use
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerCollectedCurrency( CBasePlayer *pPlayer, int nAmount )
-{
-	Assert( pPlayer );
-
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	if ( pTFPlayer )
-	{
-		IncrementStat( pTFPlayer, TFSTAT_CURRENCY_COLLECTED, nAmount );
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Records the item set a player is using and for how long (until class, map, server or loadout  change)
 //-----------------------------------------------------------------------------
 void CTFGameStats::Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceReport )
@@ -2873,14 +2838,6 @@ void CTFGameStats::Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceRe
 		stats.loadoutStats.Set( pPlayer->GetPlayerClass()->GetClassIndex() );
 	}
 #endif
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerRevived( CTFPlayer *pPlayer )
-{
-	IncrementStat( pPlayer, TFSTAT_REVIVED, 1 );
 }
 
 //-----------------------------------------------------------------------------

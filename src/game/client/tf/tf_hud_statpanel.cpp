@@ -79,8 +79,6 @@ BEGIN_DMXELEMENT_UNPACK( ClassStats_t )
 	// RoundStats_t		accumulated;
 	// RoundStats_t		max;
 	// RoundStats_t		currentRound;
-	// RoundStats_t		accumulatedMVM;
-	// RoundStats_t		maxMVM;
 END_DMXELEMENT_UNPACK( ClassStats_t, s_ClassStatsUnpack )
 
 BEGIN_DMXELEMENT_UNPACK( MapStats_t )
@@ -96,8 +94,8 @@ TFStatType_t g_statPriority[] = { TFSTAT_HEADSHOTS, TFSTAT_BACKSTABS, TFSTAT_MAX
 	TFSTAT_HEALTHLEACHED, TFSTAT_POINTSSCORED, TFSTAT_PLAYTIME, TFSTAT_BONUS_POINTS };
 // stat types that we don't display records for, kept in this list just so we can assert all stats appear in one list or the other
 TFStatType_t g_statUnused[] = { TFSTAT_DEATHS, TFSTAT_UNDEFINED, TFSTAT_SHOTS_FIRED, TFSTAT_SHOTS_HIT, TFSTAT_FIREDAMAGE, TFSTAT_BLASTDAMAGE,
-	TFSTAT_DAMAGETAKEN, TFSTAT_HEALTHKITS, TFSTAT_AMMOKITS, TFSTAT_CLASSCHANGES, TFSTAT_CRITS, TFSTAT_SUICIDES, TFSTAT_CURRENCY_COLLECTED, TFSTAT_DAMAGE_ASSIST, TFSTAT_HEALING_ASSIST, 
-	TFSTAT_DAMAGE_BOSS, TFSTAT_DAMAGE_BLOCKED, TFSTAT_DAMAGE_RANGED, TFSTAT_DAMAGE_RANGED_CRIT_RANDOM, TFSTAT_DAMAGE_RANGED_CRIT_BOOSTED, TFSTAT_REVIVED, TFSTAT_THROWABLEHIT, TFSTAT_THROWABLEKILL, TFSTAT_KILLS_RUNECARRIER, TFSTAT_FLAGRETURNS,
+	TFSTAT_DAMAGETAKEN, TFSTAT_HEALTHKITS, TFSTAT_AMMOKITS, TFSTAT_CLASSCHANGES, TFSTAT_CRITS, TFSTAT_SUICIDES, TFSTAT_DAMAGE_ASSIST, TFSTAT_HEALING_ASSIST, 
+	TFSTAT_DAMAGE_BOSS, TFSTAT_DAMAGE_BLOCKED, TFSTAT_DAMAGE_RANGED, TFSTAT_DAMAGE_RANGED_CRIT_RANDOM, TFSTAT_DAMAGE_RANGED_CRIT_BOOSTED, TFSTAT_THROWABLEHIT, TFSTAT_THROWABLEKILL, TFSTAT_KILLS_RUNECARRIER, TFSTAT_FLAGRETURNS,
 	TFSTAT_KILLSTREAK_MAX };
 
 // priority order of stats to display record for; earlier position in list is highest
@@ -131,33 +129,6 @@ const char *g_szLocalizedRecordText[] =
 	"#StatPanel_SentryKills",		
 	"#StatPanel_Teleports",
 	"#StatPanel_BonusPoints"
-};
-
-const char *g_szLocalizedMVMRecordText[] =
-{
-	"",
-	"[shots hit]",
-	"[shots fired]",
-	"#StatPanel_MVM_Kills",	
-	"[deaths]",
-	"#StatPanel_MVM_DamageDealt",
-	"#StatPanel_MVM_Captures",
-	"#StatPanel_MVM_Defenses",
-	"#StatPanel_MVM_Dominations",
-	"#StatPanel_MVM_Revenge",
-	"#StatPanel_MVM_PointsScored",
-	"#StatPanel_MVM_BuildingsDestroyed",
-	"#StatPanel_MVM_Headshots",
-	"#StatPanel_MVM_PlayTime",
-	"#StatPanel_MVM_Healing",
-	"#StatPanel_MVM_Invulnerable",
-	"#StatPanel_MVM_KillAssists",
-	"#StatPanel_MVM_Backstabs",
-	"#StatPanel_MVM_HealthLeached",
-	"#StatPanel_MVM_BuildingsBuilt",
-	"#StatPanel_MVM_SentryKills",		
-	"#StatPanel_MVM_Teleports",
-	"#StatPanel_MVM_BonusPoints"
 };
 
 
@@ -281,21 +252,10 @@ void CTFStatPanel::UpdateStats( int iClass, const RoundStats_t &stats, bool bAli
 		return;
 
 	ClassStats_t &classStats = GetClassStats( iClass );
-
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
-	if ( bMVM )
-	{
-		classStats.AccumulateMVMRound( stats );
-	}
-	else
-	{
-		classStats.AccumulateRound( stats );
-	}
+	classStats.AccumulateRound( stats );
 
 	// sentry kills is a max value rather than a count, meaningless to accumulate
 	classStats.accumulated.m_iStat[TFSTAT_MAXSENTRYKILLS] = 0;	
-	classStats.accumulatedMVM.m_iStat[TFSTAT_MAXSENTRYKILLS] = 0;
 
 	ResetDisplayedStat();
 	m_iCurStatClass = iClass;
@@ -309,18 +269,11 @@ void CTFStatPanel::UpdateStats( int iClass, const RoundStats_t &stats, bool bAli
 			continue;
 
 		int iCur = stats.m_iStat[statType];
-		int iMax = ( bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType] );
+		int iMax = ( classStats.max.m_iStat[statType] );
 		if ( iCur > iMax )
 		{
 			// Record was set, remember what stat set a record.
-			if ( bMVM )
-			{
-				classStats.maxMVM.m_iStat[statType] = iCur;
-			}
-			else
-			{
-				classStats.max.m_iStat[statType] = iCur;
-			}
+			classStats.max.m_iStat[statType] = iCur;
 
 			m_iCurStatValue = iCur;
 			m_statType = statType;
@@ -416,11 +369,9 @@ void CTFStatPanel::TestStatPanel( TFStatType_t statType, RecordBreakType_t recor
 		return;
 	}
 
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
 	m_iCurStatClass = pPlayer->GetPlayerClass()->GetClassIndex();
 	ClassStats_t &classStats = GetClassStats( m_iCurStatClass );
-	m_iCurStatValue = bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType];
+	m_iCurStatValue = classStats.max.m_iStat[statType];
 	m_iCurStatTeam = pPlayer->GetTeamNumber();
 
 	ShowStatPanel( m_iCurStatClass, m_iCurStatTeam, m_iCurStatValue, statType, recordType, false );
@@ -484,14 +435,6 @@ void CTFStatPanel::WriteStats( void )
 		CDmxElement *pMax = CreateDmxElement( "RoundStats_t" );
 		pMax->AddAttributesFromStructure( &stat.max, s_RoundStatsUnpack );
 		pClass->SetValue( "max", pMax );
-
-		CDmxElement *pAccumulatedMVM = CreateDmxElement( "RoundStats_t" );
-		pAccumulatedMVM->AddAttributesFromStructure( &stat.accumulatedMVM, s_RoundStatsUnpack );
-		pClass->SetValue( "accumulatedmvm", pAccumulatedMVM );
-
-		CDmxElement *pMaxMVM = CreateDmxElement( "RoundStats_t" );
-		pMaxMVM->AddAttributesFromStructure( &stat.maxMVM, s_RoundStatsUnpack );
-		pClass->SetValue( "maxmvm", pMaxMVM );
 	}
 
 	CDmxAttribute *pMapStatsList = pPlayerStats->AddAttribute( "aMapStats" );
@@ -618,18 +561,6 @@ bool CTFStatPanel::ReadStats( void )
 		{
 			pMax->UnpackIntoStructure( &stat.max, sizeof( stat.max ), s_RoundStatsUnpack );
 		}
-
-		CDmxElement *pAccumulatedMVM = pClass->GetValue< CDmxElement * >( "accumulatedMVM" );
-		if ( pAccumulatedMVM )
-		{
-			pAccumulatedMVM->UnpackIntoStructure( &stat.accumulatedMVM, sizeof( stat.accumulatedMVM ), s_RoundStatsUnpack );
-		}
-
-		CDmxElement *pMaxMVM = pClass->GetValue< CDmxElement * >( "maxMVM" );
-		if ( pMaxMVM )
-		{
-			pMaxMVM->UnpackIntoStructure( &stat.maxMVM, sizeof( stat.maxMVM ), s_RoundStatsUnpack );
-		}
 	}
 
 	const CUtlVector< CDmxElement* > &aMapStatsList = pPlayerStats->GetArray< CDmxElement * >( "aMapStats" );
@@ -703,15 +634,6 @@ int CTFStatPanel::CalcCRC( int iSteamID )
 void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFStatType_t statType, RecordBreakType_t recordBreakType,
 								 bool bAlive )
 {
-	bool bMVM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
-	// If this is MvM mode and we're looking at the round end, dont show the stats
-	// panel because the PVEWinPanel will be up
-	if( bMVM && TFGameRules()->State_Get() == GR_STATE_TEAM_WIN )
-	{
-		return;
-	}
-
 	ClassStats_t &classStats = GetClassStats( iClass );
 	vgui::Label *pLabel = dynamic_cast<Label *>( FindChildByName( "summaryLabel" ) );
 	if ( !pLabel )
@@ -729,7 +651,7 @@ void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFSt
 		char szCur[32],szBest[32];
 		wchar_t wzCur[32],wzBest[32];
 		GetStatValueAsString( iCurStatValue, statType, szCur, ARRAYSIZE( szCur ) );
-		GetStatValueAsString( bMVM ? classStats.maxMVM.m_iStat[statType] : classStats.max.m_iStat[statType], statType, szBest, ARRAYSIZE( szBest ) );
+		GetStatValueAsString( classStats.max.m_iStat[statType], statType, szBest, ARRAYSIZE( szBest ) );
 		g_pVGuiLocalize->ConvertANSIToUnicode( szCur, wzCur, sizeof( wzCur ) );
 		g_pVGuiLocalize->ConvertANSIToUnicode( szBest, wzBest, sizeof( wzBest ) );
 		wchar_t *wzFormat = g_pVGuiLocalize->Find( "#StatPanel_Format_Close" );
@@ -745,7 +667,7 @@ void CTFStatPanel::ShowStatPanel( int iClass, int iTeam, int iCurStatValue, TFSt
 		SetDialogVariable( "stattextlarge", szValue );
 	}
 
-	SetDialogVariable( "statdesc", g_pVGuiLocalize->Find( CFmtStr( "%s_%s", bMVM ? g_szLocalizedMVMRecordText[statType] : g_szLocalizedRecordText[statType], 
+	SetDialogVariable( "statdesc", g_pVGuiLocalize->Find( CFmtStr( "%s_%s", g_szLocalizedRecordText[statType], 
 		pRecordTextSuffix[recordBreakType] ) ) );
 
 	// Set the class name. We can't use a dialog variable because it's a string that's already
@@ -1017,7 +939,7 @@ float CTFStatPanel::GetTotalHoursPlayed( void )
 
 	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; iClass++ )
 	{		
-		totalTimePlayed += GetClassStats( iClass ).accumulated.m_iStat[ TFSTAT_PLAYTIME ] + GetClassStats( iClass ).accumulatedMVM.m_iStat[ TFSTAT_PLAYTIME ];
+		totalTimePlayed += GetClassStats( iClass ).accumulated.m_iStat[ TFSTAT_PLAYTIME ];
 	}
 	
 	return totalTimePlayed / ( 60.0f * 60.0f );

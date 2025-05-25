@@ -21,9 +21,6 @@
 	#define MDEBUG(x)
 #endif
 
-		   
-#define	MAX_MVM_WAVE_STRING 256
-
 
 //-----------------------------------------------------------------------------
 // Teams.
@@ -45,11 +42,6 @@ enum
 #define TF_TEAM_AUTOASSIGN (TF_TEAM_COUNT + 1 )
 
 #define TF_TEAM_HALLOWEEN	TF_TEAM_AUTOASSIGN
-
-#define TF_TEAM_PVE_INVADERS	TF_TEAM_BLUE		// invading bot team in mann vs machine
-#define TF_TEAM_PVE_DEFENDERS	TF_TEAM_RED			// defending player team in mann vs machine
-
-#define TF_TEAM_PVE_INVADERS_GIANTS 4				// hack for replacing visuals via itemdef
 
 extern const char *g_aTeamNames[TF_TEAM_COUNT];
 extern color32 g_aTeamColors[TF_TEAM_COUNT];
@@ -111,28 +103,6 @@ inline bool BAreTeamsEnemies( int team, int otherTeam )
 	return BIsGameTeam( team ) && BIsGameTeam( otherTeam ) && team != otherTeam;
 }
 
-enum PowerupBottleType_t
-{
-	POWERUP_BOTTLE_NONE,
-
-	POWERUP_BOTTLE_CRITBOOST,
-	POWERUP_BOTTLE_UBERCHARGE,
-	POWERUP_BOTTLE_RECALL,
-	POWERUP_BOTTLE_REFILL_AMMO,
-	POWERUP_BOTTLE_BUILDINGS_INSTANT_UPGRADE,
-	POWERUP_BOTTLE_RADIUS_STEALTH,
-
-	POWERUP_BOTTLE_TOTAL
-};
-
-enum 
-{
-	MVM_EVENT_POPFILE_NONE = 0,
-	MVM_EVENT_POPFILE_HALLOWEEN,
-
-	MVM_EVENT_POPFILE_MAX_TYPES,
-};
-
 enum
 {
 	DRAW_ARROW_UP,
@@ -168,8 +138,6 @@ enum
 
 #define PANEL_ARENA_WIN		"arenawinpanel"
 #define PANEL_ARENA_TEAM	"arenateampanel"
-
-#define PANEL_PVE_WIN		"pvewinpanel"
 
 #define PANEL_GIVEAWAY_ITEM		"giveaway_item"
 
@@ -275,7 +243,6 @@ enum ETFGameType
 	TF_GAMETYPE_CP,
 	TF_GAMETYPE_ESCORT,
 	TF_GAMETYPE_ARENA,
-	TF_GAMETYPE_MVM,
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -653,7 +620,7 @@ enum ETFCond
 	TF_COND_REGENONDAMAGEBUFF                = 27,
 	TF_COND_MARKEDFORDEATH                   = 28,
 	TF_COND_NOHEALINGDAMAGEBUFF              = 29,
-	TF_COND_SPEED_BOOST                      = 30, // = 32
+	TF_COND_SPEED_BOOST                      = 30, // = 30
 	TF_COND_CRITBOOSTED_PUMPKIN              = 31, // Brandon hates bits
 	TF_COND_CRITBOOSTED_USER_BUFF            = 32,
 	TF_COND_CRITBOOSTED_DEMO_CHARGE          = 33,
@@ -661,77 +628,75 @@ enum ETFCond
 	TF_COND_CRITBOOSTED_BONUS_TIME           = 35,
 	TF_COND_CRITBOOSTED_CTF_CAPTURE          = 36,
 	TF_COND_CRITBOOSTED_ON_KILL              = 37, // KGB, etc.
-	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 38, // =40
+	TF_COND_CANNOT_SWITCH_FROM_MELEE         = 38,
 	TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK        = 39, // 35% defense! Still damaged by crits.
-	TF_COND_REPROGRAMMED                     = 40, // Bots only
-	TF_COND_CRITBOOSTED_RAGE_BUFF            = 41,
-	TF_COND_DEFENSEBUFF_HIGH                 = 42, // 75% defense! Still damaged by crits.
-	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 43, // Sniper Rage - Charge time speed up
-	TF_COND_DISGUISE_WEARINGOFF              = 44, // Applied for half-second post-disguise
-	TF_COND_MARKEDFORDEATH_SILENT            = 45, // Sans sound
-	TF_COND_DISGUISED_AS_DISPENSER           = 46,
-	TF_COND_SAPPED                           = 47, // Bots only
-	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 48, // =50
-	TF_COND_INVULNERABLE_USER_BUFF           = 49,
-	TF_COND_HALLOWEEN_BOMB_HEAD              = 50,
-	TF_COND_HALLOWEEN_THRILLER               = 51,
-	TF_COND_RADIUSHEAL_ON_DAMAGE             = 52,
-	TF_COND_CRITBOOSTED_CARD_EFFECT          = 53,
-	TF_COND_INVULNERABLE_CARD_EFFECT         = 54,
-	TF_COND_STEALTHED_USER_BUFF              = 55, // Any class can have this
-	TF_COND_MEDIGUN_DEBUFF                   = 56,
-	TF_COND_STEALTHED_USER_BUFF_FADING       = 57,
-	TF_COND_PREVENT_DEATH                    = 58,
-	TF_COND_MVM_BOT_STUN_RADIOWAVE           = 59, // Bots only
-	TF_COND_HALLOWEEN_SPEED_BOOST            = 60,
-	TF_COND_HALLOWEEN_QUICK_HEAL             = 61,
-	TF_COND_HALLOWEEN_GIANT                  = 62,
-	TF_COND_HALLOWEEN_TINY                   = 63,
-	TF_COND_HALLOWEEN_IN_HELL                = 64,
-	TF_COND_HALLOWEEN_GHOST_MODE             = 65, // =70
-	TF_COND_MINICRITBOOSTED_ON_KILL          = 66,
-	TF_COND_OBSCURED_SMOKE                   = 67,
-	TF_COND_BLASTJUMPING                     = 68,
-	TF_COND_HALLOWEEN_KART                   = 69, 
-	TF_COND_HALLOWEEN_KART_DASH              = 70,
-	TF_COND_BALLOON_HEAD                     = 71, // =76 larger head, lower-gravity-feeling jumps
-	TF_COND_MELEE_ONLY                       = 72, // =77 melee only
-	TF_COND_SWIMMING_CURSE                   = 73, // player movement become swimming movement
-	TF_COND_FREEZE_INPUT                     = 74, // freezes player input
-	TF_COND_HALLOWEEN_KART_CAGE              = 75, // =80 attach cage model to player while in kart
-	TF_COND_DONOTUSE_0                       = 76,
-	TF_COND_RUNE_STRENGTH                    = 77,
-	TF_COND_RUNE_HASTE                       = 78,
-	TF_COND_RUNE_REGEN                       = 79,
-	TF_COND_RUNE_RESIST                      = 80,
-	TF_COND_RUNE_VAMPIRE                     = 81,
-	TF_COND_RUNE_REFLECT                     = 82,
-	TF_COND_RUNE_PRECISION                   = 83,
-	TF_COND_RUNE_AGILITY                     = 84,
-	TF_COND_AFTERBURN_IMMUNE                 = 85,
-	TF_COND_RUNE_KNOCKOUT                    = 86,
-	TF_COND_RUNE_IMBALANCE                   = 87,
-	TF_COND_CRITBOOSTED_RUNE_TEMP            = 88,
-	TF_COND_SWIMMING_NO_EFFECTS              = 89, // =95_DNOC_FT
-	TF_COND_PURGATORY                        = 90,
-	TF_COND_RUNE_KING                        = 91,
-	TF_COND_RUNE_PLAGUE                      = 92,
-	TF_COND_RUNE_SUPERNOVA                   = 93,
-	TF_COND_PLAGUE                           = 94,
-	TF_COND_KING_BUFFED                      = 95,
-	TF_COND_TEAM_GLOWS                       = 96, // used to show team glows to living players
-	TF_COND_KNOCKED_INTO_AIR                 = 97,
-	TF_COND_COMPETITIVE_WINNER               = 98,
-	TF_COND_COMPETITIVE_LOSER                = 99,
-	TF_COND_HEALING_DEBUFF                   = 100,
+	TF_COND_CRITBOOSTED_RAGE_BUFF            = 40, // =40
+	TF_COND_DEFENSEBUFF_HIGH                 = 41, // 75% defense! Still damaged by crits.
+	TF_COND_SNIPERCHARGE_RAGE_BUFF           = 42, // Sniper Rage - Charge time speed up
+	TF_COND_DISGUISE_WEARINGOFF              = 43, // Applied for half-second post-disguise
+	TF_COND_MARKEDFORDEATH_SILENT            = 44, // Sans sound
+	TF_COND_DISGUISED_AS_DISPENSER           = 45,
+	TF_COND_SAPPED                           = 46, // Bots only
+	TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED = 47,
+	TF_COND_INVULNERABLE_USER_BUFF           = 48,
+	TF_COND_HALLOWEEN_BOMB_HEAD              = 49,
+	TF_COND_HALLOWEEN_THRILLER               = 50, // =50
+	TF_COND_RADIUSHEAL_ON_DAMAGE             = 51,
+	TF_COND_CRITBOOSTED_CARD_EFFECT          = 52,
+	TF_COND_INVULNERABLE_CARD_EFFECT         = 53,
+	TF_COND_STEALTHED_USER_BUFF              = 54, // Any class can have this
+	TF_COND_MEDIGUN_DEBUFF                   = 55,
+	TF_COND_STEALTHED_USER_BUFF_FADING       = 56,
+	TF_COND_PREVENT_DEATH                    = 57,
+	TF_COND_HALLOWEEN_SPEED_BOOST            = 58,
+	TF_COND_HALLOWEEN_QUICK_HEAL             = 59,
+	TF_COND_HALLOWEEN_GIANT                  = 60, // =60
+	TF_COND_HALLOWEEN_TINY                   = 61,
+	TF_COND_HALLOWEEN_IN_HELL                = 62,
+	TF_COND_HALLOWEEN_GHOST_MODE             = 63,
+	TF_COND_MINICRITBOOSTED_ON_KILL          = 64,
+	TF_COND_OBSCURED_SMOKE                   = 65,
+	TF_COND_BLASTJUMPING                     = 66,
+	TF_COND_HALLOWEEN_KART                   = 67, 
+	TF_COND_HALLOWEEN_KART_DASH              = 68,
+	TF_COND_BALLOON_HEAD                     = 69, // =69 larger head, lower-gravity-feeling jumps
+	TF_COND_MELEE_ONLY                       = 70, // =70 melee only
+	TF_COND_SWIMMING_CURSE                   = 71, // player movement become swimming movement
+	TF_COND_FREEZE_INPUT                     = 72, // freezes player input
+	TF_COND_HALLOWEEN_KART_CAGE              = 73, // =73 attach cage model to player while in kart
+	TF_COND_DONOTUSE_0                       = 74,
+	TF_COND_RUNE_STRENGTH                    = 75,
+	TF_COND_RUNE_HASTE                       = 76,
+	TF_COND_RUNE_REGEN                       = 77,
+	TF_COND_RUNE_RESIST                      = 78,
+	TF_COND_RUNE_VAMPIRE                     = 79,
+	TF_COND_RUNE_REFLECT                     = 80,
+	TF_COND_RUNE_PRECISION                   = 81,
+	TF_COND_RUNE_AGILITY                     = 82,
+	TF_COND_AFTERBURN_IMMUNE                 = 83,
+	TF_COND_RUNE_KNOCKOUT                    = 84,
+	TF_COND_RUNE_IMBALANCE                   = 85,
+	TF_COND_CRITBOOSTED_RUNE_TEMP            = 86,
+	TF_COND_SWIMMING_NO_EFFECTS              = 87, // =87_DNOC_FT
+	TF_COND_PURGATORY                        = 88,
+	TF_COND_RUNE_KING                        = 89,
+	TF_COND_RUNE_PLAGUE                      = 90,
+	TF_COND_RUNE_SUPERNOVA                   = 91,
+	TF_COND_PLAGUE                           = 92,
+	TF_COND_KING_BUFFED                      = 93,
+	TF_COND_TEAM_GLOWS                       = 94, // used to show team glows to living players
+	TF_COND_KNOCKED_INTO_AIR                 = 95,
+	TF_COND_COMPETITIVE_WINNER               = 96,
+	TF_COND_COMPETITIVE_LOSER                = 97,
+	TF_COND_HEALING_DEBUFF                   = 98,
 	// Players who lose their footing have lessened friction and don't re-stick to the ground unless they're below a
 	// tf_movement_lost_footing_restick speed
-	TF_COND_LOST_FOOTING                     = 101,
+	TF_COND_LOST_FOOTING                     = 99,
 	// When in the air, slide up/along surfaces with momentum as if caught up in a... blast of air of some sort.
 	// Reduces air control as well.  See tf_movement_aircurrent convars.  Removed upon touching ground.
-	TF_COND_AIR_CURRENT                      = 102,
-	TF_COND_HALLOWEEN_HELL_HEAL              = 103,
-	TF_COND_IMMUNE_TO_PUSHBACK				 = 104,
+	TF_COND_AIR_CURRENT                      = 100,
+	TF_COND_HALLOWEEN_HELL_HEAL              = 101,
+	TF_COND_IMMUNE_TO_PUSHBACK				 = 102,
 		//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
 	//
@@ -1268,12 +1233,6 @@ enum
 
 enum
 {
-	MODE_SENTRYGUN_NORMAL = 0,
-	MODE_SENTRYGUN_DISPOSABLE,
-};
-
-enum
-{
 	MODE_SAPPER_NORMAL = 0,
 	MODE_SAPPER_ANTI_ROBOT,
 	MODE_SAPPER_ANTI_ROBOT_RADIUS,
@@ -1282,7 +1241,6 @@ enum
 enum ESpyTrapType_t
 {
 	MODE_SPY_TRAP_RADIUS_STEALTH = 0,
-	MODE_SPY_TRAP_REPROGRAM,
 	MODE_SPY_TRAP_MAGNET,
 	// MODE_SPY_TRAP_REPULSOR,
 };
@@ -1337,7 +1295,6 @@ typedef enum
 #define TF_SCORE_HEAL_HEALTHUNITS_PER_POINT		600
 #define TF_SCORE_BONUS_POINT_DIVISOR			10
 #define TF_SCORE_DAMAGE							250
-#define TF_SCORE_CURRENCY_COLLECTED				20
 #define TF_SCORE_CAPTURE_POWERUPMODE			5 // With these CTF rules capturing flags is tougher, hence the higher scoring for flag events
 #define TF_SCORE_FLAG_RETURN					4
 #define TF_SCORE_KILL_RUNECARRIER				1
@@ -1675,8 +1632,7 @@ enum testitem_botanims_t
 #define TF_DEATH_INTERRUPTED			0x0040	// interrupted a player doing an important game event (like capping or carrying flag)
 #define TF_DEATH_GIBBED					0x0080	// player was gibbed
 #define TF_DEATH_PURGATORY				0x0100	// player died while in purgatory
-#define TF_DEATH_MINIBOSS				0x0200	// player killed was a miniboss
-#define TF_DEATH_AUSTRALIUM				0x0400	// player killed by a Australium Weapon
+#define TF_DEATH_AUSTRALIUM				0x0200	// player killed by a Australium Weapon
 
 #define MAX_DECAPITATIONS		4
 
@@ -1737,74 +1693,10 @@ enum EAttackBonusEffects_t
 	kBonusEffect_Count, // Must be 2nd to last
 };
 
-
-//-----------------------------------------------------------------------------
-// PVE MODE
-//-----------------------------------------------------------------------------
-// In-game currency
-enum CurrencyRewards_t
-{
-	TF_CURRENCY_KILLED_PLAYER,
-	TF_CURRENCY_KILLED_OBJECT,
-	TF_CURRENCY_ASSISTED_PLAYER,
-	TF_CURRENCY_BONUS_POINTS,
-	TF_CURRENCY_CAPTURED_OBJECTIVE,
-	TF_CURRENCY_ESCORT_REWARD,
-	TF_CURRENCY_PACK_SMALL,
-	TF_CURRENCY_PACK_MEDIUM,
-	TF_CURRENCY_PACK_LARGE,
-	TF_CURRENCY_PACK_CUSTOM,
-	TF_CURRENCY_TIME_REWARD,
-	TF_CURRENCY_WAVE_COLLECTION_BONUS,
-};
-
-enum mvm_announcement_t
-{
-	TF_MVM_ANNOUNCEMENT_WAVE_COMPLETE,
-	TF_MVM_ANNOUNCEMENT_WAVE_FAILED,
-
-	TF_MVM_ANNOUNCEMENT_TOTAL
-};
-
-#define MAX_RAIDMODE_UPGRADES		60
-
-enum mvm_upgrade_uigroups_t
-{
-	UIGROUP_UPGRADE_ATTACHED_TO_ITEM = 0,
-	UIGROUP_UPGRADE_ATTACHED_TO_PLAYER,
-	UIGROUP_POWERUPBOTTLE,
-};
-
-enum
-{
-	MVM_UPGRADE_QUALITY_LOW = 1,
-	MVM_UPGRADE_QUALITY_NORMAL,		// Default
-	MVM_UPGRADE_QAULITY_HIGH,
-};
-
-#define MVM_BUYBACK_COST_PER_SEC		5
-
-#define MVM_CLASS_TYPES_PER_WAVE_MAX			12
-// this is ugly, but we need to increase the max types per wave and changing the old define will break demos
-#define MVM_CLASS_TYPES_PER_WAVE_MAX_NEW		( MVM_CLASS_TYPES_PER_WAVE_MAX * 2 )
-
-#define MVM_CLASS_FLAG_NONE				0
-#define MVM_CLASS_FLAG_NORMAL			(1<<0)
-#define MVM_CLASS_FLAG_SUPPORT			(1<<1)
-#define MVM_CLASS_FLAG_MISSION			(1<<2)
-#define MVM_CLASS_FLAG_MINIBOSS			(1<<3)
-#define MVM_CLASS_FLAG_ALWAYSCRIT		(1<<4)
-#define MVM_CLASS_FLAG_SUPPORT_LIMITED	(1<<5)
-
-
-
 enum MedicCallerType
 {
 	CALLER_TYPE_NORMAL,
 	CALLER_TYPE_AUTO,
-	CALLER_TYPE_REVIVE_EASY,		// The more someone is revived, the harder
-	CALLER_TYPE_REVIVE_MEDIUM,		// subsequent revives become.
-	CALLER_TYPE_REVIVE_HARD,
 };
 
 //-----------------------------------------------------------------------------
@@ -2287,62 +2179,6 @@ enum MedicCallerType
 #define ACHIEVEMENT_TF_MAPS_FOUNDRY_BACK_AND_FORTH_BATTLE	2211
 #define ACHIEVEMENT_TF_MAPS_FOUNDRY_ACHIEVE_PROGRESS1		2212
 #define ACHIEVEMENT_TF_MAPS_FOUNDRY_END_RANGE				2212
-
-// MvM Achievements
-#define ACHIEVEMENT_TF_MVM_START_RANGE						2301
-#define ACHIEVEMENT_TF_MVM_COMPLETE_POP_FILE				2301
-#define ACHIEVEMENT_TF_MVM_EARN_MONEY_BONUS					2302
-#define ACHIEVEMENT_TF_MVM_ADVANCED_EARN_ALL_BONUSES		2303
-#define ACHIEVEMENT_TF_MVM_PICKUP_MONEY_ABOUT_TO_EXPIRE		2304
-#define ACHIEVEMENT_TF_MVM_COLLECT_MONEY_GRIND				2305
-#define ACHIEVEMENT_TF_MVM_PLAY_GAME_FRIENDS				2306
-#define ACHIEVEMENT_TF_MVM_PLAY_EACH_CLASS					2307
-#define ACHIEVEMENT_TF_MVM_DESTROY_TWO_TANKS				2308
-#define ACHIEVEMENT_TF_MVM_DESTROY_TANK_WHILE_DEPLOYING		2309
-#define ACHIEVEMENT_TF_MVM_DESTROY_TANK_QUICKLY				2310
-#define ACHIEVEMENT_TF_MVM_DEFEND_CAP						2311
-#define ACHIEVEMENT_TF_MVM_KILL_BOMB_CARRIERS				2312
-#define ACHIEVEMENT_TF_MVM_COMPLETE_WAVE_WITHOUT_DYING		2313
-#define ACHIEVEMENT_TF_MVM_COMPLETE_TOUR					2314
-#define ACHIEVEMENT_TF_MVM_USE_TELEPORT_BOTTLE				2315
-#define ACHIEVEMENT_TF_MVM_USE_CRIT_BOTTLE					2316
-#define ACHIEVEMENT_TF_MVM_USE_UBER_BOTTLE					2317
-#define ACHIEVEMENT_TF_MVM_USE_BUILD_BOTTLE					2318
-#define ACHIEVEMENT_TF_MVM_USE_AMMO_BOTTLE					2319
-#define ACHIEVEMENT_TF_MVM_MAX_PRIMARY_UPGRADES				2320
-#define ACHIEVEMENT_TF_MVM_MAX_PLAYER_RESISTANCES			2321
-#define ACHIEVEMENT_TF_MVM_NO_ALARMS_IN_FINAL_WAVE			2322
-#define ACHIEVEMENT_TF_MVM_KILL_MEDICS_CHARGED				2323
-#define ACHIEVEMENT_TF_MVM_KILL_ROBOT_GRIND					2324
-#define ACHIEVEMENT_TF_MVM_KILL_ROBOT_MEGA_GRIND			2325
-#define ACHIEVEMENT_TF_MVM_KILL_SENTRY_BUSTER				2326
-#define ACHIEVEMENT_TF_MVM_SPY_SAP_ROBOTS					2327
-#define ACHIEVEMENT_TF_MVM_SOLDIER_BUFF_TEAM				2328
-#define ACHIEVEMENT_TF_MVM_HEAVY_RAGE_PUSH_DEPLOYING_ROBOT	2329
-#define ACHIEVEMENT_TF_MVM_MEDIC_SHARE_BOTTLES				2330
-#define ACHIEVEMENT_TF_MVM_DEMO_GROUP_KILL					2331
-#define ACHIEVEMENT_TF_MVM_SCOUT_MARK_FOR_DEATH				2332
-#define ACHIEVEMENT_TF_MVM_SNIPER_KILL_GROUP				2333
-#define ACHIEVEMENT_TF_MVM_PYRO_BOMB_RESET					2334
-#define ACHIEVEMENT_TF_MVM_ENGINEER_ESCAPE_SENTRY_BUSTER	2335
-#define ACHIEVEMENT_TF_MVM_ACHIEVE_PROGRESS1				2336
-#define ACHIEVEMENT_TF_MVM_ACHIEVE_PROGRESS2				2337
-#define ACHIEVEMENT_TF_MVM_ACHIEVE_PROGRESS3				2338
-#define ACHIEVEMENT_TF_MVM_MAPS_ROTTENBURG_TANK				2339
-#define ACHIEVEMENT_TF_MVM_MAPS_ROTTENBURG_BOMB				2340
-#define ACHIEVEMENT_TF_MVM_MAPS_ROTTENBURG_PIT_GRIND		2341
-#define ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_PIT				2342
-#define ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_MYSTERY			2343
-#define ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_NO_GATES			2344
-#define ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_STUN_RADIOWAVE	2345
-#define ACHIEVEMENT_TF_MVM_MAPS_MANNHATTAN_BOMB_BOT_GRIND	2346
-#define ACHIEVEMENT_TF_MVM_SENTRY_BUSTER_FRIENDLY_FIRE		2347
-#define ACHIEVEMENT_TF_MVM_SNIPER_COLLECT_HEADSHOT_MONEY	2348
-#define ACHIEVEMENT_TF_MVM_MEDIC_SHIELD_BLOCK_DAMAGE		2349
-#define ACHIEVEMENT_TF_MVM_MEDIC_REVIVE_TEAMMATES			2350
-#define ACHIEVEMENT_TF_MVM_ROCKET_SPECIALIST_KILL_GRIND		2351
-#define ACHIEVEMENT_TF_MVM_ROCKET_SPECIALIST_STUN_GRIND		2352
-#define ACHIEVEMENT_TF_MVM_END_RANGE						2352
 
 // Doomsday Achievements
 #define ACHIEVEMENT_TF_MAPS_DOOMSDAY_START_RANGE				2401

@@ -109,14 +109,6 @@ void CFuncRespawnRoom::Activate( void )
 //-----------------------------------------------------------------------------
 void CFuncRespawnRoom::RespawnRoomTouch(CBaseEntity *pOther)
 {
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			return;
-		}
-	}
-
 	if ( PassesTriggerFilters( pOther ) )
 	{
 		if ( pOther->IsPlayer() && InSameTeam( pOther ) )
@@ -126,16 +118,6 @@ void CFuncRespawnRoom::RespawnRoomTouch(CBaseEntity *pOther)
 			if ( pPlayer->HasTheFlag() )
 			{
 				pPlayer->DropFlag();
-			}
-
-			if ( pPlayer->m_Shared.IsCarryingObject() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				CObjectSentrygun *pSentry = dynamic_cast< CObjectSentrygun* >( pPlayer->m_Shared.GetCarriedObject() );
-				if ( pSentry )
-				{
-					pSentry->UpdatePlacement();
-					pSentry->DetonateObject();
-				}
 			}
 		}
 	}

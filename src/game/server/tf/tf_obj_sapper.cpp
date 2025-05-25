@@ -19,8 +19,6 @@
 
 #include "bot/tf_bot.h"
 
-ConVar tf_mvm_notice_sapped_squadmates_delay( "tf_mvm_notice_sapped_squadmates_delay", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long it takes for a squad leader to notice his squadmate was sapped" );
-
 
 // ------------------------------------------------------------------------ //
 
@@ -99,13 +97,6 @@ void CObjectSapper::Spawn()
 	CollisionProp()->SetSurroundingBoundsType( USE_SPECIFIED_BOUNDS, &mins, &maxs );
 
 	int nFlags = m_fObjectFlags | OF_ALLOW_REPEAT_PLACEMENT;
-
-	// Don't allow repeat placement as a human spy in MvM
-	if ( TFGameRules() && TFGameRules()->GameModeUsesMiniBosses() && 
-		 GetBuilder() && !GetBuilder()->IsBot() )
-	{
-		nFlags &= ~( OF_ALLOW_REPEAT_PLACEMENT );
-	}
 
 	m_fObjectFlags.Set( nFlags );
 
@@ -263,48 +254,6 @@ void CObjectSapper::OnGoActive( void )
 	if ( pEntity )
 	{
 		SetModel( GetSapperModelName( SAPPER_MODEL_PLACED ) );
-		
-		if ( pEntity->IsPlayer() )	// Sapped bot in MvM mode, or player in bountymode
-		{
-			float flTime = 4.f;
-
-			if ( pBuilder )
-			{
-				int iRoboSapper = 0;
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBuilder, iRoboSapper, robo_sapper );
-
-				CTFPlayer *pTFParent = ToTFPlayer( GetParentEntity() );
-				if ( pTFParent && pTFParent->IsAlive() )
-				{	
-					int nRadius = 200;
-
-					switch( iRoboSapper )
-					{
-					case 2:
-						flTime = 5.5f;
-						nRadius = 225;
-						break;
-					case 3:
-						flTime = 7.f;
-						nRadius = 250;
-						break;
-					default:
-						break;
-					}
-
-					// Unlimited, single-target version of the RoboSapper
-					if ( GetObjectMode() == MODE_SAPPER_ANTI_ROBOT )
-					{
-						nRadius = 0;
-					}
-
-					ApplyRoboSapper( pTFParent, flTime, nRadius );
-				}
-			}
-
-			m_flSelfDestructTime = gpGlobals->curtime + flTime;
-		}
-
 	}
 
 	UTIL_SetSize( this, SAPPER_MINS, SAPPER_MAXS );
@@ -323,17 +272,10 @@ bool CObjectSapper::IsParentValid( void )
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
 	if ( pEntity )
 	{
-		if ( pEntity->IsPlayer() )	// sapped bot in MvM mode
+		CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
+		if ( pObject )
 		{
 			bValid = true;
-		}
-		else
-		{
-			CBaseObject *pObject = dynamic_cast<CBaseObject *>( pEntity ); 
-			if ( pObject )
-			{
-				bValid = true;
-			}
 		}
 	}
 
@@ -611,12 +553,6 @@ void CObjectSapper::Killed( const CTakeDamageInfo &info )
 	// We don't own the building we removed the sapper from
 	if ( pScorer && GetParentObject() && GetParentObject()->GetOwner() != pScorer )
 	{
-		// Give a bonus point for it
-		if ( TFGameRules()->GameModeUsesUpgrades() )
-		{
-			CTF_GameStats.Event_PlayerAwardBonusPoints( pScorer, this, 10 );
-		}
-
 		if ( pScorer->IsPlayerClass( TF_CLASS_ENGINEER ) )
 		{
 			pScorer->AwardAchievement( ACHIEVEMENT_TF_ENGINEER_DESTROY_SAPPERS, 1 );
@@ -698,16 +634,6 @@ void CObjectSapper::ApplyRoboSapper( CTFPlayer *pTarget, float flDuration, int n
 				iCount++;
 		}
 
-		// ACHIEVEMENT_TF_MVM_SPY_SAP_ROBOTS
-		if ( iCount >= 10 )
-		{
-			CTFPlayer *pBuilder = ToTFPlayer( GetBuilder() );
-			if ( pBuilder && TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				pBuilder->AwardAchievement( ACHIEVEMENT_TF_MVM_SPY_SAP_ROBOTS );
-			}
-		}
-
 		Vector vecOrigin = GetAbsOrigin();
 		CPVSFilter filter( vecOrigin );
 		TE_TFParticleEffect( filter, 0.f, "Explosion_ShockWave_01", vecOrigin, vec3_angle );
@@ -723,13 +649,6 @@ bool CObjectSapper::ApplyRoboSapperEffects( CTFPlayer *pTarget, float flDuration
 		return false;
 
 	int iStunFlags = TF_STUN_MOVEMENT | TF_STUN_CONTROLS | TF_STUN_NO_EFFECTS;
-
-	// Giants and players can't be fully incapacitated - only slowed
-	CTFBot *pTFBot = static_cast<CTFBot *>( pTarget );
-	if ( ( pTFBot && pTFBot->IsMiniBoss() ) || !pTFBot )
-	{
-		iStunFlags = TF_STUN_MOVEMENT;
-	}
 
 	pTarget->m_Shared.StunPlayer( flDuration, 0.85f, iStunFlags, GetBuilder() );
 	pTarget->m_Shared.AddCond( TF_COND_SAPPED, flDuration, GetBuilder() );
@@ -758,9 +677,6 @@ bool CObjectSapper::IsValidRoboSapperTarget( CTFPlayer *pTarget )
 		return false;
 
 	if ( pTarget->m_Shared.InCond( TF_COND_SAPPED ) )
-		return false;
-
-	if ( pTarget->m_Shared.InCond( TF_COND_REPROGRAMMED ) )
 		return false;
 
 	return true;

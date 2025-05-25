@@ -25,7 +25,6 @@
 #include "GameEventListener.h"
 #include "c_tf_playerresource.h"
 #include "tf_playermodelpanel.h"
-#include "tf_mann_vs_machine_stats.h"
 
 using namespace vgui;
 
@@ -105,7 +104,6 @@ protected:
 protected:
 
 	CExImageButton		*m_pClassButtons[TF_CLASS_MENU_BUTTONS];
-	vgui::ImagePanel	*m_pMvmUpgradeImages[TF_CLASS_MENU_BUTTONS];
 	CSCHintIcon			*m_pClassHintIcons[TF_CLASS_MENU_BUTTONS];
 
 	CTFClassTipsPanel		*m_pClassTipsPanel;
@@ -117,8 +115,6 @@ protected:
 	CSCHintIcon				*m_pCancelHintIcon;
 
 private:
-
-	void CheckMvMUpgrades();
 
 #ifdef _X360
 	CTFFooter		*m_pFooter;

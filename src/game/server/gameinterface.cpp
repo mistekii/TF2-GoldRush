@@ -97,7 +97,6 @@
 #include "steamworks_gamestats.h"
 #include "tf/tf_gc_server.h"
 #include "tf_gamerules.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "workshop/maps_workshop.h"
 
 extern ConVar tf_mm_trusted;
@@ -220,11 +219,6 @@ INetworkStringTable *g_pStringTableMaterials = NULL;
 INetworkStringTable *g_pStringTableInfoPanel = NULL;
 INetworkStringTable *g_pStringTableClientSideChoreoScenes = NULL;
 INetworkStringTable *g_pStringTableServerMapCycle = NULL;
-
-#ifdef TF_DLL
-INetworkStringTable *g_pStringTableServerPopFiles = NULL;
-INetworkStringTable *g_pStringTableServerMapCycleMvM = NULL;
-#endif
 
 CStringTableSaveRestoreOps g_VguiScreenStringOps;
 
@@ -1448,26 +1442,13 @@ void CServerGameDLL::CreateNetworkStringTables( void )
 	g_pStringTableClientSideChoreoScenes = networkstringtable->CreateStringTable( "Scenes", MAX_CHOREO_SCENES_STRINGS );
 	g_pStringTableServerMapCycle = networkstringtable->CreateStringTable( "ServerMapCycle", 128 );
 
-#ifdef TF_DLL
-	g_pStringTableServerPopFiles = networkstringtable->CreateStringTable( "ServerPopFiles", 128 );
-	g_pStringTableServerMapCycleMvM = networkstringtable->CreateStringTable( "ServerMapCycleMvM", 128 );
-#endif
-
-	bool bPopFilesValid = true;
-	(void)bPopFilesValid; // Avoid unreferenced variable warning
-
-#ifdef TF_DLL
-	bPopFilesValid = ( g_pStringTableServerPopFiles != NULL );
-#endif
-
 	Assert( g_pStringTableParticleEffectNames &&
 			g_pStringTableEffectDispatch &&
 			g_pStringTableVguiScreen &&
 			g_pStringTableMaterials &&
 			g_pStringTableInfoPanel &&
 			g_pStringTableClientSideChoreoScenes &&
-			g_pStringTableServerMapCycle && 
-			bPopFilesValid
+			g_pStringTableServerMapCycle
 			);
 
 	// Need this so we have the error material always handy
@@ -1905,15 +1886,6 @@ void CServerGameDLL::SetServerHibernation( bool bHibernating )
 const char *CServerGameDLL::GetServerBrowserMapOverride()
 {
 #ifdef TF_DLL
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		const char *pszFilenameShort = g_pPopulationManager ? g_pPopulationManager->GetPopulationFilenameShort() : NULL;
-		if ( pszFilenameShort && pszFilenameShort[0] )
-		{
-			return pszFilenameShort;
-		}
-	}
-
 	static char maptmp[256];
 	return GetCleanMapName( STRING( gpGlobals->mapname ), maptmp );
 #endif
@@ -1935,11 +1907,6 @@ const char *CServerGameDLL::GetServerBrowserGameData()
 	else
 	{
 		sResult.Append( CFmtStr( ",lobby:%016llx", pMatch->m_nLobbyID ) );
-	}
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		bool bMannup = pMatch && pMatch->m_eMatchGroup == k_eTFMatchGroup_MvM_MannUp;
-		sResult.Append( CFmtStr( ",mannup:%d", (int)bMannup ) );
 	}
 #endif
 

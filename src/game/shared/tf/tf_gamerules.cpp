@@ -26,7 +26,6 @@
 	#include "c_tf_team.h"
 	#include "dt_utlvector_recv.h"
 	#include "tf_autorp.h"
-	#include "player_vs_environment/c_tf_upgrades.h"
 	#include "video/ivideoservices.h"
 	#include "tf_gc_client.h"
 	#include "c_tf_playerresource.h"
@@ -90,16 +89,12 @@
 	#include "tf_weapon_knife.h"
 	#include "tf_weapon_jar.h"
 	#include "halloween/tf_weapon_spellbook.h"
-	
-	#include "player_vs_environment/tf_population_manager.h"
+
 	#include "player_vs_environment/monster_resource.h"
 	#include "util_shared.h"
 	#include "gc_clientsystem.h"
 
 	#include "raid/tf_raid_logic.h"
-	#include "player_vs_environment/tf_boss_battle_logic.h"
-	#include "player_vs_environment/tf_mann_vs_machine_logic.h"
-	#include "player_vs_environment/tf_upgrades.h"
 
 	#include "tf_wheel_of_doom.h"
 	#include "halloween/zombie/zombie.h"
@@ -122,10 +117,6 @@
 	#include "player_voice_listener.h"
 #endif
 
-#include "tf_mann_vs_machine_stats.h"
-#include "tf_upgrades_shared.h"
-
-#include "tf_item_powerup_bottle.h"
 #include "tf_weaponbase_gun.h"
 #include "tf_weaponbase_melee.h"
 #include "tf_wearable_weapons.h"
@@ -135,7 +126,6 @@
 
 #include "econ_holidays.h"
 #include "rtime.h"
-#include "tf_revive.h"
 #include "tf_duckleaderboard.h"
 
 #include "tier3/tier3.h"
@@ -581,7 +571,6 @@ extern ConVar mp_holiday_nogifts;
 extern ConVar tf_debug_damage;
 extern ConVar tf_damage_range;
 extern ConVar tf_damage_disablespread;
-extern ConVar tf_populator_damage_multiplier;
 extern ConVar tf_mm_trusted;
 extern ConVar tf_weapon_criticals;
 extern ConVar tf_weapon_criticals_melee;
@@ -797,96 +786,12 @@ ConVar tf_training_client_message( "tf_training_client_message", "0", FCVAR_REPL
 #define TF_ARENA_MODE_FAST_FIRST_BLOOD_TIME 20.0f
 #define TF_ARENA_MODE_SLOW_FIRST_BLOOD_TIME 50.0f
 
-#ifdef TF_RAID_MODE
-// Raid mode
-ConVar tf_gamemode_raid( "tf_gamemode_raid", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );		// client needs access to this for IsRaidMode()
-ConVar tf_raid_enforce_unique_classes( "tf_raid_enforce_unique_classes", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-ConVar tf_raid_respawn_time( "tf_raid_respawn_time", "5", FCVAR_REPLICATED | FCVAR_NOTIFY /*| FCVAR_CHEAT*/, "How long it takes for a Raider to respawn with his team after death." );
-ConVar tf_raid_allow_all_classes( "tf_raid_allow_all_classes", "1", FCVAR_REPLICATED | FCVAR_NOTIFY );
-
-ConVar tf_gamemode_boss_battle( "tf_gamemode_boss_battle", "0", FCVAR_REPLICATED | FCVAR_NOTIFY );
-
-#ifdef GAME_DLL
-ConVar tf_raid_allow_overtime( "tf_raid_allow_overtime", "0"/*, FCVAR_CHEAT*/ );
-#endif // GAME_DLL
-#endif // TF_RAID_MODE
-
-ConVar tf_mvm_defenders_team_size( "tf_mvm_defenders_team_size", "6", FCVAR_REPLICATED | FCVAR_NOTIFY, "Maximum number of defenders in MvM" );
-ConVar tf_mvm_max_connected_players( "tf_mvm_max_connected_players", "10", FCVAR_GAMEDLL, "Maximum number of connected real players in MvM" );
-ConVar tf_mvm_max_invaders( "tf_mvm_max_invaders", "22", FCVAR_GAMEDLL, "Maximum number of invaders in MvM" );
-
-ConVar tf_mvm_min_players_to_start( "tf_mvm_min_players_to_start", "3", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum number of players connected to start a countdown timer" );
-ConVar tf_mvm_respec_enabled( "tf_mvm_respec_enabled", "1", FCVAR_CHEAT | FCVAR_REPLICATED, "Allow players to refund credits spent on player and item upgrades." );
-ConVar tf_mvm_respec_limit( "tf_mvm_respec_limit", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "The total number of respecs a player can earn.  Default: 0 (no limit).", true, 0.f, true, 100.f );
-ConVar tf_mvm_respec_credit_goal( "tf_mvm_respec_credit_goal", "2000", FCVAR_CHEAT | FCVAR_REPLICATED, "When tf_mvm_respec_limit is non-zero, the total amount of money the team must collect to earn a respec credit." );
-ConVar tf_mvm_buybacks_method( "tf_mvm_buybacks_method", "0", FCVAR_REPLICATED | FCVAR_HIDDEN, "When set to 0, use the traditional, currency-based system.  When set to 1, use finite, charge-based system.", true, 0.0, true, 1.0 );
-ConVar tf_mvm_buybacks_per_wave( "tf_mvm_buybacks_per_wave", "3", FCVAR_REPLICATED | FCVAR_HIDDEN, "The fixed number of buybacks players can use per-wave." );
-
-
-#ifdef GAME_DLL
-enum { kMVM_CurrencyPackMinSize = 1, };
-#endif // GAME_DLL
 
 extern ConVar mp_tournament;
 extern ConVar mp_tournament_post_match_period;
 
 extern ConVar tf_flag_return_on_touch;
 extern ConVar tf_flag_return_time_credit_factor;
-
-#ifdef GAME_DLL
-CUtlString s_strNextMvMPopFile;
-CON_COMMAND_F( tf_mvm_popfile, "Change to a target popfile for MvM", FCVAR_GAMEDLL )
-{
-	// Listenserver host or rcon access only!
-	if ( !UTIL_IsCommandIssuedByServerAdmin() )
-		return;
-
-	if ( args.ArgC() <= 1 )
-	{
-		if ( TFGameRules() && g_pPopulationManager )
-		{
-			const char *pszFile = g_pPopulationManager->GetPopulationFilename();
-			if ( pszFile && pszFile[0] )
-			{
-				Msg( "Current popfile is: %s\n", pszFile );
-				return;
-			}
-		}
-
-		Msg( "Missing Popfile name\n" );
-		return;
-	}
-
-	const char *pszShortName = args.Arg(1);
-
-	if ( !TFGameRules() || !g_pPopulationManager )
-	{
-		Warning( "Cannot set population file before map load.\n" );
-		return;
-	}
-
-	// Make sure we have a file system
-	if ( !g_pFullFileSystem )
-	{
-		Msg( "No File System to find Popfile to load\n" );
-		return;
-	}
-
-	// Form full path
-	CUtlString fullPath;
-
-	if ( g_pPopulationManager->FindPopulationFileByShortName( pszShortName, fullPath ) && g_pPopulationManager->IsValidPopfile( fullPath ) )
-	{
-		g_pPopulationManager->SetPopulationFilename( fullPath );
-		g_pPopulationManager->ResetMap();
-		return;
-	}
-
-	// Give them a message to make it clear what file we were looking for
-	Warning( "Could not find a valid population file matching: %s.\n", pszShortName );
-}
-
-#endif
 
 static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int eHoliday )
 {
@@ -986,7 +891,6 @@ ConVar tf_gamemode_sd ( "tf_gamemode_sd", "0", FCVAR_REPLICATED | FCVAR_NOTIFY |
 ConVar tf_gamemode_tc ( "tf_gamemode_tc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_beta_content ( "tf_beta_content", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_payload ( "tf_gamemode_payload", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_mvm ( "tf_gamemode_mvm", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_misc ( "tf_gamemode_misc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_bot_count( "tf_bot_count", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
@@ -1278,13 +1182,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropInt( RECVINFO( m_nMapHolidayType ) ),
 
 	RecvPropEHandle( RECVINFO( m_itHandle ) ),
-	RecvPropBool( RECVINFO( m_bPlayingMannVsMachine ) ),
 	RecvPropEHandle( RECVINFO( m_hBirthdayPlayer ) ),
 
 	RecvPropInt( RECVINFO( m_nBossHealth ) ),
 	RecvPropInt( RECVINFO( m_nMaxBossHealth ) ),
 	RecvPropInt( RECVINFO( m_fBossNormalizedTravelDistance ) ),
-	RecvPropBool( RECVINFO( m_bMannVsMachineAlarmStatus ) ),
 	RecvPropBool( RECVINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	RecvPropBool( RECVINFO( m_bBountyModeEnabled ) ),
@@ -1298,7 +1200,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropBool( RECVINFO( m_bCompetitiveMode ), 0, RecvProxy_CompetitiveMode ),
 	RecvPropInt( RECVINFO( m_nMatchGroupType ) ),
 	RecvPropBool( RECVINFO( m_bMatchEnded ) ),
-	RecvPropString( RECVINFO( m_pszCustomUpgradesFile ) ),
 	RecvPropBool( RECVINFO( m_bTruceActive ) ),
 	RecvPropBool( RECVINFO( m_bShowMatchSummary ), 0, RecvProxy_MatchSummary ),
 	RecvPropBool( RECVINFO_NAME( m_bShowMatchSummary, "m_bShowCompetitiveMatchSummary" ), 0, RecvProxy_MatchSummary ),     // Renamed
@@ -1310,7 +1211,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	RecvPropInt( RECVINFO( m_eRematchState ) ),
 	RecvPropArray3( RECVINFO_ARRAY(m_nNextMapVoteOptions), RecvPropInt( RECVINFO(m_nNextMapVoteOptions[0]), 0, RecvProxy_NewMapVoteStateChanged ) ),
 
-	RecvPropInt( RECVINFO( m_nForceUpgrades ) ),
 	RecvPropInt( RECVINFO( m_nForceEscortPushLogic ) ),
 
 	RecvPropBool( RECVINFO( m_bRopesHolidayLightsAllowed ) ),
@@ -1342,13 +1242,11 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropInt( SENDINFO( m_nMapHolidayType ), 3, SPROP_UNSIGNED ),
 
 	SendPropEHandle( SENDINFO( m_itHandle ) ),
-	SendPropBool( SENDINFO( m_bPlayingMannVsMachine ) ),
 	SendPropEHandle( SENDINFO( m_hBirthdayPlayer ) ),
 
 	SendPropInt( SENDINFO( m_nBossHealth ) ),
 	SendPropInt( SENDINFO( m_nMaxBossHealth ) ),
 	SendPropInt( SENDINFO( m_fBossNormalizedTravelDistance ) ),
-	SendPropBool( SENDINFO( m_bMannVsMachineAlarmStatus ) ),
 	SendPropBool( SENDINFO( m_bHaveMinPlayersToEnableReady ) ),
 
 	SendPropBool( SENDINFO( m_bBountyModeEnabled ) ),
@@ -1362,7 +1260,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropBool( SENDINFO( m_bCompetitiveMode ) ),
 	SendPropInt( SENDINFO( m_nMatchGroupType ) ),
 	SendPropBool( SENDINFO( m_bMatchEnded ) ),
-	SendPropString( SENDINFO( m_pszCustomUpgradesFile ) ),
 	SendPropBool( SENDINFO( m_bTruceActive ) ),
 	SendPropBool( SENDINFO( m_bShowMatchSummary ) ),
 	SendPropBool( SENDINFO( m_bTeamsSwitched ) ),
@@ -1373,7 +1270,6 @@ BEGIN_NETWORK_TABLE_NOBASE( CTFGameRules, DT_TFGameRules )
 	SendPropInt( SENDINFO( m_eRematchState ) ),
 	SendPropArray3( SENDINFO_ARRAY3(m_nNextMapVoteOptions), SendPropInt( SENDINFO_ARRAY(m_nNextMapVoteOptions), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 
-	SendPropInt( SENDINFO( m_nForceUpgrades ) ),
 	SendPropInt( SENDINFO( m_nForceEscortPushLogic ) ),
 
 	SendPropBool( SENDINFO( m_bRopesHolidayLightsAllowed ) ),
@@ -1441,7 +1337,6 @@ BEGIN_DATADESC( CTFGameRulesProxy )
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVOBlue", InputPlayVOBlue ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "PlayVO", InputPlayVO ),
 	DEFINE_INPUTFUNC( FIELD_STRING, "HandleMapEvent", InputHandleMapEvent ),
-	DEFINE_INPUTFUNC( FIELD_STRING, "SetCustomUpgradesFile", InputSetCustomUpgradesFile ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "SetRoundRespawnFreezeEnabled", InputSetRoundRespawnFreezeEnabled ),
 	DEFINE_INPUTFUNC( FIELD_BOOLEAN, "SetMapForcedTruceDuringBossFight", InputSetMapForcedTruceDuringBossFight ),
 
@@ -1674,17 +1569,6 @@ void CTFGameRulesProxy::InputHandleMapEvent( inputdata_t &inputdata )
 	if ( TFGameRules() )
 	{
 		TFGameRules()->HandleMapEvent( inputdata );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRulesProxy::InputSetCustomUpgradesFile( inputdata_t &inputdata )
-{
-	if ( TFGameRules() )
-	{
-		TFGameRules()->SetCustomUpgradesFile( inputdata );
 	}
 }
 
@@ -1927,73 +1811,18 @@ int	CTFGameRules::Damage_GetShouldNotBleed( void )
 	return 0;
 }
 
-//-----------------------------------------------------------------------------
-// Return true if we are playing a PvE mode
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsPVEModeActive( void ) const
-{
-#ifdef TF_RAID_MODE
-	if ( IsRaidMode() || IsBossBattleMode() )
-		return true;
-#endif
-
-	if ( IsMannVsMachineMode() )
-		return true;
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Return true for PvE opponents (ie: enemy bot team)
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsPVEModeControlled( CBaseEntity *who ) const
-{
-	if ( !who )
-	{
-		return false;
-	}
-
-#ifdef GAME_DLL
-	if ( IsMannVsMachineMode() )
-	{
-		return who->GetTeamNumber() == TF_TEAM_PVE_INVADERS ? true : false;
-	}
-
-	if ( IsPVEModeActive() )
-	{
-		return who->GetTeamNumber() == TF_TEAM_RED ? true : false;
-	}
-#endif
-
-	return false;
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Return true if engineers can build quickly now
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsQuickBuildTime( void )
 {
-	return IsMannVsMachineMode() && ( InSetup() || TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() );
+	return false;
 }
 
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::GameModeUsesUpgrades( void )
-{
-	if ( m_nForceUpgrades == 1 )
-		return false;
-
-	if ( m_nForceUpgrades == 2 )
-		return true;
-
-	if ( IsMannVsMachineMode() || IsBountyMode() )
-		return true;
-
-	return false;
-}
-
 bool CTFGameRules::GameModeUsesEscortPushLogic( void )
 {
 	if ( m_nForceEscortPushLogic == 1 )
@@ -2011,28 +1840,6 @@ bool CTFGameRules::GameModeUsesEscortPushLogic( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::CanPlayerUseRespec( CTFPlayer *pTFPlayer )
-{
-	if ( !pTFPlayer )
-		return false;
-
-	bool bAllowed = IsMannVsMachineRespecEnabled() && State_Get() == GR_STATE_BETWEEN_RNDS;
-
-#ifdef GAME_DLL
-	if ( !g_pPopulationManager )
-		return false;
-
-	bAllowed &= ( g_pPopulationManager->GetNumRespecsAvailableForPlayer( pTFPlayer ) ) ? true : false;
-#else
-	if ( !g_TF_PR )
-		return false;
-
-	bAllowed &= ( g_TF_PR->GetNumRespecCredits( pTFPlayer->entindex() ) ) ? true : false;
-#endif
-	
-	return bAllowed;
-}
-
 bool CTFGameRules::IsCommunityGameMode( void ) const
 {
 	return tf_gamemode_community.GetBool();
@@ -2591,21 +2398,6 @@ bool CTFGameRules::IsAttackDefenseMode( void )
 	return bRetVal;
 }
 
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-void CTFGameRules::EndManagedMvMMatch( bool bKickPlayersToParties )
-{
-	// Primarily a pass through so we can ensure our match end state is sync'd -- CPopulationManager manages most of the
-	// MvM meta round state
-	if ( !IsManagedMatchEnded() )
-	{
-		GTFGCClientSystem()->EndManagedMatch();
-		Assert( IsManagedMatchEnded() );
-		m_bMatchEnded.Set( true );
-	}
-}
-#endif // GAME_DLL
-
 
 #endif // STAGING_ONLY
 
@@ -2614,9 +2406,6 @@ void CTFGameRules::EndManagedMvMMatch( bool bKickPlayersToParties )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::UsePlayerReadyStatusMode( void )
 {
-	if ( IsMannVsMachineMode() )
-		return true;
-
 	if ( IsCompetitiveMode() )
 		return true;
 
@@ -2670,11 +2459,6 @@ bool CTFGameRules::PlayerReadyStatus_HaveMinPlayersToEnable( void )
 	{
 		nMinPlayers = pMatch->GetCanonicalMatchSize();
 	}
-	else if ( IsMannVsMachineMode() &&
-	          ( engine->IsDedicatedServer() || ( !engine->IsDedicatedServer() && nNumPlayers > 1 ) ) )
-	{
-		nMinPlayers = tf_mvm_min_players_to_start.GetInt();
-	}
 	else if ( UsePlayerReadyStatusMode() && engine->IsDedicatedServer() )
 	{
 		nMinPlayers = mp_tournament_readymode_min.GetInt();
@@ -2692,9 +2476,6 @@ bool CTFGameRules::PlayerReadyStatus_HaveMinPlayersToEnable( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::PlayerReadyStatus_ArePlayersOnTeamReady( int iTeam )
 {
-	if ( IsMannVsMachineMode() && iTeam == TF_TEAM_PVE_INVADERS )
-		return true;
-
 	CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
 	if ( pMatch )
 	{
@@ -2728,7 +2509,7 @@ bool CTFGameRules::PlayerReadyStatus_ArePlayersOnTeamReady( int iTeam )
 		}
 		else
 		{
-			int iTeamSize = IsMannVsMachineMode() ? pMatch->GetCanonicalMatchSize() : pMatch->GetCanonicalMatchSize() / 2;
+			int iTeamSize = pMatch->GetCanonicalMatchSize() / 2;
 			return iPlayerReadyCount >= iTeamSize;
 		}
 	}
@@ -2763,19 +2544,7 @@ bool CTFGameRules::PlayerReadyStatus_ShouldStartCountdown( void )
 	CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
 
 
-	if ( IsMannVsMachineMode() )
-	{
-		if ( !IsTeamReady( TF_TEAM_PVE_DEFENDERS ) && m_flRestartRoundTime >= gpGlobals->curtime + mp_tournament_readymode_countdown.GetInt() )
-		{
-			bool bIsTeamReady = PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_PVE_DEFENDERS );
-			if ( bIsTeamReady )
-			{
-				SetTeamReadyState( true, TF_TEAM_PVE_DEFENDERS );
-				return true;
-			}
-		}
-	}
-	else if ( pMatch &&
+	if ( pMatch &&
 	          PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_RED ) &&
 	          PlayerReadyStatus_ArePlayersOnTeamReady( TF_TEAM_BLUE ) )
 	{
@@ -2870,7 +2639,7 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 	}
 	else
 	{
-		if ( IsMannVsMachineMode() || IsCompetitiveMode() )
+		if ( IsCompetitiveMode() )
 		{
 			// Reduce timer as each player hits Ready, but only once per-player
 			if ( !m_bPlayerReadyBefore[nEntIndex] && m_flRestartRoundTime > gpGlobals->curtime + 60.f )
@@ -2900,7 +2669,7 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 
 		// Unofficial modes set team ready state here
 		CMatchInfo *pMatch = GTFGCClientSystem()->GetMatch();
-		if ( !pMatch && !IsMannVsMachineMode() )
+		if ( !pMatch )
 		{
 			int nRed = 0;
 			int nRedCount = 0;
@@ -2959,9 +2728,6 @@ void CTFGameRules::PlayerReadyStatus_UpdatePlayerState( CTFPlayer *pTFPlayer, bo
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsDefaultGameMode( void )
 {
-	if ( IsMannVsMachineMode() )
-		return false;
-
 	if ( IsInArenaMode() )
 		return false;
 
@@ -2992,66 +2758,6 @@ bool CTFGameRules::IsDefaultGameMode( void )
 #endif // TF_CREEP_MODE
 
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Allows us to give situational discounts, such as secondary weapons
-//-----------------------------------------------------------------------------
-int CTFGameRules::GetCostForUpgrade( CMannVsMachineUpgrades *pUpgrade, int iItemSlot, int nClass, CTFPlayer *pPurchaser /*= NULL*/ )
-{
-	Assert( pUpgrade );
-
-	if ( !pUpgrade )
-		return 0;
-
-	int iCost = pUpgrade->nCost;
-
-	CEconItemSchema *pSchema = ItemSystem()->GetItemSchema();
-	if ( pSchema )
-	{
-		const CEconItemAttributeDefinition *pAttr = pSchema->GetAttributeDefinitionByName( pUpgrade->szAttrib );
-		if ( pAttr )
-		{
-			if ( ( iItemSlot == LOADOUT_POSITION_PRIMARY && nClass == TF_CLASS_ENGINEER ) ||
-				 ( iItemSlot == LOADOUT_POSITION_SECONDARY && nClass != TF_CLASS_DEMOMAN ) ||
-				 ( iItemSlot == LOADOUT_POSITION_MELEE && nClass != TF_CLASS_SPY && nClass != TF_CLASS_ENGINEER ) )
-			{
-				switch ( pAttr->GetDefinitionIndex() )
-				{
-				case 4:		// clip size bonus
-				case 6:		// fire rate bonus
-				case 78:	// maxammo secondary increased
-				case 180:	// heal on kill
-				case 266:	// projectile penetration
-				case 335:	// clip size bonus upgrade
-				case 397:	// projectile penetration heavy
-					iCost *= 0.5f;
-					break;
-				default:
-					break;
-				}
-			}
-			else if ( iItemSlot == LOADOUT_POSITION_ACTION )
-			{
-				if ( pPurchaser )
-				{
-					int iCanteenSpec = 0;
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pPurchaser, iCanteenSpec, canteen_specialist );
-					if ( iCanteenSpec )
-					{
-
-// 						iCost *= ( 1.f - ( iCanteenSpec * 0.1f ) );
-// 						iCost = Max( 1, ( iCost - ( iCost % 5 ) ) );
-
-						iCost -= ( 10 * iCanteenSpec );
-						iCost = Max( 5, iCost );
-					}
-				}
-			}
-		}
-	}
-
-	return iCost;
 }
 
 //-----------------------------------------------------------------------------
@@ -3129,10 +2835,6 @@ CTFGameRules::CTFGameRules()
 
 	m_flCapInProgressBuffer = 0.f;
 
-	m_bMannVsMachineAlarmStatus = false;
-	m_flNextFlagAlarm = 0.0f;
-	m_flNextFlagAlert = 0.0f;
-
 	m_doomsdaySetupTimer.Invalidate();
 	StopDoomsdayTicketsTimer();
 
@@ -3161,8 +2863,6 @@ CTFGameRules::CTFGameRules()
 	// Initialize the game type
 	m_nGameType.Set( TF_GAMETYPE_UNDEFINED );
 
-	m_bPlayingMannVsMachine.Set( false );
-	m_bMannVsMachineAlarmStatus.Set( false );
 	m_bBountyModeEnabled.Set( false );
 
 	m_bPlayingKoth.Set( false );
@@ -3225,8 +2925,6 @@ CTFGameRules::CTFGameRules()
 
 	m_flGravityMultiplier.Set( 1.0 );
 
-	m_pszCustomUpgradesFile.GetForModify()[0] = '\0';
-
 	m_bShowMatchSummary.Set( false );
 	m_bMapHasMatchSummaryStage.Set( false );
 	m_bPlayersAreOnMatchSummaryStage.Set( false );
@@ -3258,8 +2956,6 @@ CTFGameRules::CTFGameRules()
 	}
 
 	m_flCheckPlayersConnectingTime = 0;
-
-	m_pUpgrades = NULL;
 
 	// Determine if a halloween event map is active
 	// Map active always turns on Halloween
@@ -3326,11 +3022,6 @@ void CTFGameRules::Precache( void )
 		CMerasmus::PrecacheMerasmus();
 	}
 
-	if ( StringHasPrefix( STRING( gpGlobals->mapname ), "mvm_" ) )
-	{
-		CTFPlayer::PrecacheMvM();
-	}
-
 	CTFPlayer::m_bTFPlayerNeedsPrecache = true;
 }
 #endif
@@ -3367,10 +3058,6 @@ void CTFGameRules::LevelInitPostEntity( void )
 //-----------------------------------------------------------------------------
 float CTFGameRules::GetRespawnTimeScalar( int iTeam )
 {
-	// In PvE mode, we don't modify respawn times
-	if ( IsPVEModeActive() )
-		return 1.0;
-
 	return BaseClass::GetRespawnTimeScalar( iTeam );
 }
 
@@ -3394,11 +3081,6 @@ float CTFGameRules::GetRespawnWaveMaxLength( int iTeam, bool bScaleWithNumPlayer
 		return tf_creep_wave_player_respawn_time.GetFloat();
 	}
 #endif
-
-	if ( IsMannVsMachineMode() )
-	{
-		bScale = false;
-	}
 
 	float flTime = BaseClass::GetRespawnWaveMaxLength( iTeam, bScale );
 
@@ -3930,11 +3612,6 @@ static const char *s_PreserveEnts[] =
 	"tf_viewmodel",
 	"tf_logic_training",
 	"tf_logic_training_mode",
-#ifdef TF_RAID_MODE
-	"tf_logic_raid",
-#endif // TF_RAID_MODE
-	"tf_powerup_bottle",
-	"tf_mann_vs_machine_stats",
 	"tf_wearable",
 	"tf_wearable_demoshield",
 	"tf_wearable_vm",
@@ -3944,8 +3621,6 @@ static const char *s_PreserveEnts[] =
 	"tf_logic_medieval",
 	"tf_logic_cp_timer",
 	"tf_logic_tower_defense",	// legacy
-	"tf_logic_mann_vs_machine",
-	"func_upgradestation",
 	"entity_rocket",
 	"entity_carrier",
 	"entity_sign",
@@ -3970,22 +3645,13 @@ void CTFGameRules::Activate()
 	tf_gamemode_ctf.SetValue( 0 );
 	tf_gamemode_sd.SetValue( 0 );
 	tf_gamemode_payload.SetValue( 0 );
-	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_tc.SetValue( 0 );
 	tf_beta_content.SetValue( 0 );
 	tf_gamemode_misc.SetValue( 0 );
 
 	tf_bot_count.SetValue( 0 );
 
-#ifdef TF_RAID_MODE
-	tf_gamemode_raid.SetValue( 0 );
-	tf_gamemode_boss_battle.SetValue( 0 );
-#endif
-	m_bPlayingMannVsMachine.Set( false );
 	m_bBountyModeEnabled.Set( false );
-	m_nCurrencyAccumulator = 0;
-	m_iCurrencyPool = 0;
-	m_bMannVsMachineAlarmStatus.Set( false );
 	m_bPlayingKoth.Set( false );
 	m_bPlayingMedieval.Set( false );
 	m_bPlayingHybrid_CTF_CP.Set( false );
@@ -3998,7 +3664,6 @@ void CTFGameRules::Activate()
 	
 	m_zombieMobTimer.Invalidate();
 	m_zombiesLeftToSpawn = 0;
-	m_nForceUpgrades = 0;
 	m_nForceEscortPushLogic = 0;
 
 	m_CPTimerEnts.RemoveAll();
@@ -4019,27 +3684,6 @@ void CTFGameRules::Activate()
 		engine->ServerCommand( "exec config_arena.cfg\n" );
 	}
 
-#ifdef TF_RAID_MODE
-	CRaidLogic *pRaidLogic = dynamic_cast< CRaidLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_raid" ) );
-	if ( pRaidLogic )
-	{
-		m_hRaidLogic = pRaidLogic;
-
-		tf_gamemode_raid.SetValue( 1 );
-
-		Msg( "Executing server raid game mode config file\n" );
-		engine->ServerCommand( "exec config_raid.cfg\n" );
-	}
-
-	CBossBattleLogic *pBossBattleLogic = dynamic_cast< CBossBattleLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_boss_battle" ) );
-	if ( pBossBattleLogic )
-	{
-		m_hBossBattleLogic = pBossBattleLogic;
-
-		tf_gamemode_boss_battle.SetValue( 1 );
-	}
-#endif // TF_RAID_MODE
-
 	// This is beta content if this map has "beta" as a tag in the schema
 	{
 		const MapDef_t* pMap = GetItemSchema()->GetMasterMapDefByName( STRING( gpGlobals->mapname ) );
@@ -4053,17 +3697,10 @@ void CTFGameRules::Activate()
 	{
 		tf_gamemode_tc.SetValue( 1 );
 	}
-	
-	CMannVsMachineLogic *pMannVsMachineLogic = dynamic_cast< CMannVsMachineLogic * >( gEntList.FindEntityByClassname( NULL, "tf_logic_mann_vs_machine" ) );
+
 	CTeamTrainWatcher *pTrainWatch = dynamic_cast<CTeamTrainWatcher*> ( gEntList.FindEntityByClassname( NULL, "team_train_watcher" ) );
 	bool bFlag = ICaptureFlagAutoList::AutoList().Count() > 0;
-	if ( pMannVsMachineLogic )
-	{
-		m_bPlayingMannVsMachine.Set( true );
-		tf_gamemode_mvm.SetValue( 1 );
-		m_nGameType.Set( TF_GAMETYPE_MVM );
-	}
-	else if ( StringHasPrefix( STRING( gpGlobals->mapname ), "sd_" ) )
+	if ( StringHasPrefix( STRING( gpGlobals->mapname ), "sd_" ) )
 	{
 		m_bPlayingSpecialDeliveryMode.Set( true );
 		tf_gamemode_sd.SetValue( 1 );
@@ -4168,17 +3805,6 @@ void CTFGameRules::Activate()
 // 	{
 // 		CExtraMapEntity::SpawnExtraModel();
 // 	}
-
-	// If leaving MvM for any other game mode, clean up any sticky UI/state
-	if ( IsInTournamentMode() && m_nGameType != TF_GAMETYPE_MVM && g_TFGameModeHistory.GetPrevState() == TF_GAMETYPE_MVM )
-	{
-		mp_tournament.SetValue( false );
-	}
-
-	if ( GameModeUsesUpgrades() && g_pPopulationManager == NULL )
-	{
-		(CPopulationManager *)CreateEntityByName( "info_populator" );
-	}
 
 	if ( tf_gamemode_tc.GetBool() || tf_gamemode_sd.GetBool() || m_bPlayingMedieval )
 	{
@@ -4358,10 +3984,6 @@ const char* CTFGameRules::LoseSongName( int nTeam )
 			? "Announcer.Helltower_Hell_Red_Lose" 
 			: "Announcer.Helltower_Hell_Blue_Lose";
 	}
-	else if ( IsMannVsMachineMode() )
-	{
-		return "music.mvm_lost_wave";
-	}
 	else
 	{
 		return BaseClass::LoseSongName( nTeam );
@@ -4397,23 +4019,6 @@ void CTFGameRules::CleanUpMap( void )
 	for ( int i = 0; i < TF_TEAM_COUNT; i++ )
 	{
 		m_bHasSpawnedSoccerBall[i] = false;
-	}
-
-	// If we're in a mode with upgrades, we force the players to recreate their weapons on next spawn.
-	// This clears out any weapon upgrades they had in the previous round.
-	if ( g_hUpgradeEntity )
-	{
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			CTFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-			if ( !pTFPlayer )
-				continue;
-
-			pTFPlayer->ForceItemRemovalOnRespawn();
-
-			// Remove all player upgrades as well
-			pTFPlayer->RemovePlayerAttributes( false );
-		}
 	}
 #endif
 }
@@ -4576,14 +4181,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 		}
 	}
 #endif // TF_RAID_MODE
-
-	if ( IsMannVsMachineMode() )
-	{
-		if ( g_hMannVsMachineLogic )
-		{
-			g_hMannVsMachineLogic->SetupOnRoundStart();
-		}
-	}
 
 	m_redPayloadToPush = NULL;
 	m_bluePayloadToPush = NULL;
@@ -5052,18 +4649,6 @@ void CTFGameRules::SetupOnRoundRunning( void )
 		if ( !IsHalloweenScenario( HALLOWEEN_SCENARIO_DOOMSDAY ) )
 		{
 			BroadcastSound( 255, "Announcer.SD_RoundStart" );
-		}
-	}
-
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "mvm_begin_wave" );
-		if ( event )
-		{
-			event->SetInt( "wave_index", g_pPopulationManager->GetWaveNumber() );
-			event->SetInt( "max_waves", g_pPopulationManager->GetTotalWaveCount() );
-			event->SetInt( "advanced", g_pPopulationManager->IsAdvancedPopFile() ? 1 : 0 );
-			gameeventmanager->FireEvent( event );
 		}
 	}
 
@@ -6617,8 +6202,8 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			{
 				bool bReduceBlast = false;
 
-				// If someone else shot us or we're in MvM
-				if( pAttacker != pVictimBaseEntity || IsMannVsMachineMode() )
+				// If someone else shot us
+				if( pAttacker != pVictimBaseEntity )
 				{
 					bReduceBlast = true;
 				}
@@ -6671,14 +6256,6 @@ float CTFGameRules::ApplyOnDamageAliveModifyRules( const CTakeDamageInfo &info, 
 			if ( pSentry )
 			{
 				CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pVictim, flRealDamage, dmg_from_sentry_reduced );
-			}
-		}
-
-		if ( IsMannVsMachineMode() )
-		{
-			if ( pTFAttacker && pTFAttacker->IsBot() && pAttacker != pVictimBaseEntity && pVictim && !pVictim->IsBot() )
-			{
-				flRealDamage *= g_pPopulationManager ? g_pPopulationManager->GetDamageMultiplier() : tf_populator_damage_multiplier.GetFloat();
 			}
 		}
 
@@ -6880,12 +6457,6 @@ CTFGameRules::~CTFGameRules()
 
 	// clean up cached teleport locations
 	m_mapTeleportLocations.PurgeAndDeleteElements();
-
-	// reset this only if we quit MvM to minimize the risk of breaking pub tournament
-	if ( IsMannVsMachineMode() )
-	{
-		mp_tournament.SetValue( 0 );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -7006,10 +6577,6 @@ bool CTFGameRules::TFVoiceManager( CBasePlayer *pListener, CBasePlayer *pTalker 
 	if ( pTalker && pTalker->BHaveChatSuspensionInCurrentMatch() )
 		return false;
 
-	// Always allow teams to hear each other in TD mode
-	if ( IsMannVsMachineMode() )
-		return true;
-
 	if ( !tf_gravetalk.GetBool() )
 	{
 		// Dead players can only be heard by other dead team mates but only if a match is in progress
@@ -7044,9 +6611,6 @@ bool CTFGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 	{
 		if ( FStrEq( pcmd, "tournament_readystate" ) )
 		{
-			if ( IsMannVsMachineMode() )
-				return true;
-
 			if ( UsePlayerReadyStatusMode() )
 				return true;
 
@@ -7088,9 +6652,6 @@ bool CTFGameRules::ClientCommand( CBaseEntity *pEdict, const CCommand &args )
 
 		if ( FStrEq( pcmd, "tournament_teamname" ) )
 		{
-			if ( IsMannVsMachineMode() )
-				return true;
-
 			if ( IsCompetitiveMode() )
 				return true;
 
@@ -7274,11 +6835,6 @@ void CTFGameRules::LevelShutdown()
 	DuelMiniGame_LevelShutdown();
 
 	g_TFGameModeHistory.SetPrevState( m_nGameType );
-
-	if ( m_pUpgrades )
-	{
-		UTIL_Remove( m_pUpgrades );
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -7294,7 +6850,7 @@ void CTFGameRules::Think()
 
 	if ( g_fGameOver )
 	{
-		if ( IsCompetitiveMode() && !IsMannVsMachineMode() )
+		if ( IsCompetitiveMode() )
 		{
 			const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( GetCurrentMatchGroup() );
 
@@ -7660,31 +7216,6 @@ void CTFGameRules::Think()
 
 		tf_item_based_forced_holiday.SetValue( kHoliday_None );
 		FlushAllAttributeCaches();
-	}	
-
-	// play the bomb alarm if we need to
-	if ( m_bMannVsMachineAlarmStatus )
-	{
-		if ( m_flNextFlagAlert < gpGlobals->curtime )
-		{
-			if ( PlayThrottledAlert( 255, "Announcer.MVM_Bomb_Alert_Near_Hatch", 5.0f ) )
-			{
-				m_flNextFlagAlarm = gpGlobals->curtime + 3.0;
-				m_flNextFlagAlert = gpGlobals->curtime + 20.0f;
-			}
-		}
-
-		if ( m_flNextFlagAlarm < gpGlobals->curtime )
-		{
-			m_flNextFlagAlarm = gpGlobals->curtime + 3.0;
-
-			BroadcastSound( 255, "MVM.BombWarning" );
-		}
-	}
-	else if ( m_flNextFlagAlarm > 0.0f )
-	{
-		m_flNextFlagAlarm = 0.0f;
-		m_flNextFlagAlert = gpGlobals->curtime + 5.0f;
 	}
 
 	SpawnHalloweenBoss();
@@ -7810,13 +7341,6 @@ void CTFGameRules::Think()
 
 #endif // GAME_DLL
 
-	// This is ugly, but, population manager needs to sometimes think when we're not simulating, but it is an entity.
-	// Really, we need to better split out some kind of "sub-gamerules" class for modes like this.
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		g_pPopulationManager->GameRulesThink();
-	}
-
 	BaseClass::Think();
 }
 
@@ -7841,7 +7365,19 @@ bool CTFGameRules::SwitchToNextBestWeapon( CBaseCombatCharacter *pPlayer, CBaseC
 
 #ifdef GAME_DLL
 
-extern bool IsSpaceToSpawnHere( const Vector &where );
+//--------------------------------------------------------------------------------------------------------------
+/**
+ * Return true if a player has room to spawn at the given position
+ */
+bool IsSpaceToSpawnHere(const Vector& where)
+{
+	// make sure a player will fit here
+	trace_t result;
+	float bloat = 5.0f;
+	UTIL_TraceHull(where, where, VEC_HULL_MIN - Vector(bloat, bloat, 0), VEC_HULL_MAX + Vector(bloat, bloat, bloat), MASK_SOLID | CONTENTS_PLAYERCLIP, NULL, COLLISION_GROUP_PLAYER_MOVEMENT, &result);
+
+	return result.fraction >= 1.0;
+}
 
 static bool isZombieMobForceSpawning = false;
 
@@ -8589,30 +8125,6 @@ void CTFGameRules::CheckRespawnWaves()
 		{
 			pTFPlayer->ForceRespawn();
 		}
-		else if ( IsPVEModeActive() )
-		{
-			// special stuff for PVE mode
-			if ( !ShouldRespawnQuickly( pTFPlayer ) )
-				continue;
-
-			// If the player hasn't been dead the minimum respawn time, he
-			// waits until the next wave.
-			if ( !HasPassedMinRespawnTime( pTFPlayer ) )
-				continue;
-
-			if ( !pTFPlayer->IsReadyToSpawn() )
-			{
-				// Let the player spawn immediately when they do pick a class
-				if ( pTFPlayer->ShouldGainInstantSpawn() )
-				{
-					pTFPlayer->AllowInstantSpawn();
-				}
-				continue;
-			}
-
-			// Respawn this player
-			pTFPlayer->ForceRespawn();
-		}
 	}
 }
 
@@ -8695,17 +8207,6 @@ void CTFGameRules::SetWinningTeam( int team, int iWinReason, bool bForceMapReset
 	}
 
 	DuelMiniGame_AssignWinners();
-
-#ifdef TF_RAID_MODE
-	if ( !IsBossBattleMode() )
-	{
-		// Don't do a full reset in Raid mode if the defending team didn't win
-		if ( IsRaidMode() && team != TF_TEAM_PVE_DEFENDERS )
-		{
-			bForceMapReset = false;
-		}
-	}
-#endif // TF_RAID_MODE
 
 	SetBirthdayPlayer( NULL );
 
@@ -8910,16 +8411,6 @@ bool CTFGameRules::FPlayerCanTakeDamage( CBasePlayer *pPlayer, CBaseEntity *pAtt
 
 	// prevent eyeball rockets from hurting teammates if it's a spell
 	if ( info.GetDamageCustom() == TF_DMG_CUSTOM_SPELL_MONOCULUS && pAttacker->GetTeamNumber() == pPlayer->GetTeamNumber() )
-	{
-		return false;
-	}
-
-	// in PvE modes, if entities are on the same team, they can't hurt each other
-	// this is needed since not all entities will be players
-	if ( IsPVEModeActive() && 
-			pPlayer->GetTeamNumber() == pAttacker->GetTeamNumber() && 
-			pPlayer != pAttacker && 
-			!info.IsForceFriendlyFire() )
 	{
 		return false;
 	}
@@ -9278,8 +8769,7 @@ void CTFGameRules::ChangePlayerName( CTFPlayer *pPlayer, const char *pszNewName 
 	const char *pszOldName = pPlayer->GetPlayerName();
 
 	// Check if they can change their name
-	// don't show when bots change their names in PvE mode
-	if ( State_Get() != GR_STATE_STALEMATE && !( IsPVEModeActive() && pPlayer->IsBot() ) )
+	if ( State_Get() != GR_STATE_STALEMATE )
 	{
 		CReliableBroadcastRecipientFilter filter;
 		UTIL_SayText2Filter( filter, pPlayer, false, "#TF_Name_Change", pszOldName, pszNewName );
@@ -10289,21 +9779,6 @@ static kill_eater_event_t g_eClassKillEvents[] =
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE( g_eClassKillEvents ) == (TF_LAST_NORMAL_CLASS - TF_FIRST_NORMAL_CLASS) );
 
-//-----------------------------------------------------------------------------
-static kill_eater_event_t g_eRobotClassKillEvents[] =
-{
-	kKillEaterEvent_RobotScoutKill,					// TF_CLASS_SCOUT
-	kKillEaterEvent_RobotSniperKill,				// TF_CLASS_SNIPER
-	kKillEaterEvent_RobotSoldierKill,				// TF_CLASS_SOLDIER
-	kKillEaterEvent_RobotDemomanKill,				// TF_CLASS_DEMOMAN
-	kKillEaterEvent_RobotMedicKill,					// TF_CLASS_MEDIC
-	kKillEaterEvent_RobotHeavyKill,					// TF_CLASS_HEAVYWEAPONS
-	kKillEaterEvent_RobotPyroKill,					// TF_CLASS_PYRO
-	kKillEaterEvent_RobotSpyKill,					// TF_CLASS_SPY
-	kKillEaterEvent_RobotEngineerKill,				// TF_CLASS_ENGINEER
-};
-COMPILE_TIME_ASSERT( ARRAYSIZE( g_eRobotClassKillEvents ) == (TF_LAST_NORMAL_CLASS - TF_FIRST_NORMAL_CLASS) );
-
 static bool BHasWearableOfSpecificQualityEquipped( /*const*/ CTFPlayer *pTFPlayer, EEconItemQuality eQuality )
 {
 	Assert( pTFPlayer );
@@ -10366,19 +9841,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 		if ( pObject->GetBuilder() != pVictim )
 		{
 			pObject->IncrementKills();
-
-			// minibosses count for 5 kills
-			if ( IsMannVsMachineMode() && pVictim && pVictim->IsPlayer() )
-			{
-				CTFPlayer *playerVictim = ToTFPlayer( pVictim );
-				if ( playerVictim->IsMiniBoss() )
-				{
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-					pObject->IncrementKills();
-				}
-			}
 		}
 		pInflictor = pObject;
 
@@ -10556,248 +10018,204 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 
 		if ( pAttackerEconWeapon )
 		{
-			if ( !( IsPVEModeActive() && pTFPlayerVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
+			EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eKillEaterEvent );
+
+			// Cosmetic any kill type tracking
 			{
-				// Any type of non-robot kill!
-				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eKillEaterEvent );
+				HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_CosmeticKills );
 
-				// Cosmetic any kill type tracking
+				// Halloween silliness: overworld kills for Merasmus carnival.
+				if ( IsHalloweenScenario( HALLOWEEN_SCENARIO_DOOMSDAY ) && !pTFPlayerScorer->m_Shared.InCond( TF_COND_HALLOWEEN_IN_HELL ) )
 				{
-					HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_CosmeticKills );
-
-					// Halloween silliness: overworld kills for Merasmus carnival.
-					if ( IsHalloweenScenario( HALLOWEEN_SCENARIO_DOOMSDAY ) && !pTFPlayerScorer->m_Shared.InCond( TF_COND_HALLOWEEN_IN_HELL ) )
-					{
-						HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer,
-																	  pTFPlayerVictim,
-																	  kKillEaterEvent_Halloween_OverworldKills );
-					}
+					HatAndMiscEconEntities_OnOwnerKillEaterEvent( pTFPlayerScorer,
+																	pTFPlayerVictim,
+																	kKillEaterEvent_Halloween_OverworldKills );
 				}
+			}
 
-				// Operation Kills
-				EconEntity_NonEquippedItemKillTracking( pTFPlayerScorer, pTFPlayerVictim, 1 );
+			// Operation Kills
+			EconEntity_NonEquippedItemKillTracking( pTFPlayerScorer, pTFPlayerVictim, 1 );
 
-				// Unique kill tracking?
-				// XXX(JohnS) - Disabling.  No longer collecting this on GC, never shipped code using this. See ECON_UNIQUE_EVENT_SUPPORT define
-				// EconEntity_OnOwnerUniqueEconEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UniqueEvent__KilledAccountWithItem );
+			// Unique kill tracking?
+			// XXX(JohnS) - Disabling.  No longer collecting this on GC, never shipped code using this. See ECON_UNIQUE_EVENT_SUPPORT define
+			// EconEntity_OnOwnerUniqueEconEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UniqueEvent__KilledAccountWithItem );
 
-				// Optional Taunt Kill tracking
-				if ( IsTauntDmg( info.GetDamageCustom() ) )
+			// Optional Taunt Kill tracking
+			if ( IsTauntDmg( info.GetDamageCustom() ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
+			}
+			// Scorch Shot Taunt is Different
+			else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_FLARE_PELLET )
+			{
+				CBaseEntity *pInflictor = info.GetInflictor();
+				CTFProjectile_Flare *pFlare = dynamic_cast<CTFProjectile_Flare*>(pInflictor);
+				if ( pFlare && pFlare->IsFromTaunt() )
 				{
 					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
 				}
-				// Scorch Shot Taunt is Different
-				else if ( info.GetDamageCustom() == TF_DMG_CUSTOM_FLARE_PELLET )
-				{
-					CBaseEntity *pInflictor = info.GetInflictor();
-					CTFProjectile_Flare *pFlare = dynamic_cast<CTFProjectile_Flare*>(pInflictor);
-					if ( pFlare && pFlare->IsFromTaunt() )
-					{
-						EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntKill );
-					}
-				}
+			}
 
-				// Optional: also track "killed X players of this specific class".
-				int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
-				if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
-				{
-					const kill_eater_event_t eClassKillType = g_eClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
-				}
+			// Optional: also track "killed X players of this specific class".
+			int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
+			if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
+			{
+				const kill_eater_event_t eClassKillType = g_eClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
+			}
 
-				// Optional : Kills while in Victory / Bonus time
-				if ( State_Get() == GR_STATE_TEAM_WIN && GetWinningTeam() != pTFPlayerVictim->GetTeamNumber() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_VictoryTimeKill );
-				}
+			// Optional : Kills while in Victory / Bonus time
+			if ( State_Get() == GR_STATE_TEAM_WIN && GetWinningTeam() != pTFPlayerVictim->GetTeamNumber() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_VictoryTimeKill );
+			}
 
-				// Optional: also track "killed X players while they were in the air".
-				if ( !(pTFPlayerVictim->GetFlags() & FL_ONGROUND) && (pTFPlayerVictim->GetWaterLevel() == WL_NotInWater) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_AirborneEnemyKill );
-				}
+			// Optional: also track "killed X players while they were in the air".
+			if ( !(pTFPlayerVictim->GetFlags() & FL_ONGROUND) && (pTFPlayerVictim->GetWaterLevel() == WL_NotInWater) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_AirborneEnemyKill );
+			}
 
-				// Optional: also track "killed X players with headshots".
-				if ( IsHeadshot( info.GetDamageCustom() ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HeadshotKill );
-				}
+			// Optional: also track "killed X players with headshots".
+			if ( IsHeadshot( info.GetDamageCustom() ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HeadshotKill );
+			}
 
-				// Optional: also track "gibbed X players".
-				if ( pTFPlayerVictim->ShouldGib( info ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_GibKill );
-				}
+			// Optional: also track "gibbed X players".
+			if ( pTFPlayerVictim->ShouldGib( info ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_GibKill );
+			}
 
-				// Optional: also track "killed X players during full moons". We intentionally don't call into the
-				// game rules here because we don't want server variables to override this. Setting local time on the
-				// server will still allow it to happen but it at least takes a little effort.
-				if ( UTIL_IsHolidayActive( kHoliday_FullMoon ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillDuringFullMoon );
-				}
+			// Optional: also track "killed X players during full moons". We intentionally don't call into the
+			// game rules here because we don't want server variables to override this. Setting local time on the
+			// server will still allow it to happen but it at least takes a little effort.
+			if ( UTIL_IsHolidayActive( kHoliday_FullMoon ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillDuringFullMoon );
+			}
 
-				// Optional: also track kills we make while we're dead (afterburn, pre-death-fired rocket, etc.)
-				if ( !pTFPlayerScorer->IsAlive() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillPosthumous );
-				}
+			// Optional: also track kills we make while we're dead (afterburn, pre-death-fired rocket, etc.)
+			if ( !pTFPlayerScorer->IsAlive() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillPosthumous );
+			}
 
-				// Optional: also track kills that were specifically criticals.
-				if ( (info.GetDamageType() & DMG_CRITICAL) != 0 )
+			// Optional: also track kills that were specifically criticals.
+			if ( (info.GetDamageType() & DMG_CRITICAL) != 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillCritical );
+			}
+			else 
+			{
+				// Not special at all kill
+				if ( pTFPlayerVictim->GetAttackBonusEffect() == kBonusEffect_None )
 				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillCritical );
-				}
-				else 
-				{
-					// Not special at all kill
-					if ( pTFPlayerVictim->GetAttackBonusEffect() == kBonusEffect_None )
-					{
-						EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_NonCritKills );
-					}
-				}
-
-				// Optional: also track kills that were made while we were launched into the air from an explosion (ie., rocket-jumping).
-				if ( pTFPlayerScorer->InAirDueToExplosion() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillWhileExplosiveJumping );
-				}
-
-				// Optional: also track kills where the victim was a spy who was invisible at the time of death.
-				if ( iVictimClassIndex == TF_CLASS_SPY && pTFPlayerVictim->m_Shared.GetPercentInvisible() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_InvisibleSpiesKilled );
-				}
-
-				// Optional: also track kills where the victim was a medic with 100% uber.
-				if ( pTFPlayerVictim->MedicGetChargeLevel() >= 1.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MedicsWithFullUberKilled );
-				}
-
-				// Optional: also track kills where the killer was at low health when they dealt the final damage. Don't count
-				// kills with 0 or fewer health -- those would be post-mortem kills instead.
-				if ( ((float)pTFPlayerScorer->GetHealth() / (float)pTFPlayerScorer->GetMaxHealth()) <= 0.1f && pTFPlayerScorer->GetHealth() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileLowHealth );
-				}
-
-				// Optional: also track kills that take place during the Halloween holiday. We intentionally *do* check against
-				// the game rules logic here -- if folks want to enable Halloween mode on a server and play around, I don't see any
-				// reason why we benefit from stopping their fun.
-				if ( TF_IsHolidayActive( kHoliday_Halloween ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKill );
-				}
-
-				// Optional: also track kills where the victim was completely underwater.
-				if ( pTFPlayerVictim->GetWaterLevel() >= WL_Eyes )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UnderwaterKill );
-				}
-
-				// Optional: also track kills where we're under the effects of a medic's ubercharge.
-				if ( pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileUbercharged );
-				}
-
-				// Optional: also track kills where the victim was in the process of carrying the intel, capturing a point, or pushing
-				// the cart. The actual logic for "killed a flag carrier" is handled elsewhere because by this point we've forgotten
-				// if we had a flag before we died.
-				if ( pTFPlayerVictim->IsCapturingPoint() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_DefenderKill );
-				}
-
-				// Optional: also track kills where the victim was at least N units from the person dealing the damage, where N is "however far
-				// you have to be to get the crowd chear noise". This also specifically checks to make sure the damage dealer is alive to avoid
-				// casing where you spectate far away, etc.
-				if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() >= 2000.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_LongDistanceKill );
-				}
-
-				// Optional: also track kills where the victim was wearing at least one unusual-quality item.
-				if ( BHasWearableOfSpecificQualityEquipped( pTFPlayerVictim, AE_UNUSUAL ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayersWearingUnusualKill );
-				}
-
-				// Optional: also track kills where the victim was on fire at the time that they died. We can't check the condition flag
-				// here because that may or may not be active after they die, but instead we test to see whether they still had a burn queued
-				// up for the future as a proxy for "was on fire at this point".
-				if ( pTFPlayerVictim->m_Shared.GetFlameBurnTime() >= gpGlobals->curtime )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_BurningEnemyKill );
-				}
-
-				// Optional: also track kills where this kill ended someone else's killstreak, where "killstreak" starts when the first
-				// announcement happens. If Mike gets to hard-code constants, I do, too.
-				enum { kFirstKillStreakAnnouncement = 5 };
-				if ( pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) >= kFirstKillStreakAnnouncement )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillstreaksEnded );
-				}
-
-				// Optional: also track kills where the killer and the victim were basically right next to each other. This is hard-coded to
-				// 1.5x default melee swing range.
-				if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() <= 72.0f )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PointBlankKills );
-				}
-
-				// Optional : Fullhealth kills
-				if ( pTFPlayerScorer->GetHealth() >= pTFPlayerScorer->GetMaxHealth() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_FullHealthKills );
-				}
-
-				// Optional : Taunting Player kills
-				if ( pTFPlayerVictim->IsTaunting() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntingPlayerKills );
+					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_NonCritKills );
 				}
 			}
-			else
+
+			// Optional: also track kills that were made while we were launched into the air from an explosion (ie., rocket-jumping).
+			if ( pTFPlayerScorer->InAirDueToExplosion() )
 			{
-				Assert( pTFPlayerVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS );
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayerKillWhileExplosiveJumping );
+			}
 
-				// Optional: also track kills where the victim was a robot in MvM
-				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotsDestroyed );
+			// Optional: also track kills where the victim was a spy who was invisible at the time of death.
+			if ( iVictimClassIndex == TF_CLASS_SPY && pTFPlayerVictim->m_Shared.GetPercentInvisible() > 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_InvisibleSpiesKilled );
+			}
 
-				// Optional: also track "killed X Robots of this specific class".
-				int iVictimClassIndex = pTFPlayerVictim->GetPlayerClass()->GetClassIndex();
-				if ( iVictimClassIndex >= TF_FIRST_NORMAL_CLASS && iVictimClassIndex <= TF_LAST_NORMAL_CLASS )
-				{
-					const kill_eater_event_t eClassKillType = g_eRobotClassKillEvents[ iVictimClassIndex - TF_FIRST_NORMAL_CLASS ];
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, eClassKillType );
-				}
+			// Optional: also track kills where the victim was a medic with 100% uber.
+			if ( pTFPlayerVictim->MedicGetChargeLevel() >= 1.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MedicsWithFullUberKilled );
+			}
 
-				// Optional: specifically track miniboss kills separately from base robot kills.
-				if ( pTFPlayerVictim->IsMiniBoss() )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_MinibossRobotsDestroyed );
-				}
+			// Optional: also track kills where the killer was at low health when they dealt the final damage. Don't count
+			// kills with 0 or fewer health -- those would be post-mortem kills instead.
+			if ( ((float)pTFPlayerScorer->GetHealth() / (float)pTFPlayerScorer->GetMaxHealth()) <= 0.1f && pTFPlayerScorer->GetHealth() > 0 )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileLowHealth );
+			}
 
-				// Optional: track whether this shot killed a robot *after* penetrating something else.
-				if ( info.GetPlayerPenetrationCount() > 0 )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotsDestroyedAfterPenetration );
-				}
+			// Optional: also track kills that take place during the Halloween holiday. We intentionally *do* check against
+			// the game rules logic here -- if folks want to enable Halloween mode on a server and play around, I don't see any
+			// reason why we benefit from stopping their fun.
+			if ( TF_IsHolidayActive( kHoliday_Halloween ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKill );
+			}
 
-				// Optional: also track "killed X players with headshots", but for robots specifically.
-				if ( IsHeadshot( info.GetDamageCustom() ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_RobotHeadshotKills );
-				}
+			// Optional: also track kills where the victim was completely underwater.
+			if ( pTFPlayerVictim->GetWaterLevel() >= WL_Eyes )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_UnderwaterKill );
+			}
 
-				// Optional: also track kills that take place during the Halloween holiday. See note for kKillEaterEvent_HalloweenKill
-				// regarding calling into game rules here.
-				if ( TF_IsHolidayActive( kHoliday_Halloween ) )
-				{
-					EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_HalloweenKillRobot );
-				}
+			// Optional: also track kills where we're under the effects of a medic's ubercharge.
+			if ( pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE ) || pTFPlayerScorer->m_Shared.InCond( TF_COND_INVULNERABLE_WEARINGOFF ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillWhileUbercharged );
+			}
+
+			// Optional: also track kills where the victim was in the process of carrying the intel, capturing a point, or pushing
+			// the cart. The actual logic for "killed a flag carrier" is handled elsewhere because by this point we've forgotten
+			// if we had a flag before we died.
+			if ( pTFPlayerVictim->IsCapturingPoint() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_DefenderKill );
+			}
+
+			// Optional: also track kills where the victim was at least N units from the person dealing the damage, where N is "however far
+			// you have to be to get the crowd chear noise". This also specifically checks to make sure the damage dealer is alive to avoid
+			// casing where you spectate far away, etc.
+			if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() >= 2000.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_LongDistanceKill );
+			}
+
+			// Optional: also track kills where the victim was wearing at least one unusual-quality item.
+			if ( BHasWearableOfSpecificQualityEquipped( pTFPlayerVictim, AE_UNUSUAL ) )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PlayersWearingUnusualKill );
+			}
+
+			// Optional: also track kills where the victim was on fire at the time that they died. We can't check the condition flag
+			// here because that may or may not be active after they die, but instead we test to see whether they still had a burn queued
+			// up for the future as a proxy for "was on fire at this point".
+			if ( pTFPlayerVictim->m_Shared.GetFlameBurnTime() >= gpGlobals->curtime )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_BurningEnemyKill );
+			}
+
+			// Optional: also track kills where this kill ended someone else's killstreak, where "killstreak" starts when the first
+			// announcement happens. If Mike gets to hard-code constants, I do, too.
+			enum { kFirstKillStreakAnnouncement = 5 };
+			if ( pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) >= kFirstKillStreakAnnouncement )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillstreaksEnded );
+			}
+
+			// Optional: also track kills where the killer and the victim were basically right next to each other. This is hard-coded to
+			// 1.5x default melee swing range.
+			if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() <= 72.0f )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_PointBlankKills );
+			}
+
+			// Optional : Fullhealth kills
+			if ( pTFPlayerScorer->GetHealth() >= pTFPlayerScorer->GetMaxHealth() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_FullHealthKills );
+			}
+
+			// Optional : Taunting Player kills
+			if ( pTFPlayerVictim->IsTaunting() )
+			{
+				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_TauntingPlayerKills );
 			}
 		}
 	}
@@ -10917,10 +10335,6 @@ void CTFGameRules::CalcDominationAndRevenge( CTFPlayer *pAttacker, CBaseEntity *
 
 	PlayerStats_t *pStatsVictim = CTF_GameStats.FindPlayerStats( pVictim );
 
-	// no dominations/revenge in PvE mode
-	if ( IsPVEModeActive() )
-		return;
-
 	CEconEntity *pEconWeapon = dynamic_cast<CEconEntity *>( pWeapon );
 	
 	int nAttackerEntIdx = pAttacker->entindex();
@@ -11014,8 +10428,6 @@ void CTFGameRules::CreateStandardEntities()
 	// Create the monster resource for PvE battles
 	g_pMonsterResource = (CMonsterResource *)CBaseEntity::Create( "monster_resource", vec3_origin, vec3_angle );
 
-	MannVsMachineStats_Init();
-
 	// Create the entity that will send our data to the client.
 	m_hGamerulesProxy = assert_cast<CTFGameRulesProxy*>(CBaseEntity::Create( "tf_gamerules", vec3_origin, vec3_angle ));
 	Assert( m_hGamerulesProxy.Get() );
@@ -11032,7 +10444,6 @@ void CTFGameRules::CreateStandardEntities()
 	NewGlobalIssue< CNextLevelIssue >();
 	NewGlobalIssue< CExtendLevelIssue >();
 	NewGlobalIssue< CScrambleTeams >();
-	NewGlobalIssue< CMannVsMachineChangeChallengeIssue >();
 	NewGlobalIssue< CEnableTemporaryHalloweenIssue >();
 	NewGlobalIssue< CTeamAutoBalanceIssue >();
 	NewGlobalIssue< CClassLimitsIssue >();
@@ -11972,11 +11383,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			iDeathFlags |= TF_DEATH_PURGATORY;
 		}
 
-		if ( pTFPlayerVictim->IsMiniBoss() )
-		{
-			iDeathFlags |= TF_DEATH_MINIBOSS;
-		}
-
 		// Australium Guns get a Gold Background
 		IHasAttributes *pAttribInterface = GetAttribInterface( info.GetWeapon() );
 		if ( pAttribInterface )
@@ -12172,11 +11578,7 @@ void CTFGameRules::ClientDisconnected( edict_t *pClient )
 				const IMatchGroupDescription* pMatchDesc = GetMatchGroupDescription( GetCurrentMatchGroup() );
 				if ( !pMatchDesc || !pMatchDesc->BUsesAutoReady() )
 				{
-					// Always reset when a player leaves this type of match if it isn't MvM
-					if ( !IsMannVsMachineMode() )
-					{
-						PlayerReadyStatus_ResetState();
-					}
+					PlayerReadyStatus_ResetState();
 				}
 				else if ( !IsTeamReady( pPlayer->GetTeamNumber() ) )
 				{
@@ -12451,39 +11853,11 @@ void CTFGameRules::SendArenaWinPanelInfo( void )
 	}
 }
 
-void CTFGameRules::SendPVEWinPanelInfo( void )
-{
-	IGameEvent *winEvent = gameeventmanager->CreateEvent( "pve_win_panel" );
-
-	if ( winEvent )
-	{
-		winEvent->SetInt( "panel_style", WINPANEL_BASIC );
-		winEvent->SetInt( "winning_team", m_iWinningTeam );
-		winEvent->SetInt( "winreason", 0 );
-
-		// Send the event
-		gameeventmanager->FireEvent( winEvent );
-	}
-
-	/*CBroadcastRecipientFilter filter;
-	filter.MakeReliable();
-	UserMessageBegin( filter, "MVMAnnouncement" );
-		WRITE_CHAR( TF_MVM_ANNOUNCEMENT_WAVE_FAILED );
-		WRITE_CHAR( -1 );
-	MessageEnd();*/
-}
-
 void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 {
 	if ( IsInArenaMode() == true )
 	{
 		SendArenaWinPanelInfo();
-		return;
-	}
-
-	if ( IsPVEModeActive() )
-	{
-		SendPVEWinPanelInfo();
 		return;
 	}
 
@@ -13703,156 +13077,6 @@ void CTFGameRules::ManageServerSideVoteCreation( void )
 
 
 //-----------------------------------------------------------------------------
-// Purpose: Figures out how much money to put in a custom currency pack drop
-//-----------------------------------------------------------------------------
-int CTFGameRules::CalculateCurrencyAmount_CustomPack( int nAmount )
-{
-	// Entities and events that specify a custom currency value should pass in the amount
-	// they're worth, and we figure out if there's enough currency to generate a pack.
-	// If the amount passed in isn't enough to generate a pack, we store it in an accumulator.
-	
-	int nMinDrop = kMVM_CurrencyPackMinSize;
-	if ( nMinDrop > 1 )
-	{
-		// If we're on the last spawn, drop everything
-		if ( TFObjectiveResource()->GetMannVsMachineWaveEnemyCount() == 1 )
-		{
-			nMinDrop = m_nCurrencyAccumulator + nAmount;
-			m_nCurrencyAccumulator = 0;
-			return nMinDrop;
-		}
-
-		// If we're passing in a value above mindrop, just drop it
-		if ( nAmount >= nMinDrop )
-			return nAmount;
-
-		// Accumulate currency if we're getting values below nMinDrop
-		m_nCurrencyAccumulator += nAmount;
-		if ( m_nCurrencyAccumulator >= nMinDrop )
-		{
-			m_nCurrencyAccumulator -= nMinDrop;
-			//DevMsg( "*MIN REACHED* -- %d left\n", m_nCurrencyAccumulator );
-			return nMinDrop;
-		}
-		else
-		{
-			// We don't have enough yet, drop nothing
-			//DevMsg( "*STORE* -- %d stored\n", m_nCurrencyAccumulator );
-			return 0;
-		}
-	}
-	else
-	{
-		// We don't have a PopManager - return the amount passed in
-		return nAmount;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Figures out how much to give for pre-definied events or types
-//-----------------------------------------------------------------------------
-int CTFGameRules::CalculateCurrencyAmount_ByType( CurrencyRewards_t nType )
-{
-	// CUSTOM values are usually determined by CalculateCurrencyAmount_CustomPack() and set via CCurrencyPack::SetValue()
-	Assert ( nType != TF_CURRENCY_PACK_CUSTOM );
-
-	int nAmount = 0;
-
-	switch ( nType )
-	{
-	case TF_CURRENCY_KILLED_PLAYER:
-		nAmount = 40;
-		break;
-
-	case TF_CURRENCY_KILLED_OBJECT:
-		nAmount = 40;
-		break;
-
-	case TF_CURRENCY_ASSISTED_PLAYER:
-		nAmount = 20;
-		break;
-
-	case TF_CURRENCY_BONUS_POINTS:
-		nAmount = 1;
-		break;
-
-	case TF_CURRENCY_CAPTURED_OBJECTIVE:
-		nAmount = 100;
-		break;
-
-	case TF_CURRENCY_ESCORT_REWARD:
-		nAmount = 10;
-		break;
-
-	case TF_CURRENCY_PACK_SMALL:
-		nAmount = 5;
-		break;
-
-	case TF_CURRENCY_PACK_MEDIUM:
-		nAmount = 10;
-		break;
-
-	case TF_CURRENCY_PACK_LARGE:
-		nAmount = 25;
-		break;
-
-	case TF_CURRENCY_TIME_REWARD:
-		nAmount = 5;
-		break;
-
-	case TF_CURRENCY_WAVE_COLLECTION_BONUS:
-		nAmount = 100;
-		break;
-
-	default:
-		Assert( 0 );	// Unknown type
-	};
-
-	return nAmount;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Gives money directly to a team or specific player
-//-----------------------------------------------------------------------------
-int CTFGameRules::DistributeCurrencyAmount( int nAmount, CTFPlayer *pTFPlayer /* = NULL */, bool bShared /* = true */, bool bCountAsDropped /*= false */, bool bIsBonus /*= false */ )
-{
-	// Group distribution (default)
-	if ( bShared )
-	{
-		CUtlVector<CTFPlayer *> playerVector;
-
-		if ( IsMannVsMachineMode() )
-		{
-			CollectPlayers( &playerVector, TF_TEAM_PVE_DEFENDERS );
-		}
-
-		// Money
-		FOR_EACH_VEC( playerVector, i )
-		{
-			if ( playerVector[i] )
-			{
-
-				playerVector[i]->AddCurrency( nAmount );
-			}
-		}
-	}
-	// Individual distribution
-	else if ( pTFPlayer )
-	{
-
-		pTFPlayer->AddCurrency( nAmount );
-	}
-
-	// Accounting
-	if ( IsMannVsMachineMode() && g_pPopulationManager )
-	{
-		g_pPopulationManager->OnCurrencyCollected( nAmount, bCountAsDropped, bIsBonus );
-	}
-
-	return nAmount;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 void CTFGameRules::RoundRespawn( void )
@@ -13929,13 +13153,10 @@ void CTFGameRules::RoundRespawn( void )
 		pTeam->SetFlagCaptures( 0 );
 	}
 
-	if ( !IsMannVsMachineMode() )
+	IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
+	if ( event )
 	{
-		IGameEvent *event = gameeventmanager->CreateEvent( "scorestats_accumulated_update" );
-		if ( event )
-		{
-			gameeventmanager->FireEvent( event );
-		}
+		gameeventmanager->FireEvent( event );
 	}
 
 	// reset player per-round stats
@@ -13979,9 +13200,6 @@ void CTFGameRules::RoundRespawn( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldSwitchTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return false;
-
 	return BaseClass::ShouldSwitchTeams();
 }
 
@@ -13991,9 +13209,6 @@ bool CTFGameRules::ShouldSwitchTeams( void )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldScrambleTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return false;
-
 	if ( IsCompetitiveMode() )
 		return false;
 
@@ -14073,127 +13288,6 @@ void CTFGameRules::ClientCommandKeyValues( edict_t *pEntity, KeyValues *pKeyValu
 		else if ( FStrEq( pszCommand, "TestItemsBotUpdate" ) )
 		{
 			ItemTesting_SetupFromKV( pKeyValues );
-		}
-		else if ( FStrEq( pszCommand, "MVM_Upgrade" ) )
-		{
-			if ( GameModeUsesUpgrades() )
-			{
-				if ( IsMannVsMachineMode() )
-				{
-					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
-						return;
-				}
-
-				if ( g_hUpgradeEntity )
-				{
-					// First sell everything we want to sell
-					KeyValues *pSubKey = pKeyValues->GetFirstTrueSubKey();
-					while ( pSubKey )
-					{
-						int iCount = pSubKey->GetInt("count");
-						if ( iCount < 0 )
-						{
-							int iItemSlot = pSubKey->GetInt("itemslot");
-							int iUpgrade = pSubKey->GetInt("upgrade");
-							bool bFree = pSubKey->GetBool( "free", false );
-
-							// Stop attempting once no more purchases are possible to prevent spoofed messages DoSing
-							// the server.
-							bool bAllowed = true;
-							while ( bAllowed && iCount < 0 )
-							{
-								bAllowed = g_hUpgradeEntity->PlayerPurchasingUpgrade( pTFPlayer, iItemSlot, iUpgrade, true, bFree );
-								++iCount;
-							}
-						}
-
-						pSubKey = pSubKey->GetNextTrueSubKey();
-					}
-
-					// Now buy everything we want to buy
-					pSubKey = pKeyValues->GetFirstTrueSubKey();
-					while ( pSubKey )
-					{
-						int iCount = pSubKey->GetInt("count");
-						if ( iCount > 0 )
-						{
-							int iItemSlot = pSubKey->GetInt("itemslot");
-							int iUpgrade = pSubKey->GetInt("upgrade");
-							bool bFree = ( sv_cheats && sv_cheats->GetBool() ) ? pSubKey->GetBool( "free", false ) : false;	// Never let a client set "free" without sv_cheats 1
-
-							// Stop attempting once no more purchases are possible to prevent spoofed messages DoSing
-							// the server.
-							bool bAllowed = true;
-							while ( bAllowed && iCount > 0 )
-							{
-								bAllowed = g_hUpgradeEntity->PlayerPurchasingUpgrade( pTFPlayer, iItemSlot, iUpgrade, false, bFree );
-								--iCount;
-							}
-						}
-
-						pSubKey = pSubKey->GetNextTrueSubKey();
-					}
-				}
-			}
-		}
-		else if ( FStrEq( pszCommand, "MvM_UpgradesBegin" ) )
-		{
-			pTFPlayer->BeginPurchasableUpgrades();
-		}
-		else if ( FStrEq( pszCommand, "MvM_UpgradesDone" ) )
-		{
-			pTFPlayer->EndPurchasableUpgrades();
-
-			if ( IsMannVsMachineMode() && pKeyValues->GetInt( "num_upgrades", 0 ) > 0 )
-			{
-				pTFPlayer->SpeakConceptIfAllowed( MP_CONCEPT_MVM_UPGRADE_COMPLETE );
-			}
-		}
-		else if ( FStrEq( pszCommand, "MVM_Revive_Response" ) )
-		{
-			CTFReviveMarker *pReviveMarker = pTFPlayer->GetReviveMarker();
-			if ( pReviveMarker )
-			{
-				if ( pKeyValues->GetBool( "accepted", 0 ) )
-				{
-					pReviveMarker->ReviveOwner();
-				}
-				else
-				{
-					// They hit cancel after their spawn timer was up
-					if ( HasPassedMinRespawnTime( pTFPlayer ) )
-					{
-						pTFPlayer->ForceRespawn();
-					}
-	
-					UTIL_Remove( pReviveMarker );
-				}
-			}
-		}
-		else if ( FStrEq( pszCommand, "MVM_Respec" ) )
-		{
-			if ( GameModeUsesUpgrades() && IsMannVsMachineRespecEnabled() && CanPlayerUseRespec( pTFPlayer ) )
-			{
-				if ( IsMannVsMachineMode() )
-				{
-					if ( sv_cheats && !sv_cheats->GetBool() && !pTFPlayer->m_Shared.IsInUpgradeZone() )
-						return;
-				}
-
-				if ( g_hUpgradeEntity && g_pPopulationManager )
-				{
-					// Consume a respec credit
-					g_pPopulationManager->RemoveRespecFromPlayer( pTFPlayer );
-
-					// Remove the appropriate upgrade info from upgrade histories
-					g_pPopulationManager->RemovePlayerAndItemUpgradesFromHistory( pTFPlayer );
-
-					// Remove upgrade attributes from the player and their items
-					g_hUpgradeEntity->GrantOrRemoveAllUpgrades( pTFPlayer, true );
-
-					pTFPlayer->ForceRespawn();
-				}
-			}
 		}
 		else if ( FStrEq( pszCommand, "use_action_slot_item_server" ) )
 		{
@@ -14567,36 +13661,8 @@ void CTFGameRules::HandleMapEvent( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFGameRules::SetCustomUpgradesFile( inputdata_t &inputdata )
-{
-	const char *pszPath = inputdata.value.String();
-
-	// Reload
-	g_MannVsMachineUpgrades.LoadUpgradesFileFromPath( pszPath );
-
-	// Tell future clients to load from this path
-	V_strncpy( m_pszCustomUpgradesFile.GetForModify(), pszPath, MAX_PATH );
-
-	// Tell connected clients to reload
-	IGameEvent *pEvent = gameeventmanager->CreateEvent( "upgrades_file_changed" );
-	if ( pEvent )
-	{
-		pEvent->SetString( "path", pszPath );
-		gameeventmanager->FireEvent( pEvent );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldWaitToStartRecording( void )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		// Don't wait for the WaitingForPlayers period to end if we're MvM
-		return false;
-	}
-	
 	return BaseClass::ShouldWaitToStartRecording(); 
 }
 
@@ -15171,9 +14237,6 @@ int CTFGameRules::GetAssignedHumanTeam( void )
 //-----------------------------------------------------------------------------
 void CTFGameRules::HandleSwitchTeams( void )
 {
-	if ( IsPVEModeActive() )
-		return;
-
 	m_bTeamsSwitched.Set( !m_bTeamsSwitched );
 
 	// switch this as well
@@ -15546,7 +14609,7 @@ bool CTFGameRules::PlayerMayCapturePoint( CBasePlayer *pPlayer, int iPointIndex,
 		}
 		return false;
 	}
-	if ( ( pTFPlayer->m_Shared.IsInvulnerable() ) && !IsMannVsMachineMode() )
+	if ( pTFPlayer->m_Shared.IsInvulnerable() )
 	{
 		if ( pszReason )
 		{
@@ -15643,8 +14706,6 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 		iHealing = 0;
 	}
 
-	bool bMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-
 	int iScore =	( pRoundStats->m_iStat[TFSTAT_KILLS] * TF_SCORE_KILL ) + 
 					( pRoundStats->m_iStat[TFSTAT_KILLS_RUNECARRIER] * TF_SCORE_KILL_RUNECARRIER ) + // Kill someone who is carrying a rune
 					( pRoundStats->m_iStat[TFSTAT_CAPTURES] * ( TF_SCORE_CAPTURE ) ) +
@@ -15653,13 +14714,12 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 					( pRoundStats->m_iStat[TFSTAT_BUILDINGSDESTROYED] * TF_SCORE_DESTROY_BUILDING ) + 
 					( pRoundStats->m_iStat[TFSTAT_HEADSHOTS] / TF_SCORE_HEADSHOT_DIVISOR ) + 
 					( pRoundStats->m_iStat[TFSTAT_BACKSTABS] * TF_SCORE_BACKSTAB ) + 
-					( iHealing / ( ( bMvM ) ? TF_SCORE_DAMAGE : TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) ) +  // MvM values healing more than PvP
+					( iHealing / TF_SCORE_HEAL_HEALTHUNITS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_KILLASSISTS] / TF_SCORE_KILL_ASSISTS_PER_POINT ) + 
 					( pRoundStats->m_iStat[TFSTAT_TELEPORTS] / TF_SCORE_TELEPORTS_PER_POINT ) +
 					( pRoundStats->m_iStat[TFSTAT_INVULNS] / TF_SCORE_INVULN ) +
 					( pRoundStats->m_iStat[TFSTAT_REVENGE] / TF_SCORE_REVENGE ) +
-					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR ) +
-					( pRoundStats->m_iStat[TFSTAT_CURRENCY_COLLECTED] / TF_SCORE_CURRENCY_COLLECTED );
+					( pRoundStats->m_iStat[TFSTAT_BONUS_POINTS] / TF_SCORE_BONUS_POINT_DIVISOR );
 
 	if ( pPlayer )
 	{
@@ -15680,7 +14740,7 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 	}
 
 	// Previously MvM-only
-	const int nDivisor = ( bMvM ) ? TF_SCORE_DAMAGE : TF_SCORE_HEAL_HEALTHUNITS_PER_POINT;
+	const int nDivisor = TF_SCORE_HEAL_HEALTHUNITS_PER_POINT;
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE] / nDivisor );
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE_ASSIST] / nDivisor );
 	iScore += ( pRoundStats->m_iStat[TFSTAT_DAMAGE_BOSS] / nDivisor );
@@ -15749,9 +14809,6 @@ bool CTFGameRules::IsBirthdayOrPyroVision( void ) const
 //-----------------------------------------------------------------------------
 bool CTFGameRules::IsHolidayActive( /*EHoliday*/ int eHoliday ) const
 {
-	//if ( IsPVEModeActive() )
-	//	return false;
-
 	return TF_IsHolidayActive( eHoliday );
 }
 
@@ -16355,7 +15412,7 @@ bool CTFGameRules::ShouldBalanceTeams( void )
 
 	bool bDisableBalancing = false;
 
-	if ( IsPVEModeActive() || bDisableBalancing )
+	if ( bDisableBalancing )
 		return false;
 
 	// don't balance the teams while players are in hell
@@ -16370,11 +15427,7 @@ bool CTFGameRules::ShouldBalanceTeams( void )
 //-----------------------------------------------------------------------------
 int CTFGameRules::GetBonusRoundTime( bool bGameOver /* = false*/ )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		return 5;
-	}
-	else if ( IsCompetitiveMode() && bGameOver )
+	if ( IsCompetitiveMode() && bGameOver )
 	{
 		if ( IsMatchTypeCompetitive() )
 		{
@@ -16533,25 +15586,6 @@ CObjectSentrygun *CTFGameRules::FindSentryGunWithMostKills( int team ) const
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ClientConnected( edict_t *pEntity, const char *pszName, const char *pszAddress, char *reject, int maxrejectlen )
 {
-	if ( IsMannVsMachineMode() )
-	{
-		int nCount = 0;
-		CTFPlayer *pPlayer;
-
-		for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-		{
-			pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
-
-			if ( !pPlayer || pPlayer->IsFakeClient() )
-				continue;
-
-			nCount++;
-		}
-
-		if ( nCount >= tf_mvm_max_connected_players.GetInt() )
-			return false;
-	}
-
 	bool bRet = BaseClass::ClientConnected( pEntity, pszName, pszAddress, reject, maxrejectlen );
 	if ( bRet )
 	{
@@ -16572,9 +15606,6 @@ bool CTFGameRules::ClientConnected( edict_t *pEntity, const char *pszName, const
 bool CTFGameRules::ShouldMakeChristmasAmmoPack( void )
 {
 	if ( IsInTournamentMode() && !IsMatchTypeCasual() )
-		return false;
-
-	if ( IsMannVsMachineMode() )
 		return false;
 
 	if ( mp_holiday_nogifts.GetBool() == true )
@@ -16824,9 +15855,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 #ifdef GAME_DLL
 	if ( !Q_strcmp( eventName, "teamplay_point_captured" ) )
 	{
-		if ( IsMannVsMachineMode() )
-			return;
-
 		// keep track of how many times each team caps
 		int iTeam = event->GetInt( "team" );
 		Assert( iTeam >= FIRST_GAME_TEAM && iTeam < TF_TEAM_COUNT );
@@ -16848,10 +15876,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 				{
 					pPlayer->AwardAchievement( ACHIEVEMENT_TF_HEAVY_PAYLOAD_CAP_GRIND );
 				}
-
-				// Give money and experience
-				int nAmount = CalculateCurrencyAmount_ByType( TF_CURRENCY_CAPTURED_OBJECTIVE );
-				DistributeCurrencyAmount( nAmount, pPlayer, false );
 			}
 		}
 
@@ -16908,9 +15932,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 			{
 				CTF_GameStats.Event_PlayerScoresEscortPoints( pPlayer, iPoints );
 
-				int nAmount = CalculateCurrencyAmount_ByType( TF_CURRENCY_ESCORT_REWARD );
-				DistributeCurrencyAmount( ( nAmount * iPoints ), pPlayer, false );
-
 				if ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && GetGameType() == TF_GAMETYPE_ESCORT )
 				{
 					for ( int i = 0 ; i < iPoints ; i++ )
@@ -16937,22 +15958,6 @@ void CTFGameRules::FireGameEvent( IGameEvent *event )
 	}
 	else if ( !Q_strcmp( eventName, "teamplay_round_start" ) )
 	{
-		if ( IsMannVsMachineMode() )
-		{
-			if ( g_pPopulationManager )
-			{
-				g_pPopulationManager->RestorePlayerCurrency();
-				
-				// make sure all invaders are removed
-				CUtlVector< CTFPlayer * > playerVector;
-				CollectPlayers( &playerVector, TF_TEAM_PVE_INVADERS );
-
-				for( int i=0; i<playerVector.Count(); ++i )
-				{
-					playerVector[i]->ChangeTeam( TEAM_SPECTATOR, false, true );
-				}
-			}
-		}
 	}
 	else if ( !Q_strcmp( eventName, "recalculate_truce" ) )
 	{
@@ -17326,12 +16331,6 @@ bool CTFGameRules::HasPassedMinRespawnTime( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 bool CTFGameRules::ShouldRespawnQuickly( CBasePlayer *pPlayer )
 {
-	CTFPlayer *pTFPlayer = ToTFPlayer( pPlayer );
-	if ( IsPVEModeActive() && pTFPlayer && pTFPlayer->GetTeamNumber() == TF_TEAM_PVE_DEFENDERS && pTFPlayer->GetPlayerClass()->GetClassIndex() == TF_CLASS_SCOUT )
-	{
-		return true;
-	}
-
 #if defined( _DEBUG ) || defined( STAGING_ONLY )
 	if ( mp_developer.GetBool() )
 		return true;
@@ -17352,14 +16351,6 @@ struct convar_tags_t
 	BIgnoreConvarChangeFunc ignoreConvarFunc;
 };
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static bool BIgnoreConvarChangeInPVEMode(void)
-{
-	return TFGameRules() && TFGameRules()->IsPVEModeActive();
-}
-
 // The list of convars that automatically turn on tags when they're changed.
 // Convars in this list need to have the FCVAR_NOTIFY flag set on them, so the
 // tags are recalculated and uploaded to the master server when the convar is changed.
@@ -17375,14 +16366,12 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_gamemode_cp", "cp", NULL },
 	{ "tf_gamemode_ctf", "ctf", NULL },
 	{ "tf_gamemode_sd", "sd", NULL },
-	{ "tf_gamemode_mvm", "mvm", NULL },
 	{ "tf_gamemode_payload", "payload", NULL },
 	{ "tf_gamemode_tc",	"tc", NULL },
 	{ "tf_beta_content", "beta", NULL },
 	{ "tf_damage_disablespread", "dmgspread", NULL },
 	{ "mp_highlander", "highlander", NULL },
-	{ "tf_bot_count", "bots", &BIgnoreConvarChangeInPVEMode },
-	{ "tf_pve_mode", "pve" },
+	{ "tf_bot_count", "bots" },
 	{ "sv_registration_successful", "_registered", NULL },
 	{ "tf_server_identity_disable_quickplay", "noquickplay", NULL },
 	{ "tf_mm_strict", "hidden", NULL },
@@ -17528,21 +16517,6 @@ const char *CTFGameRules::FormatVideoName( const char *videoName, bool bWithExte
 			V_strncpy( strFullpath, "media/" "arena_intro", MAX_PATH );
 		}
 	}
-	else if ( Q_strstr( videoName, "mvm_" ) )
-	{
-		char strTempPath[MAX_PATH];
-		Q_strncpy( strTempPath, "media/", MAX_PATH );
-		Q_strncat( strTempPath, videoName, MAX_PATH );
-		Q_strncat( strTempPath, FILE_EXTENSION_ANY_MATCHING_VIDEO, MAX_PATH );	
-
-		VideoSystem_t vSystem = VideoSystem::NONE;
-
-		// default to mvm_intro video if we can't find the specified video
-		if ( !g_pVideo || g_pVideo->LocatePlayableVideoFile( strTempPath, "GAME", &vSystem, strFullpath, sizeof(strFullpath), VideoSystemFeature::PLAY_VIDEO_FILE_IN_MATERIAL ) != VideoResult::SUCCESS )
-		{
-			V_strncpy( strFullpath, "media/" "mvm_intro", MAX_PATH );
-		}
-	}
 	else
 	{
 		Q_strncat( strFullpath, videoName, MAX_PATH );
@@ -17661,10 +16635,6 @@ const char *GetMapDisplayName( const char *mapName, bool bTitleCase /* = false *
 		pszSrc +=  5;
 	}
 #endif // TF_RAID_MODE
-	else if ( !Q_strncmp( pszSrc, "mvm_", 4 ) )
-	{
-		pszSrc +=  4;
-	}
 	else if ( !Q_strncmp( pszSrc, "arena_", 6 ) )
 	{
 		pszSrc +=  6;
@@ -17767,10 +16737,6 @@ const char *GetMapType( const char *mapName )
 			return "#Gametype_Raid";
 		}
 #endif // TF_RAID_MODE
-		else if ( !Q_strnicmp( mapName, "mvm_", 4 ) )
-		{
-			return "#Gametype_MVM";
-		}
 		else
 		{
 			if ( TFGameRules() )
@@ -18623,29 +17589,6 @@ void CTFGameRules::BetweenRounds_Start( void )
 {
 	SetSetup( true );
 
-	if ( IsMannVsMachineMode() )
-	{
-		mp_tournament.SetValue( true );
-		RestartTournament();
-		SetInStopWatch( false );
-
-		char szName[16];
-		Q_strncpy( szName, "ROBOTS", MAX_TEAMNAME_STRING + 1 );
-		mp_tournament_blueteamname.SetValue( szName );
-		Q_strncpy( szName, "MANNCO", MAX_TEAMNAME_STRING + 1 );
-		mp_tournament_redteamname.SetValue( szName );
-		SetTeamReadyState( true, TF_TEAM_PVE_INVADERS );
-	}
-
-	for ( int i = 0; i < IBaseObjectAutoList::AutoList().Count(); ++i )
-	{
-		CBaseObject *pObj = static_cast<CBaseObject*>( IBaseObjectAutoList::AutoList()[i] );
-		if ( pObj->IsDisposableBuilding() || pObj->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			pObj->DetonateObject();
-		}
-	}
-
 	if ( m_hGamerulesProxy )
 	{
 		m_hGamerulesProxy->StateEnterBetweenRounds();
@@ -18681,12 +17624,6 @@ void CTFGameRules::BetweenRounds_End( void )
 	SetInWaitingForPlayers( false );
 	SetSetup( false );
 
-	if ( IsMannVsMachineMode() )
-	{
-		SetInStopWatch( false );
-		mp_tournament_stopwatch.SetValue( false );
-	}
-
 	for ( int i = 1; i <= MAX_PLAYERS; i++ )
 	{
 		CTFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( i ) );
@@ -18712,7 +17649,7 @@ void CTFGameRules::BetweenRounds_Think( void )
 		float flDropDeadTime = gpGlobals->curtime + mp_tournament_readymode_countdown.GetFloat() + 0.1f;
 		if ( bStartFinalCountdown && ( m_flRestartRoundTime < 0 || m_flRestartRoundTime >= flDropDeadTime ) )
 		{
-			float flDelay = IsMannVsMachineMode() ? 10.f : mp_tournament_readymode_countdown.GetFloat();
+			float flDelay = mp_tournament_readymode_countdown.GetFloat();
 			m_flRestartRoundTime.Set( gpGlobals->curtime + flDelay );
 			ShouldResetScores( true, true );
 			ShouldResetRoundsPlayed( true );
@@ -19280,60 +18217,7 @@ int CTFGameRules::GetTeamAssignmentOverride( CTFPlayer *pTFPlayer, int iDesiredT
 	int nMatchPlayers = pMatch ? pMatch->GetNumActiveMatchPlayers() : 0;
 	CMatchInfo::PlayerMatchData_t *pMatchPlayer = ( pMatch && steamID.IsValid() ) ? pMatch->GetMatchDataForPlayer( steamID ) : NULL;
 
-	if ( IsMannVsMachineMode() )
-	{
-		if ( !pTFPlayer->IsBot() && iTeam != TEAM_SPECTATOR )
-		{
-			if ( pMatchPlayer && !pMatchPlayer->bDropped )
-			{
-				// Part of the lobby match
-				Log( "MVM assigned %s to defending team (player is in lobby)\n", pTFPlayer->GetPlayerName() );
-				return TF_TEAM_PVE_DEFENDERS;
-			}
-
-			// Count ad-hoc players on defenders team
-			int nAdHocDefenders = 0;
-			for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-			{
-				CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-
-				if ( !pPlayer || ( pPlayer->GetTeamNumber() != TF_TEAM_PVE_DEFENDERS ) )
-					{ continue; }
-
-				CSteamID steamID;
-				if ( pPlayer->GetSteamID( &steamID ) && GTFGCClientSystem()->GetLiveMatchPlayer( steamID ) )
-					{ continue; }
-
-				// Player on defenders that doesn't have a live match entry
-				nAdHocDefenders++;
-			}
-
-			// Bootcamp mode can mix a lobby with ad-hoc joins
-			int nSlotsLeft = tf_mvm_defenders_team_size.GetInt() - nMatchPlayers - nAdHocDefenders;
-			if ( nSlotsLeft >= 1 )
-			{
-				Log( "MVM assigned %s to defending team (%d more slots remaining after us)\n", pTFPlayer->GetPlayerName(), nSlotsLeft-1 );
-
-				// Set Their Currency
-				int nRoundCurrency = MannVsMachineStats_GetAcquiredCredits();
-				nRoundCurrency += g_pPopulationManager->GetStartingCurrency();
-
-				// deduct any cash that has already been spent
-				int spentCurrency = g_pPopulationManager->GetPlayerCurrencySpent( pTFPlayer );
-				pTFPlayer->SetCurrency( nRoundCurrency - spentCurrency );
-
-				iTeam = TF_TEAM_PVE_DEFENDERS;
-			}
-			else
-			{
-				// no room
-				Log( "MVM assigned %s to spectator, all slots for defending team are in use, or reserved for lobby members\n",
-				     pTFPlayer->GetPlayerName() );
-				iTeam = TEAM_SPECTATOR;
-			}
-		}
-	}
-	else if ( pMatch )
+	if ( pMatch )
 	{
 		if ( !bAutoBalance )
 		{
@@ -19454,461 +18338,6 @@ void CTFGameRules::PushAllPlayersAway( const Vector& vFromThisPoint, float flRan
 	}
 }
 
-#endif // GAME_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFGameRules::CanUpgradeWithAttrib( CTFPlayer *pPlayer, int iWeaponSlot, attrib_definition_index_t iAttribIndex, CMannVsMachineUpgrades *pUpgrade )
-{
-	if ( !pPlayer )
-		return false;
-
-	Assert ( pUpgrade );
-
-	// Upgrades on players are considered active at all times
-	if ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER )
-	{
-		switch ( iAttribIndex )
-		{
-		case 113:	// "metal regen"
-			{
-				return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) );
-			}
-			break;
-		}
-
-		return true;
-	}
-
-	// Get the item entity. We use the entity, not the item in the loadout, because we want
-	// the dynamic attributes that have already been purchases and attached.
-	CEconEntity *pEntity;
-	CEconItemView *pCurItemData = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pPlayer, iWeaponSlot, &pEntity );
-	if ( !pCurItemData || !pEntity )
-		return false;
-
-	// bottles can only hold things in the appropriate ui group
-	if ( dynamic_cast< CTFPowerupBottle *>( pEntity ) )
-	{
-		if ( pUpgrade->nUIGroup == UIGROUP_POWERUPBOTTLE )
-		{
-			switch ( iAttribIndex )
-			{
-			case 327:	// "building instant upgrade"
-				{
-					return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) );
-				}
-#ifndef _DEBUG
-			case 480:	// "radius stealth"
-				{
-					return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) );
-				}
-#endif // !_DEBUG
-		}
-			return true;
-		}
-
-		return false;
-	}
-	else if ( pUpgrade->nUIGroup == UIGROUP_POWERUPBOTTLE )
-	{
-		return false;
-	}
-
-	CTFWeaponBase *pWeapon = dynamic_cast< CTFWeaponBase* > ( pEntity );
-	CTFWeaponBaseGun *pWeaponGun = dynamic_cast< CTFWeaponBaseGun* > ( pEntity );
-	int iWeaponID = ( pWeapon ) ? pWeapon->GetWeaponID() : TF_WEAPON_NONE;
-	CTFWearableDemoShield *pShield = ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) ) ? dynamic_cast< CTFWearableDemoShield* >( pEntity ) : NULL;
-	bool bShield = ( pShield ) ? true : false;
-
-	// Hack to simplify excluding non-weapons from damage upgrades
-	bool bHideDmgUpgrades = iWeaponID == TF_WEAPON_NONE || 
-							iWeaponID == TF_WEAPON_LASER_POINTER || 
-							iWeaponID == TF_WEAPON_MEDIGUN || 
-							iWeaponID == TF_WEAPON_BUFF_ITEM ||
-							iWeaponID == TF_WEAPON_BUILDER ||
-							iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD ||
-							iWeaponID == TF_WEAPON_INVIS ||
-							iWeaponID == TF_WEAPON_SPELLBOOK ||
-							iWeaponID == TF_WEAPON_LUNCHBOX;
-
-	// What tier upgrade is it?
-	int nQuality = pUpgrade->nQuality;
-
-	// This is bad, but it's hopefully more maintainable than the allowed attributes block for all current & future items
-	switch ( iAttribIndex )
-	{
-	case 2:		// "damage bonus"
-		{
-			if ( bHideDmgUpgrades )
-				return false;
-
-			// Some classes get a weaker dmg upgrade
-			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-			{
-				if ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) && !bShield )
-				{
-					return ( iWeaponSlot == TF_WPN_TYPE_PRIMARY || iWeaponSlot == TF_WPN_TYPE_SECONDARY );
-				}
-				else
-				{
-					return false;
-				}
-			}
-
-			bool bShieldEquipped = false;
-			if ( pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) )
-			{
-				for ( int i = 0; i < pPlayer->GetNumWearables(); ++i )
-				{
-					CTFWearableDemoShield *pWearableShield = dynamic_cast< CTFWearableDemoShield* >( pPlayer->GetWearable( i ) );
-					if ( pWearableShield )
-					{
-						bShieldEquipped = true;
-					}
-				}
-			}
-
-			return ( ( iWeaponSlot == TF_WPN_TYPE_PRIMARY && 
-					( pPlayer->IsPlayerClass( TF_CLASS_SCOUT ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_SNIPER ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_SOLDIER ) || 
-					pPlayer->IsPlayerClass( TF_CLASS_PYRO ) ) ) || 
-					( iWeaponID == TF_WEAPON_SWORD && bShieldEquipped ) );
-		}
-		break;
-	case 6:		// "fire rate bonus"
-		{
-			// Heavy's version of firing speed costs more
-			bool bMinigun = iWeaponID == TF_WEAPON_MINIGUN;
-			if ( nQuality == MVM_UPGRADE_QUALITY_LOW )
-			{
-				return bMinigun;
-			}
-			else if ( iWeaponID == TF_WEAPON_GRENADELAUNCHER && pWeapon && pWeapon->AutoFiresFullClipAllAtOnce() )
-			{
-				return false;
-			}
-
-			// Non-melee version
-			return ( dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) == NULL && 
-				iWeaponID != TF_WEAPON_NONE && !bHideDmgUpgrades && 
-				iWeaponID != TF_WEAPON_FLAMETHROWER &&
-				!WeaponID_IsSniperRifleOrBow( iWeaponID ) && 
-				!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
-				!bMinigun );
-		}
-		break;
-	// case 8:		// "heal rate bonus"
-	case 10:	// "ubercharge rate bonus"
-	case 314:	// "uber duration bonus"
-	case 481:	// "canteen specialist"
-	case 482:	// "overheal expert"
-	case 483:	// "medic machinery beam"
-	case 493:	// "healing mastery"
-		{
-			return ( iWeaponID == TF_WEAPON_MEDIGUN );
-		}
-		break;
-	case 31:	// "critboost on kill"
-		{
-			CTFWeaponBaseMelee *pMelee = dynamic_cast<CTFWeaponBaseMelee *> ( pEntity );
-			return ( pMelee && (
-				pPlayer->IsPlayerClass( TF_CLASS_DEMOMAN ) || 
-				pPlayer->IsPlayerClass( TF_CLASS_SPY ) ) );
-		}
-	case 71:	// weapon burn dmg increased
-	case 73:	// weapon burn time increased
-		{
-			return ( iWeaponID == TF_WEAPON_FLAMETHROWER || iWeaponID == TF_WEAPON_FLAREGUN );
-		}
-		break;
-	case 76:	// "maxammo primary increased"
-		{
-			return ( pWeapon && pWeapon->GetPrimaryAmmoType() == TF_AMMO_PRIMARY && !pWeapon->IsEnergyWeapon() );
-		}
-		break;
-	case 78:	// "maxammo secondary increased"
-		{
-			return ( pWeapon && pWeapon->GetPrimaryAmmoType() == TF_AMMO_SECONDARY && !pWeapon->IsEnergyWeapon() );
-		}
-		break;
-	case 90:	// "SRifle Charge rate increased"
-		{
-			return WeaponID_IsSniperRifle( iWeaponID );
-		}
-		break;
-	case 103:	// "Projectile speed increased"
-		{
-			if ( pWeaponGun )
-			{
-				return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_PIPEBOMB );
-			}
-
-			return false;
-		}
-		break;
-	case 149:	// "bleed duration"
-	case 523:	// "arrow mastery"
-		{
-			return ( iWeaponID == TF_WEAPON_COMPOUND_BOW );
-		}
-		break;
-	case 218:	// "mark for death"
-		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
-		}
-		break;
-	case 249:	// "charge recharge rate increased"
-	case 252:   // "damage force reduction"
-		{
-			return bShield;
-		}
-		break;
-	case 255:	// "airblast pushback scale"
-		{
-			return ( iWeaponID == TF_WEAPON_FLAMETHROWER && pWeaponGun && assert_cast< CTFFlameThrower* >( pWeaponGun )->CanAirBlastPushPlayer() );
-		}
-		break;
-	case 266:	// "projectile penetration"
-		{
-			if ( pWeaponGun && !bHideDmgUpgrades )
-			{
-				if ( !( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY ) )
-				{
-					int iProjectile = pWeaponGun->GetWeaponProjectileType();
-					return ( iProjectile == TF_PROJECTILE_ARROW || iProjectile == TF_PROJECTILE_BULLET );
-				}
-			}
-
-			return false;
-		}
-		break;
-	case 80:	// "maxammo metal increased"
-	case 276:	// "bidirectional teleport"
-	case 286:	// "engy building health bonus"
-	case 343:	// "engy sentry fire rate increased"
-	case 345:	// "engy dispenser radius increased"
-	case 351:	// "engy disposable sentries"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_ENGINEER ) && iWeaponID == TF_WEAPON_PDA_ENGINEER_BUILD );
-		}
-		break;
-	case 278:	// "effect bar recharge rate increased"
-		{
-			return ( pWeapon && pWeapon->HasEffectBarRegeneration() && iWeaponID != TF_WEAPON_BUILDER && iWeaponID != TF_WEAPON_SPELLBOOK );
-		}
-		break;
-	case 279:	// "maxammo grenades1 increased"
-		{
-			return ( iWeaponID == TF_WEAPON_BAT_WOOD );
-		}
-		break;
-	case 313:	// "applies snare effect"
-		{
-			return ( iWeaponID == TF_WEAPON_JAR );
-		}
-		break;
-	case 318:	// "faster reload rate"
-		{
-			return ( ( pWeapon && pWeapon->ReloadsSingly() ) || 
-				WeaponID_IsSniperRifleOrBow( iWeaponID ) || 
-				iWeaponID == TF_WEAPON_FLAREGUN );
-		}
-		break;
-	case 319:	// "increase buff duration"
-		{
-			return ( iWeaponID == TF_WEAPON_BUFF_ITEM );
-		}
-		break;
-	case 320:	// "robo sapper"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) && iWeaponID == TF_WEAPON_BUILDER );
-		}
-		break;
-	case 323:	// "attack projectiles"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-		}
-		break;
-	case 335:		// "clip size bonus upgrade"
-		{
-			return ( pWeapon && !pWeapon->IsBlastImpactWeapon() && pWeapon->UsesClipsForAmmo1() && pWeapon->GetMaxClip1() > 1 
-					 && iWeaponID != TF_WEAPON_FLAREGUN_REVENGE && iWeaponID != TF_WEAPON_SPELLBOOK );
-		}
-		break;
-	case 375:		// "generate rage on damage"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-		}
-		break;
-	case 395:		// "explosive sniper shot"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SNIPER ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY && 
-					 pWeaponGun && pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_BULLET );
-		}
-		break;
-	case 396:		// "melee attack rate bonus"
-		{
-			bool bAllowed = ( iWeaponID != TF_WEAPON_BAT_WOOD &&
-							iWeaponID != TF_WEAPON_BUFF_ITEM && 
-							!( pWeapon && pWeapon->HasEffectBarRegeneration() ) &&
-							dynamic_cast< CTFWeaponBaseMelee* >( pEntity ) );
-			return bAllowed;
-		}
-		break;
-	case 397:	// "projectile penetration heavy"
-		{
-			if ( !bHideDmgUpgrades )
-			{
-				return ( pPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && iWeaponSlot == TF_WPN_TYPE_PRIMARY );
-			}
-		}
-		break;
-	case 399:	// "armor piercing"
-		{
-			return ( pPlayer->IsPlayerClass( TF_CLASS_SPY ) && iWeaponID == TF_WEAPON_KNIFE );
-		}
-		break;
-	case 440:	// "clip size upgrade atomic"
-		{
-			return pWeapon && pWeapon->IsBlastImpactWeapon();
-		}
-		break;
-	case 484:	// "mad milk syringes"
-		{
-			return ( iWeaponID == TF_WEAPON_SYRINGEGUN_MEDIC );
-		}
-	case 488:	// "rocket specialist"
-		if ( pWeaponGun )
-		{
-			return ( pWeaponGun->GetWeaponProjectileType() == TF_PROJECTILE_ROCKET );
-		}
-	case 499:	// generate rage on heal (shield)
-	case 554:	// revive
-	case 555:	// medigun specialist
-		{
-			return ( iWeaponID == TF_WEAPON_MEDIGUN );
-		}
-	case 871:	// falling_impact_radius_stun
-		{
-			return false;
-		}
-	}
-
-	// All weapon related attributes require an item that does damage
-	if ( pUpgrade->nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM )
-	{
-		// All guns
-		if ( pWeaponGun )
-			return ( iWeaponID != TF_WEAPON_NONE && !bHideDmgUpgrades && 
-			!( pWeapon && pWeapon->HasEffectBarRegeneration() ) );
-
-		CTFWeaponBaseMelee *pMelee = dynamic_cast< CTFWeaponBaseMelee* >( pEntity );
-		if ( pMelee )
-		{
-			// All melee weapons except buff banners
-			return ( iWeaponID != TF_WEAPON_BUFF_ITEM && !bHideDmgUpgrades );
-		}
-
-		return false;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// 
-//-----------------------------------------------------------------------------
-int CTFGameRules::GetUpgradeTier( int iUpgrade )
-{
-	if ( !GameModeUsesUpgrades() || iUpgrade < 0 || iUpgrade >= g_MannVsMachineUpgrades.m_Upgrades.Count() )
-		return 0;
-	
-	return g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].nTier;
-}
-
-//-----------------------------------------------------------------------------
-//  Given an upgrade and slot, see if its' tier is enabled/available
-//-----------------------------------------------------------------------------
-bool CTFGameRules::IsUpgradeTierEnabled( CTFPlayer *pTFPlayer, int iItemSlot, int iUpgrade )
-{
-	if ( !pTFPlayer )
-		return false;
-
-	// If the upgrade has a tier, it's mutually exclusive with upgrades of the same tier for the same slot
-	int nTier = GetUpgradeTier( iUpgrade );
-	if ( !nTier )
-		return false;
-
-	bool bIsAvailable = true;
-	CEconItemView *pItem = NULL;
-	float flValue = 0.f;
-
-	// Go through the upgrades and see if it could apply, and if we already have it
-	for ( int i = 0; i < g_MannVsMachineUpgrades.m_Upgrades.Count(); i++ )
-	{
-		CMannVsMachineUpgrades upgrade = g_MannVsMachineUpgrades.m_Upgrades[i];
-
-		// Same upgrade
-// 		if ( !V_strcmp( upgrade.szAttrib, g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].szAttrib ) )
-// 			continue;
-
-		// Different tier
-		if ( upgrade.nTier != nTier )
-			continue;
-
-		// Wrong type
-		if ( upgrade.nUIGroup != g_MannVsMachineUpgrades.m_Upgrades[iUpgrade].nUIGroup )
-			continue;
-
-		CEconItemAttributeDefinition *pAttribDef = ItemSystem()->GetStaticDataForAttributeByName( upgrade.szAttrib );
-		if ( !pAttribDef )
-			continue;
-			
-		// Can't use
-		if ( !CanUpgradeWithAttrib( pTFPlayer, iItemSlot, pAttribDef->GetDefinitionIndex(), &upgrade ) )
-			continue;
-
-		if ( upgrade.nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_ITEM )
-		{
-			pItem = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pTFPlayer, iItemSlot );
-			if ( pItem )
-			{
-				::FindAttribute_UnsafeBitwiseCast< attrib_value_t >( pItem->GetAttributeList(), pAttribDef, &flValue );
-			}
-		}
-		else if ( upgrade.nUIGroup == UIGROUP_UPGRADE_ATTACHED_TO_PLAYER )
-		{
-			::FindAttribute_UnsafeBitwiseCast< attrib_value_t >( pTFPlayer->GetAttributeList(), pAttribDef, &flValue );
-		}
-
-		if ( flValue > 0.f )
-		{
-			bIsAvailable = false;
-			break;
-		}
-	}
-	
-	return bIsAvailable;
-}
-
-#ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Helper Functions
-//-----------------------------------------------------------------------------
-void CTFGameRules::SetNextMvMPopfile ( const char * next )
-{
-	s_strNextMvMPopFile = next;
-}
-
-//-----------------------------------------------------------------------------
-const char * CTFGameRules::GetNextMvMPopfile ( )
-{
-	return s_strNextMvMPopFile.Get();
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -19956,9 +18385,6 @@ bool CTFGameRules::PointsMayBeCaptured( void )
 		}
 	}
 #endif // GAME_DLL
-
-	if ( IsMannVsMachineMode() )
-		return true;
 
 	if ( GetActiveRoundTimer() && InSetup() )
 		return false;
@@ -20036,14 +18462,7 @@ bool	ScriptIsInArenaMode()										{ return TFGameRules()->IsInArenaMode(); }
 bool	ScriptIsInKothMode()										{ return TFGameRules()->IsInKothMode(); }
 bool	ScriptIsInMedievalMode()									{ return TFGameRules()->IsInMedievalMode(); }
 bool	ScriptIsHolidayMap( int nHoliday )							{ return TFGameRules()->IsHolidayMap( nHoliday ); }
-bool	ScriptIsMannVsMachineMode()									{ return TFGameRules()->IsMannVsMachineMode(); }
-bool	ScriptGetMannVsMachineAlarmStatus()							{ return TFGameRules()->GetMannVsMachineAlarmStatus(); }
-void	ScriptSetMannVsMachineAlarmStatus( bool bEnabled )			{ return TFGameRules()->SetMannVsMachineAlarmStatus( bEnabled ); }
 bool	ScriptIsQuickBuildTime()									{ return TFGameRules()->IsQuickBuildTime(); }
-bool	ScriptGameModeUsesUpgrades()								{ return TFGameRules()->GameModeUsesUpgrades(); }
-bool	ScriptGameModeUsesCurrency()								{ return TFGameRules()->GameModeUsesCurrency(); }
-bool	ScriptGameModeUsesMiniBosses()								{ return TFGameRules()->GameModeUsesMiniBosses(); }
-bool	ScriptIsMannVsMachineRespecEnabled()						{ return TFGameRules()->IsMannVsMachineRespecEnabled(); }
 bool	ScriptIsCompetitiveMode()									{ return TFGameRules()->IsCompetitiveMode(); }
 bool	ScriptIsMatchTypeCasual()									{ return TFGameRules()->IsMatchTypeCasual(); }
 bool	ScriptIsMatchTypeCompetitive()								{ return TFGameRules()->IsMatchTypeCompetitive(); }
@@ -20055,7 +18474,6 @@ bool	ScriptPlayerReadyStatus_HaveMinPlayersToEnable()			{ return TFGameRules()->
 bool	ScriptPlayerReadyStatus_ArePlayersOnTeamReady(int iTeam)	{ return TFGameRules()->PlayerReadyStatus_ArePlayersOnTeamReady( iTeam ); }
 void	ScriptPlayerReadyStatus_ResetState()						{ TFGameRules()->PlayerReadyStatus_ResetState(); }
 bool	ScriptIsDefaultGameMode()									{ return TFGameRules()->IsDefaultGameMode(); }
-bool	ScriptIsPVEModeActive()										{ return TFGameRules()->IsPVEModeActive(); }
 bool	ScriptAllowThirdPersonCamera()								{ return TFGameRules()->AllowThirdPersonCamera(); }
 void	ScriptSetGravityMultiplier( float flMultiplier )			{ return TFGameRules()->SetGravityMultiplier( flMultiplier ); }
 float	ScriptGetGravityMultiplier()								{ return TFGameRules()->GetGravityMultiplier(); }
@@ -20070,7 +18488,6 @@ bool	ScriptHaveStopWatchWinner()									{ return TFGameRules()->HaveStopWatchWi
 void	ScriptSetOvertimeAllowedForCTF( bool bAllowed )				{ TFGameRules()->SetOvertimeAllowedForCTF( bAllowed ); }
 bool	ScriptGetOvertimeAllowedForCTF()							{ return TFGameRules()->GetOvertimeAllowedForCTF(); }
 
-void	ScriptForceEnableUpgrades( int nState )						{ TFGameRules()->ForceEnableUpgrades( nState ); }
 void	ScriptForceEscortPushLogic( int nState )					{ TFGameRules()->ForceEscortPushLogic( nState ); }
 
 void CTFGameRules::RegisterScriptFunctions()
@@ -20090,14 +18507,7 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( IsInKothMode,								"Playing king of the hill mode?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsInMedievalMode,							"Playing medieval mode?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsHolidayMap,								"Playing a holiday map? See Constants.EHoliday" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineMode,						"Playing MvM? Beep boop" );
-	TF_GAMERULES_SCRIPT_FUNC( GetMannVsMachineAlarmStatus,				"" );
-	TF_GAMERULES_SCRIPT_FUNC( SetMannVsMachineAlarmStatus,				"" );
 	TF_GAMERULES_SCRIPT_FUNC( IsQuickBuildTime,							"If an engie places a building, will it immediately upgrade? Eg. MvM pre-round etc." );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesUpgrades,						"Does the current gamemode have upgrades?" );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesCurrency,						"Does the current gamemode have currency?" );
-	TF_GAMERULES_SCRIPT_FUNC( GameModeUsesMiniBosses,					"Does the current gamemode have minibosses?" );
-	TF_GAMERULES_SCRIPT_FUNC( IsMannVsMachineRespecEnabled,				"Are players allowed to refund their upgrades?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsCompetitiveMode,						"Playing competitive?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCasual,						"Playing casual?" );
 	TF_GAMERULES_SCRIPT_FUNC( IsMatchTypeCompetitive,					"Playing competitive?" );
@@ -20108,8 +18518,7 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_HaveMinPlayersToEnable,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ArePlayersOnTeamReady,	"" );
 	TF_GAMERULES_SCRIPT_FUNC( PlayerReadyStatus_ResetState,				"" );
-	TF_GAMERULES_SCRIPT_FUNC( IsDefaultGameMode,						"The absence of arena, mvm, tournament mode, etc" );
-	TF_GAMERULES_SCRIPT_FUNC( IsPVEModeActive,							"" );
+	TF_GAMERULES_SCRIPT_FUNC( IsDefaultGameMode,						"The absence of arena, tournament mode, etc" );
 	TF_GAMERULES_SCRIPT_FUNC( AllowThirdPersonCamera,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetGravityMultiplier,						"" );
 	TF_GAMERULES_SCRIPT_FUNC( GetGravityMultiplier,						"" );
@@ -20124,7 +18533,6 @@ void CTFGameRules::RegisterScriptFunctions()
 	TF_GAMERULES_SCRIPT_FUNC( GetOvertimeAllowedForCTF,					"" );
 	TF_GAMERULES_SCRIPT_FUNC( SetOvertimeAllowedForCTF,					"" );
 
-	TF_GAMERULES_SCRIPT_FUNC( ForceEnableUpgrades,						"Whether to force on MvM-styled upgrades on/off. 0 -> default, 1 -> force off, 2 -> force on" );
 	TF_GAMERULES_SCRIPT_FUNC( ForceEscortPushLogic,						"Forces payload pushing logic. 0 -> default, 1 -> force off, 2 -> force on" );
 
 	g_pScriptVM->RegisterInstance( &PlayerVoiceListener(), "PlayerVoiceListener" );

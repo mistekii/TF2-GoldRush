@@ -138,11 +138,6 @@ ActionResult< CTFBot >	CTFBotSpyAttack::Update( CTFBot *me, float interval )
 	case CTFBot::EXPERT:	behindTolerance = 0.0f;		break;
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		behindTolerance = 0.7071f;
-	}
-
 	bool isBehindVictim = DotProduct( playerThreatForward, toPlayerThreat ) > behindTolerance;
 
 	// easy Spies always think they're in position to backstab
@@ -216,14 +211,6 @@ ActionResult< CTFBot >	CTFBotSpyAttack::Update( CTFBot *me, float interval )
 					if ( threatRange < 100.0f )
 					{
 						isMovingTowardVictim = false;
-					}
-				}
-				else if ( TFGameRules()->IsMannVsMachineMode() )
-				{
-					if ( m_chuckleTimer.IsElapsed() )
-					{
-						m_chuckleTimer.Start( 1.0f );
-						me->EmitSound( "Spy.MVM_Chuckle" );
 					}
 				}
 			}

@@ -20,7 +20,6 @@
 #endif // REPLAY_ENABLED
 #include "tf_weapon_bonesaw.h"
 #include "sourcevr/isourcevirtualreality.h"
-#include "tf_revive.h"
 #include "entity_capture_flag.h"
 #include "vgui_avatarimage.h"
 
@@ -314,43 +313,15 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 			bool bInSameTeam = pLocalTFPlayer->InSameDisguisedTeam( pEnt );	
 			bool bSpy = pLocalTFPlayer->IsPlayerClass( TF_CLASS_SPY ) && iHideEnemyHealth == 0;
 
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				// We don't want to show health bars to the spy in MVM because it's distracting
-				bSpy = false;
-
-				// Are we disguised as the enemy?
-				if ( pLocalTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pLocalTFPlayer->m_Shared.GetDisguiseTeam() != pLocalTFPlayer->GetTeamNumber() )
-				{
-					// Get the target's apparent team
-					int iTheirApparentTeam = pEnt->GetTeamNumber();
-					if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_DISGUISED ) )
-					{
-						iTheirApparentTeam = pPlayer->m_Shared.GetDisguiseTeam();
-					}
-
-					// Are we disguised as they appear?
-					if ( pLocalTFPlayer->m_Shared.GetDisguiseTeam() == iTheirApparentTeam )
-					{
-						// Don't show the health
-						bInSameTeam = false;
-					}
-				}
-			}
-
 			bool bSpectator = pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR;
 			int iSeeEnemyHealth = 0;
 			bool bStealthed = false;
-			bool bHealthBarVisible = ShouldHealthBarBeVisible( pEnt, pLocalTFPlayer );
-			bool bShow = bHealthBarVisible;
 
 			if ( pPlayer )
 			{
 				if ( pPlayer->m_Shared.IsStealthed() )
 				{
 					bStealthed = true;
-					bHealthBarVisible = false;
-					bShow = false;
 				}
 
 				if ( !bStealthed )
@@ -359,25 +330,6 @@ bool CTargetID::IsValidIDTarget( int nEntIndex, float flOldTargetRetainFOV, floa
 				}
 
 				bool bMaintainInFOV = !pLocalTFPlayer->InSameTeam( pEnt );
-
-				if ( bHealthBarVisible )
-				{
-					bool bEnemyPlayer = pPlayer->GetTeamNumber() != pLocalTFPlayer->GetTeamNumber();
-					bool bEnemyMiniBoss = pPlayer->IsMiniBoss() && bEnemyPlayer;
-					bShow = bEnemyMiniBoss;
-
-					if ( bShow )
-					{
-						bMaintainInFOV = false;
-
-						// Minibosses keep the health indicator up within a small FOV until a different valid target is selected
-						// The FOV needs to grow exponentially when a target is getting near
-						if ( bEnemyMiniBoss )
-						{
-							bMaintainInFOV = true;
-						}
-					}
-				}
 
 				if ( bMaintainInFOV )
 				{
@@ -767,6 +719,17 @@ void CTargetID::UpdateID( void )
 							break;
 						}
 					}
+				}
+			}
+			// Generic
+			else if ( pEnt->IsVisibleToTargetID() )
+			{
+				if ( pLocalTFPlayer->InSameTeam( pEnt ) )
+				{
+					bShowHealth = true;
+					flHealth = pEnt->GetHealth();
+					flMaxHealth = pEnt->GetMaxHealth();
+					iMaxBuffedHealth = pEnt->GetMaxHealth();
 				}
 			}
 		}

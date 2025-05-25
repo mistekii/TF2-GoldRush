@@ -727,11 +727,6 @@ void CTFWeaponBaseGrenadeProj::VPhysicsUpdate( IPhysicsObject *pPhysics )
 	CTraceFilterCollisionGrenades filter( this, GetThrower() );
 	
 	ITraceFilter *pFilterChain = NULL;
-	CTraceFilterIgnoreFriendlyCombatItems filterCombatItems( this, COLLISION_GROUP_NONE, GetTeamNumber(), true );
-	if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-	{
-		pFilterChain = &filterCombatItems;
-	}
 	CTraceFilterChain filterChain( &filter, pFilterChain );
 
 	trace_t tr;

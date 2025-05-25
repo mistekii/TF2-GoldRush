@@ -62,9 +62,6 @@
 #include "tf_partyclient.h"
 
 #include "econ_item_system.h"
-#include "tf_mann_vs_machine_stats.h"
-#include "tf_hud_mann_vs_machine_status.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 
 #include "steam/isteamfriends.h"
 #include "steamworks_gamestats.h"
@@ -118,7 +115,6 @@ ConVar tf_delete_temp_files( "tf_delete_temp_files", "1", FCVAR_CLIENTDLL | FCVA
 
 ConVar tf_taunt_always_show_hint( "tf_taunt_always_show_hint", "1", FCVAR_CLIENTDLL );
 extern ConVar tf_allow_all_team_partner_taunt;
-extern ConVar tf_mvm_buybacks_method;
 extern ConVar tf_autobalance_ask_candidates_maxtime;
 extern ConVar tf_autobalance_dead_candidates_maxtime;
 extern ConVar tf_autobalance_xp_bonus;
@@ -394,8 +390,6 @@ void ClientModeTFNormal::Init()
 	m_pMenuTauntSelection = ( CHudMenuTauntSelection * )GET_HUDELEMENT( CHudMenuTauntSelection );
 	Assert( m_pMenuTauntSelection );
 
-	m_pMenuUpgradePanel = ( CHudUpgradePanel* )GET_HUDELEMENT( CHudUpgradePanel );
-
 
 	m_pMenuSpell = ( CHudSpellMenu * )GET_HUDELEMENT( CHudSpellMenu);
 	Assert( m_pMenuSpell );
@@ -446,11 +440,7 @@ void ClientModeTFNormal::Init()
 #endif // TF_RAID_MODE
 	
 	ListenForGameEvent( "player_upgraded" );
-	ListenForGameEvent( "player_buyback" );
 	ListenForGameEvent( "player_death" );
-	ListenForGameEvent( "player_used_powerup_bottle" );
-
-	ListenForGameEvent( "pve_win_panel" );
 
 	ListenForGameEvent( "arena_win_panel" );
 	ListenForGameEvent( "teamplay_win_panel" );
@@ -671,9 +661,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 #endif // TF_RAID_MODE
 	else if ( FStrEq( "player_connect_client", eventname ) || FStrEq( "player_disconnect", eventname ) )
 	{
-		// ignore these
-		if ( TFGameRules() && TFGameRules()->IsPVEModeActive() && event->GetInt( "bot" ) != 0 )
-			return;
 	}
 	else if ( FStrEq( "client_disconnect", eventname ) )
 	{
@@ -687,34 +674,13 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "server_cvar", eventname ) )
 	{
-		if ( TFGameRules() && TFGameRules()->IsPVEModeActive() && !Q_strcmp( event->GetString("cvarname"), "tf_bot_count" ) )
-			return;
-	}
-	else if ( FStrEq( "player_buyback", eventname ) )
-	{
-		int idxPlayer = event->GetInt( "player" );
-		KeyValuesAD pKeyValues( "data" );
-		if ( g_TF_PR )
-		{
-			const char *pszString = tf_mvm_buybacks_method.GetBool() ? "#TF_PVE_Player_BuyBack_Fixed" : "#TF_PVE_Player_BuyBack";
-
-			pKeyValues->SetString( "player", g_TF_PR->GetPlayerName( idxPlayer ) );
-			pKeyValues->SetInt( "credits", event->GetInt( "cost", 0 ) );
-			PrintTextToChatPlayer( idxPlayer, pszString, pKeyValues );
-
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				pLocalPlayer->EmitSound( "MVM.PlayerBoughtIn" );
-			}
-		}
 	}
 	else if ( FStrEq( "player_death", eventname ) )
 	{
 		// Make sure they're not doing a dead ringer fake death
 		if ( ( event->GetInt( "death_flags" ) & TF_DEATH_FEIGN_DEATH ) == 0 )
 		{
-			if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && ( TFGameRules()->IsMannVsMachineMode() || TFGameRules()->IsCompetitiveMode() ) )
+			if ( TFGameRules() && ( TFGameRules()->State_Get() == GR_STATE_RND_RUNNING ) && TFGameRules()->IsCompetitiveMode() )
 			{
 				C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 				if ( pLocalPlayer )
@@ -745,72 +711,31 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 
 					if ( !bSomeAlive )
 					{
-						if ( TFGameRules()->IsMannVsMachineMode() )
+						const char *pszSound = NULL;
+
+						if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
 						{
-							if ( nVictimTeam == TF_TEAM_PVE_DEFENDERS )
-							{
-								// Inform the team that everyone is dead
-								pLocalPlayer->EmitSound( "Announcer.MVM_All_Dead" );
-							}
+							pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
+						}
+						else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
+						{
+							pszSound = "Announcer.YourTeamWiped";
 						}
 						else
 						{
-							const char *pszSound = NULL;
+							pszSound = "Announcer.TheirTeamWiped";
+						}
 
-							if ( ( RandomInt( 1, 100 ) <= 20 ) || ( pLocalPlayer->GetTeamNumber() < FIRST_GAME_TEAM ) )
-							{
-								pszSound = ( nVictimTeam == TF_TEAM_RED ) ? "Announcer.TeamWipeRed" : "Announcer.TeamWipeBlu";
-							}
-							else if ( pLocalPlayer->GetTeamNumber() == nVictimTeam )
-							{
-								pszSound = "Announcer.YourTeamWiped";
-							}
-							else
-							{
-								pszSound = "Announcer.TheirTeamWiped";
-							}
-
-							if ( pszSound )
-							{
-								pLocalPlayer->EmitSound( pszSound );
-							}
+						if ( pszSound )
+						{
+							pLocalPlayer->EmitSound( pszSound );
 						}
 					}
 				}
 			}
 		}
 	}
-	else if ( FStrEq( "player_used_powerup_bottle", eventname ) )
-	{
-		int idxPlayer = event->GetInt( "player" );
-		KeyValuesAD pKeyValues( "data" );
-		if ( g_TF_PR )
-		{
-			pKeyValues->SetString( "player", g_TF_PR->GetPlayerName( idxPlayer ) );
-			const char *pText = NULL;
-			switch ( event->GetInt( "type" ) )
-			{
-			case POWERUP_BOTTLE_CRITBOOST: pText = "#TF_PVE_Player_UsedCritsBottle"; break;
-			case POWERUP_BOTTLE_UBERCHARGE: pText = "#TF_PVE_Player_UsedUberBottle"; break;
-			case POWERUP_BOTTLE_RECALL: pText = "#TF_PVE_Player_UsedRecallBottle"; break;
-			case POWERUP_BOTTLE_REFILL_AMMO: pText = "#TF_PVE_Player_UsedRefillAmmoBottle"; break;
-			case POWERUP_BOTTLE_BUILDINGS_INSTANT_UPGRADE: pText = "#TF_PVE_Player_UsedBuildingUpgrade"; break;
-			case POWERUP_BOTTLE_RADIUS_STEALTH: pText = "#TF_PVE_Player_UsedRadiusStealth"; break;
-			}
-			if ( pText != NULL )
-			{
-				PrintTextToChatPlayer( idxPlayer, pText, pKeyValues );
-			}
-
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				pLocalPlayer->EmitSound( "MVM.PlayerUsedPowerup" );
-			}
-		}
-	}
 	else if ( 
-			  FStrEq( "pve_win_panel", eventname ) ||
 			  FStrEq( "arena_win_panel", eventname ) ||
 			  FStrEq( "teamplay_win_panel", eventname )  )
 	{
@@ -1388,14 +1313,14 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "scorestats_accumulated_reset", eventname ) )
 	{
-		if ( g_TF_PR && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+		if ( g_TF_PR && TFGameRules() )
 		{
 			g_TF_PR->ResetPlayerScoreStats();
 		}
 	}
 	else if ( FStrEq( "scorestats_accumulated_update", eventname ) )
 	{
-		if ( g_TF_PR && TFGameRules() && !TFGameRules()->IsMannVsMachineMode() )
+		if ( g_TF_PR && TFGameRules() )
 		{
 			g_TF_PR->UpdatePlayerScoreStats();
 		}
@@ -1773,7 +1698,6 @@ void ClientModeTFNormal::Update()
 	NotificationQueue_Update();
 
 	// CHudVote *pHudVote = GET_HUDELEMENT( CHudVote );
-	// CTFHudMannVsMachineStatus *pMannVsMachineStatus = GET_HUDELEMENT( CTFHudMannVsMachineStatus );
 	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
 
 	// Update steam controller stuff if one is active
@@ -1966,12 +1890,6 @@ bool ClientModeTFNormal::IsEngyDestroyVisible() const
 bool ClientModeTFNormal::IsSpyDisguiseVisible() const
 {
 	return m_pMenuSpyDisguise && m_pMenuSpyDisguise->IsVisible();
-}
-
-//----------------------------------------------------------------------------
-bool ClientModeTFNormal::IsUpgradePanelVisible() const
-{
-	return m_pMenuUpgradePanel && m_pMenuUpgradePanel->IsVisible();
 }
 
 //----------------------------------------------------------------------------

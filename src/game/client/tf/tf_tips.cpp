@@ -229,38 +229,6 @@ const wchar_t *CTFTips::GetAbuseReportTip( void )
 	return wzAbuseTip;
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Returns tip related to MvM
-//-----------------------------------------------------------------------------
-const wchar_t *CTFTips::GetRandomMvMTip( int &iClassUsed )
-{
-	Init();
-
-	static wchar_t wzMvMTip[512] = L"";
-	static int iPrevMvMClass = -1;
-
-	iClassUsed = RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
-
-	if ( iClassUsed == iPrevMvMClass )
-	{
-		iClassUsed = ( iClassUsed + 1 ) % TF_LAST_NORMAL_CLASS;
-	}
-	iPrevMvMClass = iClassUsed;
-
-	// Get Tip Count
-	CFmtStr fmtTipCount("Tip_MvM_%d_Count", iClassUsed );
-	int iMvMTipCount = g_pVGuiLocalize->Find( fmtTipCount ) ? _wtoi( g_pVGuiLocalize->Find( fmtTipCount ) ) : 1;
-
-	int iTip = RandomInt( 1, iMvMTipCount );
-
-	// replace any commands with their bound keys
-	const wchar_t *wzFmt = g_pVGuiLocalize->Find( CFmtStr( "#Tip_MvM_%d_%d", iClassUsed, iTip ) );
-	UTIL_ReplaceKeyBindings( wzFmt, 0, wzMvMTip, sizeof( wzMvMTip ) );
-
-	iPrevMvMClass = iClassUsed;
-	return wzMvMTip;
-}
-
 void CTFTips::GetRandomCaptainCanteenImages( const char **ppchBody, const char **ppchMisc, const char **ppchHat )
 {
 	// Select and copy over all 3 parts

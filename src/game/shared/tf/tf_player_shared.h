@@ -23,7 +23,6 @@
 class C_TFPlayer;
 // Server specific.
 #else
-#include "entity_currencypack.h"
 #include "tf_weapon_builder.h"
 class CTFPlayer;
 #endif
@@ -190,16 +189,6 @@ struct condition_source_t
 
 
 //=============================================================================
-// For checkpointing upgrades Players have purchased in Mann Vs Machine
-class CUpgradeInfo
-{
-public:
-	int m_iPlayerClass;							// the character class this upgrade is being applied too
-	item_definition_index_t m_itemDefIndex;		// item that was upgraded (or INVALID_ITEM_DEF_INDEX for the player itself)
-	int m_upgrade;								// the upgrade that was applied
-	int m_nCost;								// price of the upgrade
-};
-
 #define CONTROL_STUN_ANIM_TIME	1.5f
 
 enum TFStunAnimState_t
@@ -736,14 +725,12 @@ private:
 	void OnAddNoHealingDamageBuff( void );
 	void OnAddSpeedBoost( bool IsNonCombat );
 	void OnAddSapped( void );
-	void OnAddReprogrammed( void );
 	void OnAddMarkedForDeathSilent( void );
 	void OnAddDisguisedAsDispenser( void );
 	void OnAddHalloweenBombHead( void );
 	void OnAddHalloweenThriller( void );
 	void OnAddRadiusHealOnDamage( void );
 	void OnAddStealthedUserBuffFade( void );
-	void OnAddMVMBotRadiowave( void );
 	void OnAddHalloweenSpeedBoost( void );
 	void OnAddHalloweenQuickHeal( void );
 	void OnAddHalloweenGiant( void );
@@ -793,14 +780,12 @@ private:
 	void OnRemoveNoHealingDamageBuff( void );
 	void OnRemoveSpeedBoost( bool IsNonCombat );
 	void OnRemoveSapped( void );
-	void OnRemoveReprogrammed( void );
 	void OnRemoveMarkedForDeathSilent( void );
 	void OnRemoveDisguisedAsDispenser( void );
 	void OnRemoveHalloweenBombHead( void );
 	void OnRemoveHalloweenThriller( void );
 	void OnRemoveRadiusHealOnDamage( void );
 	void OnRemoveStealthedUserBuffFade( void );
-	void OnRemoveMVMBotRadiowave( void );
 	void OnRemoveHalloweenSpeedBoost( void );
 	void OnRemoveHalloweenQuickHeal( void );
 	void OnRemoveHalloweenGiant( void );
@@ -834,9 +819,6 @@ private:
 	void  SendNewInvulnGameEvent( void );
 	void  SetChargeEffect( medigun_charge_types iCharge, bool bState, bool bInstant, const struct MedigunEffects_t& effects, float flWearOffTime, CTFPlayer *pProvider = NULL );
 	void  SetCritBoosted( bool bState );
-
-	void RadiusCurrencyCollectionCheck( void );
-	void RadiusSpyScan( void );
 
 	// Attr for Conditions
 	void ApplyAttributeToPlayer( const char* pszAttribName, float flValue );
@@ -1106,16 +1088,6 @@ private:
 	CUtlVector<CTFDamageEvent> m_DamageEvents;
 
 	CHandle<CTFPlayer>	m_hPeeAttacker;
-
-	float m_flRadiusCurrencyCollectionTime;
-	float m_flRadiusSpyScanTime;
-
-	struct pulledcurrencypacks_t
-	{
-		CHandle<CCurrencyPack> hPack;
-		float flTime;
-	};
-	CUtlVector <pulledcurrencypacks_t> m_CurrencyPacks;
 
 #else
 	float	m_flGotTeleEffectAt;

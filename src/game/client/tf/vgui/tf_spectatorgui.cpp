@@ -45,7 +45,6 @@ extern ConVar _cl_classmenuopen;
 extern ConVar tf_max_health_boost;
 extern const char *g_pszItemClassImages[];
 extern int g_ClassDefinesRemap[];
-extern ConVar tf_mvm_buybacks_method;
 
 static const wchar_t* GetSCGlyph( const char* action )
 {
@@ -88,8 +87,6 @@ CTFSpectatorGUI::CTFSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort
 	m_nEngBuilds_xpos = m_nEngBuilds_ypos = 0;
 	m_nSpyBuilds_xpos = m_nSpyBuilds_ypos = 0;
 
-	m_nMannVsMachineStatus_xpos = m_nMannVsMachineStatus_ypos = 0;
-	m_pBuyBackLabel = new CExLabel( this, "BuyBackLabel", "" );
 	m_pReinforcementsLabel = new Label( this, "ReinforcementsLabel", "" );
 	m_pClassOrTeamLabel = new Label( this, "ClassOrTeamLabel", "" );
 	// m_pSwitchCamModeKeyLabel = new Label( this, "SwitchCamModeKeyLabel", "" );
@@ -144,19 +141,7 @@ void CTFSpectatorGUI::Reset( void )
 //-----------------------------------------------------------------------------
 int CTFSpectatorGUI::GetTopBarHeight()
 {
-	int iPlayerPanelHeight = 0;
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( GetLocalPlayerTeam() == TF_TEAM_PVE_DEFENDERS )
-		{
-			if ( m_PlayerPanels.Count() > 0 )
-			{
-				iPlayerPanelHeight = m_PlayerPanels[0]->GetTall();
-			}
-		}
-	}
-
-	return m_pTopBar->GetTall() + iPlayerPanelHeight; 
+	return m_pTopBar->GetTall(); 
 }
 
 //-----------------------------------------------------------------------------
@@ -287,12 +272,10 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 		( pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM ) )
 	{
 		m_pReinforcementsLabel->SetVisible( false );
-		m_pBuyBackLabel->SetVisible( false );
 
 		return;
 	}
 
-	bool bBuyBackVisible = false;
 	wchar_t wLabel[256];
 		
 	if ( TFGameRules()->InStalemate() )
@@ -314,13 +297,12 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 	else
 	{
 		float flNextRespawn = 0.f;
-		bool bQuickSpawn = TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pPlayer->IsPlayerClass( TF_CLASS_SCOUT );
 
 		if ( g_TF_PR )
 		{
 			flNextRespawn = g_TF_PR->GetNextRespawnTime( pPlayer->entindex() );
 		}
-		else if ( !bQuickSpawn )
+		else
 		{
 			flNextRespawn = TFGameRules()->GetNextRespawnWave( pPlayer->GetTeamNumber(), pPlayer );
 		}
@@ -328,7 +310,6 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 		if ( !flNextRespawn )
 		{
 			m_pReinforcementsLabel->SetVisible( false );
-			m_pBuyBackLabel->SetVisible( false );
 			return;
 		}
 
@@ -346,29 +327,6 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 			char szSecs[6];
 			wchar_t wSecs[4];
 
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				bool bNewMethod = tf_mvm_buybacks_method.GetBool();
-				bBuyBackVisible = ( bNewMethod ) ? g_TF_PR->GetNumBuybackCredits( pPlayer->entindex() ) : true;
-
-				if ( bBuyBackVisible )
-				{
-					// When using the new system, we display "Hit '%use_action_slot_item%' to RESPAWN INSTANTLY! (%s1 remaining this wave)"
-					// When using the old system, we display "Hit '%use_action_slot_item%' to pay %s1 credits and RESPAWN INSTANTLY!"
-					int nCost = ( bNewMethod ) ? g_TF_PR->GetNumBuybackCredits( pPlayer->entindex() ) : iRespawnWait * MVM_BUYBACK_COST_PER_SEC;
-					const char *pszString = ( bNewMethod ) ? "#TF_PVE_Buyback_Fixed" : "#TF_PVE_Buyback";
-
-					Q_snprintf( szSecs, sizeof( szSecs ), "%d", nCost );
-					g_pVGuiLocalize->ConvertANSIToUnicode( szSecs, wSecs, sizeof( wSecs ) );
-					g_pVGuiLocalize->ConstructString_safe( wLabel, g_pVGuiLocalize->Find( pszString ), 1, wSecs );
-
-					wchar_t wBuyBack[256];
-					UTIL_ReplaceKeyBindings( wLabel, 0, wBuyBack, sizeof( wBuyBack ), GAME_ACTION_SET_SPECTATOR );
-
-					m_pBuyBackLabel->SetText( wBuyBack, true );
-				}
-			}
-
 			Q_snprintf( szSecs, sizeof(szSecs), "%d", iRespawnWait );
 
 			g_pVGuiLocalize->ConvertANSIToUnicode(szSecs, wSecs, sizeof(wSecs));
@@ -378,7 +336,6 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 
 	m_pReinforcementsLabel->SetVisible( true );
 	m_pReinforcementsLabel->SetText( wLabel, true );
-	m_pBuyBackLabel->SetVisible( bBuyBackVisible );
 }
 
 //-----------------------------------------------------------------------------
@@ -785,9 +742,6 @@ void CTFSpectatorGUI::UpdateItemPanel( bool bForce )
 				if ( m_flNextItemPanelUpdate && m_flNextItemPanelUpdate > gpGlobals->curtime && m_hPrevItemPlayer == pPlayer )
 					return;
 
-				if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && ( pPlayer->GetTeamNumber() == TF_TEAM_PVE_INVADERS ) )
-					return;
-
 				if ( m_hPrevItemPlayer != pPlayer )
 				{
 					m_iPrevItemShown = 0;
@@ -893,14 +847,7 @@ const char *CTFSpectatorGUI::GetResFile( void )
 //-----------------------------------------------------------------------------
 bool CTFSpectatorGUI::InTournamentGUI( void )
 {
-	bool bOverride = false;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		bOverride = true;
-	}
-
-	return ( TFGameRules()->IsInTournamentMode() && !TFGameRules()->IsCompetitiveMode() && ( cl_use_tournament_specgui.GetBool() || bOverride ) );
+	return ( TFGameRules()->IsInTournamentMode() && !TFGameRules()->IsCompetitiveMode() && cl_use_tournament_specgui.GetBool() );
 }
 
 //-----------------------------------------------------------------------------
@@ -928,7 +875,6 @@ void CTFSpectatorGUI::RecalculatePlayerPanels( void )
 		return;
 
 	int iLocalTeam = pPlayer->GetTeamNumber();
-	bool bMvM = TFGameRules()->IsMannVsMachineMode();
 
 	// Calculate the number of players that must be shown. Spectators see all players (except in MvM), team members only see their team.
 	int iPanel = 0;
@@ -944,22 +890,12 @@ void CTFSpectatorGUI::RecalculatePlayerPanels( void )
 			if ( !g_TF_PR->IsConnected( iPlayer ) )
 				continue;
 
-			bool bHideBots = false;
-
-	#ifndef _DEBUG 
-			if ( bMvM )
-			{
-				bHideBots = true;
-			}
-	#endif
 			int iTeam = g_TF_PR->GetTeam( iPlayer );
 			if ( iTeam != iLocalTeam && iLocalTeam != TEAM_SPECTATOR )
 				continue;
 			if ( iTeam != TF_TEAM_RED && iTeam != TF_TEAM_BLUE )
 				continue;
-			if ( g_TF_PR->IsFakePlayer( iPlayer ) && bHideBots )
-				continue;
-			if ( bMvM && ( iTeam == TF_TEAM_PVE_INVADERS ) )
+			if ( g_TF_PR->IsFakePlayer( iPlayer ) )
 				continue;
 			if ( g_TF_PR->GetPlayerClass( iPlayer ) != nCurrentClass )
 				continue;
@@ -1032,35 +968,6 @@ void CTFSpectatorGUI::UpdatePlayerPanels( void )
 	int iTeam2Count = 0;
 	int iCenter = GetWide() * 0.5;
 	int iYPosOverride = 0;
-
-	// We only want to draw the player panels for the defenders in MvM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		iTeam1 = TF_TEAM_PVE_DEFENDERS;
-		iTeam2 = TF_TEAM_PVE_INVADERS;
-
-		int iNumValidPanels = 0;
-		for ( int i = 0; i < m_PlayerPanels.Count(); i++ )
-		{
-			if ( m_PlayerPanels[i]->GetPlayerIndex() <= 0 )
-			{
-				continue;
-			}
-
-			iNumValidPanels++;
-		}
-
-		// we'll center the group of players in MvM
-		m_iTeam1PlayerBaseOffsetX = ( iNumValidPanels * m_iTeam1PlayerDeltaX ) * -0.5;
-
-		if ( iLocalTeam > LAST_SHARED_TEAM )
-		{
-			if ( m_pTopBar )
-			{
-				iYPosOverride = m_pTopBar->GetTall();
-			}
-		}
-	}
 
 	for ( int i = 0; i < m_PlayerPanels.Count(); i++ )
 	{

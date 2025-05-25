@@ -482,41 +482,34 @@ void CTFMapInfoMenu::LoadMapPage()
 
 			if( !g_pVGuiLocalize->Find( mapInfoKey ) && TFGameRules() )
 			{
-				if ( TFGameRules()->IsMannVsMachineMode() )
+				switch ( TFGameRules()->GetGameType() )
 				{
-					pszDescription = "#default_mvm_description";
-				}
-				else
-				{
-					switch ( TFGameRules()->GetGameType() )
+				case TF_GAMETYPE_CTF:
+					pszDescription = "#default_ctf_description";
+					break;
+				case TF_GAMETYPE_CP:
+					if ( TFGameRules()->IsInKothMode() )
 					{
-					case TF_GAMETYPE_CTF:
-						pszDescription = "#default_ctf_description";
-						break;
-					case TF_GAMETYPE_CP:
-						if ( TFGameRules()->IsInKothMode() )
-						{
-							pszDescription = "#default_koth_description";
-						}
-						else
-						{
-							pszDescription = "#default_cp_description";
-						}
-						break;
-					case TF_GAMETYPE_ESCORT:
-						if ( TFGameRules()->HasMultipleTrains() )
-						{
-							pszDescription = "#default_payload_race_description";
-						}
-						else
-						{
-							pszDescription = "#default_payload_description";
-						}
-						break;
-					case TF_GAMETYPE_ARENA:
-						pszDescription = "#default_arena_description";
-						break;
+						pszDescription = "#default_koth_description";
 					}
+					else
+					{
+						pszDescription = "#default_cp_description";
+					}
+					break;
+				case TF_GAMETYPE_ESCORT:
+					if ( TFGameRules()->HasMultipleTrains() )
+					{
+						pszDescription = "#default_payload_race_description";
+					}
+					else
+					{
+						pszDescription = "#default_payload_description";
+					}
+					break;
+				case TF_GAMETYPE_ARENA:
+					pszDescription = "#default_arena_description";
+					break;
 				}
 			}
 			else

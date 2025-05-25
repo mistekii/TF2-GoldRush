@@ -139,14 +139,6 @@ void CObjectTeleporter::TeleporterSend( CTFPlayer *pPlayer )
 			pPlayer,
 			kKillEaterEvent_TeleportsProvided
 		);
-
-		if ( GetBuilder() != pPlayer &&
-			 TFGameRules() && 
-			 TFGameRules()->GameModeUsesUpgrades() &&
-			 TFGameRules()->State_Get() == GR_STATE_RND_RUNNING )
-		{
-			CTF_GameStats.Event_PlayerAwardBonusPoints( GetBuilder(), pPlayer, 10 );
-		}
 	}
 
 	int iSpeedBoost = 0;
@@ -265,11 +257,6 @@ void CObjectTeleporter::Spawn()
 //-----------------------------------------------------------------------------
 void CObjectTeleporter::UpdateOnRemove()
 {
-	if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		TFObjectiveResource()->DecrementTeleporterCount();
-	}
-
 	BaseClass::UpdateOnRemove();
 }
 
@@ -864,12 +851,6 @@ void CObjectTeleporter::DeterminePlaybackRate( void )
 			break;
 		}
 
-		// Always spin when the teleporter is done building
-		if ( TFGameRules()->IsMannVsMachineMode() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			flPlaybackRate = 1.f;
-		}
-
 		SetPlaybackRate( flPlaybackRate );
 	}
 
@@ -1158,11 +1139,6 @@ void CObjectTeleporter::TeleporterThink( void )
 void CObjectTeleporter::FinishedBuilding( void )
 {
 	BaseClass::FinishedBuilding();
-
-	if ( GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		TFObjectiveResource()->IncrementTeleporterCount();
-	}
 
 	SetActivity( ACT_OBJ_RUNNING );
 	SetPlaybackRate( 0.0f );

@@ -9,7 +9,6 @@
 
 
 #include "cbase.h"
-//#include "tf_pvelobbypanel.h"
 #include "game/client/iviewport.h"
 #include "vgui_controls/TextEntry.h"
 #include "tf_matchmaking_shared.h"
@@ -73,7 +72,6 @@ protected:
 	CPanelAnimationVarAliasType( int, m_iChallengeCheckBoxWidth, "challenge_check_box_width", "8", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iAvatarWidth, "avatar_width", "16", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iPlayerNameWidth, "player_name_width", "110", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iBannedWidth, "squad_surplus_width", "12", "proportional_int" );
 
 	// Sectioned list panels are the worst
 	struct ChatModelPanel_t
@@ -104,8 +102,6 @@ protected:
 	{
 		CSteamID m_steamID;
 		CUtlString m_sName;
-		bool m_bHasTicket;
-		bool m_bSquadSurplus;
 		uint32 m_nBadgeLevel;
 		CAvatarImage *m_pAvatarImage;
 		uint32 m_nCompletedChallenges; // bitmask of badge slots (not related to the challenge index in the schema!)

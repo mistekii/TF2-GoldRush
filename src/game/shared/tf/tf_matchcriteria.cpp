@@ -193,7 +193,6 @@ bool ITFGroupMatchCriteria::MakeDelta( const ITFGroupMatchCriteriaReader& msgBas
 	// Simple fields
 	DELTA_PROTO_FIELD( late_join_ok );
 	DELTA_PROTO_FIELD( custom_ping_tolerance );
-	DELTA_PROTO_FIELD( mvm_mannup_tour );
 
 	#undef DELTA_PROTO_FIELD
 
@@ -227,11 +226,6 @@ bool ITFGroupMatchCriteria::MakeDelta( const ITFGroupMatchCriteriaReader& msgBas
 			{ MutProto().add_## field( "" ); }																		\
 		}																											\
 	}																												\
-
-	// mvm_missions - repeated field
-	// ---
-	MISSION_CHANGE_CHECK( mvm_mannup_missions )
-	MISSION_CHANGE_CHECK( mvm_bootcamp_missions )
 
 	// casual_criteria
 	// ---
@@ -289,26 +283,10 @@ bool ITFGroupMatchCriteria::ApplyDelta( const ITFGroupMatchCriteriaReader& msgDe
 
 	APPLY_DELTA_FIELD( late_join_ok );
 	APPLY_DELTA_FIELD( custom_ping_tolerance );
-	APPLY_DELTA_FIELD( mvm_mannup_tour );
 
 	#undef APPLY_DELTA_FIELD
 
 	// Complex/repeated fields
-
-	#define APPLY_MVM_MISSION_DELTA( field )																				\
-	if ( msgDelta.Proto().field ##_size() )																					\
-	{																														\
-		MutProto().mutable_ ## field()->CopyFrom( msgDelta.Proto().field() );												\
-		/* See corresponding terrible hack in MakeDelta -- we send a single empty field to indicate that this field did		\
-		   change, and changed to nothing. */																				\
-		if ( Proto().field ## _size() == 1 && Proto().field( 0 ) == "" )													\
-			{ MutProto().mutable_ ## field()->Clear(); }																	\
-	}																														\
-
-	// mvm_missions
-	// ---
-	APPLY_MVM_MISSION_DELTA( mvm_mannup_missions )
-	APPLY_MVM_MISSION_DELTA( mvm_bootcamp_missions )
 
 	// casual_criteria
 	// ---
@@ -327,21 +305,6 @@ bool ITFGroupMatchCriteria::ApplyDelta( const ITFGroupMatchCriteriaReader& msgDe
 //-----------------------------------------------------------------------------
 // ITFPerPlayerMatchCriteria
 //-----------------------------------------------------------------------------
-
-//-----------------------------------------------------------------------------
-bool ITFPerPlayerMatchCriteriaReader::GetSquadSurplus() const
-{
-	return Proto().mvm_squad_surplus();
-}
-
-//-----------------------------------------------------------------------------
-void ITFPerPlayerMatchCriteria::SetSquadSurplus( bool bSquadSurplus )
-{
-	if ( GetSquadSurplus() != bSquadSurplus )
-	{
-		MutProto().set_mvm_squad_surplus( bSquadSurplus );
-	}
-}
 
 //-----------------------------------------------------------------------------
 bool ITFPerPlayerMatchCriteria::MakeDelta( const ITFPerPlayerMatchCriteriaReader& msgBase,
@@ -363,9 +326,6 @@ bool ITFPerPlayerMatchCriteria::MakeDelta( const ITFPerPlayerMatchCriteriaReader
 				MutProto().set_ ## field( x ## field ## Value );  \
 			}                                                     \
 		} while ( false );
-
-	DELTA_PROTO_FIELD( mvm_squad_surplus );
-	// DELTA_PROTO_FIELD( some_other_field ... );
 
 	#undef DELTA_PROTO_FIELD
 
@@ -390,9 +350,6 @@ bool ITFPerPlayerMatchCriteria::ApplyDelta( const ITFPerPlayerMatchCriteriaReade
 				MutProto().set_ ## field( x ## field ## Value );     \
 			}                                                        \
 		} while ( false );
-
-	APPLY_DELTA_FIELD( mvm_squad_surplus );
-	// APPLY_DELTA_FIELD( some_other_field ... );
 
 	#undef APPLY_DELTA_FIELD
 

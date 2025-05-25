@@ -54,12 +54,10 @@ ConVar cl_hud_killstreak_display_fontsize( "cl_hud_killstreak_display_fontsize",
 ConVar cl_hud_killstreak_display_alpha( "cl_hud_killstreak_display_alpha", "120", FCVAR_ARCHIVE, "Adjusts font alpha value of killstreak notices.  Range is from 0 to 255 (default is 200)." );
 
 const int STREAK_MIN = 5;
-const int STREAK_MIN_MVM = 20;
 const int STREAK_MIN_DUCKS = 10;
 
 static int MinStreakForType( CTFPlayerShared::ETFStreak eStreakType )
 {
-	bool bIsMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
 	if ( eStreakType == CTFPlayerShared::kTFStreak_Ducks )
 	{
 		return STREAK_MIN_DUCKS;
@@ -68,10 +66,7 @@ static int MinStreakForType( CTFPlayerShared::ETFStreak eStreakType )
 	{
 		return 1;
 	}
-	if ( bIsMvM )
-	{
-		return STREAK_MIN_MVM;
-	}
+
 	return STREAK_MIN;
 }
 
@@ -321,7 +316,6 @@ void CTFStreakNotice::StreakUpdated( CTFPlayerShared::ETFStreak eStreakType, int
 	// Temp override all messages
 	// Add New message
 
-	bool bIsMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
 	int iStreakMin = MinStreakForType( eStreakType );
 
 	if ( IsCurrentStreakHigherPriority( eStreakType, iStreak ) )
@@ -355,13 +349,6 @@ void CTFStreakNotice::StreakUpdated( CTFPlayerShared::ETFStreak eStreakType, int
 	else if ( eStreakType == CTFPlayerShared::kTFStreak_Duck_levelup )
 	{
 		iStreakTier = 5;
-	}
-	else if ( bIsMvM )
-	{
-		if ( iStreak % iStreakMin != 0 )
-			return;
-
-		iStreakTier = iStreak / iStreakMin;
 	}
 	else
 	{
@@ -690,21 +677,6 @@ bool CTFHudDeathNotice::ShouldShowDeathNotice( IGameEvent *event )
 		}
 	}
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && ( event->GetInt( "death_flags" ) & TF_DEATH_MINIBOSS ) == 0 )
-	{
-		int iLocalPlayerIndex = GetLocalPlayerIndex();
-
-		if ( iLocalPlayerIndex != engine->GetPlayerForUserID( event->GetInt( "attacker" ) ) && 
-			 iLocalPlayerIndex != engine->GetPlayerForUserID( event->GetInt( "assister" ) ) )
-		{
-			C_TFPlayer* pVictim = ToTFPlayer( UTIL_PlayerByIndex( engine->GetPlayerForUserID( event->GetInt( "userid" ) ) ) );
-			if ( pVictim && pVictim->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-			{
-				return false;
-			}
-		}
-	}
-
 	return true;
 }
 
@@ -867,12 +839,6 @@ void CTFHudDeathNotice::OnGameEvent( IGameEvent *event, int iDeathNoticeMsg )
 		const int iPlayerPenetrationCount = !event->IsEmpty( "playerpenetratecount" ) ? event->GetInt( "playerpenetratecount" ) : 0;
 
 		bool bPenetrateSound = iPlayerPenetrationCount > 0;
-
-		// This happens too frequently in Coop/TD
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			bPenetrateSound = false;
-		}
 
 		if ( bPenetrateSound )
 		{

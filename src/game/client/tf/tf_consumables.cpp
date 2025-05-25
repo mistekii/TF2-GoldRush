@@ -23,7 +23,6 @@
 #include "tf_gamerules.h"
 #include "tf_item_tools.h"
 #include "c_tf_freeaccount.h"
-#include "tf_item_powerup_bottle.h"
 
 // for UI
 #include "clientmode_tf.h"
@@ -1050,21 +1049,6 @@ static void StartUseActionSlotItem( const CCommand &args )
 		return;
 	}
 
-	// If we're in Mann Vs MAchine, and we're dead, we can use this to respawn instantly.
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && pLocalPlayer->IsObserver() )
-	{
-		float flNextRespawn = TFGameRules()->GetNextRespawnWave( pLocalPlayer->GetTeamNumber(), pLocalPlayer );
-		if ( flNextRespawn )
-		{
-			int iRespawnWait = (flNextRespawn - gpGlobals->curtime);
-			if ( iRespawnWait > 1.0 )
-			{
-				engine->ClientCmd_Unrestricted( "td_buyback\n" );
-				return;
-			}
-		}
-	}
-
 	// send a request to the GC to use the item
 	g_bUsedGCItem = false;
 	CEconItemView *pItem = CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( pLocalPlayer, LOADOUT_POSITION_ACTION );
@@ -1110,47 +1094,8 @@ static ConCommand end_use_action_slot_item( "-use_action_slot_item", EndUseActio
 
 static void StartContextAction( const CCommand &args )
 {
-	// Assume we're going to taunt
-	bool bDoTaunt = true;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-		if ( pLocalPlayer )
-		{
-			CTFPowerupBottle *pPowerupBottle = dynamic_cast< CTFPowerupBottle* >( pLocalPlayer->GetEquippedWearableForLoadoutSlot( LOADOUT_POSITION_ACTION ) );
-			if ( pPowerupBottle && pPowerupBottle->GetNumCharges() > 0 )
-			{
-				// They're in MvM and have a bottle with a charge, so do an action instead
-				bDoTaunt = false;
-			}
-
-			if ( pLocalPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS ) && pLocalPlayer->GetActiveTFWeapon() && pLocalPlayer->GetActiveTFWeapon()->GetWeaponID() == TF_WEAPON_MINIGUN )
-			{
-				int iRage = 0;
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, iRage, generate_rage_on_dmg );
-				if ( iRage )
-				{
-					if ( pLocalPlayer->m_Shared.GetRageMeter() >= 100.f && !pLocalPlayer->m_Shared.IsRageDraining() )
-					{
-						// They have rage ready to go, do the taunt
-						bDoTaunt = true;
-					}
-				}
-			}
-		}
-	}
-
-	if ( bDoTaunt )
-	{
-		// Taunt
-		engine->ClientCmd_Unrestricted( "+taunt\n" );
-	}
-	else
-	{
-		// Action item
-		StartUseActionSlotItem( args );
-	}
+	// Taunt
+	engine->ClientCmd_Unrestricted( "+taunt\n" );
 }
 
 static ConCommand start_context_action( "+context_action", StartContextAction, "Use the item in the action slot." );

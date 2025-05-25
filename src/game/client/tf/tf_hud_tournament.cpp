@@ -161,67 +161,11 @@ void CHudTournament::PlaySounds( int nTime )
 		}
 		case 10:
 		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( TFObjectiveResource()->GetMannVsMachineWaveCount() >= TFObjectiveResource()->GetMannVsMachineMaxWaveCount() )
-				{
-					pLocalPlayer->EmitSound( "Announcer.MVM_Final_Wave_Start" );
-				}
-				else if ( TFObjectiveResource()->GetMannVsMachineWaveCount() <= 1 )
-				{
-					if ( GTFGCClientSystem()->GetLobby() && IsMannUpGroup( GTFGCClientSystem()->GetLobby()->GetMatchGroup() ) )
-					{
-						pLocalPlayer->EmitSound( "Announcer.MVM_Manned_Up" );
-					}
-					else
-					{
-						pLocalPlayer->EmitSound( "Announcer.MVM_First_Wave_Start" );
-					}
-				}
-				else
-				{
-					pLocalPlayer->EmitSound( "Announcer.MVM_Wave_Start" );
-				}
-			}
-			else
-			{
-				pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGame1Begins10Seconds" : "Announcer.RoundBegins10Seconds" );
-			}
+			pLocalPlayer->EmitSound( bCompetitiveMode ? "Announcer.CompGame1Begins10Seconds" : "Announcer.RoundBegins10Seconds" );
 			break;
 		}
 		case 9:
 		{
-			if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-			{
-				int nMaxWaves = TFObjectiveResource()->GetMannVsMachineMaxWaveCount();
-				int nCurWave = TFObjectiveResource()->GetMannVsMachineWaveCount();
-				bool bHasTank = false;
-				for ( int i = 0; i < MVM_CLASS_TYPES_PER_WAVE_MAX_NEW; ++i )
-				{
-	// 				int nClassCount = TFObjectiveResource()->GetMannVsMachineWaveClassCount( i );
- 					const char *pchClassIconName = TFObjectiveResource()->GetMannVsMachineWaveClassName( i );
-					if( V_stristr( pchClassIconName, "tank" ))
-					{
-						bHasTank = true;
-					}
-				}
-				if( nCurWave == nMaxWaves )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_last_wave" );	
-				}
-				else if( bHasTank )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_tank_wave" );
-				}
-				else if( nCurWave > ( nMaxWaves / 2 ) )
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_mid_wave" );	
-				}
-				else
-				{
-					pLocalPlayer->EmitSound( "music.mvm_start_wave" );
-				}
-			}
 			break;
 		}
 		case 5:
@@ -701,12 +645,7 @@ void CHudTournament::ApplySchemeSettings( IScheme *pScheme )
 	m_bReapplyPlayerPanelKVs = true;
 
 	KeyValues *pConditions = NULL;
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
-	else if ( m_bCompetitiveMode )
+	if ( m_bCompetitiveMode )
 	{
 		pConditions = new KeyValues( "conditions" );
 		AddSubKeyNamed( pConditions, "if_competitive" );
@@ -766,7 +705,7 @@ void CHudTournament::PerformLayout( void )
 		}
 	}
 
-	bool bShowTournamentConditions = !m_bCompetitiveMode && TFGameRules() && !TFGameRules()->IsMannVsMachineMode();
+	bool bShowTournamentConditions = !m_bCompetitiveMode;
 
 	// Hide some elements when in competitive mode
 	if ( m_pTournamentConditionLabel )
@@ -839,10 +778,6 @@ void CHudTournament::RecalculatePlayerPanels( void )
 
 		int iTeam = g_TF_PR->GetTeam( i );
 		if ( iTeam == TEAM_UNASSIGNED && !m_bReadyStatusMode )
-			continue;
-			
-		// Spectators see all players, team members only see their team.
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && iTeam != iLocalTeam && iLocalTeam != TEAM_SPECTATOR )
 			continue;
 
 		if ( iTeam != TF_TEAM_RED && iTeam != TF_TEAM_BLUE )
@@ -988,7 +923,7 @@ void CHudTournament::UpdatePlayerPanels( void )
 		if ( iTeam == iTeam1 )
 		{
 			// Two teams.  First team left of center.
-			if ( m_bReadyStatusMode && !TFGameRules()->IsMannVsMachineMode() )
+			if ( m_bReadyStatusMode )
 			{
 				int iTeam1LeftCorner = iCenter - ( iTeamSize * nOffset );
 				iXPos += ( iTeam1LeftCorner + ( iTeam1Processed * nOffset ) );

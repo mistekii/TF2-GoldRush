@@ -981,16 +981,6 @@ class CAchievementTFSoldier_KillDefenseless : public CBaseTFAchievement
 
 	virtual bool LocalPlayerCanEarn( void ) 
 	{ 
-		if ( TFGameRules() )
-		{
-			bool bMVMAchievement = ( m_iAchievementID >= ACHIEVEMENT_TF_MVM_START_RANGE && m_iAchievementID <= ACHIEVEMENT_TF_MVM_END_RANGE );
-
-			if ( ( bMVMAchievement && !TFGameRules()->IsMannVsMachineMode() ) || ( !bMVMAchievement && TFGameRules()->IsMannVsMachineMode() ) )
-			{
-				return false;
-			}
-		}
-
 		// This achievement can be earned while we're in the post-win state
 		return IsLocalTFPlayerClass( TF_CLASS_SOLDIER );
 	}

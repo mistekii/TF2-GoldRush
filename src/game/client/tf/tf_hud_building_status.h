@@ -203,37 +203,6 @@ private:
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CBuildingStatusItem_SentryGun_Disposable : public CBuildingStatusItem
-{
-	DECLARE_CLASS_SIMPLE( CBuildingStatusItem_SentryGun_Disposable, CBuildingStatusItem );
-
-public:
-	CBuildingStatusItem_SentryGun_Disposable( Panel *parent );
-
-	virtual void OnTick( void );
-	virtual void PerformLayout( void );
-	virtual void ApplySchemeSettings( vgui::IScheme *scheme );
-
-	virtual const char *GetBackgroundImage( void );
-	virtual const char *GetInactiveBackgroundImage( void );
-
-private:
-
-	CIconPanel *m_pSentryIcons[3];
-	CIconPanel *m_pUpgradeIcon;
-
-	vgui::ContinuousProgressBar *m_pShellsProgress;
-
-	int m_iUpgradeLevel;
-
-	// Ammo
-	Color m_cLowAmmoColor;
-	Color m_cNormalAmmoColor;
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 class CBuildingStatusItem_Dispenser : public CBuildingStatusItem
 {
 	DECLARE_CLASS_SIMPLE( CBuildingStatusItem_Dispenser, CBuildingStatusItem );

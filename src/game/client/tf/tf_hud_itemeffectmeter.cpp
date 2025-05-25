@@ -19,7 +19,6 @@
 #include "tf_weapon_revolver.h"
 #include "tf_weapon_flamethrower.h"
 #include "tf_weapon_knife.h"
-#include "tf_item_powerup_bottle.h"
 #include "tf_imagepanel.h"
 #include "c_tf_weapon_builder.h"
 #include "tf_weapon_minigun.h"
@@ -338,15 +337,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		outMeters.AddToHead( hNewMeter );
 		hNewMeter->SetVisible( false );
 	}*/
-
-	// Mvm canteen
-	hNewMeter = new CHudItemEffectMeter_Weapon< CTFPowerupBottle >( pszElementName, pPlayer, TF_WEAPON_NONE, true, "resource/UI/HudItemEffectMeter_PowerupBottle.res" );
-	if ( hNewMeter )
-	{
-		gHUD.AddHudElement( hNewMeter );
-		outMeters.AddToHead( hNewMeter );
-		hNewMeter->SetVisible( false );
-	}
 
 }
 
@@ -839,111 +829,6 @@ bool CHudItemEffectMeter_Weapon<CTFFlameThrower>::ShouldFlash( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Heavy rage bar in MvM
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon< CTFMinigun >::IsEnabled( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	CTFMinigun *pWeapon = GetWeapon();
-	if ( !pWeapon )
-		return false;
-
-	bool bVisible = false;
-
-
-	int iRage = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pPlayer, iRage, generate_rage_on_dmg );
-	if ( iRage )
-	{
-		bVisible = true;
-	}
-
-	return bVisible;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon< CTFMinigun >::ShouldFlash( void )
-{
-	CTFMinigun *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->EffectMeterShouldFlash();
-	}
-	else
-	{
-		return false;
-	}
-}
-
-static const char *pszClassIcons[] = {
-	"",
-	"../hud/leaderboard_class_scout",
-	"../hud/leaderboard_class_sniper",
-	"../hud/leaderboard_class_soldier",
-	"../hud/leaderboard_class_demo",
-	"../hud/leaderboard_class_medic",
-	"../hud/leaderboard_class_heavy",
-	"../hud/leaderboard_class_pyro",
-	"../hud/leaderboard_class_spy",
-	"../hud/leaderboard_class_engineer",
-};
-
-template <>
-void CHudItemEffectMeter_Weapon< CTFMinigun >::Update( C_TFPlayer* pPlayer )
-{
-	CTFMinigun *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		float fKillComboFireRateBoost = 0.0f;
-		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( pWeapon, fKillComboFireRateBoost, kill_combo_fire_rate_boost );
-		if ( fKillComboFireRateBoost > 0.0f )
-		{
-			SetControlVisible( "ItemEffectMeterLabel2", true );
-
-			int nKillComboClass = pWeapon->GetKillComboClass();
-			int nKillComboCount = pWeapon->GetKillComboCount();
-
-			ImagePanel *( pImagePanel[3] ) =
-			{
-				assert_cast< ImagePanel* >( FindChildByName( "KillComboClassIcon1" ) ),
-				assert_cast< ImagePanel* >( FindChildByName( "KillComboClassIcon2" ) ),
-				assert_cast< ImagePanel* >( FindChildByName( "KillComboClassIcon3" ) )
-			};
-
-			for ( int i = 0; i < ARRAYSIZE( pImagePanel ); ++i )
-			{
-				if ( !pImagePanel[i] )
-					continue;
-
-				if ( nKillComboCount > i )
-				{
-					pImagePanel[i]->SetImage( pszClassIcons[nKillComboClass] );
-					pImagePanel[i]->SetVisible( true );
-				}
-				else
-				{
-					pImagePanel[i]->SetVisible( false );
-				}
-			}
-		}
-		else
-		{
-			SetControlVisible( "ItemEffectMeterLabel2", false );
-			SetControlVisible( "KillComboClassIcon1", false );
-			SetControlVisible( "KillComboClassIcon2", false );
-			SetControlVisible( "KillComboClassIcon3", false );
-		}
-	}
-	CHudItemEffectMeter::Update( pPlayer );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Specialization for engineer revenge count.
 //-----------------------------------------------------------------------------
 template <>
@@ -1086,10 +971,7 @@ const char*	CHudItemEffectMeter_Weapon<CTFSniperRifle>::GetBeepSound( void )
 template <>
 bool CHudItemEffectMeter_Weapon<C_TFWeaponBuilder>::IsEnabled( void )
 {
-	if ( !m_pPlayer )
-		return false;
-
-	return ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() );
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1117,108 +999,6 @@ bool CHudItemEffectMeter_Weapon<C_TFWeaponBuilder>::ShouldFlash( void )
 		return false;
 
 	C_TFWeaponBuilder *pWeapon = GetWeapon();
-	if ( pWeapon )
-	{
-		return pWeapon->EffectMeterShouldFlash();
-	}
-	else
-	{
-		return false;
-	}
-}
-
-template <>
-CTFPowerupBottle* CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetWeapon( void )
-{
-	if ( m_bEnabled && m_pPlayer && !m_hWeapon )
-	{
-		for ( int i = 0; i < m_pPlayer->GetNumWearables(); ++i )
-		{
-			m_hWeapon = dynamic_cast<CTFPowerupBottle*>( m_pPlayer->GetWearable( i ) );
-			if ( m_hWeapon )
-			{
-				break;
-			}
-		}
-
-		if ( !m_hWeapon )
-		{
-			m_bEnabled = false;
-		}
-	}
-
-	return m_hWeapon;
-}
-
-template <>
-bool CHudItemEffectMeter_Weapon<CTFPowerupBottle>::IsEnabled( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return ( pPowerupBottle->GetNumCharges() > 0 );
-	}
-
-	return false;
-}
-
-template <>
-int CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetCount( void )
-{
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return pPowerupBottle->GetNumCharges();
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-template <>
-const char* CHudItemEffectMeter_Weapon<CTFPowerupBottle>::GetIconName( void )
-{
-	CTFPowerupBottle *pPowerupBottle = GetWeapon();
-	if ( pPowerupBottle )
-	{
-		return pPowerupBottle->GetEffectIconName();
-	}
-
-	return CHudItemEffectMeter::GetIconName();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Medic "rage" bar in MvM
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon< CWeaponMedigun >::IsEnabled( void )
-{
-	if ( !m_pPlayer )
-		return false;
-
-	int iRage = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( m_pPlayer, iRage, generate_rage_on_heal );
-	if ( !iRage )
-		return false;
-
-	CWeaponMedigun *pWeapon = GetWeapon();
-	if ( !pWeapon )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CWeaponMedigun>::ShouldFlash( void )
-{
-	CWeaponMedigun *pWeapon = GetWeapon();
 	if ( pWeapon )
 	{
 		return pWeapon->EffectMeterShouldFlash();

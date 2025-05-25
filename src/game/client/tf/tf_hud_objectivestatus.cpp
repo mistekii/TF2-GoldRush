@@ -155,13 +155,6 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 		bCTFVisible = ( iGameType == TF_GAMETYPE_CTF || iHudType == TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_CP ) && ( iHudType != TF_HUDTYPE_ESCORT );
 	}
 
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		bCTFVisible = ( ( TFGameRules()->State_Get() != GR_STATE_BETWEEN_RNDS ) 
-					 && ( TFGameRules()->State_Get() != GR_STATE_TEAM_WIN ) 
-					 && ( TFGameRules()->State_Get() != GR_STATE_GAME_OVER ) );
-	}
-
 	if ( m_pFlagPanel && m_pFlagPanel->IsVisible() != bCTFVisible )
 	{
 		m_pFlagPanel->SetVisible( bCTFVisible );
@@ -170,7 +163,7 @@ void CTFHudObjectiveStatus::SetVisiblePanels( void )
 	bool bCPVisible = TFGameRules()->IsPlayingHybrid_CTF_CP();
 	if ( !bCPVisible )
 	{
-		bCPVisible = ( iGameType == TF_GAMETYPE_CP || iGameType == TF_GAMETYPE_ARENA || iHudType == TF_HUDTYPE_CP || iGameType == TF_GAMETYPE_MVM ) && ( iHudType != TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_ESCORT ) && !TFGameRules()->IsPlayingHybrid_CTF_CP();
+		bCPVisible = ( iGameType == TF_GAMETYPE_CP || iGameType == TF_GAMETYPE_ARENA || iHudType == TF_HUDTYPE_CP ) && ( iHudType != TF_HUDTYPE_CTF ) && ( iHudType != TF_HUDTYPE_ESCORT ) && !TFGameRules()->IsPlayingHybrid_CTF_CP();
 	}
 
 	if ( m_pControlPointIconsPanel && m_pControlPointIconsPanel->IsVisible() != bCPVisible )

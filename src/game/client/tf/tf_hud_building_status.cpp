@@ -384,15 +384,10 @@ void CBuildingStatusItem::OnTick()
 			// show low ammo for normal sentry and mini-sentry
 		case BUILDING_HUD_ALERT_LOW_AMMO:
 		case BUILDING_HUD_ALERT_VERY_LOW_AMMO:
-			bShowAlertTray = true;
-			m_pWrenchIcon->SetVisible( bAlertTrayFullyDeployed );
-			break;
-
-			// do not show low health for the disposable mini-sentry
 		case BUILDING_HUD_ALERT_LOW_HEALTH:
 		case BUILDING_HUD_ALERT_VERY_LOW_HEALTH:
-			bShowAlertTray = pObj->IsDisposableBuilding() == false;
-			m_pWrenchIcon->SetVisible( bAlertTrayFullyDeployed && bShowAlertTray );
+			bShowAlertTray = true;
+			m_pWrenchIcon->SetVisible( bAlertTrayFullyDeployed );
 			break;
 
 			// always show when being sapped
@@ -406,7 +401,7 @@ void CBuildingStatusItem::OnTick()
 			break;
 		}
 
-		if ( bShowAlertTray && !pObj->IsDisposableBuilding() )
+		if ( bShowAlertTray )
 		{
 			if ( !m_pAlertTray->IsTrayOut() )
 			{
@@ -461,15 +456,7 @@ int CBuildingStatusItem::GetRepresentativeObjectMode( void )
 //-----------------------------------------------------------------------------
 int CBuildingStatusItem::GetObjectPriority( void )
 {
-	int nPriority = GetObjectInfo( GetRepresentativeObjectType() )->m_iDisplayPriority;
-
-	// MvM hack to sort buildings properly since we can have more than one sentry via upgrades
-	if ( GetRepresentativeObjectType() == OBJ_SENTRYGUN && GetRepresentativeObjectMode() == MODE_SENTRYGUN_DISPOSABLE )
-	{
-		nPriority = 0;
-	}
-
-	return nPriority;	
+	return GetObjectInfo(GetRepresentativeObjectType())->m_iDisplayPriority;
 }
 
 //============================================================================
@@ -641,7 +628,7 @@ void CBuildingStatusAlertTray::SetAlertType( BuildingHudAlert_t alertLevel )
 // Purpose: 
 //-----------------------------------------------------------------------------
 CBuildingStatusItem_SentryGun::CBuildingStatusItem_SentryGun( Panel *parent ) :
-CBuildingStatusItem( parent, "resource/UI/hud_obj_sentrygun.res", OBJ_SENTRYGUN, MODE_SENTRYGUN_NORMAL )
+CBuildingStatusItem( parent, "resource/UI/hud_obj_sentrygun.res", OBJ_SENTRYGUN )
 {
 	m_pShellsProgress = new vgui::ContinuousProgressBar( GetRunningPanel(), "Shells" );
 	m_pRocketsProgress = new vgui::ContinuousProgressBar( GetRunningPanel(), "Rockets" );
@@ -678,7 +665,7 @@ void CBuildingStatusItem_SentryGun::PerformLayout( void )
 
 	C_ObjectSentrygun *pSentrygun = dynamic_cast<C_ObjectSentrygun *>( GetRepresentativeObject() );
 
-	if ( !pSentrygun || ( pSentrygun && pSentrygun->IsDisposableBuilding() ) )
+	if ( !pSentrygun )
 	{
 		return;
 	}
@@ -784,129 +771,6 @@ const char *CBuildingStatusItem_SentryGun::GetBackgroundImage( void )
 const char *CBuildingStatusItem_SentryGun::GetInactiveBackgroundImage( void )
 {
 	return "obj_status_background_tall_disabled";
-}
-
-//============================================================================
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-CBuildingStatusItem_SentryGun_Disposable::CBuildingStatusItem_SentryGun_Disposable( Panel *parent ) :
-CBuildingStatusItem( parent, "resource/UI/hud_obj_sentrygun_disp.res", OBJ_SENTRYGUN, MODE_SENTRYGUN_DISPOSABLE )
-{
-	m_pShellsProgress = new vgui::ContinuousProgressBar( GetRunningPanel(), "Shells" );
-
-	m_pUpgradeIcon = new CIconPanel( GetRunningPanel(), "UpgradeIcon" );
-
-	m_pSentryIcons[0] = new CIconPanel( this, "Icon_Sentry_1" );
-	m_pSentryIcons[1] = new CIconPanel( this, "Icon_Sentry_2" );
-	m_pSentryIcons[2] = new CIconPanel( this, "Icon_Sentry_3" );
-
-	m_iUpgradeLevel = 1;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBuildingStatusItem_SentryGun_Disposable::ApplySchemeSettings( vgui::IScheme *scheme )
-{
-	BaseClass::ApplySchemeSettings( scheme );
-
-	m_cLowAmmoColor = scheme->GetColor( "LowHealthRed", Color(255,0,0,255) );
-	m_cNormalAmmoColor = scheme->GetColor( "ProgressOffWhite", Color(255,255,255,255) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Calc visibility of subpanels
-//-----------------------------------------------------------------------------
-void CBuildingStatusItem_SentryGun_Disposable::PerformLayout( void )
-{
-	BaseClass::PerformLayout();
-
-	C_ObjectSentrygun *pSentrygun = dynamic_cast<C_ObjectSentrygun *>( GetRepresentativeObject() );
-
-	if ( !pSentrygun || ( pSentrygun && !pSentrygun->IsDisposableBuilding() ) )
-	{
-		return;
-	}
-
-	GetRunningPanel()->SetDialogVariable( "numkills", pSentrygun->GetKills() );
-	GetRunningPanel()->SetDialogVariable( "numassists", pSentrygun->GetAssists() );
-
-	int iShells, iMaxShells;
-	int iRockets, iMaxRockets;
-	pSentrygun->GetAmmoCount( iShells, iMaxShells, iRockets, iMaxRockets );
-
-	// Shells label
-	float flShells = (float)iShells / (float)iMaxShells;
-	m_pShellsProgress->SetProgress( flShells );
-
-	if ( flShells < 0.25f )
-	{
-		m_pShellsProgress->SetFgColor( m_cLowAmmoColor );
-	}
-	else
-	{
-		m_pShellsProgress->SetFgColor( m_cNormalAmmoColor );
-	}
-
-	int iUpgradeLevel = pSentrygun->GetUpgradeLevel();
-
-	Assert( iUpgradeLevel >= 1 && iUpgradeLevel <= 3 );
-
-	// show the correct icon
-	m_pSentryIcons[0]->SetVisible( false );
-	m_pSentryIcons[1]->SetVisible( false );
-	m_pSentryIcons[2]->SetVisible( false );
-	m_pSentryIcons[iUpgradeLevel-1]->SetVisible( true );
-
-	m_pUpgradeIcon->SetEnabled( false );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBuildingStatusItem_SentryGun_Disposable::OnTick()
-{
-	BaseClass::OnTick();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-const char *CBuildingStatusItem_SentryGun_Disposable::GetBackgroundImage( void )
-{
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-	const char *pResult = "obj_status_background_tall_blue";
-
-	if ( !pLocalPlayer )
-	{
-		return pResult;
-	}
-
-	switch( pLocalPlayer->GetTeamNumber() )
-	{
-	case TF_TEAM_BLUE:
-		pResult = "obj_status_background_blue";
-		break;
-	case TF_TEAM_RED:
-		pResult = "obj_status_background_red";
-		break;
-	default:
-		break;
-	}
-
-	return pResult;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-const char *CBuildingStatusItem_SentryGun_Disposable::GetInactiveBackgroundImage( void )
-{
-	return "obj_status_background_disabled";
 }
 
 //============================================================================
@@ -1186,11 +1050,10 @@ DECLARE_HUDELEMENT( CHudBuildingStatusContainer_Engineer );
 CHudBuildingStatusContainer_Engineer::CHudBuildingStatusContainer_Engineer( const char *pElementName ) :
 BaseClass( "BuildingStatus_Engineer" )
 {
-	AddBuildingPanel( OBJ_SENTRYGUN, MODE_SENTRYGUN_NORMAL );
+	AddBuildingPanel( OBJ_SENTRYGUN );
 	AddBuildingPanel( OBJ_DISPENSER );
 	AddBuildingPanel( OBJ_TELEPORTER, MODE_TELEPORTER_ENTRANCE );
 	AddBuildingPanel( OBJ_TELEPORTER, MODE_TELEPORTER_EXIT );
-	AddBuildingPanel( OBJ_SENTRYGUN, MODE_SENTRYGUN_DISPOSABLE );
 
 	vgui::ivgui()->AddTickSignal( GetVPanel(), 500 );
 }
@@ -1223,42 +1086,6 @@ bool CHudBuildingStatusContainer_Engineer::ShouldDraw( void )
 void CHudBuildingStatusContainer_Engineer::OnTick()
 {
 	BaseClass::OnTick();
-	
-	if ( !ShouldDraw() )
-		return;
-
-	C_TFPlayer *pLocalPlayer = CTFPlayer::GetLocalTFPlayer();
-	if ( pLocalPlayer )
-	{
-		bool bDisposableSentriesVisible = false;
-
-		if ( TFGameRules() && TFGameRules()->GameModeUsesUpgrades() )
-		{
-			int nDisposableSentries = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, nDisposableSentries, engy_disposable_sentries );
-			if ( nDisposableSentries )
-			{
-				bDisposableSentriesVisible = true;
-			}
-		}
-
-
-		for ( int i = 0 ; i < m_BuildingPanels.Count() ; i++ )
-		{
-			CBuildingStatusItem *pItem = m_BuildingPanels.Element( i );
-
-			if ( pItem && ( pItem->GetRepresentativeObjectType() == OBJ_SENTRYGUN ) && ( pItem->GetRepresentativeObjectMode() == MODE_SENTRYGUN_DISPOSABLE ) )
-			{
-				if ( pItem->IsVisible() != bDisposableSentriesVisible )
-				{
-					pItem->SetVisible( bDisposableSentriesVisible );
-				}
-
-				break;
-			}
-
-		}
-	}
 }
 
 //============================================================================
@@ -1336,14 +1163,7 @@ CBuildingStatusItem *CHudBuildingStatusContainer::CreateItemPanel( int iObjectTy
 	switch( iObjectType )
 	{
 	case OBJ_SENTRYGUN:
-		if ( iObjectMode == 0 )
-		{
-			pBuildingItem = new CBuildingStatusItem_SentryGun( this );
-		}
-		else
-		{
-			pBuildingItem = new CBuildingStatusItem_SentryGun_Disposable( this );
-		}
+		pBuildingItem = new CBuildingStatusItem_SentryGun( this );
 		break;
 	case OBJ_DISPENSER:
 		pBuildingItem = new CBuildingStatusItem_Dispenser( this );

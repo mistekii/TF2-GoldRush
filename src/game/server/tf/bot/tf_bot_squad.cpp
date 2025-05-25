@@ -25,10 +25,6 @@ void CTFBotSquad::Join( CTFBot *bot )
 	{
 		m_leader = bot;
 	}
-	else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		bot->SetFlagTarget( NULL );
-	}
 
 	m_roster.AddToTail( bot );
 }
@@ -52,15 +48,6 @@ void CTFBotSquad::Leave( CTFBot *bot )
 			{
 				m_leader = members[0];
 			}
-		}
-	}
-	else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		AssertMsg( !bot->HasFlagTaget(), "Squad member shouldn't have a flag target. Always follow the leader." );
-		CCaptureFlag *pFlag = bot->GetFlagToFetch();
-		if ( pFlag )
-		{
-			bot->SetFlagTarget( pFlag );
 		}
 	}
 	

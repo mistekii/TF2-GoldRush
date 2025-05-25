@@ -18,11 +18,9 @@
 #include "tier1/convar.h"
 #include "tf_matchmaking_shared.h"
 #include "tf_quickplay_shared.h"
-#include "tf_mann_vs_machine_stats.h"
 #include "tf_objective_resource.h"
 #include "tf_player.h"
 #include "tf_voteissues.h"
-#include "player_vs_environment/tf_population_manager.h"
 #include "player_resource.h"
 #include "tf_player_resource.h"
 #include "tf_gamestats.h"
@@ -163,7 +161,6 @@ const int k_InvalidState_Timeout_Without_Match = 5;
       - Match result message provides canonical record of match, is queued to send to GC when available.
       - GameServerKickingLobby message dissolves live match if GC is available/tracking it. Queued similarly.
         - ** This can happen before or after the match result.
-        - In MvM, we send potentially multiple victory messages per match -- they can cycle missions and keep winning.
         - As of right now, in competitive, we end the match coincident with sending a match result.
       - Match ended doesn't necessarily kick players, so a dead/finished match will stick around on our end until
         everyone Disconnects, (or the game logic kicks them, e.g. MatchInfo->BEnded + a timeout)
@@ -221,9 +218,6 @@ ConVar tf_mm_player_disconnect_time_minimum_penalty( "tf_mm_player_disconnect_ti
 
 ConVar tf_mm_next_map_result_hold_time( "tf_mm_next_map_result_hold_time", "7" );
 
-ConVar tf_mvm_allow_abandon_after_seconds( "tf_mvm_allow_abandon_after_seconds", "600", FCVAR_DEVELOPMENTONLY );
-ConVar tf_mvm_allow_abandon_below_players( "tf_mvm_allow_abandon_below_players", "5", FCVAR_DEVELOPMENTONLY );
-
 ConVar tf_allow_server_hibernation( "tf_allow_server_hibernation", "1", FCVAR_NONE, "Allow the server to hibernate when empty." );
 
 
@@ -234,8 +228,6 @@ CTFGCServerSystem *GTFGCClientSystem() { return &s_TFGCServerSystem; }
 
 //bool g_bServerReceivedGCWelcome = false;
 int g_gcServerVersion = 0; // Version from the GC
-
-static bool g_bWarnedAboutMaxplayersInMVM = false;
 
 extern ConVar tf_mm_servermode;
 extern ConVar tf_mm_trusted;
@@ -323,17 +315,6 @@ public:
 					   (unsigned long long) Msg().Body().lobby_id(),
 					   Msg().Body().member_size() );
 	}
-};
-
-//-----------------------------------------------------------------------------
-class ReliableMsgMvMVictory
-	: public CJobReliableMessageBase < ReliableMsgMvMVictory,
-	                                   CMsgMvMVictory,            k_EMsgGCMvMVictory,
-	                                   CMsgMvMMannUpVictoryReply, k_EMsgGCMvMVictoryReply >
-{
-public:
-	const char *MsgName() { return "MvMVictory"; }
-	void InitDebugString( CUtlString &dbgStr ) { dbgStr.Format( "Lobby %016llx", (unsigned long long) Msg().Body().lobby_id() ); }
 };
 
 //-----------------------------------------------------------------------------
@@ -427,43 +408,6 @@ public:
 	const char *MsgName() { return "MatchResult"; }
 	void InitDebugString( CUtlString &dbgStr ) { dbgStr.Format( "Match %016llx", (unsigned long long) Msg().Body().match_id() ); }
 };
-
-//-----------------------------------------------------------------------------
-// CMvMVictoryInfo
-//-----------------------------------------------------------------------------
-void CMvMVictoryInfo::Init ( CTFGSLobby *pLobby )
-{
-	if ( !pLobby )
-	{
-		MMLog( "CTFGCServerSystem::MvMVictory() -- no lobby, so not sending results to GC\n" );
-		return;
-	}
-
-	m_nLobbyId = pLobby->GetGroupID();
-	m_sChallengeName = pLobby->GetMissionName();
-#ifdef USE_MVM_TOUR
-	if ( IsMannUpGroup( pLobby->GetMatchGroup() ) )
-	{
-		const char *pszTourName = pLobby->GetMannUpTourName();
-		Assert( pszTourName );
-		m_sMannUpTourOfDuty = pszTourName;
-	}
-#endif // USE_MVM_TOUR
-	m_tEventTime = CRTime::RTime32TimeCur();
-
-	m_vPlayerIds.RemoveAll();
-	m_vSquadSurplus.RemoveAll();
-
-	for ( auto idxMember : pLobby->GatherMatchPlayers() )
-	{
-		ConstTFLobbyPlayer member = pLobby->GatherMatchPlayers().GetDetails( idxMember );
-		if ( member.BMatchPlayer() )
-		{
-			m_vPlayerIds.AddToTail( member.GetSteamID().ConvertToUint64() );
-			m_vSquadSurplus.AddToTail( member.GetSquadSurplus() );
-		}
-	}
-}
 
 //-----------------------------------------------------------------------------
 // CCompetitiveMatchInfo
@@ -1278,8 +1222,6 @@ CTFGCServerSystem::CTFGCServerSystem()
 	m_flTimeBecameEmptyWithLobby = 0.0f;
 	m_timeLastConnectedToGC = 0.f;
 	m_pMatchInfo = NULL;
-
-	g_bWarnedAboutMaxplayersInMVM = false;
 }
 
 
@@ -1300,7 +1242,6 @@ bool CTFGCServerSystem::Init()
 	ListenForGameEvent( "player_disconnect" );
 	ListenForGameEvent( "player_score_changed" );
 
-	g_bWarnedAboutMaxplayersInMVM = false;
 	return true;
 }
 
@@ -1550,63 +1491,14 @@ void CTFGCServerSystem::PreClientUpdate( )
 
 	// Check for slamming visiblemaxplayers
 	static ConVarRef sv_visiblemaxplayers( "sv_visiblemaxplayers" );
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
+
+	// Check for restoring sv_visiblemaxplayers
+	if ( m_bOverridingVisibleMaxPlayers )
 	{
-		// Abort the server if they don't have enough maxplayers
-		if ( gpGlobals->maxClients < 32 )
-		{
-			if( !g_bWarnedAboutMaxplayersInMVM )
-			{
-				// Prevent this warning from endlessly spamming the console...
-				g_bWarnedAboutMaxplayersInMVM = true;
-				Warning( "You must set maxplayers to 32 to host Mann vs. Machine\n" );
-			}
-
-			if ( engine->IsDedicatedServer() )
-			{
-				engine->ServerCommand( "exit\n" );
-			}
-			return;
-		}
-
-		// This changes what the server browser displays
-		// update sv_visiblemaxplayers for MvM, count only non-bot spectators
-		CUtlVector<CTFPlayer *> spectatorVector;
-		CollectPlayers( &spectatorVector, TEAM_SPECTATOR );
-		int spectatorCount = 0;
-		FOR_EACH_VEC ( spectatorVector, iIndex )
-		{
-			if ( !spectatorVector[iIndex]->IsBot() && !spectatorVector[iIndex]->IsReplay() && !spectatorVector[iIndex]->IsHLTV() )
-			{
-				spectatorCount++;
-			}
-		}
-
-		int playerCount = tf_mvm_defenders_team_size.GetInt() + spectatorCount;
-		if ( sv_visiblemaxplayers.GetInt() <= 0 || sv_visiblemaxplayers.GetInt() != playerCount )
-		{
-			MMLog( "Setting sv_visiblemaxplayers to %d for MvM\n", playerCount );
-
-			// save off visible players
-			if ( !m_bOverridingVisibleMaxPlayers )
-			{
-				m_bOverridingVisibleMaxPlayers = true;
-				m_iSavedVisibleMaxPlayers = sv_visiblemaxplayers.GetInt();
-			}
-
-			sv_visiblemaxplayers.SetValue( playerCount );
-		}
-	}
-	else
-	{
-		// Not in MvM.  Check for restoring sv_visiblemaxplayers
-		if ( m_bOverridingVisibleMaxPlayers )
-		{
-			MMLog( "Restoring sv_visiblemaxplayers to %d\n", m_iSavedVisibleMaxPlayers );
-			sv_visiblemaxplayers.SetValue( m_iSavedVisibleMaxPlayers );
-			m_bOverridingVisibleMaxPlayers = false;
-			m_iSavedVisibleMaxPlayers = -1;
-		}
+		MMLog( "Restoring sv_visiblemaxplayers to %d\n", m_iSavedVisibleMaxPlayers );
+		sv_visiblemaxplayers.SetValue( m_iSavedVisibleMaxPlayers );
+		m_bOverridingVisibleMaxPlayers = false;
+		m_iSavedVisibleMaxPlayers = -1;
 	}
 
 	// You may not be in matchmaking if you have a password!
@@ -1951,8 +1843,6 @@ void CTFGCServerSystem::ChangeMatchPlayerTeamsResponse( bool bSuccess )
 }
 
 //-----------------------------------------------------------------------------
-extern ConVar sv_vote_issue_kick_spectators_mvm;
-
 bool CTFGCServerSystem::CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer )
 {
 	Assert( pVoterPlayer->GetTeamVoteController() == pTargetPlayer->GetTeamVoteController() );
@@ -1964,27 +1854,6 @@ bool CTFGCServerSystem::CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTarg
 	}
 
 	return true;
-}
-
-bool CTFGCServerSystem::CanKickPlayerMvM( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer )
-{
-	// Josh: Mirrors logic in tf_voteissues.cpp
-
-	// Allow kicking team unassigned
-	if ( pTargetPlayer->IsConnected() && pTargetPlayer->GetTeamNumber() == TEAM_UNASSIGNED )
-	{
-		MMLog("[TF Vote GC] Allowing player to be kicked as they are connected & TEAM_UNASSIGNED.\n");
-		return true;
-	}
-
-	// Allow kicking of spectators when this is set, except when it's a bot (invader bots are spectators between rounds)
-	if ( sv_vote_issue_kick_spectators_mvm.GetBool() && !pTargetPlayer->IsBot() && pTargetPlayer->GetTeamNumber() == TEAM_SPECTATOR )
-	{
-		MMLog( "[TF Vote GC] Allowing kick of player as they are TEAM_SPECTATOR.\n" );
-		return true;
-	}
-
-	return CanKickPlayer( pVoterPlayer, pTargetPlayer );
 }
 
 void CTFGCServerSystem::VoteKickPlayerRequestResponse( CSteamID voterSteamID, CSteamID targetSteamID,
@@ -2023,16 +1892,8 @@ void CTFGCServerSystem::VoteKickPlayerRequestResponse( CSteamID voterSteamID, CS
 		{ return; }
 
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( !CanKickPlayerMvM( pVoterPlayer, pTargetPlayer ) )
-			return;
-	}
-	else
-	{
-		if ( !CanKickPlayer( pVoterPlayer, pTargetPlayer ) )
-			return;
-	}
+	if ( !CanKickPlayer( pVoterPlayer, pTargetPlayer ) )
+		return;
 
 	CVoteController *pVoteController = pVoterPlayer->GetTeamVoteController();
 	Assert( pVoteController );
@@ -3266,17 +3127,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 		case GR_STATE_TEAM_WIN:
 		case GR_STATE_STALEMATE:
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				// *Currently* can only end in victory (or dissolves because everyone leaves)
-				if (
-					TFGameRules()->State_Get() == GR_STATE_TEAM_WIN
-					&& TFGameRules()->GetWinningTeam() == TF_TEAM_PVE_DEFENDERS )
-				{
-					gcState = TF_GC_GAMESTATE_POST_GAME;
-				}
-			}
-			else if ( TFGameRules()->IsCompetitiveMode() )
+			if ( TFGameRules()->IsCompetitiveMode() )
 			{
 				if ( TFGameRules()->State_Get() == GR_STATE_GAME_OVER )
 				{
@@ -3287,8 +3138,7 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 		case GR_STATE_GAME_OVER:
 			gcState = TF_GC_GAMESTATE_GAME_IN_PROGRESS;
-			if ( TFGameRules()->IsMannVsMachineMode() ||
-			     TFGameRules()->IsCompetitiveMode() ) // right?
+			if ( TFGameRules()->IsCompetitiveMode() ) // right?
 			{
 				gcState = TF_GC_GAMESTATE_DISCONNECT;
 			}
@@ -3303,16 +3153,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 		sGameServerInfoMap = STRING( gpGlobals->mapname );
 		sGameServerInfoTags = sv_tags.GetString();
 		sGameServerInfoTags.Clear();
-
-		// Set the "map" to the current challenge, if in MvM
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			const char *pszFilenameShort = g_pPopulationManager ? g_pPopulationManager->GetPopulationFilenameShort() : NULL;
-			if ( pszFilenameShort && pszFilenameShort[0] )
-			{
-				sGameServerInfoMap = pszFilenameShort;
-			}
-		}
 
 		// Determine state
 		if ( !m_pMatchInfo && !pLobby )
@@ -3360,18 +3200,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 			eGameServerInfoState = ServerMatchmakingState_NOT_PARTICIPATING;
 		}
 	}
-
-// This is probably not worth the risk / reward right now.  We've given instructions
-// telling server operators how to avoid this from happening, and it might break something
-//		// Check if we have a lobby, and they have switched to/from MvM mode, then don't
-//		// put us in matchmaking for now
-//		bool bMapIsMvmMap = ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() );
-//		if ( ( pLobby != NULL ) && ( bMapIsMvmMap != bIsMvmMode ) )
-//		{
-//			eGameServerInfoMatchmakingMode = TF_Matchmaking_INVALID;
-//			eGameServerInfoState = ServerMatchmakingState_NOT_PARTICIPATING;
-//			MMLog( "Sending NOT_PARTICIPATING.  Is MvM Map: %d, tf_mm_servermode=%d\n", bMapIsMvmMap ? 1 : 0, tf_mm_servermode.GetInt() );
-//		}
 
 	int nSlotsFree = nMaxHumans - nHumans;
 
@@ -3476,13 +3304,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 			);
 		}
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			msg.Body().set_mvm_credits_acquired( MannVsMachineStats_GetAcquiredCredits( -1 ) );
-			msg.Body().set_mvm_credits_dropped( MannVsMachineStats_GetAcquiredCredits( -1 ) );
-			msg.Body().set_mvm_wave( MannVsMachineStats_GetCurrentWave() );
-		}
-
 		ETFMatchGroup eCurrentGroup = k_eTFMatchGroup_Invalid;
 		if ( m_pMatchInfo )
 		{
@@ -3572,50 +3393,6 @@ void CTFGCServerSystem::UpdateConnectedPlayersAndServerInfo( CMsgGameServerMatch
 
 
 // ***************************************************************************************************************
-void CTFGCServerSystem::SendMvMVictoryResult()
-{
-	// Note that we don't have to have an *ended* match -- MvM code technically allows players to continue in the same
-	// match and achieve multiple victories.
-	Assert( m_pMatchInfo );
-
-	CTFGSLobby *pLobby = GetLobby();
-	if ( !pLobby )
-	{
-		// FIXME - We should be able to submit this even if the GC reboots and loses our lobby state (though it wont
-		// happen that often, as the GC tries to revive lobby state from memcached)
-		MMLog( "CTFGCServerSystem::MvMVictory() -- no lobby, so not sending results to GC\n" );
-		return;
-	}
-
-	if ( IsMannUpGroup( pLobby->GetMatchGroup() ) )
-	{
-		m_mvmVictoryInfo.Init( pLobby );
-
-		ReliableMsgMvMVictory *pReliable = new ReliableMsgMvMVictory;
-
-		auto &msg = pReliable->Msg().Body();
-
-		msg.set_mission_name( m_mvmVictoryInfo.m_sChallengeName );
-#ifdef USE_MVM_TOUR
-		if ( !m_mvmVictoryInfo.m_sMannUpTourOfDuty.IsEmpty() )
-		{
-			msg.set_tour_name_mannup( m_mvmVictoryInfo.m_sMannUpTourOfDuty );
-		}
-#endif // USE_MVM_TOUR
-		msg.set_lobby_id( m_mvmVictoryInfo.m_nLobbyId );
-		msg.set_event_time( m_mvmVictoryInfo.m_tEventTime );
-
-		FOR_EACH_VEC( m_mvmVictoryInfo.m_vPlayerIds, iMember )
-		{
-			CMsgMvMVictory_Player *pMsgPlayer = msg.add_players();
-			pMsgPlayer->set_steam_id( m_mvmVictoryInfo.m_vPlayerIds[ iMember ]);
-			pMsgPlayer->set_squad_surplus( m_mvmVictoryInfo.m_vSquadSurplus[ iMember ] );
-		}
-
-		ReliableMsgQueue().Enqueue( pReliable );
-	}
-}
-
 ////-----------------------------------------------------------------------------
 //// Purpose: Job for being told when the server GC connection is established
 ////-----------------------------------------------------------------------------

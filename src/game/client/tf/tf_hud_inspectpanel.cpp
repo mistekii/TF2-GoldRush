@@ -20,7 +20,6 @@
 #include "hud_macros.h"
 #include "c_playerresource.h"
 #include "view.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 #include "tf_hud_inspectpanel.h"
 #include "clientmode_tf.h"
 #include "vguicenterprint.h"
@@ -111,35 +110,6 @@ void CHudInspectPanel::UserCmd_InspectTarget( void )
 		if ( pPanel )
 		{
 			pPanel->ForceItemPanelCycle();
-		}
-	}
-	// In MvM, display player upgrades
-	else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		CHudUpgradePanel *pUpgradePanel = GET_HUDELEMENT( CHudUpgradePanel );
-		if ( pUpgradePanel )
-		{
-			// Close if open
-			if ( pUpgradePanel->IsVisible() )
-			{
-				pUpgradePanel->OnCommand( "cancel" );
-			}
-			// Inspect a player
-			else if ( pTargetPlayer && ( pTargetPlayer->GetTeamNumber() != TF_TEAM_PVE_INVADERS ) )
-			{
-				if ( !GetClientModeTFNormal()->BIsFriendOrPartyMember( pTargetPlayer ) )
-				{
-					internalCenterPrint->Print( "#TF_Invalid_Inspect_Target" );
-					return;
-				}
-				
-				pUpgradePanel->InspectUpgradesForPlayer( pTargetPlayer );
-			}
-			// Inspect self
-			else if ( !pTargetPlayer && pLocalTFPlayer  )
-			{
-				pUpgradePanel->InspectUpgradesForPlayer( pLocalTFPlayer );
-			}
 		}
 	}
 	else

@@ -53,8 +53,6 @@
 #endif
 
 #include "econ_item_system.h"
-#include "tf_mann_vs_machine_stats.h"
-#include "player_vs_environment/c_tf_upgrades.h"
 #include "tf_badge_panel.h"
 
 
@@ -164,7 +162,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_iTextureCamera = -1;
 	m_iImageDead = 0;
 
-	m_bIsPVEMode = false;
 //	m_bDisplayLevel = false;
 	m_bMouseActivated = true;
 
@@ -207,12 +204,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	KeyValues *pConditions = NULL;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		pConditions = new KeyValues( "conditions" );
-		AddSubKeyNamed( pConditions, "if_mvm" );
-	}
 
 	LoadControlSettings( "Resource/UI/Scoreboard.res", NULL, NULL, pConditions );
 	m_hScoreFontDefault = pScheme->GetFont( "Default", true );
@@ -302,13 +293,6 @@ void CTFClientScoreBoardDialog::ShowPanel( bool bShow )
 	if ( m_pImageList == NULL )
 	{
 		InvalidateLayout( true, true );
-	}
-
-	bool bIsPVEMode = TFGameRules() && TFGameRules()->IsPVEModeActive();
-	if ( m_bIsPVEMode != bIsPVEMode )
-	{
-		m_bIsPVEMode = bIsPVEMode;
-		InvalidateLayout( true, true );		
 	}
 
 	// Don't show in commentary mode
@@ -760,14 +744,11 @@ void CTFClientScoreBoardDialog::InitializeInputScheme( void )
 //-----------------------------------------------------------------------------
 void CTFClientScoreBoardDialog::Reset()
 {
-	if ( !m_bIsPVEMode )
-	{
-		InitPlayerList( m_pPlayerListBlue );
-		InitPlayerList( m_pPlayerListRed );
-	}
+	InitPlayerList( m_pPlayerListBlue );
+	InitPlayerList( m_pPlayerListRed );
 
- 	m_pPlayerListBlue->SetVisible( !m_bIsPVEMode );
- 	m_pPlayerListRed->SetVisible( !m_bIsPVEMode );
+ 	m_pPlayerListBlue->SetVisible( true );
+ 	m_pPlayerListRed->SetVisible( true );
 }
 
 //-----------------------------------------------------------------------------
@@ -1816,11 +1797,6 @@ bool CTFClientScoreBoardDialog::ShouldShowAsSpectator( int iPlayerIndex )
 					return true;
 
 				return false;
-			}
-			else if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( g_TF_PR->IsFakePlayer( iPlayerIndex ) )
-					return false;
 			}
 		}
 

@@ -15,7 +15,9 @@
 #include "hudelement.h"
 #include "tf_hud_playerstatus.h"
 #include "clientscoreboarddialog.h"
-#include "tf_hud_mann_vs_machine_scoreboard.h"
+#include "c_tf_objective_resource.h"
+#include <vgui_controls/ImageList.h>
+#include "tf_gc_client.h"
 
 class CAvatarImagePanel;
 class CTFBadgePanel;
@@ -140,7 +142,6 @@ private:
 
 	int							m_iTextureCamera;
 
-	bool						m_bIsPVEMode;
 //	bool						m_bDisplayLevel;
 	bool						m_bMouseActivated;
 	vgui::HFont					m_hScoreFontDefault;

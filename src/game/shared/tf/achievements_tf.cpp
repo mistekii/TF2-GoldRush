@@ -36,26 +36,6 @@ bool IsLocalTFPlayerClass( int iClass );
 
 bool CBaseTFAchievementSimple::LocalPlayerCanEarn( void ) 
 { 
-	if ( TFGameRules() )
-	{
-		bool bMVMAchievement = ( m_iAchievementID >= ACHIEVEMENT_TF_MVM_START_RANGE && m_iAchievementID <= ACHIEVEMENT_TF_MVM_END_RANGE );
-
-		if ( bMVMAchievement )
-		{
-			if ( !TFGameRules()->IsMannVsMachineMode() || ( GetLocalPlayerTeam() != TF_TEAM_PVE_DEFENDERS ) )
-			{
-				return false;
-			}
-		}
-		else
-		{
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				return false;
-			}
-		}
-	}
-
 	return BaseClass::LocalPlayerCanEarn();
 }
 

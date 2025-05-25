@@ -12,7 +12,6 @@
 #include "vscript_server.h"
 
 ConVar tf_nav_show_incursion_distance( "tf_nav_show_incursion_distance", "0", FCVAR_CHEAT, "Display travel distances from current spawn room (1=red, 2=blue)" );
-ConVar tf_nav_show_bomb_target_distance( "tf_nav_show_bomb_target_distance", "0", FCVAR_CHEAT, "Display travel distances to bomb target (MvM mode)" );
 ConVar tf_nav_show_turf_ownership( "tf_nav_show_turf_ownership", "0", FCVAR_CHEAT, "Color nav area by smallest incursion distance" );
 
 ConVar tf_nav_in_combat_duration( "tf_nav_in_combat_duration", "30", FCVAR_CHEAT, "How long after gunfire occurs is this area still considered to be 'in combat'" );
@@ -92,7 +91,6 @@ BEGIN_ENT_SCRIPTDESC_ROOT( CTFNavArea, "Navigation areas class" )
 	DEFINE_SCRIPTFUNC_NAMED( ScriptGetDoor, "GetDoor", "Returns the door entity above the area" )
 	DEFINE_SCRIPTFUNC( IsBottleneck, "Returns true if area is a bottleneck" )
 	DEFINE_SCRIPTFUNC( IsValidForWanderingPopulation, "Returns true if area is valid for wandering population" )
-	DEFINE_SCRIPTFUNC( GetTravelDistanceToBombTarget, "Gets the travel distance to the MvM bomb target" )
 	DEFINE_SCRIPTFUNC( IsReachableByTeam, "Is this area reachable by the given team?" )
 	DEFINE_SCRIPTFUNC( IsTFMarked, "Is this nav area marked with the current marking scope?" )
 	DEFINE_SCRIPTFUNC( TFMark, "Mark this nav area with the current marking scope." )
@@ -478,11 +476,6 @@ void CTFNavArea::Draw( void ) const
 	if ( tf_nav_show_incursion_distance.GetBool() )
 	{
 		NDebugOverlay::Text( GetCenter(), UTIL_VarArgs( "R:%3.1f   B:%3.1f", GetIncursionDistance( TF_TEAM_RED ), GetIncursionDistance( TF_TEAM_BLUE ) ), false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
-	}
-
-	if ( tf_nav_show_bomb_target_distance.GetBool() )
-	{
-		NDebugOverlay::Text( GetCenter(), UTIL_VarArgs( "%3.1f", GetTravelDistanceToBombTarget() ), false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 	}
 
 	if ( tf_show_sniper_areas.GetBool() )

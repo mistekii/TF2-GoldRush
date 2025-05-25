@@ -639,18 +639,6 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 		const char *pszMsgKey = NULL;
 		int iEventType = event->GetInt( "eventtype" );
 
-		bool bIsMvM = TFGameRules() && TFGameRules()->IsMannVsMachineMode();
-		if ( bIsMvM )
-		{
-			// MvM only cares about Defend notifications
-			if ( iEventType != TF_FLAGEVENT_DEFEND )
-			{
-				// unsupported, don't put anything up			
-				m_DeathNotices.Remove( iMsg );
-				return;
-			}
-		}
-
 		bool bIsHalloween2014 = TFGameRules() && TFGameRules()->IsHalloweenScenario( CTFGameRules::HALLOWEEN_SCENARIO_DOOMSDAY );
 
 		switch ( iEventType )
@@ -662,16 +650,7 @@ void CHudBaseDeathNotice::FireGameEvent( IGameEvent *event )
 			pszMsgKey = bIsHalloween2014 ? "#Msg_CapturedFlagHalloween2014" : "#Msg_CapturedFlag"; 
 			break;
 		case TF_FLAGEVENT_DEFEND: 
-			if ( bIsMvM )
-			{
-				pszMsgKey = "#Msg_DefendedBomb";
-			}
-			else
-			{
-				pszMsgKey = bIsHalloween2014 ? "#Msg_DefendedFlagHalloween2014" : "#Msg_DefendedFlag";
-			}
-
-
+			pszMsgKey = bIsHalloween2014 ? "#Msg_DefendedFlagHalloween2014" : "#Msg_DefendedFlag";
 			break;
 
 		// Add this when we can get localization for it

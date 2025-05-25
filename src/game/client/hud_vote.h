@@ -21,11 +21,6 @@
 
 extern INetworkStringTable *g_pStringTableServerMapCycle;
 
-#ifdef TF_CLIENT_DLL
-extern INetworkStringTable *g_pStringTableServerPopFiles;
-extern INetworkStringTable *g_pStringTableServerMapCycleMvM;
-#endif
-
 static const int k_MAX_VOTE_NAME_LENGTH = 256;
 
 namespace vgui
@@ -84,10 +79,6 @@ public:
 	void			AddVoteIssues( CUtlVector< VoteIssue_t > &m_VoteSetupIssues );
 	void			AddVoteIssueParams_MapCycle( CUtlStringList &m_VoteSetupMapCycle );
 
-#ifdef TF_CLIENT_DLL
-	void			AddVoteIssueParams_PopFiles( CUtlStringList &m_VoteSetupPopFiles );
-#endif
-
 private:
 	//MESSAGE_FUNC( OnItemSelected, "ItemSelected" );
 	MESSAGE_FUNC_PTR( OnItemSelected, "ItemSelected", panel );
@@ -107,10 +98,6 @@ private:
 
 	CUtlVector< VoteIssue_t >	m_VoteIssues;
 	CUtlVector<const char*>	m_VoteIssuesMapCycle;
-
-#ifdef TF_CLIENT_DLL
-	CUtlVector<const char*>	m_VoteIssuesPopFiles;
-#endif
 
 	CPanelAnimationVarAliasType( int, m_iIssueWidth, "issue_width", "100", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iParameterWidth, "parameter_width", "150", "proportional_int" );
@@ -238,10 +225,6 @@ private:
 
 	CUtlVector< VoteIssue_t > m_VoteSetupIssues;
 	CUtlStringList		m_VoteSetupMapCycle;
-
-#ifdef TF_CLIENT_DLL
-	CUtlStringList		m_VoteSetupPopFiles;
-#endif
 
 	CVoteSetupDialog	*m_pVoteSetupDialog;
 	CHudVotePanel		*m_pVotePanels[ 2 ];

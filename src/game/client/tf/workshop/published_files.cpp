@@ -353,7 +353,6 @@ static TagPair_t kMapTags[] = {
 	{ "MapsCheckBox_Koth", "King of the Hill" },
 	{ "MapsCheckBox_AttackDefense", "Attack / Defense" },
 	{ "MapsCheckBox_SD", "Special Delivery" },
-	{ "MapsCheckBox_MVM", "Mann vs. Machine" },
 	{ "MapsCheckBox_Powerup", "Mannpower" },
 	{ "MapsCheckBox_Medieval", "Medieval" },
 	{ "MapsCheckBox_Specialty", "Specialty" },

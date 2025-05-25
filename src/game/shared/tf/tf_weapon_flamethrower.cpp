@@ -1819,9 +1819,9 @@ bool CTFFlameThrower::DeflectPlayer( CTFPlayer *pTarget, CTFPlayer *pOwner, Vect
 		pTarget->m_AchievementData.AddPusherToHistory( pOwner );
 
 		// Give bonus points whenever a pyro pushes high-value targets back
-		if ( TFGameRules() && ( pTarget->IsMiniBoss() || pTarget->m_Shared.IsInvulnerable() ) )
+		if ( TFGameRules() && pTarget->m_Shared.IsInvulnerable() )
 		{
-			int nAmount = pTarget->IsMiniBoss() ? 10 : 5;
+			int nAmount = 5;
 			CTF_GameStats.Event_PlayerAwardBonusPoints( pOwner, pTarget, nAmount );
 		}
 

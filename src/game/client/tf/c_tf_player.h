@@ -25,7 +25,6 @@
 #include "ihasattributes.h"
 #include "GameEventListener.h"
 #include "tf_item_inventory.h"
-#include "c_tf_mvm_boss_progress_user.h"
 #include "c_te_legacytempents.h"
 
 
@@ -35,7 +34,6 @@ class C_TFRagdoll;
 class C_TFWearable;
 class C_CaptureZone;
 class C_MerasmusBombEffect;
-class CTFReviveDialog;
 
 extern ConVar tf_medigun_autoheal;
 extern ConVar cl_autorezoom;
@@ -68,7 +66,7 @@ extern BonusEffect_t g_BonusEffects[ kBonusEffect_Count ];
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class C_TFPlayer : public C_BasePlayer, public IHasAttributes, public IInventoryUpdateListener, public C_TFMvMBossProgressUser
+class C_TFPlayer : public C_BasePlayer, public IHasAttributes, public IInventoryUpdateListener
 {
 public:
 
@@ -332,10 +330,6 @@ public:
 	CAttributeList			*GetAttributeList( void ) { return &m_AttributeList; }
 	virtual void			ReapplyProvision( void ) { return; }
 
-	// ITFMvMBossProgressUser
-	virtual const char* GetBossProgressImageName() const OVERRIDE;
-	virtual float GetBossStatusProgress() const OVERRIDE;
-
 protected:
 	CNetworkVarEmbedded(	CAttributeContainerPlayer, m_AttributeManager );
 
@@ -399,8 +393,6 @@ public:
 	int		GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 
 	//-----------------------------------------------------------------------------------------------------
-	// Return true if we are a "mini boss" in Mann Vs Machine mode
-	bool IsMiniBoss( void ) const;
 	bool ShouldTauntHintIconBeVisible() const;
 	virtual bool IsHealthBarVisible( void ) const OVERRIDE;
 
@@ -483,10 +475,6 @@ public:
 
 	void		UpdateDemomanEyeEffect( int iDecapitations );
 	const char* GetDemomanEyeEffectName( int iDecapitations );
-
-	int		GetCurrency( void ){ return m_nCurrency; }
-
-	virtual void UpdateMVMEyeGlowEffect( bool bVisible );
 
 	void	UpdateKillStreakEffects( int iCount, bool bKillScored = false );
 	const char *GetEyeGlowEffect() { return m_pszEyeGlowEffectName; }
@@ -647,7 +635,6 @@ public:
 	int				m_iSpawnCounter;
 	bool			m_bArenaSpectator;
 
-	bool			m_bIsMiniBoss;
 	bool			m_bIsABot;
 	int				m_nBotSkill;
 	int				m_nOldBotSkill;
@@ -732,7 +719,6 @@ public:
 	float				m_flLastResistTime;
 
 	HPARTICLEFFECT m_pSappedPlayerEffect;
-	HPARTICLEFFECT m_pMVMEyeGlowEffect[ 2 ];
 
 	// KillStreak Weapons
 	char m_pszEyeGlowEffectName[MAX_PATH];
@@ -740,8 +726,6 @@ public:
 	Vector m_vEyeGlowColor2;
 	HPARTICLEFFECT m_pEyeGlowEffect[ 2 ];
 	float m_flNextSheenStartTime;
-	
-	HPARTICLEFFECT m_pMVMBotRadiowave;
 
 	enum EKartParticles
 	{
@@ -835,10 +819,6 @@ private:
 
 	mutable char m_bIsCalculatingMaximumSpeed;
 
-	// In-game currency
-	int m_nCurrency;
-	int m_nOldCurrency;
-
 	// Bounty Mode
 	int m_nExperienceLevel;
 	int m_nExperienceLevelProgress;
@@ -873,8 +853,6 @@ private:
 	CNetworkVar( int, m_nForcedSkin );
 
 	int m_nFootStamps;
-
-	vgui::DHANDLE< CTFReviveDialog > m_hRevivePrompt;
 
 public:
 	void SetShowHudMenuTauntSelection( bool bShow ) { m_bShowHudMenuTauntSelection = bShow; }

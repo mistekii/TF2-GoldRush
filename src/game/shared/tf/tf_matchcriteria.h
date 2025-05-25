@@ -35,9 +35,6 @@ class ITFPerPlayerMatchCriteriaReader
 public:
 	virtual ~ITFPerPlayerMatchCriteriaReader() {};
 
-	// Check if the local player is doubling down
-	bool GetSquadSurplus() const;
-
 	// Implementor provides
 	virtual const CTFPerPlayerMatchCriteriaProto &Proto() const = 0;
 };
@@ -46,9 +43,6 @@ class ITFPerPlayerMatchCriteria : public ITFPerPlayerMatchCriteriaReader
 {
 public:
 	virtual ~ITFPerPlayerMatchCriteria() {};
-
-	// Check if the local player is doubling down
-	void SetSquadSurplus( bool bSquadSurplus );
 
 	bool MakeDelta( const ITFPerPlayerMatchCriteriaReader& msgBase, const ITFPerPlayerMatchCriteriaReader& msgFinal );
 	bool ApplyDelta( const ITFPerPlayerMatchCriteriaReader& msgDelta );

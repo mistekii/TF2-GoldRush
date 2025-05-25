@@ -36,7 +36,6 @@
 #if defined(TF_CLIENT_DLL) || defined(TF_DLL)
 	#include "tf_gamerules.h"
 	#ifdef GAME_DLL
-		#include "player_vs_environment/tf_population_manager.h"
 		#include "../server/tf/tf_gc_server.h"
 		#include "../server/tf/tf_objective_resource.h"
 	#else
@@ -1074,7 +1073,7 @@ void CTeamplayRoundBasedRules::CheckRestartRound( void )
 		int iDelayMax = 60;
 
 #ifdef TF_DLL
-		if ( TFGameRules() && ( TFGameRules()->IsMannVsMachineMode() || TFGameRules()->IsCompetitiveMode() ) )
+		if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
 		{
 			iDelayMax = 180;
 		}
@@ -1546,11 +1545,6 @@ void CTeamplayRoundBasedRules::State_Enter_PREROUND( void )
 		State_Transition( GR_STATE_BETWEEN_RNDS );
 		m_bAllowBetweenRounds = false;
 
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			TFObjectiveResource()->SetMannVsMachineBetweenWaves( true );
-		}
-
 		StopWatchModeThink();
 		return;
 	}
@@ -1699,16 +1693,7 @@ void CTeamplayRoundBasedRules::CheckReadyRestart( void )
 #ifdef TF_DLL
 		if ( TFGameRules() )
 		{
-			if ( TFGameRules()->IsMannVsMachineMode() )
-			{
-				if ( g_pPopulationManager && TFObjectiveResource()->GetMannVsMachineIsBetweenWaves() )
-				{
-					g_pPopulationManager->StartCurrentWave();
-					m_bAllowBetweenRounds = true;
-					return;
-				}
-			}
-			else if ( TFGameRules()->IsCompetitiveMode() )
+			if ( TFGameRules()->IsCompetitiveMode() )
 			{
 				TFGameRules()->StartCompetitiveMatch();
 				return;
@@ -1952,23 +1937,6 @@ void CTeamplayRoundBasedRules::State_Think_TEAM_WIN( void )
 				State_Transition( GR_STATE_PREROUND );
 			}
 #ifdef TF_DLL
-			else if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() && g_pPopulationManager )
-			{
-				// one of the convars mp_timelimit, mp_winlimit, mp_maxrounds, or nextlevel has been triggered
-				for ( int i = 1; i <= MAX_PLAYERS; i++ )
-				{
-					CBasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-					if ( !pPlayer )
-						continue;
-
-					pPlayer->AddFlag( FL_FROZEN );
-				}
-
-				g_fGameOver = true;
-				g_pPopulationManager->SetMapRestartTime( gpGlobals->curtime + 10.0f );
-				State_Enter( GR_STATE_GAME_OVER );
-				return;
-			}
 			else if ( TFGameRules() && TFGameRules()->UsePlayerReadyStatusMode() )
 			{
 				for ( int i = 1; i <= MAX_PLAYERS; i++ )
@@ -2562,7 +2530,7 @@ void CC_CH_TournamentRestart( void )
 	}
 
 #ifdef TF_DLL
-	if ( TFGameRules() && ( TFGameRules()->IsMannVsMachineMode() || TFGameRules()->IsCompetitiveMode() ) )
+	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
 		return;
 #endif // TF_DLL
 

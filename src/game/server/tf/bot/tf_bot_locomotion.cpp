@@ -41,15 +41,6 @@ void CTFBotLocomotion::Update( void )
 // Move directly towards the given position
 void CTFBotLocomotion::Approach( const Vector &pos, float goalWeight )
 {
-	if ( TFGameRules()->IsMannVsMachineMode() )
-	{
-		if ( !IsOnGround() && !IsClimbingOrJumping() )
-		{
-			// no air control
-			return;
-		}
-	}
-
 	BaseClass::Approach( pos, goalWeight );
 }
 
@@ -116,22 +107,4 @@ bool CTFBotLocomotion::IsEntityTraversable( CBaseEntity *obstacle, TraverseWhenT
 void CTFBotLocomotion::Jump( void )
 {
 	BaseClass::Jump();
-
-	CTFBot *me = ToTFBot( GetBot()->GetEntity() );
-	if ( !me )
-	{
-		return;
-	}
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		int iCustomJumpParticle = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( me, iCustomJumpParticle, bot_custom_jump_particle );
-		if ( iCustomJumpParticle )
-		{
-			const char *pEffectName = "rocketjump_smoke";
-			DispatchParticleEffect( pEffectName, PATTACH_POINT_FOLLOW, me, "foot_L" );
-			DispatchParticleEffect( pEffectName, PATTACH_POINT_FOLLOW, me, "foot_R" );
-		}
-	}
 }

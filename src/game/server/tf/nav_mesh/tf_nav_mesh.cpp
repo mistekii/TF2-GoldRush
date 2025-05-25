@@ -35,7 +35,6 @@ ConVar tf_show_mesh_decoration_manual( "tf_show_mesh_decoration_manual", "0", FC
 ConVar tf_show_sentry_danger( "tf_show_sentry_danger", "0", FCVAR_CHEAT, "Show sentry danger areas. 1:Use m_sentryAreas. 2:Check all nav areas." );
 ConVar tf_show_actor_potential_visibility( "tf_show_actor_potential_visibility", "0", FCVAR_CHEAT );
 ConVar tf_show_control_points( "tf_show_control_points", "0", FCVAR_CHEAT );
-ConVar tf_show_bomb_drop_areas( "tf_show_bomb_drop_areas", "0", FCVAR_CHEAT );
 
 ConVar tf_bot_min_setup_gate_defend_range( "tf_bot_min_setup_gate_defend_range", "750", FCVAR_CHEAT, "How close from the setup gate(s) defending bots can take up positions. Areas closer than this will be in cover to ambush." );
 ConVar tf_bot_max_setup_gate_defend_range( "tf_bot_max_setup_gate_defend_range", "2000", FCVAR_CHEAT, "How far from the setup gate(s) defending bots can take up positions" );
@@ -545,11 +544,6 @@ void CTFNavMesh::OnRoundRestart( void )
 	// nasty hack
 	TheTFBots().OnRoundRestart();
 
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		RecomputeInternalData();
-	}
-
 	DevMsg( "CTFNavMesh: %d nav areas in mesh.\n", GetNavAreaCount() );
 }
 
@@ -906,220 +900,6 @@ void CTFNavMesh::CollectControlPointAreas( void )
 }
 
 
-//-------------------------------------------------------------------------
-// For MvM mode. Mark all nav areas where the bomb can drop and the invaders can reach it.
-void CTFNavMesh::ComputeLegalBombDropAreas( void )
-{
-	if ( !TFGameRules()->IsMannVsMachineMode() )
-	{
-		return;
-	}
-
-	CTFNavArea *startArea = NULL;
-
-	FOR_EACH_VEC( TheNavAreas, it )
-	{
-		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ it ] );
-
-		if ( area->HasAttributeTF( TF_NAV_SPAWN_ROOM_BLUE ) )
-		{
-			startArea = area;
-		}
-
-		area->ClearAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE );
-	}
-
-	if ( startArea == NULL )
-	{
-		Warning( "Can't find blue spawn room nav areas. No legal bomb drop areas are marked" );
-		return;
-	}
-
-	CNavArea::ClearSearchLists();
-
-	startArea->AddToOpenList();
-	startArea->Mark();
-	startArea->SetParent( NULL );
-
-	CUtlVectorFixedGrowable< const NavConnect *, 64 > adjAreaVector;
-
-	while( !CNavArea::IsOpenListEmpty() )
-	{
-		// get next area to check
-		CTFNavArea *area = static_cast< CTFNavArea * >( CNavArea::PopOpenList() );
-
-		// explore adjacent floor areas
-		adjAreaVector.RemoveAll();
-
-		for( int dir=0; dir<NUM_DIRECTIONS; ++dir )
-		{
-			// collect all OUTGOING links from this area to adjacent areas
-			const NavConnectVector *adjVector = area->GetAdjacentAreas( (NavDirType)dir );
-			FOR_EACH_VEC( (*adjVector), bit )
-			{
-				adjAreaVector.AddToTail( &(*adjVector)[ bit ] );
-			}
-		}
-
-		FOR_EACH_VEC( adjAreaVector, vit )
-		{
-			const NavConnect *connect = adjAreaVector[ vit ];
-			CTFNavArea *adjArea = static_cast< CTFNavArea * >( connect->area );
-
-			if ( adjArea->IsMarked() )
-			{
-				continue;
-			}
-
-			if ( area->ComputeAdjacentConnectionHeightChange( adjArea ) > StepHeight )
-			{
-				// don't go up ledges higher than a legal step
-				continue;
-			}
-
-			if ( !adjArea->HasAttributeTF( TF_NAV_SPAWN_ROOM_BLUE | TF_NAV_SPAWN_ROOM_RED ) )
-			{
-				// this area can be reached by walking from the spawn, so it's legal to drop the bomb here
-				adjArea->SetAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE );
-			}
-
-			adjArea->Mark();
-			adjArea->SetParent( area );
-
-			if ( !adjArea->IsOpen() )
-			{
-				// Since we're doing a breadth-first search, this area will end up at the end of the list.
-				// Adding it to the tail explicitly saves us a bunch of list traversals.
-				adjArea->AddToOpenListTail();
-			}
-		}
-	}
-}
-
-
-//-------------------------------------------------------------------------
-// For MvM mode. Mark all nav areas where the bomb can drop and the invaders can reach it.
-void CTFNavMesh::ComputeBombTargetDistance()
-{
-	if ( !TFGameRules()->IsMannVsMachineMode() )
-	{
-		return;
-	}
-
-	CCaptureZone *zone = NULL;
-	for( int i=0; i<ICaptureZoneAutoList::AutoList().Count(); ++i )
-	{
-		zone = static_cast< CCaptureZone* >( ICaptureZoneAutoList::AutoList()[i] );
-		if ( zone->GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-		{
-			break;
-		}
-	}
-
-	if ( zone == NULL )
-	{
-		Warning( "Can't find bomb delivery zone." );
-		return;
-	}
-
-	CTFNavArea *zoneArea = (CTFNavArea *)TheTFNavMesh()->GetNearestNavArea( zone->WorldSpaceCenter(), false, 500.0f, true );
-	if ( !zoneArea )
-	{
-		Warning( "No nav area for bomb delivery zone." );
-		return;
-	}
-
-	// invalidate all travel distances
-	FOR_EACH_VEC( TheNavAreas, it )
-	{
-		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ it ] );
-		area->m_distanceToBombTarget = -1.0f;
-	}
-
-	CNavArea::ClearSearchLists();
-
-	zoneArea->AddToOpenList();
-	zoneArea->Mark();
-	zoneArea->SetParent( NULL );
-	zoneArea->m_distanceToBombTarget = 0.0f;
-
-	CUtlVectorFixedGrowable< const NavConnect *, 64 > adjAreaVector;
-
-	while( !CNavArea::IsOpenListEmpty() )
-	{
-		// get next area to check
-		CTFNavArea *area = static_cast< CTFNavArea * >( CNavArea::PopOpenList() );
-
-		// explore adjacent floor areas
-		adjAreaVector.RemoveAll();
-
-		for( int dir=0; dir<NUM_DIRECTIONS; ++dir )
-		{
-			// collect all OUTGOING links from this area to adjacent areas
-			const NavConnectVector *adjVector = area->GetAdjacentAreas( (NavDirType)dir );
-			FOR_EACH_VEC( (*adjVector), bit )
-			{
-				adjAreaVector.AddToTail( &(*adjVector)[ bit ] );
-			}
-		}
-
-		FOR_EACH_VEC( adjAreaVector, vit )
-		{
-			const NavConnect *connect = adjAreaVector[ vit ];
-			CTFNavArea *adjArea = static_cast< CTFNavArea * >( connect->area );
-
-			if ( area->ComputeAdjacentConnectionHeightChange( adjArea ) > TF_PLAYER_JUMP_HEIGHT )
-			{
-				// don't go up ledges too high to jump
-				continue;
-			}
-
-			// compute travel distance
-			float newTravelDistance = 0.0f;
-
-			float between = connect->length;
-			newTravelDistance = area->m_distanceToBombTarget + between;
-
-			float adjacentTravelDistance = adjArea->m_distanceToBombTarget;
-
-			// Found a shortcut to our neighbor passing through this area?
-			// Use a tolernace.  Without it, floating point math can make this loop go on forever,
-			// because intermediate results are stored at a different precision
-			float flTol = .001f;
-			if ( adjacentTravelDistance < 0.0f || adjacentTravelDistance > newTravelDistance + flTol )
-			{
-				adjArea->m_distanceToBombTarget = newTravelDistance;
-				adjArea->Mark();
-				adjArea->SetParent( area );
-
-				if ( !adjArea->IsOpen() )
-				{
-					// Since we're doing a breadth-first search, this area will end up at the end of the list.
-					// Adding it to the tail explicitly saves us a bunch of list traversals.
-					adjArea->AddToOpenListTail();
-				}
-			}
-			else
-			{
-				// Found a shortcut this area that passes through the neighbor?
-				float newTravelDistanceFromAdjacent = adjacentTravelDistance + between;
-				if ( newTravelDistanceFromAdjacent + flTol < area->m_distanceToBombTarget )
-				{
-					// check if the reverse direction is cheaper (for the case of jumping off edges)
-					area->m_distanceToBombTarget = newTravelDistanceFromAdjacent;
-					area->Mark();
-					area->SetParent( adjArea );
-					if ( !area->IsOpen() )
-					{
-						// found a cheaper path, try to traverse backward
-						area->AddToOpenListTail();
-					}
-				}
-			}
-		}
-	}
-}
-
 
 //-------------------------------------------------------------------------
 void CTFNavMesh::RecomputeInternalData( void )
@@ -1130,8 +910,6 @@ void CTFNavMesh::RecomputeInternalData( void )
 	ComputeBlockedAreas();			// relies on DecorateMesh() being complete
 	ComputeIncursionDistances();
 	ComputeInvasionAreas();
-	ComputeLegalBombDropAreas();
-	ComputeBombTargetDistance();	// for MvM
 
 	if ( m_recomputeReason == RESET || m_recomputeReason == SETUP_FINISHED )
 	{
@@ -1507,31 +1285,28 @@ void CTFNavMesh::ComputeIncursionDistances( void )
 		Warning( "Can't compute incursion distances from the Blue spawn room(s). Bots will perform poorly. This is caused by either a missing func_respawnroom, or missing info_player_teamspawn entities within the func_respawnroom.\n" );
 	}
 
-	if ( !TFGameRules()->IsMannVsMachineMode() )
+	// In Raid mode, the Red (bot) team has no spawn room.
+	// So, we'll assume the Red incursion distance is the inverse of the Blue incursion distance for now.
+	// @TODO: Use the Boss battle room as the anchor for computing Red incursion distances
+	float maxBlueIncursionDistance = 0.0f;
+
+	for( int i=0; i<TheNavAreas.Count(); ++i )
 	{
-		// In Raid mode, the Red (bot) team has no spawn room.
-		// So, we'll assume the Red incursion distance is the inverse of the Blue incursion distance for now.
-		// @TODO: Use the Boss battle room as the anchor for computing Red incursion distances
-		float maxBlueIncursionDistance = 0.0f;
+		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
 
-		for( int i=0; i<TheNavAreas.Count(); ++i )
+		if ( area->GetIncursionDistance( TF_TEAM_BLUE ) > maxBlueIncursionDistance )
 		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-			if ( area->GetIncursionDistance( TF_TEAM_BLUE ) > maxBlueIncursionDistance )
-			{
-				maxBlueIncursionDistance = area->GetIncursionDistance( TF_TEAM_BLUE );
-			}
+			maxBlueIncursionDistance = area->GetIncursionDistance( TF_TEAM_BLUE );
 		}
+	}
 
-		for( int i=0; i<TheNavAreas.Count(); ++i )
+	for( int i=0; i<TheNavAreas.Count(); ++i )
+	{
+		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
+
+		if ( area->GetIncursionDistance( TF_TEAM_BLUE ) >= 0.0f )
 		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-			if ( area->GetIncursionDistance( TF_TEAM_BLUE ) >= 0.0f )
-			{
-				area->m_distanceFromSpawnRoom[ TF_TEAM_RED ] = maxBlueIncursionDistance - area->GetIncursionDistance( TF_TEAM_BLUE );
-			}
+			area->m_distanceFromSpawnRoom[ TF_TEAM_RED ] = maxBlueIncursionDistance - area->GetIncursionDistance( TF_TEAM_BLUE );
 		}
 	}
 }
@@ -1563,32 +1338,13 @@ void CTFNavMesh::ComputeIncursionDistances( CTFNavArea *spawnArea, int team )
 	{
 		// get next area to check
 		CTFNavArea *area = static_cast< CTFNavArea * >( CNavArea::PopOpenList() );
-		
-		bool bIgnoreBlockedAreas = false;
 
-#ifdef TF_RAID_MODE
-		// TODO: Raid mode ignores blocked areas for now (cap gates break this)
-		if ( TFGameRules()->IsRaidMode()  )
+		// ignore spawn room exits, since they presumably will be open
+		// ignore setup gates, since they will be open after the setup time
+		if ( !area->HasAttributeTF( TF_NAV_SPAWN_ROOM_EXIT | TF_NAV_BLUE_SETUP_GATE | TF_NAV_RED_SETUP_GATE ) && area->IsBlocked( team ) )
 		{
-			bIgnoreBlockedAreas = true;
-		}
-#endif // TF_RAID_MODE
-
-		// TODO: Ditto for Mann Vs Machine mode
-		if ( TFGameRules()->IsMannVsMachineMode() )
-		{
-			bIgnoreBlockedAreas = true;
-		}
-
-		if ( !bIgnoreBlockedAreas )
-		{
-			// ignore spawn room exits, since they presumably will be open
-			// ignore setup gates, since they will be open after the setup time
-			if ( !area->HasAttributeTF( TF_NAV_SPAWN_ROOM_EXIT | TF_NAV_BLUE_SETUP_GATE | TF_NAV_RED_SETUP_GATE ) && area->IsBlocked( team ) )
-			{
-				// don't pass through blocked areas
-				continue;
-			}
+			// don't pass through blocked areas
+			continue;
 		}
 
 		// explore adjacent floor areas
@@ -1973,19 +1729,6 @@ void CTFNavMesh::UpdateDebugDisplay( void ) const
 				CTFNavArea *area = static_cast< CTFNavArea * >( invasionAreaVector[ it ] );
 
 				area->DrawFilled( 255, 0, 0, 255, NDEBUG_PERSIST_TILL_NEXT_SERVER, true );
-			}
-		}
-	}
-
-	if ( tf_show_bomb_drop_areas.GetBool() )
-	{
-		FOR_EACH_VEC( TheNavAreas, it )
-		{
-			CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ it ] );
-
-			if ( area->HasAttributeTF( TF_NAV_BOMB_CAN_DROP_HERE ) )
-			{
-				area->DrawFilled( 0, 255, 0, 255, NDEBUG_PERSIST_TILL_NEXT_SERVER, true );
 			}
 		}
 	}
@@ -2496,24 +2239,6 @@ void CTFNavMesh::CollectSpawnRoomThresholdAreas( CUtlVector< CTFNavArea * > *spa
 		if ( exitArea )
 		{
 			spawnExitAreaVector->AddToTail( exitArea );
-		}
-	}
-}
-
-
-//--------------------------------------------------------------------------------------------------------
-// Populate the given vector with areas that have a bomb travel distance within the given range
-void CTFNavMesh::CollectAreaWithinBombTravelRange( CUtlVector< CTFNavArea * > *spawnExitAreaVector, float minTravel, float maxTravel ) const
-{
-	for( int i=0; i<TheNavAreas.Count(); ++i )
-	{
-		CTFNavArea *area = static_cast< CTFNavArea * >( TheNavAreas[ i ] );
-
-		float travelDistance = area->GetTravelDistanceToBombTarget();
-
-		if ( travelDistance >= minTravel && travelDistance <= maxTravel )
-		{
-			spawnExitAreaVector->AddToTail( area );
 		}
 	}
 }

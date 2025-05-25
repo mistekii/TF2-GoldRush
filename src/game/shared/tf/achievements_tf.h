@@ -15,8 +15,7 @@ bool GameRulesAllowsAchievements( void );
 
 
 //----------------------------------------------------------------------------------------------------------------
-// All achievements should derive from this. It takes care of ensuring that MVM mode isn't active for
-// non MVM achievements and that MVM is active for MVM achievements
+// All achievements should derive from this.
 class CBaseTFAchievementSimple : public CBaseAchievement
 {
 	DECLARE_CLASS( CBaseTFAchievementSimple, CBaseAchievement );

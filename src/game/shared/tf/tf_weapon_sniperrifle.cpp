@@ -401,11 +401,6 @@ void CTFSniperRifle::ItemPostFrame( void )
 //-----------------------------------------------------------------------------
 void CTFSniperRifle::PlayWeaponShootSound( void )
 {
-	if ( TFGameRules()->GameModeUsesUpgrades() )
-	{
-		PlayUpgradedShootSound( "Weapon_Upgrade.DamageBonus" );
-	}
-
 	if ( !IsFullyCharged() )
 	{
 		float flDamageBonus = 1.0f;
@@ -1051,7 +1046,7 @@ void CTFSniperRifle::ExplosiveHeadShot( CTFPlayer *pAttacker, CTFPlayer *pVictim
 
 	// Stun the source
 	float flStunDuration = 1.f + ( ( (float)iExplosiveShot - 1.f ) * 0.5f );
-	float flStunAmt = pVictim->IsMiniBoss() ? 0.5f : RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
+	float flStunAmt = RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
 	pVictim->m_Shared.StunPlayer( flStunDuration, flStunAmt, TF_STUN_MOVEMENT, pAttacker );
 
 	// Generate an explosion and look for nearby bots
@@ -1088,7 +1083,7 @@ void CTFSniperRifle::ExplosiveHeadShot( CTFPlayer *pAttacker, CTFPlayer *pVictim
 			continue;
 
 		// Stun			
-		flStunAmt = pTFPlayer->IsMiniBoss() ? 0.5f : RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
+		flStunAmt = RemapValClamped( iExplosiveShot, 1, 3, 0.5f, 0.8f );
 		pTFPlayer->m_Shared.StunPlayer( flStunDuration, flStunAmt, TF_STUN_MOVEMENT, pAttacker );
 
 		// DoT
@@ -1568,37 +1563,6 @@ bool CSniperDot::ShouldDraw( void )
 
 void CSniperDot::ClientThink( void )
 {
-	// snipers have laser sights in PvE mode
-	if ( TFGameRules()->IsPVEModeActive() && GetTeamNumber() == TF_TEAM_PVE_INVADERS )
-	{
-		C_TFPlayer *pPlayer = ToTFPlayer( GetOwnerEntity() );
-		if ( pPlayer )
-		{
-			if ( !m_laserBeamEffect )
-			{
-				m_laserBeamEffect = ParticleProp()->Create( "laser_sight_beam", PATTACH_ABSORIGIN_FOLLOW );
-			}
-
-			if ( m_laserBeamEffect )
-			{
-				m_laserBeamEffect->SetSortOrigin( m_laserBeamEffect->GetRenderOrigin() );
-				m_laserBeamEffect->SetControlPoint( 2, Vector( 0, 0, 255 ) );
-
-				Vector vecAttachment;
-				Vector vecEndPos;
-				float flSize;
-
-				if ( pPlayer->GetAttachment( "eye_1", vecAttachment ) )
-				{
-					m_laserBeamEffect->SetControlPoint( 1, vecAttachment );
-				}
-				else if ( GetRenderingPositions( pPlayer, vecAttachment, vecEndPos, flSize ) )
-				{
-					m_laserBeamEffect->SetControlPoint( 1, vecAttachment );
-				}
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------

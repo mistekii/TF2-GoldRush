@@ -91,8 +91,6 @@ ConVar tf_raid_debug_director( "tf_raid_debug_director", "0"/*, FCVAR_CHEAT*/ );
 
 ConVar tf_raid_spawn_enable( "tf_raid_spawn_enable", "1"/*, FCVAR_CHEAT*/ );
 
-extern ConVar tf_populator_active_buffer_range;
-
 
 extern bool IsSpaceToSpawnHere( const Vector &where );
 
@@ -577,8 +575,8 @@ public:
 		CTFNavArea *area = (CTFNavArea *)adjArea;
 		float incursionDistance = area->GetIncursionDistance( TF_TEAM_BLUE );
 
-		return incursionDistance > m_leaderIncursionRange - tf_populator_active_buffer_range.GetFloat() &&
-			   incursionDistance < m_leaderIncursionRange + tf_populator_active_buffer_range.GetFloat() &&
+		return incursionDistance > m_leaderIncursionRange &&
+			   incursionDistance < m_leaderIncursionRange &&
 			   !adjArea->IsBlocked( TEAM_ANY );
 	}
 
@@ -637,7 +635,7 @@ bool CRaidLogic::Unspawn( CTFPlayer *who )
 		if ( who->IsPlayerClass( TF_CLASS_ENGINEER ) )
 		{
 			CTFNavArea *area = (CTFNavArea *)who->GetLastKnownArea();
-			if ( area && area->GetIncursionDistance( TF_TEAM_BLUE ) > GetMaximumRaiderIncursionDistance() - tf_populator_active_buffer_range.GetFloat() )
+			if ( area && area->GetIncursionDistance( TF_TEAM_BLUE ) > GetMaximumRaiderIncursionDistance() )
 				return false;
 		}
 		else if ( !who->IsPlayerClass( TF_CLASS_SCOUT ) )
@@ -1239,8 +1237,8 @@ return;
 	// cull wanderers outside of the active area set - use slightly larger range to avoid thrashing
 	CTeam *defenseTeam = GetGlobalTeam( TF_TEAM_RED );
 
-	float cullMinIncursionDistance = minIncursion - 1.1f * tf_populator_active_buffer_range.GetFloat();
-	float cullMaxIncursionDistance = maxIncursion + 1.1f * tf_populator_active_buffer_range.GetFloat();
+	float cullMinIncursionDistance = minIncursion - 1.1f;
+	float cullMaxIncursionDistance = maxIncursion + 1.1f;
 
 	for( int i=0; i<defenseTeam->GetNumPlayers(); ++i )
 	{

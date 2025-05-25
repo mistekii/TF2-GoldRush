@@ -168,29 +168,6 @@ public:
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-class CMannVsMachineChangeChallengeIssue : public CBaseTFIssue
-{
-public:
-	CMannVsMachineChangeChallengeIssue( CVoteController *pVoteController ) : CBaseTFIssue( "ChangeMission", pVoteController ) { } // This string will have "Vote_" glued onto the front for localization (i.e. "#Vote_ChangeMission")
-	
-	virtual void		ExecuteCommand( void ) OVERRIDE;
-	virtual bool		IsEnabled( void ) OVERRIDE;
-	virtual bool		CanTeamCallVote( int iTeam ) const OVERRIDE;
-	virtual bool		RequestCallVote( int iEntIndex, const char *pszDetails, vote_create_failed_t &nFailCode, int &nTime ) OVERRIDE;
-	virtual const char *GetDisplayString( void ) OVERRIDE;
-	virtual void		ListIssueDetails( CBasePlayer *pForWhom ) OVERRIDE;
-	virtual const char *GetVotePassedString( void ) OVERRIDE;
-	virtual const char *GetDetailsString( void ) OVERRIDE;
-	virtual bool		IsYesNoVote( void ) OVERRIDE;
-	virtual int			GetNumberVoteOptions( void ) OVERRIDE;
-
-private:
-	CUtlVector <const char *> m_IssueOptions;
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 class CEnableTemporaryHalloweenIssue : public CBaseTFIssue
 {
 public:

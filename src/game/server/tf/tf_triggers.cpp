@@ -310,11 +310,6 @@ void CTriggerTimerDoor::StartTouch( CBaseEntity *pOther )
 void CTriggerTimerDoor::OnStartCapture( int iTeam )
 {
 	BaseClass::OnStartCapture( iTeam );
-
-	if ( FStrEq( gpGlobals->mapname.ToCStr(), "mvm_mannhattan" ) )
-	{
-		TFGameRules()->RandomPlayersSpeakConceptIfAllowed( MP_CONCEPT_MANNHATTAN_GATE_ATK, 1, TF_TEAM_RED );
-	}
 }
 
 
@@ -324,11 +319,6 @@ void CTriggerTimerDoor::OnStartCapture( int iTeam )
 void CTriggerTimerDoor::OnEndCapture( int iTeam )
 {
 	BaseClass::OnEndCapture( iTeam );
-
-	if ( FStrEq( gpGlobals->mapname.ToCStr(), "mvm_mannhattan" ) )
-	{
-		TFGameRules()->RandomPlayersSpeakConceptIfAllowed( MP_CONCEPT_MANNHATTAN_GATE_TAKE, 1, TF_TEAM_RED );
-	}
 }
 
 

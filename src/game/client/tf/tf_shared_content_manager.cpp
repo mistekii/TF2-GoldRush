@@ -88,21 +88,7 @@ void C_TFSharedContentManager::Update( float frametime )
 //-----------------------------------------------------------------------------
 bool C_TFSharedContentManager::CanOfferVision( int iFlag )
 {
-	bool bRetVal = false;
-
-	switch ( iFlag )
-	{
-	case TF_VISION_FILTER_ROME:
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			bRetVal = true;
-		}
-		break;
-	default: 
-		break;
-	}
-
-	return bRetVal;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -142,24 +128,6 @@ void C_TFSharedContentManager::PrintChatText( int iFlag, uint32 unAccountID )
 		{
 			KeyValuesAD pKeyValues( "data" );
 			pKeyValues->SetString( "player", pszPlayerName );
-
-			const char *pText = NULL;
-			switch ( iFlag )
-			{
-			case TF_VISION_FILTER_ROME:
-				if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-				{
-					pText = "#TF_Player_OptionalVision"; 
-				}
-				break;
-			default: 
-				break;
-			}
-
-			if ( pText )
-			{
-				GetClientModeTFNormal()->PrintTextToChat( pText, pKeyValues );
-			}
 		}
 
 		m_PlayersWhoHaveOfferedVision.AddToHead( unAccountID );

@@ -38,8 +38,6 @@ ConVar _cl_classmenuopen( "_cl_classmenuopen", "0", 0, "internal cvar used to te
 ConVar replay_replaywelcomedlgcount( "replay_replaywelcomedlgcount", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The number of times the replay help dialog has displayed." );
 #endif
 
-ConVar tf_mvm_classupgradehelpcount( "tf_mvm_classupgradehelpcount", "0", FCVAR_CLIENTDLL | FCVAR_DONTRECORD | FCVAR_ARCHIVE | FCVAR_HIDDEN, "The number of times the player upgrade help dialog has displayed." );
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
@@ -378,7 +376,6 @@ public:
 			for ( int iTip = 1; iTip < nTipCount+1; ++iTip )
 			{
 				const wchar_t *pwszText = g_pVGuiLocalize->Find( CFmtStr( "#ClassTips_%d_%d", iClass, iTip ) );
-				const wchar_t *pwszTextMvM = g_pVGuiLocalize->Find( CFmtStr( "#ClassTips_%d_%d_MvM", iClass, iTip ) );
 				wchar_t *pwszIcon = g_pVGuiLocalize->Find( CFmtStr( "ClassTips_%d_%d_Icon", iClass, iTip ) );
 				char szIcon[MAX_PATH];
 
@@ -388,28 +385,13 @@ public:
 					g_pVGuiLocalize->ConvertUnicodeToANSI( pwszIcon, szIcon, sizeof( szIcon ) );
 				}
 
-				// Don't load MvM tips outside the mode
-				if ( pwszTextMvM )
-				{
-					if ( !TFGameRules()->IsMannVsMachineMode() )
-						continue;
-
-					// If we're MvM mode, remember first MvM tip
-					if ( !nScrollToItem )
-						nScrollToItem = iTip;
-				}
-
 				// Create a TipsItemPanel for each tip
-				if ( pwszText || pwszTextMvM )
+				if ( pwszText )
 				{
 					CTFClassTipsItemPanel *pClassTipsItemPanel = new CTFClassTipsItemPanel( this, "ClassTipsItemPanel", iTip );
 					if ( pwszText )
 					{
 						pClassTipsItemPanel->SetClassTip( pwszText, szIcon );
-					}
-					else if ( pwszTextMvM )
-					{
-						pClassTipsItemPanel->SetClassTip( pwszTextMvM, szIcon );
 					}
 
 					m_pClassTipsListPanel->AddItem( NULL, pClassTipsItemPanel );
@@ -498,17 +480,6 @@ CTFClassMenu::CTFClassMenu( IViewPort *pViewPort )
 
 	ListenForGameEvent( "localplayer_changeteam" );
 	ListenForGameEvent( "show_match_summary" );
-
-	Q_memset( m_pMvmUpgradeImages, 0, sizeof( m_pMvmUpgradeImages ) );
-	m_pMvmUpgradeImages[TF_CLASS_SCOUT] = new vgui::ImagePanel( this, "MvMUpgradeImageScout" );
-	m_pMvmUpgradeImages[TF_CLASS_SOLDIER] = new vgui::ImagePanel( this, "MvMUpgradeImageSolider" );
-	m_pMvmUpgradeImages[TF_CLASS_PYRO] = new vgui::ImagePanel( this, "MvMUpgradeImagePyro" );
-	m_pMvmUpgradeImages[TF_CLASS_DEMOMAN] = new vgui::ImagePanel( this, "MvMUpgradeImageDemoman" );
-	m_pMvmUpgradeImages[TF_CLASS_MEDIC] = new vgui::ImagePanel( this, "MvMUpgradeImageMedic" );
-	m_pMvmUpgradeImages[TF_CLASS_HEAVYWEAPONS] = new vgui::ImagePanel( this, "MvMUpgradeImageHeavy" );
-	m_pMvmUpgradeImages[TF_CLASS_SNIPER] = new vgui::ImagePanel( this, "MvMUpgradeImageSniper" );
-	m_pMvmUpgradeImages[TF_CLASS_ENGINEER] = new vgui::ImagePanel( this, "MvMUpgradeImageEngineer" );
-	m_pMvmUpgradeImages[TF_CLASS_SPY] = new vgui::ImagePanel( this, "MvMUpgradeImageSpy" );
 
 	vgui::ivgui()->AddTickSignal( GetVPanel() );
 }
@@ -808,14 +779,7 @@ void CTFClassMenu::SelectClass( int iClass )
 	enginesound->StopSoundByGuid( m_nBaseMusicGuid );
 	CBroadcastRecipientFilter filter;
 	char nClassMusicStr[64];
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		sprintf( nClassMusicStr, "music.mvm_class_menu_0%i", iClass );
-	}
-	else
-	{
-		sprintf( nClassMusicStr, "music.class_menu_0%i", iClass );
-	}
+	sprintf( nClassMusicStr, "music.class_menu_0%i", iClass );
 	CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, nClassMusicStr );
 	m_nBaseMusicGuid = enginesound->GetGuidForLastSoundEmitted();
 	
@@ -1181,30 +1145,14 @@ void CTFClassMenu::SetVisible( bool state )
 		engine->ClientCmd( "_cl_classmenuopen 1" );	// for other panels
 		CBroadcastRecipientFilter filter;
 
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.mvm_class_menu" );
-		}
-		else
-		{
-			CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.class_menu" );
-		}
-
-		CheckMvMUpgrades();
+		CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.class_menu" );
 	}
 	else
 	{
 		engine->ServerCmd( "menuclosed" );	
 		engine->ClientCmd( "_cl_classmenuopen 0" );
-		
-		if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-		{
-			CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.mvm_class_menu" );
-		}
-		else
-		{
-			CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.class_menu" );
-		}
+
+		CBaseEntity::StopSound( SOUND_FROM_UI_PANEL, "music.class_menu" );
 	}
 }
 
@@ -1259,17 +1207,6 @@ void CTFClassMenu::Go()
 
 	// Change class
 	BaseClass::OnCommand( CFmtStr( "joinclass %s", g_aRawPlayerClassNames[ iClass ] ).Access() );
-
-	CBroadcastRecipientFilter filter;
-
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		CBaseEntity::EmitSound( filter, SOUND_FROM_UI_PANEL, "music.mvm_class_select" );
-	}
-	else
-	{
-		
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1613,68 +1550,6 @@ void CTFClassMenu::OnEconUIClosed()
 {
 	// Reload items on model panel, in case anything's changed
 	LoadItems();
-}
-
-int g_nNumUpgradeIconsForLastHint = 0;
-
-//-----------------------------------------------------------------------------
-void CTFClassMenu::CheckMvMUpgrades()
-{
-	// Set MvM Icons invisible
-	for ( int icons = 0; icons < ARRAYSIZE( m_pMvmUpgradeImages ); ++icons )
-	{
-		if ( m_pMvmUpgradeImages[icons] == NULL )
-			continue;
-		m_pMvmUpgradeImages[icons]->SetVisible( false );
-	}
-
-	if ( !TFGameRules() || !TFGameRules()->IsMannVsMachineMode() )
-		return;
-
-	CMannVsMachineStats *pStats = MannVsMachineStats_GetInstance();
-	if ( !pStats )
-		return;
-
-	CUtlVector< CUpgradeInfo > *upgrades = pStats->GetLocalPlayerUpgrades();
-
-	int nShowUpgradingHint = -1;
-	int nNumUpgradeIconsForHint = 0;
-
-	for ( int i = 0; i < upgrades->Count(); ++i )
-	{
-		vgui::Panel *pUpgradeImage = m_pMvmUpgradeImages[upgrades->Element(i).m_iPlayerClass];
-
-		if ( !pUpgradeImage )
-			continue;
-
-		if ( !pUpgradeImage->IsVisible() )
-		{
-			pUpgradeImage->SetVisible( true );
-			nNumUpgradeIconsForHint++;
-
-			// Only show the hint if we've shown it 3 or less times ever
-			if ( nShowUpgradingHint == -1 && tf_mvm_classupgradehelpcount.GetInt() < 3 )
-			{
-				int nY;
-				pUpgradeImage->GetPos( nShowUpgradingHint, nY );
-				nShowUpgradingHint += pUpgradeImage->GetWide() / 2;
-			}
-		}
-	}
-
-	// Only show the hint if there are more upgrade icon than the last time we openned the menu
-	if ( nShowUpgradingHint != -1 && g_nNumUpgradeIconsForLastHint < nNumUpgradeIconsForHint )
-	{
-		CExplanationPopup *pPopup = dynamic_cast< CExplanationPopup* >( FindChildByName("StartExplanation") );
-		if ( pPopup )
-		{
-			pPopup->SetCalloutInParentsX( nShowUpgradingHint );
-			pPopup->Popup();
-
-			g_nNumUpgradeIconsForLastHint = nNumUpgradeIconsForHint;
-			tf_mvm_classupgradehelpcount.SetValue( tf_mvm_classupgradehelpcount.GetInt() + 1 );
-		}
-	}
 }
 
 

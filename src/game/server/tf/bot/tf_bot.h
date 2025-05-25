@@ -46,8 +46,6 @@ extern void BotGenerateAndWearItem( CTFPlayer *pBot, const char *itemName );
 
 #define TFBOT_ALL_BEHAVIOR_FLAGS		0xFFFF
 
-#define TFBOT_MVM_MAX_PATH_LENGTH		0.0f // 7000.0f			// in MvM, all pathfinds are limited to this (0 == no limit)
-
 
 //----------------------------------------------------------------------------
 class CTFBot: public NextBotPlayer< CTFPlayer >, public CGameEventListener
@@ -255,12 +253,10 @@ public:
 		PRIORITIZE_DEFENSE			= 1<<12,				// bot prioritizes defending when possible
 		ALWAYS_FIRE_WEAPON			= 1<<13,				// constantly fire our weapon
 		TELEPORT_TO_HINT			= 1<<14,				// bot will teleport to hint target instead of walking out from the spawn point
-		MINIBOSS					= 1<<15,				// is miniboss?
-		USE_BOSS_HEALTH_BAR			= 1<<16,				// should I use boss health bar?
-		IGNORE_FLAG					= 1<<17,				// don't pick up flag/bomb
-		AUTO_JUMP					= 1<<18,				// auto jump
-		AIR_CHARGE_ONLY				= 1<<19,				// demo knight only charge in the air
-		PROJECTILE_SHIELD			= 1<<20,				// medic projectile shield
+		USE_BOSS_HEALTH_BAR			= 1<<15,				// should I use boss health bar?
+		IGNORE_FLAG					= 1<<16,				// don't pick up flag/bomb
+		AUTO_JUMP					= 1<<17,				// auto jump
+		AIR_CHARGE_ONLY				= 1<<18,				// demo knight only charge in the air
 	};
 	void SetAttribute( int attributeFlag );
 	void ClearAttribute( int attributeFlag );
@@ -341,7 +337,6 @@ public:
 		MISSION_SNIPER,					// maintain teams of snipers harassing the enemy
 		MISSION_SPY,					// maintain teams of spies harassing the enemy
 		MISSION_ENGINEER,				// maintain engineer nests for harassing the enemy
-		MISSION_REPROGRAMMED,			// MvM: robot has been hacked and will do bad things to their team
 	};
 	#define MISSION_DOESNT_RESET_BEHAVIOR_SYSTEM false
 	void SetMission( MissionType mission, bool resetBehaviorSystem = true );
@@ -975,14 +970,6 @@ public:
 
 			// add a random penalty unique to this character so they choose different routes to the same place
 			float preference = 1.0f;
-
-			if ( m_routeType == DEFAULT_ROUTE && !m_me->IsMiniBoss() ) 
-			{
-				// this term causes the same bot to choose different routes over time,
-				// but keep the same route for a period in case of repaths
-				int timeMod = (int)( gpGlobals->curtime / 10.0f ) + 1;
-				preference = 1.0f + 50.0f * ( 1.0f + FastCos( (float)( m_me->GetEntity()->entindex() * area->GetID() * timeMod ) ) );
-			}
 
 			if ( m_routeType == SAFEST_ROUTE )
 			{

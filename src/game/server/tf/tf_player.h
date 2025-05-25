@@ -30,7 +30,6 @@ class CIntroViewpoint;
 class CTriggerAreaCapture;
 class CTFWeaponBaseGun;
 class CCaptureZone;
-class CTFReviveMarker;
 class CWaveSpawnPopulator;
 class CTFTauntProp;
 
@@ -145,7 +144,6 @@ public:
 	void				ForceRegenerateAndRespawn( void );
 	virtual CBaseEntity	*EntSelectSpawnPoint( void );
 	virtual void		InitialSpawn();
-	static void			PrecacheMvM();
 	static void			PrecacheKart();
 private:
 	static void			PrecachePlayerModels();
@@ -310,10 +308,6 @@ public:
 	int					GetMaxHealthForBuffing();
 
 	//-----------------------------------------------------------------------------------------------------
-	// Return true if we are a "mini boss" in Mann Vs Machine mode
-	bool				IsMiniBoss( void ) const;
-	void				SetIsMiniBoss( bool isMiniBoss ) { m_bIsMiniBoss = isMiniBoss; }
-
 	bool				CanAttack( int iCanAttackFlags = 0 );
 	bool				CanJump() const;
 	bool				CanDuck() const;
@@ -449,7 +443,6 @@ public:
 	void DropAmmoPackFromProjectile( CBaseEntity *pProjectile );
 	void DropExtraAmmo( const CTakeDamageInfo& info, bool bFromDeath = false );
 	void DropHealthPack( const CTakeDamageInfo &info, bool bEmpty );
-	void DropCurrencyPack( CurrencyRewards_t nSize = TF_CURRENCY_PACK_SMALL, int nAmount = 0, bool bForceDistribute = false, CBasePlayer* pMoneyMaker = NULL );	// Only pass in an amount when nSize = TF_CURRENCY_PACK_CUSTOM
 	
 	bool CanDisguise( void );
 	bool CanDisguise_OnKill( void );
@@ -1004,45 +997,18 @@ public:
 	void 				MarkAsSupportEnemy( void ){ m_bIsSupportEnemy = true; }
 	void 				MarkAsLimitedSupportEnemy( void ){ m_bIsLimitedSupportEnemy = true; }
 
-	// In-game currency
-	int					GetCurrency( void ) const { return m_nCurrency; }
-	void				SetCurrency( int nAmount ){ m_nCurrency = nAmount; }
-	void				AddCurrency( int nAmount );
-	void				RemoveCurrency( int nAmount );
-
-	// Set the amount of money this bot is worth when killed. We re-use m_nCurrency, because bots don't collect currency.
-	void				SetCustomCurrencyWorth( int nAmount )	{ m_nCurrency = nAmount; }
-
 	// Bounty Mode
 	int					GetExperienceLevel( void ) { return m_nExperienceLevel; }
 	void				SetExperienceLevel( int nValue ) { m_nExperienceLevel.Set( MAX( nValue, 1 ) ); }
 	int					GetExperiencePoints( void ) { return m_nExperiencePoints; }
 	void				SetExperiencePoints( int nValue ) { m_nExperiencePoints = MAX( nValue, 0 ); }
-	void				AddExperiencePoints( int nValue, bool bGiveCurrency = false, CTFPlayer *pSource = NULL );
+	void				AddExperiencePoints( int nValue, CTFPlayer *pSource = NULL );
 	void				CalculateExperienceLevel( bool bAnnounce = true );
 	void				RefundExperiencePoints( void );
 
-	void				RememberUpgrade( int iPlayerClass, CEconItemView *pItem, int iUpgrade, int nCost, bool bDowngrade = false );	// store this upgrade for restoring at a checkpoint
-	void				ForgetFirstUpgradeForItem( CEconItemView *pItem );						// erase the first upgrade stored for this item (for powerup bottles)
-	void				ClearUpgradeHistory( void );
-	void				ReapplyItemUpgrades ( CEconItemView *pItem );
-	void				ReapplyPlayerUpgrades ( void );
 	void				SetWaveSpawnPopulator( CWaveSpawnPopulator *pWave ){ m_pWaveSpawnPopulator = pWave; }
-	CUtlVector< CUpgradeInfo >* GetRefundableUpgrades( void ) { return &m_RefundableUpgrades; }
-	void				ResetRefundableUpgrades( void ) { m_RefundableUpgrades.RemoveAll(); }
-	void				BeginPurchasableUpgrades( void );
-	void				EndPurchasableUpgrades( void );
-	bool				CanPurchaseUpgrades( void ) const { Assert( m_nCanPurchaseUpgradesCount >= 0 ); return m_nCanPurchaseUpgradesCount > 0; }
 
 	void				PlayReadySound( void );
-
-	void				AccumulateSentryGunDamageDealt( float damage );
-	void				ResetAccumulatedSentryGunDamageDealt();
-	float				GetAccumulatedSentryGunDamageDealt();
-
-	void				IncrementSentryGunKillCount( void );
-	void				ResetAccumulatedSentryGunKillCount();
-	int					GetAccumulatedSentryGunKillCount();
 
 	bool				PlaySpecificSequence( const char *pSequenceName );
 
@@ -1283,10 +1249,6 @@ private:
 	bool				m_bIsSupportEnemy;
 	bool				m_bIsLimitedSupportEnemy;
 
-	// In-game currency
-	CNetworkVar( int, m_nCurrency );
-	CNetworkVar( bool, m_bIsMiniBoss );
-
 	// Bounty Mode
 	CNetworkVar( uint32, m_nExperienceLevel );
 	CNetworkVar( uint32, m_nExperienceLevelProgress );	// Networked progress bar
@@ -1299,19 +1261,9 @@ private:
 	CWaveSpawnPopulator *m_pWaveSpawnPopulator;
 	float				m_flLastReadySoundTime;
 
-	int						m_nCanPurchaseUpgradesCount;
-	CUtlVector< CUpgradeInfo >	m_RefundableUpgrades;
-
-	CUtlVector< CUpgradeInfo > * GetPlayerUpgradeHistory( void );
-	CUtlVector< CUpgradeInfo >  m_LocalUpgradeHistory;
-
 public:
-	void GrantOrRemoveAllUpgrades( bool bRemove, bool bRefund );
-
 	// Marking for death.
 	CHandle<CTFPlayer>	m_pMarkedForDeathTarget;
-
-	CountdownTimer m_playerMovementStuckTimer;			// for destroying stuck bots in MvM
 
 	QAngle				m_qPreviousChargeEyeAngle;		// Previous EyeAngles to compute deltas for legal mouse movement
 private:
@@ -1390,9 +1342,6 @@ private:
 
 	//CountdownTimer		m_fireproofTimer;		// if active, we're fireproof
 
-	float				m_accumulatedSentryGunDamageDealt;	// for Sentry Buster missions in MvM
-	int					m_accumulatedSentryGunKillCount;	// for Sentry Buster missions in MvM
-
 	static const int	DPS_Period = 90;					// The duration of the sliding window for calculating DPS, in seconds
 	int					*m_damageRateArray;					// One array element per second, for accumulating damage done during that time
 	int					m_lastDamageRateIndex;
@@ -1422,11 +1371,7 @@ private:
 	CNetworkVar( bool, m_bForcedSkin );
 	CNetworkVar( int, m_nForcedSkin );
 
-private:
-	CHandle< CTFReviveMarker >		m_hReviveMarker;
 public:
-	CTFReviveMarker	*GetReviveMarker( void ) { return m_hReviveMarker; }
-
 	// Send ForcePlayerViewAngles user message. Handled in __MsgFunc_ForcePlayerViewAngles in
 	// clientmode_tf.cpp. Sets Local and Abs angles, along with TauntYaw and VehicleMovingAngles.
 	void ForcePlayerViewAngles( const QAngle& qTeleportAngles );
@@ -1615,36 +1560,6 @@ inline void CTFPlayer::NoteMedicCall( void )
 inline bool CTFPlayer::IsInPurgatory( void ) const
 {
 	return m_Shared.InCond( TF_COND_PURGATORY );
-}
-
-inline void CTFPlayer::AccumulateSentryGunDamageDealt( float damage )
-{
-	m_accumulatedSentryGunDamageDealt += damage;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunDamageDealt()
-{
-	m_accumulatedSentryGunDamageDealt = 0.0f;
-}
-
-inline float CTFPlayer::GetAccumulatedSentryGunDamageDealt()
-{
-	return m_accumulatedSentryGunDamageDealt;
-}
-
-inline void CTFPlayer::IncrementSentryGunKillCount( void )
-{
-	++m_accumulatedSentryGunKillCount;
-}
-
-inline void	CTFPlayer::ResetAccumulatedSentryGunKillCount()
-{
-	m_accumulatedSentryGunKillCount = 0;
-}
-
-inline int CTFPlayer::GetAccumulatedSentryGunKillCount()
-{
-	return m_accumulatedSentryGunKillCount;
 }
 
 inline int CTFPlayer::GetDamagePerSecond( void ) const
