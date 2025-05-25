@@ -64,9 +64,6 @@ static const char *GetDefaultMeterTextForLoadoutPosition( int iLoadout )
 	}
 
 
-extern ConVar tf_rocketpack_cost;
-
-
 using namespace vgui;
 
 IMPLEMENT_AUTO_LIST( IHudItemEffectMeterAutoList );

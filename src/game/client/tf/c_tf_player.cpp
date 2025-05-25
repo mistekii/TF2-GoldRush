@@ -3871,8 +3871,6 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "damage_resisted" );
 	ListenForGameEvent( "player_changeclass" );
 	ListenForGameEvent( "player_abandoned_match" );
-	ListenForGameEvent( "rocketpack_launch" );
-	ListenForGameEvent( "rocketpack_landed" );
 
 	//AddPhonemeFile
 	engine->AddPhonemeFile( "scripts/game_sounds_vo_phonemes.txt" );
@@ -10470,8 +10468,7 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		}
 	}
 	else if ( FStrEq( event->GetName(), "rocket_jump" ) 
-			  || FStrEq( event->GetName(), "sticky_jump" )
-			  || FStrEq( event->GetName(), "rocketpack_launch" ) )
+			  || FStrEq( event->GetName(), "sticky_jump" ) )
 	{
 		// Play a special sound when blast jumping with weapons that don't hurt the player
 		const int iUserID = event->GetInt( "userid" );
@@ -10520,8 +10517,7 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		}
 	}
 	else if ( FStrEq( event->GetName(), "rocket_jump_landed" ) 
-			  || FStrEq( event->GetName(), "sticky_jump_landed" )
-			  || FStrEq( event->GetName(), "rocketpack_landed" ) )
+			  || FStrEq( event->GetName(), "sticky_jump_landed" ) )
 	{
 		const int iUserID = event->GetInt( "userid" );
 		if ( iUserID == GetUserID() )

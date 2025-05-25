@@ -260,8 +260,6 @@ extern ConVar mp_spectators_restricted;
 extern ConVar mp_teams_unbalance_limit;
 extern ConVar tf_tournament_classchange_allowed;
 extern ConVar tf_tournament_classchange_ready_allowed;
-extern ConVar tf_rocketpack_impact_push_min;
-extern ConVar tf_rocketpack_impact_push_max;
 #if defined( _DEBUG ) || defined( STAGING_ONLY )
 extern ConVar mp_developer;
 extern ConVar bot_mimic;
