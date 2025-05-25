@@ -59,7 +59,6 @@ static bool VotableMap( const char *pszMapName )
 // Purpose: Restart Round Issue
 //-----------------------------------------------------------------------------
 ConVar sv_vote_issue_restart_game_allowed( "sv_vote_issue_restart_game_allowed", "0", FCVAR_NONE, "Can players call votes to restart the game?" );
-ConVar sv_vote_issue_restart_game_allowed_mvm( "sv_vote_issue_restart_game_allowed_mvm", "1", FCVAR_NONE, "Can players call votes to restart the game in Mann-Vs-Machine?" );
 ConVar sv_vote_issue_restart_game_cooldown( "sv_vote_issue_restart_game_cooldown", "300", FCVAR_NONE, "Minimum time before another restart vote can occur (in seconds)." );
 
 //-----------------------------------------------------------------------------
@@ -132,12 +131,8 @@ void CRestartGameIssue::ListIssueDetails( CBasePlayer *pForWhom )
 // Purpose: Kick Player Issue
 //-----------------------------------------------------------------------------
 ConVar sv_vote_issue_kick_allowed( "sv_vote_issue_kick_allowed", "0", FCVAR_REPLICATED, "Can players call votes to kick players from the server?" );
-ConVar sv_vote_issue_kick_allowed_mvm( "sv_vote_issue_kick_allowed_mvm", "1", FCVAR_NONE, "Can players call votes to kick players from the server in MvM?" );
 ConVar sv_vote_kick_ban_duration( "sv_vote_kick_ban_duration", "20", FCVAR_NONE, "The number of minutes a vote ban should last. (0 = Disabled)" );
-ConVar sv_vote_issue_kick_min_connect_time_mvm( "sv_vote_issue_kick_min_connect_time_mvm", "300", FCVAR_NONE, "How long a player must be connected before they can be kicked (in seconds)." );
-ConVar sv_vote_issue_kick_spectators_mvm( "sv_vote_issue_kick_spectators_mvm", "1", FCVAR_NONE, "Allow players to kick spectators in MvM." );
 ConVar sv_vote_issue_kick_namelock_duration( "sv_vote_issue_kick_namelock_duration", "120", FCVAR_NONE, "How long to prevent kick targets from changing their name (in seconds)." );
-ConVar sv_vote_issue_kick_limit_mvm( "sv_vote_issue_kick_limit_mvm", "0", FCVAR_HIDDEN, "The maximum number of kick votes a player can call during an MvM mission started by matchmaking. (0 = disabled)" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -623,7 +618,6 @@ void CKickIssue::OnPlayerDisconnected( CBasePlayer *pPlayer )
 // Purpose: Changelevel
 //-----------------------------------------------------------------------------
 ConVar sv_vote_issue_changelevel_allowed( "sv_vote_issue_changelevel_allowed", "0", FCVAR_NONE, "Can players call votes to change levels?" );
-ConVar sv_vote_issue_changelevel_allowed_mvm( "sv_vote_issue_changelevel_allowed_mvm", "0", FCVAR_NONE, "Can players call votes to change levels in MvM?" );
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1335,9 +1329,7 @@ float CTeamAutoBalanceIssue::GetQuorumRatio( void )
 // Purpose: Enable/Disable tf_classlimit
 //-----------------------------------------------------------------------------
 ConVar sv_vote_issue_classlimits_allowed( "sv_vote_issue_classlimits_allowed", "0", FCVAR_NONE, "Can players call votes to enable or disable per-class limits?" );
-ConVar sv_vote_issue_classlimits_allowed_mvm( "sv_vote_issue_classlimits_allowed_mvm", "0", FCVAR_NONE, "Can players call votes in Mann-Vs-Machine to enable or disable per-class limits?" );
 ConVar sv_vote_issue_classlimits_max( "sv_vote_issue_classlimits_max", "4", FCVAR_NONE, "Maximum number of players (per-team) that can be any one class.", true, 1.f, false, 16.f );
-ConVar sv_vote_issue_classlimits_max_mvm( "sv_vote_issue_classlimits_max_mvm", "2", FCVAR_NONE, "Maximum number of players (per-team) that can be any one class.", true, 1.f, false, 16.f );
 ConVar sv_vote_issue_classlimits_cooldown( "sv_vote_issue_classlimits_cooldown", "300", FCVAR_NONE, "Minimum time before another classlimits vote can occur (in seconds)." );
 
 //-----------------------------------------------------------------------------

@@ -530,7 +530,6 @@ private:
 	// Callbacks from the GC
 	void ChangeMatchPlayerTeamsResponse( bool bSuccess );
 	bool CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer );
-	bool CanKickPlayerMvM( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer );
 	void VoteKickPlayerRequestResponse( CSteamID voterSteamID,
 	                                    CSteamID targetSteamID,
 	                                    TFVoteKickReason eReason,

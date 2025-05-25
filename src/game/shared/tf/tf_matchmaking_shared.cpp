@@ -72,8 +72,6 @@ const char *GetMatchGroupLeaderboardName( EMatchGroupLeaderboard eMatchGroupLead
 	#define GCConVar ConVar
 	#define FCVAR_MATCHSIZE_THING ( FCVAR_REPLICATED )
 
-GCConVar tf_mm_match_size_mvm( "tf_mm_match_size_mvm", "6", FCVAR_MATCHSIZE_THING,
-                               "How many players in an MvM matchmade group?" );
 GCConVar tf_mm_match_size_ladder_6v6( "tf_mm_match_size_ladder_6v6", "12", FCVAR_MATCHSIZE_THING,
                                       "Number of players required to play a 6v6 ladder game.", true, 1, true, 12 );
 

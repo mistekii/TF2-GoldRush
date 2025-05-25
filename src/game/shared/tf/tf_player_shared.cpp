@@ -118,8 +118,6 @@ extern ConVar tf_max_charge_speed;
 
 ConVar tf_always_loser( "tf_always_loser", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "Force loserstate to true." );
 
-ConVar tf_mvm_bot_flag_carrier_movement_penalty( "tf_mvm_bot_flag_carrier_movement_penalty", "0.5", FCVAR_REPLICATED | FCVAR_CHEAT );
-
 //ConVar tf_scout_dodge_move_penalty_duration( "tf_scout_dodge_move_penalty_duration", "3.0", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );
 //ConVar tf_scout_dodge_move_penalty( "tf_scout_dodge_move_penalty", "0.5", FCVAR_DEVELOPMENTONLY | FCVAR_REPLICATED );
 

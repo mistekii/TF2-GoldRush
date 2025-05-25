@@ -12,7 +12,6 @@
 #include "vscript_server.h"
 
 ConVar tf_nav_show_incursion_distance( "tf_nav_show_incursion_distance", "0", FCVAR_CHEAT, "Display travel distances from current spawn room (1=red, 2=blue)" );
-ConVar tf_nav_show_bomb_target_distance( "tf_nav_show_bomb_target_distance", "0", FCVAR_CHEAT, "Display travel distances to bomb target (MvM mode)" );
 ConVar tf_nav_show_turf_ownership( "tf_nav_show_turf_ownership", "0", FCVAR_CHEAT, "Color nav area by smallest incursion distance" );
 
 ConVar tf_nav_in_combat_duration( "tf_nav_in_combat_duration", "30", FCVAR_CHEAT, "How long after gunfire occurs is this area still considered to be 'in combat'" );
@@ -478,11 +477,6 @@ void CTFNavArea::Draw( void ) const
 	if ( tf_nav_show_incursion_distance.GetBool() )
 	{
 		NDebugOverlay::Text( GetCenter(), UTIL_VarArgs( "R:%3.1f   B:%3.1f", GetIncursionDistance( TF_TEAM_RED ), GetIncursionDistance( TF_TEAM_BLUE ) ), false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
-	}
-
-	if ( tf_nav_show_bomb_target_distance.GetBool() )
-	{
-		NDebugOverlay::Text( GetCenter(), UTIL_VarArgs( "%3.1f", GetTravelDistanceToBombTarget() ), false, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 	}
 
 	if ( tf_show_sniper_areas.GetBool() )

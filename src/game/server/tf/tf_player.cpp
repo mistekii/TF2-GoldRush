@@ -191,9 +191,6 @@ ConVar tf_allow_player_use( "tf_allow_player_use", "0", FCVAR_NOTIFY, "Allow pla
 ConVar tf_deploying_bomb_time( "tf_deploying_bomb_time", "1.90", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to deploy bomb before the point of no return." );
 ConVar tf_deploying_bomb_delay_time( "tf_deploying_bomb_delay_time", "0.0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Time to delay before deploying bomb." );
 
-ConVar tf_mvm_death_penalty( "tf_mvm_death_penalty", "0", FCVAR_NOTIFY | FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How much currency players lose when dying" );
-extern ConVar tf_mvm_skill;
-
 ConVar tf_highfive_separation_forward( "tf_highfive_separation_forward", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Forward distance between high five partners" );
 ConVar tf_highfive_separation_right( "tf_highfive_separation_right", "0", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "Right distance between high five partners" );
 

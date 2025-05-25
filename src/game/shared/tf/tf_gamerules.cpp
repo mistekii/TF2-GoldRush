@@ -786,15 +786,6 @@ ConVar tf_training_client_message( "tf_training_client_message", "0", FCVAR_REPL
 #define TF_ARENA_MODE_FAST_FIRST_BLOOD_TIME 20.0f
 #define TF_ARENA_MODE_SLOW_FIRST_BLOOD_TIME 50.0f
 
-ConVar tf_mvm_defenders_team_size( "tf_mvm_defenders_team_size", "6", FCVAR_REPLICATED | FCVAR_NOTIFY, "Maximum number of defenders in MvM" );
-ConVar tf_mvm_max_connected_players( "tf_mvm_max_connected_players", "10", FCVAR_GAMEDLL, "Maximum number of connected real players in MvM" );
-ConVar tf_mvm_max_invaders( "tf_mvm_max_invaders", "22", FCVAR_GAMEDLL, "Maximum number of invaders in MvM" );
-
-ConVar tf_mvm_min_players_to_start( "tf_mvm_min_players_to_start", "3", FCVAR_REPLICATED | FCVAR_NOTIFY, "Minimum number of players connected to start a countdown timer" );
-ConVar tf_mvm_respec_enabled( "tf_mvm_respec_enabled", "1", FCVAR_CHEAT | FCVAR_REPLICATED, "Allow players to refund credits spent on player and item upgrades." );
-ConVar tf_mvm_respec_limit( "tf_mvm_respec_limit", "0", FCVAR_CHEAT | FCVAR_REPLICATED, "The total number of respecs a player can earn.  Default: 0 (no limit).", true, 0.f, true, 100.f );
-ConVar tf_mvm_respec_credit_goal( "tf_mvm_respec_credit_goal", "2000", FCVAR_CHEAT | FCVAR_REPLICATED, "When tf_mvm_respec_limit is non-zero, the total amount of money the team must collect to earn a respec credit." );
-
 
 extern ConVar mp_tournament;
 extern ConVar mp_tournament_post_match_period;
@@ -900,7 +891,6 @@ ConVar tf_gamemode_sd ( "tf_gamemode_sd", "0", FCVAR_REPLICATED | FCVAR_NOTIFY |
 ConVar tf_gamemode_tc ( "tf_gamemode_tc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_beta_content ( "tf_beta_content", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_payload ( "tf_gamemode_payload", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
-ConVar tf_gamemode_mvm ( "tf_gamemode_mvm", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 ConVar tf_gamemode_misc ( "tf_gamemode_misc", "0", FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_bot_count( "tf_bot_count", "0", FCVAR_NOTIFY | FCVAR_DEVELOPMENTONLY );
@@ -3675,7 +3665,6 @@ void CTFGameRules::Activate()
 	tf_gamemode_ctf.SetValue( 0 );
 	tf_gamemode_sd.SetValue( 0 );
 	tf_gamemode_payload.SetValue( 0 );
-	tf_gamemode_mvm.SetValue( 0 );
 	tf_gamemode_tc.SetValue( 0 );
 	tf_beta_content.SetValue( 0 );
 	tf_gamemode_misc.SetValue( 0 );
@@ -16414,7 +16403,6 @@ convar_tags_t convars_to_check_for_tags[] =
 	{ "tf_gamemode_cp", "cp", NULL },
 	{ "tf_gamemode_ctf", "ctf", NULL },
 	{ "tf_gamemode_sd", "sd", NULL },
-	{ "tf_gamemode_mvm", "mvm", NULL },
 	{ "tf_gamemode_payload", "payload", NULL },
 	{ "tf_gamemode_tc",	"tc", NULL },
 	{ "tf_beta_content", "beta", NULL },

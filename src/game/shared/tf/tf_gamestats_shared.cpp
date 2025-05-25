@@ -485,7 +485,6 @@ const char* GetGameTypeID()
 	ConVarRef tf_gamemode_ctf( "tf_gamemode_ctf" );
 	ConVarRef tf_gamemode_sd( "tf_gamemode_sd" );
 	ConVarRef tf_gamemode_payload( "tf_gamemode_payload" );
-	ConVarRef tf_gamemode_mvm( "tf_gamemode_mvm" );
 
 	const char* pszGameTypeID = NULL;
 	if ( tf_gamemode_arena.GetBool() )
@@ -507,10 +506,6 @@ const char* GetGameTypeID()
 	else if ( tf_gamemode_payload.GetBool() )
 	{
 		pszGameTypeID = "payload";
-	}
-	else if ( tf_gamemode_mvm.GetBool() )
-	{
-		pszGameTypeID = "mvm";
 	}
 	else
 	{

@@ -19,8 +19,6 @@
 
 #include "bot/tf_bot.h"
 
-ConVar tf_mvm_notice_sapped_squadmates_delay( "tf_mvm_notice_sapped_squadmates_delay", "1", FCVAR_CHEAT | FCVAR_DEVELOPMENTONLY, "How long it takes for a squad leader to notice his squadmate was sapped" );
-
 
 // ------------------------------------------------------------------------ //
 

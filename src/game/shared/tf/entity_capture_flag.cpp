@@ -40,7 +40,6 @@ extern ConVar tf_rd_flag_ui_mode;
 #include "bot/tf_bot.h"
 #include "tf_logic_halloween_2014.h"
 extern ConVar tf_flag_caps_per_round;
-extern ConVar tf_mvm_endless_bomb_reset;
 extern ConVar tf_rd_min_points_to_steal;
 
 ConVar cl_flag_return_height( "cl_flag_return_height", "82", FCVAR_CHEAT );

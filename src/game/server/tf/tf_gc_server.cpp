@@ -219,9 +219,6 @@ ConVar tf_mm_player_disconnect_time_minimum_penalty( "tf_mm_player_disconnect_ti
 
 ConVar tf_mm_next_map_result_hold_time( "tf_mm_next_map_result_hold_time", "7" );
 
-ConVar tf_mvm_allow_abandon_after_seconds( "tf_mvm_allow_abandon_after_seconds", "600", FCVAR_DEVELOPMENTONLY );
-ConVar tf_mvm_allow_abandon_below_players( "tf_mvm_allow_abandon_below_players", "5", FCVAR_DEVELOPMENTONLY );
-
 ConVar tf_allow_server_hibernation( "tf_allow_server_hibernation", "1", FCVAR_NONE, "Allow the server to hibernate when empty." );
 
 
@@ -1852,8 +1849,6 @@ void CTFGCServerSystem::ChangeMatchPlayerTeamsResponse( bool bSuccess )
 }
 
 //-----------------------------------------------------------------------------
-extern ConVar sv_vote_issue_kick_spectators_mvm;
-
 bool CTFGCServerSystem::CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer )
 {
 	Assert( pVoterPlayer->GetTeamVoteController() == pTargetPlayer->GetTeamVoteController() );
@@ -1865,27 +1860,6 @@ bool CTFGCServerSystem::CanKickPlayer( CTFPlayer *pVoterPlayer, CTFPlayer *pTarg
 	}
 
 	return true;
-}
-
-bool CTFGCServerSystem::CanKickPlayerMvM( CTFPlayer *pVoterPlayer, CTFPlayer *pTargetPlayer )
-{
-	// Josh: Mirrors logic in tf_voteissues.cpp
-
-	// Allow kicking team unassigned
-	if ( pTargetPlayer->IsConnected() && pTargetPlayer->GetTeamNumber() == TEAM_UNASSIGNED )
-	{
-		MMLog("[TF Vote GC] Allowing player to be kicked as they are connected & TEAM_UNASSIGNED.\n");
-		return true;
-	}
-
-	// Allow kicking of spectators when this is set, except when it's a bot (invader bots are spectators between rounds)
-	if ( sv_vote_issue_kick_spectators_mvm.GetBool() && !pTargetPlayer->IsBot() && pTargetPlayer->GetTeamNumber() == TEAM_SPECTATOR )
-	{
-		MMLog( "[TF Vote GC] Allowing kick of player as they are TEAM_SPECTATOR.\n" );
-		return true;
-	}
-
-	return CanKickPlayer( pVoterPlayer, pTargetPlayer );
 }
 
 void CTFGCServerSystem::VoteKickPlayerRequestResponse( CSteamID voterSteamID, CSteamID targetSteamID,
