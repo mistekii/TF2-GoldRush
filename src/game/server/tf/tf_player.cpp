@@ -13462,22 +13462,8 @@ void CTFPlayer::PainSound( const CTakeDamageInfo &info )
 	if ( m_flNextPainSoundTime > gpGlobals->curtime )
 		return;
 
-	// play death sound as if we're taking huge damage when we landed on the ground
 	if ( info.GetDamageType() & DMG_FALL )
-	{
-		CBaseEntity *pGround = GetGroundEntity();
-
-		// don't play sound for fall stomp event
-		if ( !( pGround && pGround->IsPlayer() && m_Shared.CanFallStomp() ) )
-		{
-			TFPlayerClassData_t *pData = GetPlayerClass()->GetData();
-			if ( pData )
-			{
-				EmitSound( pData->GetDeathSound( DEATH_SOUND_GENERIC ) );
-			}
-		}
 		return;
-	}
 
 	// No sound for DMG_GENERIC
 	if ( info.GetDamageType() == 0 || info.GetDamageType() == DMG_PREVENT_PHYSICS_FORCE )
