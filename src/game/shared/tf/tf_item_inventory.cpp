@@ -23,7 +23,6 @@
 #include "baseachievement.h"
 #include "achievements_tf.h"
 #include "econ/econ_item_preset.h"
-#include "tf_shared_content_manager.h"
 #include "c_playerresource.h"
 #include "backpack_panel.h"
 #include "materialsystem/itexture.h"
@@ -1249,15 +1248,6 @@ void CTFPlayerInventory::SOCreated( const CSteamID & steamIDOwner, const GCSDK::
 //	{
 //		CheckSaxtonMaskAchievement( pEconItem );
 //	}
-
-	static CSchemaItemDefHandle pItemDef_HardyLaurel( "The Hardy Laurel" );
-	if ( pEconItem->GetItemDefinition() == pItemDef_HardyLaurel )
-	{
-		if ( TFSharedContentManager() )
-		{
-			TFSharedContentManager()->OfferSharedVision( TF_VISION_FILTER_ROME, pEconItem->GetAccountID() );
-		}
-	}
  #else
 	// Summer 2015 Operation Pass so players can display the coin
 	// remove this when we have a coin equip slot

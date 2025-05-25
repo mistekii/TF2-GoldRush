@@ -43,11 +43,8 @@ void CAmmoPack::Spawn( void )
 void CAmmoPack::Precache( void )
 {
 	PrecacheScriptSound( TF_AMMOPACK_PICKUP_SOUND );
-	PrecacheModel( TF_AMMOPACK_LARGE_BDAY ); // always precache this for PyroVision
 
 	BaseClass::Precache();
-
-	UpdateModelIndexOverrides();
 }
 
 //-----------------------------------------------------------------------------

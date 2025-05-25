@@ -113,7 +113,6 @@ void CTFLunchBox::Precache( void )
 	if ( DropAllowed() )
 	{
 		PrecacheModel( "models/items/medkit_medium.mdl" );
-		PrecacheModel( "models/items/medkit_medium_bday.mdl" );
 		PrecacheModel( LUNCHBOX_DROP_MODEL );
 	}
 
@@ -225,9 +224,6 @@ void CTFLunchBox::SecondaryAttack( void )
 		Vector vecVelocity = vecForward * 500.0;
 		
 		pMedKit->SetModel( LUNCHBOX_DROP_MODEL );
-
-		// clear out the overrides so the thrown sandvich/steak look correct in either vision mode
-		pMedKit->ClearModelIndexOverrides();
 
 		pMedKit->SetAbsAngles( vec3_angle );
 		pMedKit->SetSize( LUNCHBOX_DROPPED_MINS, LUNCHBOX_DROPPED_MAXS );

@@ -921,31 +921,6 @@ class CAchievementTF_KillBalloonicornOwners : public CBaseTFAchievement
 			{
 				int nVisionOptInFlags = 0;
 				CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, nVisionOptInFlags, vision_opt_in_flags );
-
-				// Does the local player have PyroVision on?
-				if ( nVisionOptInFlags & TF_VISION_FILTER_PYRO )
-				{
-					// Is the victim wearing the Balloonicorn?
-					for ( int i = 0 ; i < pTFVictim->GetNumWearables() ; ++i )
-					{
-						C_EconWearable *pWearable = pTFVictim->GetWearable( i );
-						if ( pWearable && pWearable->GetAttributeContainer() )
-						{
-							CEconItemView *pItem = pWearable->GetAttributeContainer()->GetItem();
-							if ( pItem && pItem->IsValid() )
-							{
-								if ( pItem->GetItemDefinition() == pItemDef_Balloonicorn ||
-									 pItem->GetItemDefinition() == pItemDef_BalloonicornPromo ||
-									 pItem->GetItemDefinition() == pItemDef_BalloonicornPlushPromo ||
-									 pItem->GetItemDefinition() == pItemDef_Reindoonicorn ||
-									 pItem->GetItemDefinition() == pItemDef_Balloonicorpse )
-								{
-									IncrementCount();
-								}
-							}
-						}
-					}
-				}
 			}
 		}
 	}
@@ -1024,20 +999,6 @@ class CAchievementTF_MultipleBFF : public CBaseTFAchievement
 
 				int nVisionOptInFlags = 0;
 				CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, nVisionOptInFlags, vision_opt_in_flags );
-
-				if ( nVisionOptInFlags & TF_VISION_FILTER_PYRO )
-				{
-					int index = m_hBFFs.Find( pTFVictim );
-					if ( index == m_hBFFs.InvalidIndex() )
-					{
-						m_hBFFs.AddToHead( pTFVictim );
-					}
-				
-					if ( m_hBFFs.Count() >= 2 )
-					{
-						IncrementCount();
-					}
-				}
 			}
 			else if ( pTFAttacker && ( pTFVictim == pLocalPlayer ) && bRevenge )
 			{
@@ -1056,103 +1017,6 @@ private:
 	CUtlVector< CHandle<C_TFPlayer> > m_hBFFs;
 };
 DECLARE_ACHIEVEMENT( CAchievementTF_MultipleBFF, ACHIEVEMENT_TF_MULTIPLE_BFF, "TF_MULTIPLE_BFF", 5 );
-
-//----------------------------------------------------------------------------------------------------------------
-class CAchievementTF_TeamPyrovision : public CBaseTFAchievement
-{
-	void Init() 
-	{
-		SetFlags( ACH_SAVE_GLOBAL );
-		SetGoal( 1 );
-
-		SetNextThink( 1.0 );
-	}
-
-	virtual void Think( void )
-	{
-		C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
-		if ( pLocalPlayer && ( pLocalPlayer->GetTeamNumber() >= FIRST_GAME_TEAM ) )
-		{
-			int nVisionOptInFlags = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pLocalPlayer, nVisionOptInFlags, vision_opt_in_flags );
-			
-			if ( nVisionOptInFlags & TF_VISION_FILTER_PYRO )
-			{
-				int nCount = 0;
-
-				for ( int i = 1; i <= gpGlobals->maxClients; i++ )
-				{
-					C_BasePlayer *pPlayer = UTIL_PlayerByIndex( i );
-					if ( !pPlayer )
-						continue;
-
-					if ( pPlayer == pLocalPlayer )
-					{
-						nCount++;
-					}
-					else if ( pPlayer->GetTeamNumber() == pLocalPlayer->GetTeamNumber() )
-					{
-						int nTempFlags = 0;
-						CALL_ATTRIB_HOOK_INT_ON_OTHER( pPlayer, nTempFlags, vision_opt_in_flags );
-
-						if ( nTempFlags & TF_VISION_FILTER_PYRO )
-						{
-							nCount++;
-						}
-					}
-				}
-
-				if ( nCount >= 6 )
-				{
-					IncrementCount();
-					ClearThink();
-					return;
-				}
-			}
-		}
-
-		SetNextThink( 1.0 );
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTF_TeamPyrovision, ACHIEVEMENT_TF_TEAM_PYROVISION, "TF_TEAM_PYROVISION", 5 );
-
-//----------------------------------------------------------------------------------------------------------------
-class CAchievementTF_DominateForGoggles : public CBaseTFAchievement
-{
-	void Init()
-	{
-		SetFlags( ACH_LISTEN_PLAYER_KILL_ENEMY_EVENTS | ACH_SAVE_GLOBAL );
-		SetGoal( 1 );
-	}
-
-	virtual void Event_EntityKilled( CBaseEntity *pVictim, CBaseEntity *pAttacker, CBaseEntity *pInflictor, IGameEvent *event ) 
-	{
-		CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
-		bool bDomination = event->GetInt( "death_flags" ) & TF_DEATH_DOMINATION;
-
-		if ( pTFVictim && ( pAttacker == C_TFPlayer::GetLocalTFPlayer() ) && ( bDomination == true ) )
-		{
-			// are they wearing the PyroVision goggles?
-			for ( int i = 0 ; i < pTFVictim->GetNumWearables() ; ++i )
-			{
-				C_EconWearable *pWearable = pTFVictim->GetWearable( i );
-				if ( pWearable && pWearable->GetAttributeContainer() )
-				{
-					CEconItemView *pItem = pWearable->GetAttributeContainer()->GetItem();
-					if ( pItem && pItem->IsValid() )
-					{
-						if ( ( pItem->GetItemDefIndex() == 743 ) ||	// Autogrant PyroVision Goggles
-							( pItem->GetItemDefIndex() == 744 ) )		// PyroVision Goggles
-						{
-							IncrementCount();
-						}
-					}
-				}
-			}
-		}
-	}
-};
-DECLARE_ACHIEVEMENT( CAchievementTF_DominateForGoggles, ACHIEVEMENT_TF_DOMINATE_FOR_GOGGLES, "TF_DOMINATE_FOR_GOGGLES", 5 );
 
 //----------------------------------------------------------------------------------------------------------------
 class CAchievementTF_MeleeKillClassicRifleSniper : public CBaseTFAchievement

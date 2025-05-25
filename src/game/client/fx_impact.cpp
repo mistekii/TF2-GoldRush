@@ -134,8 +134,8 @@ bool Impact( Vector &vecOrigin, Vector &vecStart, int iMaterial, int iDamageType
 		bool bSkipDecal = false;
 
 #ifdef TF_CLIENT_DLL
-		// Don't show blood decals if we're filtering them out (Pyro Goggles)
-		if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) || UTIL_IsLowViolence() || ( TFGameRules() && TFGameRules()->IsTruceActive() ) )
+		// Don't show blood decals if we're filtering them out
+		if ( UTIL_IsLowViolence() || ( TFGameRules() && TFGameRules()->IsTruceActive() ) )
 		{
 			if ( V_strstr( pchDecalName, "Flesh" ) )
 			{

@@ -88,7 +88,6 @@
 #include "tempent.h"
 #include "confirm_dialog.h"
 #include "c_tf_weapon_builder.h"
-#include "tf_shared_content_manager.h"
 #include "baseanimatedtextureproxy.h"
 #include "econ_entity.h"
 #include "halloween/tf_weapon_spellbook.h"
@@ -136,15 +135,6 @@ C_TFPlayer *GetOwnerFromProxyEntity( void *pEntity );
 // --------------------------------------------------------------------------------
 // Local Convar Helper Function
 // --------------------------------------------------------------------------------
-void VisionMode_ChangeCallback( IConVar *pConVar, char const *pOldString, float flOldValue )
-{
-	C_BasePlayer *pLocalPlayer = C_BasePlayer::GetLocalPlayer();
-	if ( pLocalPlayer )
-	{
-		pLocalPlayer->CalculateVisionUsingCurrentFlags();
-	}
-}
-
 #ifdef _DEBUG
 CON_COMMAND_F ( tf_test_bomb, "Test halloween bomb", 0 )
 {
@@ -158,11 +148,6 @@ CON_COMMAND_F ( tf_test_bomb, "Test halloween bomb", 0 )
 
 	pPlayer->CreateBombonomiconHint();
 }
-
-ConVar test_vision_off( "test_vision_off", "0", FCVAR_NONE, "Force vision modes off!", VisionMode_ChangeCallback );
-ConVar test_pyrovision( "test_pyrovision", "0", FCVAR_NONE, "Force Pyrovision on!", VisionMode_ChangeCallback );
-ConVar test_romevision( "test_romevision", "0", FCVAR_NONE, "Force Romevision on!", VisionMode_ChangeCallback );
-ConVar test_halloweenvision( "test_halloweenvision", "0", FCVAR_NONE, "Force halloween vision on!", VisionMode_ChangeCallback );
 #endif
 
 // These are all permanently STAGING_ONLY
@@ -201,13 +186,7 @@ ConVar tf_respawn_on_loadoutchanges( "tf_respawn_on_loadoutchanges", "1", FCVAR_
 ConVar sb_dontshow_maxplayer_warning( "sb_dontshow_maxplayer_warning", "0", FCVAR_ARCHIVE );
 ConVar sb_close_browser_on_connect( "sb_close_browser_on_connect", "1", FCVAR_ARCHIVE );
 
-ConVar tf_spectate_pyrovision( "tf_spectate_pyrovision", "0", FCVAR_ARCHIVE, "When on, spectator will see the world with Pyrovision active", VisionMode_ChangeCallback );
-ConVar tf_replay_pyrovision( "tf_replay_pyrovision", "0", FCVAR_ARCHIVE, "When on, replays will be seen with Pyrovision active", VisionMode_ChangeCallback );
-
 ConVar tf_taunt_first_person( "tf_taunt_first_person", "0", FCVAR_NONE, "1 = taunts remain first-person" );
-
-ConVar tf_romevision_opt_in( "tf_romevision_opt_in", "0", FCVAR_ARCHIVE, "Enable Romevision in Mann vs. Machine mode when available." );
-ConVar tf_romevision_skip_prompt( "tf_romevision_skip_prompt", "0", FCVAR_ARCHIVE, "If nonzero, skip the prompt about sharing Romevision." );
 
 
 #define BDAY_HAT_MODEL		"models/effects/bday_hat.mdl"
@@ -1079,16 +1058,7 @@ void C_TFRagdoll::CreateTFGibs( bool bDestroyRagdoll, bool bCurrentPosition )
 
 	if ( pPlayer )
 	{
-		if ( TFGameRules() && TFGameRules()->IsBirthdayOrPyroVision() )
-		{
-			DispatchParticleEffect( "bday_confetti", pPlayer->GetAbsOrigin() + Vector(0,0,32), vec3_angle );
-
-			if ( TFGameRules() && TFGameRules()->IsBirthday() )
-			{
-				C_BaseEntity::EmitSound( "Game.HappyBirthday" );
-			}
-		}
-		else if ( m_bCritOnHardHit && !UTIL_IsLowViolence() )
+		if ( m_bCritOnHardHit && !UTIL_IsLowViolence() )
 		{
 			DispatchParticleEffect( "tfc_sniper_mist", pPlayer->WorldSpaceCenter(), vec3_angle );
 		}
@@ -6963,7 +6933,7 @@ void C_TFPlayer::InitPlayerGibs( void )
 void C_TFPlayer::CheckAndUpdateGibType( void )
 {
 	// check the first gib, if it's different copy them all over
-	if ( IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) || ( TFGameRules() && TFGameRules()->UseSillyGibs() ) )
+	if ( TFGameRules() && TFGameRules()->UseSillyGibs() )
 	{
 		if ( Q_strcmp( m_aGibs[0].modelName, g_pszBDayGibs[ m_aSillyGibs[0] ]) != 0 )
 		{
@@ -7321,32 +7291,7 @@ void C_TFPlayer::AdjustSkinIndexForZombie( int iClassIndex, int &iSkinIndex )
 
 bool C_TFPlayer::BRenderAsZombie( bool bWeaponsCheck /*= false */  )
 {
-	// Only if the local player is optining in.
-	if ( !IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_HALLOWEEN, bWeaponsCheck ) )
-		return false;
-
-	// Should we render as somebody else?
-	bool bRenderDisguised = false;
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-
-		// When disguised, our teammates will see us with a mask.
-		// Don't show us as a zombie in that state, because the zombie parts
-		// (like every other cosmetic) disappear.
-		if ( !IsEnemyPlayer() )
-			return false;
-
-		// Ditto when we are disguised as an enemy spy.  We always use the mask
-		// in that case and hide cosmetics
-		if ( m_Shared.GetDisguiseClass() == TF_CLASS_SPY )
-			return false;
-
-		bRenderDisguised = true;
-	}
-
-	int iPlayerSkinOverride = bRenderDisguised ? m_Shared.GetDisguisedSkinOverride() : GetSkinOverride();
-
-	return iPlayerSkinOverride == 1;
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -7577,108 +7522,6 @@ bool C_TFPlayer::ShouldDraw()
 	}
 
 	return BaseClass::ShouldDraw();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-int C_TFPlayer::GetVisionFilterFlags( bool bWeaponsCheck /*= false */  )
-{
-#if defined( REPLAY_ENABLED )
-	extern IEngineClientReplay *g_pEngineClientReplay;
-	if ( g_pEngineClientReplay->IsPlayingReplayDemo() )
-	{
-		if ( tf_replay_pyrovision.GetBool() ) 
-		{
-			return TF_VISION_FILTER_PYRO;
-		}
-		return 0x00;
-	}
-#endif
-
-	int nVisionOptInFlags = 0;
-	CALL_ATTRIB_HOOK_INT( nVisionOptInFlags, vision_opt_in_flags );
-
-	if ( IsLocalPlayer() )
-	{
-		// Force our vision filter to a specific setting
-		if ( bWeaponsCheck && m_nForceVisionFilterFlags != 0 )
-		{
-			return m_nForceVisionFilterFlags;
-		}
-
-#ifdef _DEBUG
-		int nFlags = 0;
-		if ( test_pyrovision.GetBool() )
-		{
-			nFlags |= TF_VISION_FILTER_PYRO;
-		}
-
-		if ( test_halloweenvision.GetBool() )
-		{
-			nFlags |= TF_VISION_FILTER_HALLOWEEN;
-		}
-
-		if ( test_romevision.GetBool() )
-		{
-			nFlags |= TF_VISION_FILTER_ROME;
-		}
-
-		if ( nFlags != 0 )
-		{
-			return nFlags;
-		}
-
-		if ( test_vision_off.GetBool() )
-		{
-			return 0x00;
-		}
-#endif
-		// Check the PyroVision Convar
-		if ( GetTeamNumber() == TEAM_SPECTATOR )
-		{
-			if ( tf_spectate_pyrovision.GetBool() ) 
-			{
-				nVisionOptInFlags |= TF_VISION_FILTER_PYRO;
-			}
-		}
-	}
-
-	// check for holidays and add them in to the mix
-	// Halloween / Fullmoon vision
-	if ( TFGameRules()->IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
-	{
-		nVisionOptInFlags |= TF_VISION_FILTER_HALLOWEEN;
-	}
-
-	return nVisionOptInFlags;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-// Input  : updateType - 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::CalculateVisionUsingCurrentFlags( void )
-{
-	if ( IsLocalPlayer() )
-	{
-		for( int iClient = 1; iClient <= gpGlobals->maxClients; ++iClient )
-		{
-			C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iClient ) );
-			if ( !pPlayer || !pPlayer->IsPlayer() )
-				continue;
-
-			if ( !pPlayer->IsAlive() )
-				continue;
-
-			pPlayer->UpdateWearables();
-			pPlayer->SetBodygroupsDirty();
-			if ( pPlayer->GetActiveWeapon() )
-			{
-				pPlayer->GetActiveWeapon()->RestartParticleEffect();
-			}
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -10926,31 +10769,22 @@ void C_TFPlayer::ClientAdjustStartSoundParams( StartSoundParams_t& params )
 //-----------------------------------------------------------------------------
 void C_TFPlayer::ClientAdjustVOPitch( int& pitch )
 {
-	// Use high-pitched voices for other players if the local player has an item that allows them to hear it (Pyro Goggles)
-	if ( !IsLocalPlayer() && IsLocalPlayerUsingVisionFilterFlags( TF_VISION_FILTER_PYRO ) )
+	float flVoicePitchScale = 1.f;
+	CALL_ATTRIB_HOOK_FLOAT( flVoicePitchScale, voice_pitch_scale );
+
+	int iHalloweenVoiceSpell = 0;
+	if ( TF_IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
 	{
-		pitch *= 1.3f;
+		CALL_ATTRIB_HOOK_INT( iHalloweenVoiceSpell, halloween_voice_modulation );
 	}
-	// Halloween voice futzery?
-	else
+
+	if ( iHalloweenVoiceSpell > 0 )
 	{
-		float flVoicePitchScale = 1.f;
-		CALL_ATTRIB_HOOK_FLOAT( flVoicePitchScale, voice_pitch_scale );
-
-		int iHalloweenVoiceSpell = 0;
-		if ( TF_IsHolidayActive( kHoliday_HalloweenOrFullMoon ) )
-		{
-			CALL_ATTRIB_HOOK_INT( iHalloweenVoiceSpell, halloween_voice_modulation );
-		}
-
-		if ( iHalloweenVoiceSpell > 0 )
-		{
-			pitch *= 0.8f;
-		}
-		else if ( flVoicePitchScale != 1.f )
-		{
-			pitch *= flVoicePitchScale;
-		}
+		pitch *= 0.8f;
+	}
+	else if ( flVoicePitchScale != 1.f )
+	{
+		pitch *= flVoicePitchScale;
 	}
 }
 

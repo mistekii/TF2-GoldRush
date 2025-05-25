@@ -34,15 +34,6 @@ public:
 	powerupsize_t	GetPowerupSize( void ) { return POWERUP_FULL; }
 	virtual const char *GetAmmoPackName( void ) { return "ammopack_large"; }
 
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_AMMOPACK_LARGE_BDAY ) );
-		}
-	}
-
 	virtual const char *GetDefaultPowerupModel( void )
 	{ 
 		if ( TFGameRules() && TFGameRules()->IsHolidayActive( kHoliday_TFBirthday ) )
@@ -63,17 +54,7 @@ public:
 
 	virtual void Precache( void )
 	{
-		PrecacheModel( TF_AMMOPACK_SMALL_BDAY ); // always precache this for PyroVision
 		BaseClass::Precache();
-	}
-
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_AMMOPACK_SMALL_BDAY ) );
-		}
 	}
 
 	virtual const char *GetDefaultPowerupModel( void )
@@ -96,17 +77,7 @@ public:
 
 	virtual void Precache( void )
 	{
-		PrecacheModel( TF_AMMOPACK_MEDIUM_BDAY ); // always precache this for PyroVision
 		BaseClass::Precache();
-	}
-
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_AMMOPACK_MEDIUM_BDAY ) );
-		}
 	}
 	 
 	virtual const char *GetDefaultPowerupModel( void ) 

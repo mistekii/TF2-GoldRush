@@ -37,16 +37,6 @@ public:
 	virtual void Precache( void );
 	virtual bool MyTouch( CBasePlayer *pPlayer );
 
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_MEDKIT_LARGE_BDAY ) );
-			SetModelIndexOverride( VISION_MODE_HALLOWEEN, modelinfo->GetModelIndex( TF_MEDKIT_LARGE_HALLOWEEN ) );
-		}
-	}
-
 	virtual const char *GetDefaultPowerupModel( void )
 	{ 
 		if ( TFGameRules() && TFGameRules()->IsHolidayActive( kHoliday_TFBirthday ) )
@@ -72,19 +62,7 @@ public:
 
 	virtual void Precache( void )
 	{
-		PrecacheModel( TF_MEDKIT_SMALL_BDAY ); // always precache this for PyroVision
-		PrecacheModel( TF_MEDKIT_SMALL_HALLOWEEN ); // always precache this for Halloween Vision
 		BaseClass::Precache();
-	}
-
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_MEDKIT_SMALL_BDAY ) );
-			SetModelIndexOverride( VISION_MODE_HALLOWEEN, modelinfo->GetModelIndex( TF_MEDKIT_SMALL_HALLOWEEN ) );
-		}
 	}
 
 	virtual const char *GetDefaultPowerupModel( void )
@@ -107,19 +85,7 @@ public:
 
 	virtual void Precache( void )
 	{
-		PrecacheModel( TF_MEDKIT_MEDIUM_BDAY ); // always precache this for PyroVision
-		PrecacheModel( TF_MEDKIT_MEDIUM_HALLOWEEN ); // always precache this for Halloween Vision
 		BaseClass::Precache();
-	}
-
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_MEDKIT_MEDIUM_BDAY ) );
-			SetModelIndexOverride( VISION_MODE_HALLOWEEN, modelinfo->GetModelIndex( TF_MEDKIT_MEDIUM_HALLOWEEN ) );
-		}
 	}
 
 	virtual const char *GetDefaultPowerupModel( void )
@@ -154,19 +120,7 @@ public:
 
 	virtual void Precache( void )
 	{
-		PrecacheModel( TF_MEDKIT_MEDIUM_BDAY ); // always precache this for PyroVision
-		PrecacheModel( TF_MEDKIT_MEDIUM_HALLOWEEN ); // always precache this for Halloween Vision
 		BaseClass::Precache();
-	}
-
-	virtual void UpdateModelIndexOverrides( void )
-	{
-		if ( modelinfo )
-		{
-			SetModelIndexOverride( VISION_MODE_NONE, modelinfo->GetModelIndex( GetPowerupModel() ) );
-			SetModelIndexOverride( VISION_MODE_PYRO, modelinfo->GetModelIndex( TF_MEDKIT_MEDIUM_BDAY ) );
-			SetModelIndexOverride( VISION_MODE_HALLOWEEN, modelinfo->GetModelIndex( TF_MEDKIT_MEDIUM_HALLOWEEN ) );
-		}
 	}
 
 	virtual const char *GetDefaultPowerupModel( void )
