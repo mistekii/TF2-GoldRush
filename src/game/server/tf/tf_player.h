@@ -1415,8 +1415,6 @@ public:
 	bool IsMaxHealthDraining( void ) { return m_nMaxHealthDrainBucket != 0.0; }
 
 private:
-	float m_flSendPickupWeaponMessageTime;
-
 	void ModifyDamageInfo( CTakeDamageInfo *pInfo, const CBaseEntity *pTarget );
 
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );

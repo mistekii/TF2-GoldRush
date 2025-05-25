@@ -116,7 +116,6 @@ void CItemEffectMeterManager::SetPlayer( C_TFPlayer* pPlayer )
 {
 	StopListeningForAllEvents();
 	ListenForGameEvent( "post_inventory_application" );	
-	ListenForGameEvent( "localplayer_pickup_weapon" );
 	ListenForGameEvent( "localplayer_respawn" );
 
 	ClearExistingMeters();
@@ -150,8 +149,7 @@ void CItemEffectMeterManager::FireGameEvent( IGameEvent *event )
 
 	bool bNeedsUpdate = false;
 
-	if ( FStrEq( "localplayer_pickup_weapon", type ) ||
-		 FStrEq( "localplayer_respawn", type ) )
+	if ( FStrEq( "localplayer_respawn", type ) )
 	{
 		bNeedsUpdate = true;
 	}

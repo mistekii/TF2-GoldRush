@@ -1002,16 +1002,6 @@ void CTFPlayer::TFPlayerThink()
 		(this->*m_pStateInfo->pfnThink)();
 	}
 
-	if ( m_flSendPickupWeaponMessageTime != -1.f && gpGlobals->curtime >= m_flSendPickupWeaponMessageTime )
-	{
-		CSingleUserRecipientFilter filter( this );
-		filter.MakeReliable();
-		UserMessageBegin( filter, "PlayerPickupWeapon" );
-		MessageEnd();
-
-		m_flSendPickupWeaponMessageTime = -1.f;
-	}
-
 	// In doomsday event, kart can run over ghost to do stuff
 	if ( m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
 	{
@@ -3016,8 +3006,6 @@ void CTFPlayer::Spawn()
 	m_bUsingActionSlot = false;
 
 	m_flHelpmeButtonPressTime = 0.f;
-
-	m_flSendPickupWeaponMessageTime = -1.f;
 
 	m_bAlreadyUsedExtendFreezeThisDeath = false;
 
