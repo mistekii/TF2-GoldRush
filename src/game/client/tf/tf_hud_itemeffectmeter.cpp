@@ -278,8 +278,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	case TF_CLASS_SNIPER:
 	{
 		DECLARE_ITEM_EFFECT_METER( CTFJar, TF_WEAPON_JAR, true, NULL );
-		DECLARE_ITEM_EFFECT_METER( CTFSniperRifle, TF_WEAPON_SNIPERRIFLE, true, "resource/UI/HudItemEffectMeter_SniperFocus.res" );
-		lambdaAddItemEffectMeter( "tf_wearable_razorback", true );
 		break;
 	}
 	case TF_CLASS_DEMOMAN:
