@@ -348,7 +348,6 @@ static IIsHolidayActive *s_HolidayChecks[] =
 	&g_Holiday_HalloweenOrFullMoon,					// kHoliday_HalloweenOrFullMoon
 	&g_Holiday_HalloweenOrFullMoonOrValentines,		// kHoliday_HalloweenOrFullMoonOrValentines
 	&g_Holiday_AprilFools,							// kHoliday_AprilFools
-	&g_Holiday_Soldier,								// kHoliday_Soldier
 	&g_Holiday_Summer,								// kHoliday_Summer
 };
 

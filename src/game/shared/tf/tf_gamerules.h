@@ -31,7 +31,6 @@
 #include "c_tf_player.h"
 #else
 #include "tf_player.h"
-#include "entity_soldier_statue.h"
 #endif
 
 #ifdef CLIENT_DLL
@@ -443,8 +442,6 @@ public:
 
 	void			SetMapForcedTruceDuringBossFight( bool bState ){ m_bMapForcedTruceDuringBossFight = bState; }
 	bool			IsMapForcedTruceDuringBossFight( void ){ return m_bMapForcedTruceDuringBossFight; }
-
-	void			CreateSoldierStatue();
 
 	virtual void	BroadcastSound( int iTeam, const char *sound, int iAdditionalSoundFlags = 0, CBasePlayer *pPlayer = NULL ) override;
 
@@ -1282,8 +1279,6 @@ private:
 	bool	m_bMapCycleNeedsUpdate;
 
 	float	m_flCompModeRespawnPlayersAtMatchStart;
-
-	CHandle< CEntitySoldierStatue > m_hSoldierStatue = nullptr;
 
 #endif // GAME_DLL
 

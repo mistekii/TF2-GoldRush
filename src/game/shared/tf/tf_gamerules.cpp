@@ -195,46 +195,6 @@ static int g_TauntCamAchievements2[] =
 	0,		// TF_CLASS_COUNT_ALL,
 };
 
-struct StatueInfo_t
-{
-	const char	*pDiskName;
-	Vector		vec_origin;
-	QAngle		vec_angle;
-};
-
-static StatueInfo_t s_StatueMaps[] = {
-	{ "ctf_2fort",				Vector( 483, 613, 0 ),			QAngle( 0, 180, 0 ) },
-	{ "cp_dustbowl",			Vector( -596, 2650, -256 ),		QAngle( 0, 180, 0 ) },
-	{ "cp_granary",				Vector( -544, -510, -416 ),		QAngle( 0, 180, 0 ) },
-	{ "cp_well",				Vector( 1255, 515, -512 ),		QAngle( 0, 180, 0 ) },
-	{ "cp_foundry",				Vector( -85, 912, 0 ),			QAngle( 0, -90, 0 ) },
-	{ "cp_gravelpit",			Vector( -4624, 660, -512 ),		QAngle( 0, 0, 0 ) },
-	{ "ctf_well",				Vector( 1000, -240, -512 ),		QAngle( 0, 180, 0 ) },
-	{ "cp_badlands",			Vector( 808, -1079, 64 ),		QAngle( 0, 135, 0 ) },
-	{ "pl_goldrush",			Vector( -2780, -650, 0 ),		QAngle( 0, 90, 0 ) },
-	{ "pl_badwater",			Vector( 2690, -416, 131 ),		QAngle( 0, -90, 0 ) },
-	{ "plr_pipeline",			Vector( 220, -2527, 128 ),		QAngle( 0, 90, 0 ) },
-	{ "cp_gorge",				Vector( -6970, 5920, -42 ),		QAngle( 0, 0, 0 ) },
-	{ "ctf_doublecross",		Vector( 1304, -206, 8 ),		QAngle( 0, 180, 0 ) },
-	{ "pl_thundermountain",		Vector( -720, -1058, 128 ),		QAngle( 0, -90, 0 ) },
-	{ "cp_mountainlab",			Vector( -2930, 1606, -1069 ),	QAngle( 0, 90, 0 ) },
-	{ "cp_degrootkeep",			Vector( -1000, 4580, -255 ),	QAngle( 0, -25, 0 ) },
-	{ "pl_barnblitz",			Vector( 3415, -2144, -54 ),		QAngle( 0, 90, 0 ) },
-	{ "pl_upward",				Vector( -736, -2275, 63 ),		QAngle( 0, 0, 0 ) },
-	{ "plr_hightower",			Vector( 5632, 7747, 8 ),		QAngle( 0, 0, 0 ) },
-	{ "koth_viaduct",			Vector( -979, 0, 240 ),			QAngle( 0, 180, 0 ) },
-	{ "koth_king",				Vector( 715, -395, -224 ),		QAngle( 0, 135, 0 ) },
-	{ "sd_doomsday",			Vector( -1025, 675, 128 ),		QAngle( 0, 90, 0 ) },
-	{ "cp_mercenarypark",		Vector( -2800, -775, -40 ),		QAngle( 0, 0, 0 ) },
-	{ "ctf_turbine",			Vector( 718, 0, -256 ),			QAngle( 0, 180, 0 ) },
-	{ "koth_harvest_final",		Vector( -1428, 220, -15 ),		QAngle( 0, 0, 0 ) },
-	{ "pl_swiftwater_final1",	Vector( 706, -2785, -934 ),		QAngle( 0, 0, 0 ) },
-	{ "pl_frontier_final",		Vector( 3070, -3013, -193 ),	QAngle( 0, -90, 0 ) },
-	{ "cp_process_final",		Vector( 650, -980, 535 ),		QAngle( 0, 90, 0 ) },
-	{ "cp_gullywash_final1",	Vector( 200, 83, 47 ),			QAngle( 0, -102, 0 ) },
-	{ "cp_sunshine",			Vector( -4725, 5860, 65 ),		QAngle( 0, 180, 0 ) },
-};
-
 struct MapInfo_t
 {
 	const char	*pDiskName;
@@ -812,7 +772,6 @@ static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int e
 	case kHoliday_AprilFools:						return iCvarValue == kHoliday_AprilFools;
 	case kHoliday_EOTL:								return iCvarValue == kHoliday_EOTL;
 	case kHoliday_CommunityUpdate:					return iCvarValue == kHoliday_CommunityUpdate;
-	case kHoliday_Soldier:							return iCvarValue == kHoliday_Soldier;
 	case kHoliday_Summer:							return iCvarValue == kHoliday_Summer;
 	}
 
@@ -3628,7 +3587,6 @@ static const char *s_PreserveEnts[] =
 	"tf_halloween_gift_pickup",
 	"tf_logic_competitive",
 	"tf_wearable_razorback",
-	"entity_soldier_statue",
 	"", // END Marker
 };
 
@@ -3823,11 +3781,6 @@ void CTFGameRules::Activate()
 	if ( pMatchDesc )
 	{
 		pMatchDesc->InitGameRulesSettings();
-	}
-
-	if ( IsHolidayActive( kHoliday_Soldier ) )
-	{
-		CreateSoldierStatue();
 	}
 }
 
@@ -18386,39 +18339,6 @@ bool CTFGameRules::PointsMayBeCaptured( void )
 }
 
 #ifdef GAME_DLL
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameRules::CreateSoldierStatue()
-{
-	if ( m_hSoldierStatue )
-		return;
-
-	if ( !IsHolidayActive( kHoliday_Soldier ) )
-		return;
-
-	if ( IsMatchTypeCompetitive() )
-		return;
-
-	char szCurrentMap[MAX_MAP_NAME];
-	Q_strncpy( szCurrentMap, STRING( gpGlobals->mapname ), sizeof( szCurrentMap ) );
-
-	for ( int iIndex = 0; iIndex < ARRAYSIZE( s_StatueMaps ); ++iIndex )
-	{
-		if ( !Q_stricmp( s_StatueMaps[iIndex].pDiskName, szCurrentMap ) )
-		{
-			m_hSoldierStatue = dynamic_cast< CEntitySoldierStatue * >( CreateEntityByName( "entity_soldier_statue" ) );
-			if ( m_hSoldierStatue )
-			{
-				m_hSoldierStatue->SetAbsOrigin( s_StatueMaps[iIndex].vec_origin );
-				m_hSoldierStatue->SetAbsAngles( s_StatueMaps[iIndex].vec_angle );
-				DispatchSpawn( m_hSoldierStatue );
-			}
-			break;
-		}
-	}
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
