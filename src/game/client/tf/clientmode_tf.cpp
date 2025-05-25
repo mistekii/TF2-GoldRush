@@ -115,7 +115,6 @@ ConVar tf_delete_temp_files( "tf_delete_temp_files", "1", FCVAR_CLIENTDLL | FCVA
 
 ConVar tf_taunt_always_show_hint( "tf_taunt_always_show_hint", "1", FCVAR_CLIENTDLL );
 extern ConVar tf_allow_all_team_partner_taunt;
-extern ConVar tf_mvm_buybacks_method;
 extern ConVar tf_autobalance_ask_candidates_maxtime;
 extern ConVar tf_autobalance_dead_candidates_maxtime;
 extern ConVar tf_autobalance_xp_bonus;
@@ -441,7 +440,6 @@ void ClientModeTFNormal::Init()
 #endif // TF_RAID_MODE
 	
 	ListenForGameEvent( "player_upgraded" );
-	ListenForGameEvent( "player_buyback" );
 	ListenForGameEvent( "player_death" );
 
 	ListenForGameEvent( "arena_win_panel" );
@@ -676,25 +674,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 	}
 	else if ( FStrEq( "server_cvar", eventname ) )
 	{
-	}
-	else if ( FStrEq( "player_buyback", eventname ) )
-	{
-		int idxPlayer = event->GetInt( "player" );
-		KeyValuesAD pKeyValues( "data" );
-		if ( g_TF_PR )
-		{
-			const char *pszString = tf_mvm_buybacks_method.GetBool() ? "#TF_PVE_Player_BuyBack_Fixed" : "#TF_PVE_Player_BuyBack";
-
-			pKeyValues->SetString( "player", g_TF_PR->GetPlayerName( idxPlayer ) );
-			pKeyValues->SetInt( "credits", event->GetInt( "cost", 0 ) );
-			PrintTextToChatPlayer( idxPlayer, pszString, pKeyValues );
-
-			C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-			if ( pLocalPlayer )
-			{
-				pLocalPlayer->EmitSound( "MVM.PlayerBoughtIn" );
-			}
-		}
 	}
 	else if ( FStrEq( "player_death", eventname ) )
 	{

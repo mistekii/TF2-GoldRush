@@ -45,7 +45,6 @@ extern ConVar _cl_classmenuopen;
 extern ConVar tf_max_health_boost;
 extern const char *g_pszItemClassImages[];
 extern int g_ClassDefinesRemap[];
-extern ConVar tf_mvm_buybacks_method;
 
 static const wchar_t* GetSCGlyph( const char* action )
 {
@@ -88,7 +87,6 @@ CTFSpectatorGUI::CTFSpectatorGUI(IViewPort *pViewPort) : CSpectatorGUI(pViewPort
 	m_nEngBuilds_xpos = m_nEngBuilds_ypos = 0;
 	m_nSpyBuilds_xpos = m_nSpyBuilds_ypos = 0;
 
-	m_pBuyBackLabel = new CExLabel( this, "BuyBackLabel", "" );
 	m_pReinforcementsLabel = new Label( this, "ReinforcementsLabel", "" );
 	m_pClassOrTeamLabel = new Label( this, "ClassOrTeamLabel", "" );
 	// m_pSwitchCamModeKeyLabel = new Label( this, "SwitchCamModeKeyLabel", "" );
@@ -274,12 +272,10 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 		( pPlayer->GetObserverMode() == OBS_MODE_FREEZECAM ) )
 	{
 		m_pReinforcementsLabel->SetVisible( false );
-		m_pBuyBackLabel->SetVisible( false );
 
 		return;
 	}
 
-	bool bBuyBackVisible = false;
 	wchar_t wLabel[256];
 		
 	if ( TFGameRules()->InStalemate() )
@@ -314,7 +310,6 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 		if ( !flNextRespawn )
 		{
 			m_pReinforcementsLabel->SetVisible( false );
-			m_pBuyBackLabel->SetVisible( false );
 			return;
 		}
 
@@ -341,7 +336,6 @@ void CTFSpectatorGUI::UpdateReinforcements( void )
 
 	m_pReinforcementsLabel->SetVisible( true );
 	m_pReinforcementsLabel->SetText( wLabel, true );
-	m_pBuyBackLabel->SetVisible( bBuyBackVisible );
 }
 
 //-----------------------------------------------------------------------------

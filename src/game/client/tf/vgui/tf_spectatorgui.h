@@ -96,7 +96,6 @@ protected:
 	int		m_nSpyBuilds_ypos;
 
 	vgui::Label				*m_pReinforcementsLabel;
-	CExLabel				*m_pBuyBackLabel;
 	vgui::Label				*m_pClassOrTeamLabel;
 	CExLabel				*m_pClassOrTeamKeyLabel;
 	vgui::Label				*m_pSwitchCamModeKeyLabel;

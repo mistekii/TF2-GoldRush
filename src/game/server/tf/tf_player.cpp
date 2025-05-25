@@ -207,9 +207,6 @@ ConVar tf_halloween_giant_health_scale( "tf_halloween_giant_health_scale", "10",
 
 ConVar tf_powerup_max_charge_time( "tf_powerup_max_charge_time", "30", FCVAR_CHEAT );
 
-extern ConVar tf_mvm_buybacks_method;
-extern ConVar tf_mvm_buybacks_per_wave;
-
 #define TF_CANNONBALL_FORCE_SCALE	80.f
 #define TF_CANNONBALL_FORCE_UPWARD	300.f
 
