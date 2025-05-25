@@ -153,7 +153,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_pFontTimeLeftNumbers = vgui::INVALID_FONT;
 	m_pFontTimeLeftString = vgui::INVALID_FONT;
 
-	m_pMvMScoreboard = new CTFHudMannVsMachineScoreboard( this, "MvMScoreboard" );
 	m_pRightClickMenu = NULL;
 
 	m_iImageDominated = 0;
@@ -818,12 +817,6 @@ void CTFClientScoreBoardDialog::SetPlayerListImages( vgui::SectionedListPanel *p
 //-----------------------------------------------------------------------------
 void CTFClientScoreBoardDialog::Update()
 {
-	// MvM
-	if ( TFGameRules() && TFGameRules()->IsMannVsMachineMode() )
-	{
-		m_pMvMScoreboard->OnTick();
-	}
-
 	UpdateTeamInfo();
 	UpdatePlayerList();
 	UpdateSpectatorList();

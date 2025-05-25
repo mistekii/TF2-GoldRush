@@ -121,8 +121,6 @@ private:
 	CExLabel					*m_pServerTimeLeftValue;
 	vgui::HFont					m_pFontTimeLeftNumbers;
 	vgui::HFont					m_pFontTimeLeftString;
-
-	CTFHudMannVsMachineScoreboard *m_pMvMScoreboard;
 	
 	int							m_iImageDominated;
 	int							m_iImageDominatedDead;

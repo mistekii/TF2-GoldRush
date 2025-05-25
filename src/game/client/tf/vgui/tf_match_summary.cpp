@@ -656,7 +656,6 @@ void CTFMatchSummary::UpdatePlayerList()
 			pKeyValues->SetString( "name", g_TF_PR->GetPlayerName( playerIndex ) );
 			pKeyValues->SetInt( "score", g_TF_PR->GetTotalScore( playerIndex ) );
 
-			int iClass = g_TF_PR->GetPlayerClass( playerIndex );
 			pKeyValues->SetInt( "class", 0 );
 
 			pKeyValues->SetInt( "kills", g_TF_PR->GetPlayerScore( playerIndex ) );
