@@ -91,8 +91,6 @@ CTFMinigun::CTFMinigun()
 	ListenForGameEvent( "teamplay_round_active" );
 	ListenForGameEvent( "localplayer_respawn" );
 
-	m_bRageDraining = false;
-	m_bPrevRageDraining = false;
 #endif
 	m_bAttack3Down = false;
 
@@ -221,10 +219,6 @@ void CTFMinigun::SharedAttack()
 		WeaponIdle();
 		return;
 	}
-
-#ifdef CLIENT_DLL
-	m_bRageDraining = pPlayer->m_Shared.IsRageDraining();
-#endif // CLIENT_DLL
 
 	if ( pPlayer->m_nButtons & IN_ATTACK )
 	{
@@ -568,45 +562,6 @@ void CTFMinigun::ActivatePushBackAttackMode( void )
 	EmitSound( "Heavy.Battlecry03" );
 }
 #endif // GAME_DLL
-
-//-----------------------------------------------------------------------------
-// Purpose: UI Progress (same as GetProgress() without the division by 100.0f)
-//-----------------------------------------------------------------------------
-bool CTFMinigun::IsRageFull( void )
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	if ( !pPlayer )
-		return false;
-
-	return ( pPlayer->m_Shared.GetRageMeter() >= 100.0f );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CTFMinigun::EffectMeterShouldFlash( void )
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	if ( !pPlayer )
-		return false;
-
-	if ( pPlayer && ( IsRageFull() || pPlayer->m_Shared.IsRageDraining() ) )
-		return true;
-	else
-		return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: UI Progress
-//-----------------------------------------------------------------------------
-float CTFMinigun::GetProgress( void )
-{
-	CTFPlayer *pPlayer = GetTFPlayerOwner();
-	if ( !pPlayer )
-		return 0.f;
-
-	return pPlayer->m_Shared.GetRageMeter() / 100.0f;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose:
@@ -1291,15 +1246,10 @@ void CTFMinigun::WeaponSoundUpdate()
 		flPitch = RemapValClamped( flSpeed, 1.5f, 0.5f, 80.f, 120.f );
 	}
 
-	if ( m_bRageDraining )
-	{
-		flPitch /= 1.65;
-	}
-
 	CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
 
 	// if we're already playing the desired sound, nothing to do
-	if ( m_iMinigunSoundCur == iSound && m_bPrevRageDraining == m_bRageDraining )
+	if ( m_iMinigunSoundCur == iSound )
 	{
 		// If the pitch is different we need to modify it
 		if ( m_flMinigunSoundCurrentPitch != flPitch )
@@ -1339,8 +1289,6 @@ void CTFMinigun::WeaponSoundUpdate()
 	{
 		controller.SoundChangePitch( m_pSoundCur, m_flMinigunSoundCurrentPitch, 0.0 );
 	}
-
-	m_bPrevRageDraining = m_bRageDraining;
 }
 
 void CTFMinigun::PlayStopFiringSound()

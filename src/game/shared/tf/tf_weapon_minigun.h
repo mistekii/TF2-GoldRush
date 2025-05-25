@@ -95,11 +95,6 @@ public:
 	float			GetFiringDuration( void ) { return ( m_flStartedFiringAt >= 0.f ) ? ( gpGlobals->curtime - m_flStartedFiringAt ) : 0.f; }
 	float			GetWindUpDuration( void ) { return ( m_flStartedWindUpAt >= 0.f ) ? ( gpGlobals->curtime - m_flStartedWindUpAt ) : 0.f; }
 
-	float			GetProgress( void );
-	bool			IsRageFull( void ); // same as GetProgress() without the division by 100.0f
-	const char*		GetEffectLabelText( void ) { return "#TF_Rage"; }
-	bool			EffectMeterShouldFlash( void );
-
 #ifdef GAME_DLL
 	virtual CDmgAccumulator	*GetDmgAccumulator( void ) { return &m_Accumulator; }
 #endif // GAME_DLL
@@ -184,9 +179,6 @@ private:
 	int					m_iMuzzleAttachment;
 
 	int					m_nShotsFired;
-
-	bool				m_bRageDraining;
-	bool				m_bPrevRageDraining;
 
 	MinigunState_t		m_iPrevMinigunState;
 #endif

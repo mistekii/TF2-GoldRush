@@ -272,7 +272,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	case TF_CLASS_HEAVYWEAPONS:
 	{
 		lambdaAddItemEffectMeter( "tf_weapon_lunchbox", true );
-		DECLARE_ITEM_EFFECT_METER( CTFMinigun, TF_WEAPON_MINIGUN, true, "resource/UI/HudItemEffectMeter_Heavy.res" );
 		break;
 	}
 
