@@ -8883,11 +8883,6 @@
 					"attribute_class"	"allowed_in_medieval_mode"
 					"value"	"1"
 				}
-				"patient overheal penalty"
-				{
-					"attribute_class"	"mult_patient_overheal_penalty"
-					"value" "0.0"
-				}
 			}
 			"mouse_pressed_sound"	"ui/item_wood_pole_pickup.wav"
 			"drop_sound"		"ui/item_wood_pole_drop.wav"

@@ -8811,9 +8811,6 @@ bool CTFPlayer::CheckBlockBackstab( CTFPlayer *pTFAttacker )
 				CTFWearable *pItem = dynamic_cast<CTFWearable *>( pEntity );
 				pItem->Break();
 				pItem->AddEffects( EF_NODRAW );
-
-				// reset the charge.
-				m_Shared.SetItemChargeMeter( LOADOUT_POSITION_SECONDARY, 0.f );
 			}
 
 			// tell the bot his Razorback just got broken
