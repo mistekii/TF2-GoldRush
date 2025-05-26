@@ -352,34 +352,20 @@ static const char *g_aConditionNames[] =
 	"TF_COND_FREEZE_INPUT",                     // = 74 - freezes player input
 	"TF_COND_HALLOWEEN_KART_CAGE",              // = 75 - attach cage model to player while in kart
 	"TF_COND_DONOTUSE_0",                       // = 76
-	"TF_COND_RUNE_STRENGTH",                    // = 77
-	"TF_COND_RUNE_HASTE",                       // = 78
-	"TF_COND_RUNE_REGEN",                       // = 79
-	"TF_COND_RUNE_RESIST",                      // = 80
-	"TF_COND_RUNE_VAMPIRE",                     // = 81
-	"TF_COND_RUNE_REFLECT",                     // = 82
-	"TF_COND_RUNE_PRECISION",                   // = 83
-	"TF_COND_RUNE_AGILITY",                     // = 84
-	"TF_COND_AFTERBURN_IMMUNE",                 // = 85
-	"TF_COND_RUNE_KNOCKOUT",                    // = 86
-	"TF_COND_RUNE_IMBALANCE",                   // = 87
-	"TF_COND_CRITBOOSTED_RUNE_TEMP",            // = 88
-	"TF_COND_SWIMMING_NO_EFFECTS",              // = 89 - =91_DNOC_FT
-	"TF_COND_PURGATORY",                        // = 90
-	"TF_COND_RUNE_KING",                        // = 91
-	"TF_COND_RUNE_PLAGUE",                      // = 92
-	"TF_COND_RUNE_SUPERNOVA",                   // = 93
-	"TF_COND_PLAGUE",                           // = 94
-	"TF_COND_KING_BUFFED",                      // = 95
-	"TF_COND_TEAM_GLOWS",                       // = 96 - used to show team glows to living players
-	"TF_COND_KNOCKED_INTO_AIR",                 // = 97
-	"TF_COND_COMPETITIVE_WINNER",               // = 98
-	"TF_COND_COMPETITIVE_LOSER",                // = 99
-	"TF_COND_HEALING_DEBUFF",                   // = 100
-	"TF_COND_LOST_FOOTING",                     // = 101
-	"TF_COND_AIR_CURRENT",                      // = 102
-	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 103
-	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 104
+	"TF_COND_AFTERBURN_IMMUNE",                 // = 77
+	"TF_COND_SWIMMING_NO_EFFECTS",              // = 78 - =78_DNOC_FT
+	"TF_COND_PURGATORY",                        // = 79
+	"TF_COND_PLAGUE",                           // = 80
+	"TF_COND_KING_BUFFED",                      // = 81
+	"TF_COND_TEAM_GLOWS",                       // = 82 - used to show team glows to living players
+	"TF_COND_KNOCKED_INTO_AIR",                 // = 83
+	"TF_COND_COMPETITIVE_WINNER",               // = 84
+	"TF_COND_COMPETITIVE_LOSER",                // = 85
+	"TF_COND_HEALING_DEBUFF",                   // = 86
+	"TF_COND_LOST_FOOTING",                     // = 87
+	"TF_COND_AIR_CURRENT",                      // = 88
+	"TF_COND_HALLOWEEN_HELL_HEAL",              // = 89
+	"TF_COND_IMMUNE_TO_PUSHBACK",				// = 90
 
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS
@@ -761,7 +747,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_SPELL_TINY",
 	"TF_DMG_CUSTOM_KART",
 	"TF_DMG_CUSTOM_GIANT_HAMMER",
-	"TF_DMG_CUSTOM_RUNE_REFLECT",
 	"TF_DMG_CUSTOM_CROC",
 	"TF_DMG_CUSTOM_TAUNTATK_GASBLAST",
 	"TF_DMG_CUSTOM_AXTINGUISHER_BOOSTED",

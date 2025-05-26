@@ -410,7 +410,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	RecvPropArray3( RECVINFO_ARRAY( m_nStreaks ), RecvPropInt( RECVINFO( m_nStreaks[0] ) ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_Low ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_High ) ),
-	RecvPropBool( RECVINFO( m_bKingRuneBuffActive ) ),
 
 	RecvPropUtlVectorDataTable( m_ConditionData, TF_COND_LAST, DT_TFPlayerConditionSource ),
 
@@ -577,7 +576,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropArray3( SENDINFO_ARRAY3( m_nStreaks ), SendPropInt( SENDINFO_ARRAY( m_nStreaks ) ) ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_Low ), -1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_High ), -1, SPROP_UNSIGNED ),
-	SendPropBool( SENDINFO( m_bKingRuneBuffActive ) ),
 
 	SendPropUtlVectorDataTable( m_ConditionData, TF_COND_LAST, DT_TFPlayerConditionSource ),
 
@@ -914,7 +912,6 @@ void CTFPlayerShared::Spawn( void )
 	m_hCarriedObject = NULL;
 
 	m_flRadiusHealCheckTime = 0;
-	m_flKingRuneBuffCheckTime = 0.f;
 
 	m_bBiteEffectWasApplied = false;
 
@@ -940,7 +937,6 @@ void CTFPlayerShared::Spawn( void )
 	m_bSyncingConditions = false;
 #endif
 	m_iStunIndex = -1;
-	m_bKingRuneBuffActive = false;
 
 	// Reset our assist here incase something happens before we get killed
 	// again that checks this
@@ -1523,7 +1519,6 @@ void CTFPlayerShared::OnConditionAdded( ETFCond eCond )
 	case TF_COND_CRITBOOSTED_RAGE_BUFF:
 	case TF_COND_SNIPERCHARGE_RAGE_BUFF:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
-	case TF_COND_CRITBOOSTED_RUNE_TEMP:
 		OnAddCritBoost();
 		break;
 
@@ -1724,7 +1719,6 @@ void CTFPlayerShared::OnConditionRemoved( ETFCond eCond )
 	case TF_COND_CRITBOOSTED_RAGE_BUFF:
 	case TF_COND_SNIPERCHARGE_RAGE_BUFF:
 	case TF_COND_CRITBOOSTED_CARD_EFFECT:
-	case TF_COND_CRITBOOSTED_RUNE_TEMP:
 		OnRemoveCritBoost();
 		break;
 
@@ -6511,8 +6505,7 @@ bool CTFPlayerShared::IsCritBoosted( void ) const
 								  InCond( TF_COND_CRITBOOSTED_BONUS_TIME ) || 
 								  InCond( TF_COND_CRITBOOSTED_CTF_CAPTURE ) || 
 								  InCond( TF_COND_CRITBOOSTED_ON_KILL ) ||
-								  InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) ||
-								  InCond( TF_COND_CRITBOOSTED_RUNE_TEMP ) );
+								  InCond( TF_COND_CRITBOOSTED_CARD_EFFECT ) );
 
 	if ( bAllWeaponCritActive )
 		return true;

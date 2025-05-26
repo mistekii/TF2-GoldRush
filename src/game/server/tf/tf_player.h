@@ -1067,9 +1067,6 @@ private:
 	float				m_flAccumulatedHealthRegen;	// Regeneration can be in small amounts, so we accumulate it and apply when it's > 1
 	float				m_flNextAmmoRegenAt;
 	float				m_flLastHealthRegenAt;
-	float				m_flAccumulatedRuneHealthRegen;
-	float				m_flNextRuneAmmoRegenAt;
-	float				m_flLastRuneHealthRegenAt;
 	float				m_flAccumulatedAmmoRegens[TF_AMMO_SECONDARY+1];	// Only support regenerating primary & secondary right now
 
 	// Bots.

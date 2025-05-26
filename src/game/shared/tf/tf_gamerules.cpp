@@ -14653,7 +14653,6 @@ int CTFGameRules::CalcPlayerScore( RoundStats_t *pRoundStats, CTFPlayer *pPlayer
 	}
 
 	int iScore =	( pRoundStats->m_iStat[TFSTAT_KILLS] * TF_SCORE_KILL ) + 
-					( pRoundStats->m_iStat[TFSTAT_KILLS_RUNECARRIER] * TF_SCORE_KILL_RUNECARRIER ) + // Kill someone who is carrying a rune
 					( pRoundStats->m_iStat[TFSTAT_CAPTURES] * ( TF_SCORE_CAPTURE ) ) +
 					( pRoundStats->m_iStat[TFSTAT_FLAGRETURNS] * TF_SCORE_FLAG_RETURN ) +
 					( pRoundStats->m_iStat[TFSTAT_DEFENSES] * TF_SCORE_DEFEND ) + 

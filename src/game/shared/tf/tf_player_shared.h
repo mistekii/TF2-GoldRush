@@ -915,10 +915,6 @@ private:
 
 #endif
 
-	// King Rune buff 
-	float		m_flKingRuneBuffCheckTime;
-	CNetworkVar( bool, m_bKingRuneBuffActive );
-
 	bool					m_bPulseRadiusHeal;
 
 	CNetworkVar( bool, m_bLastDisguisedAsOwnTeam );

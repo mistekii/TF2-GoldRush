@@ -7738,13 +7738,6 @@ int CTFPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 				m_iHealth = 1;
 				return 0;
 			}
-
-			// Powerup-sourced reflected damage should not kill player
-			if ( info.GetDamageCustom() == TF_DMG_CUSTOM_RUNE_REFLECT )
-			{
-				m_iHealth = 1;
-				return 0;
-			}
 		}
 
 		// NOTE: Deliberately skip base player OnTakeDamage, because we don't want all the stuff it does re: suit voice
