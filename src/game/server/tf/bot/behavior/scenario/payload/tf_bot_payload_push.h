@@ -28,6 +28,8 @@ private:
 	PathFollower m_path;
 	CountdownTimer m_repathTimer;
 	float m_hideAngle;
+
+	CountdownTimer m_moveToBlockTimer;
 };
 
 #endif // TF_BOT_PAYLOAD_PUSH_H

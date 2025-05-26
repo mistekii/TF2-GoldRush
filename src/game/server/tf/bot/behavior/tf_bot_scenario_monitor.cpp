@@ -130,7 +130,9 @@ Action< CTFBot > *CTFBotScenarioMonitor::DesiredScenarioAndClassAction( CTFBot *
 	{
 		// payload race, both teams push the cart
 		if ( TFGameRules()->HasMultipleTrains() == true )
+		{
 			return new CTFBotPayloadPush;
+		}
 
 		// push the cart
 		if ( me->GetTeamNumber() == TF_TEAM_BLUE )

@@ -4252,8 +4252,8 @@ void CTFGameRules::SetupOnRoundStart( void )
 
 	m_flMatchSummaryTeleportTime = -1.f;
 
-	//HACK: Pipeline round 3 stays in setup...
-	if ( HasMultipleTrains() == true && FStrEq( STRING(gpGlobals->mapname), "plr_pipeline" ) )
+	//HACK: Pipeline and Nightfall round 3 stays in setup...
+	if ( HasMultipleTrains() == true && ( FStrEq( STRING(gpGlobals->mapname), "plr_pipeline" ) || FStrEq( STRING(gpGlobals->mapname), "plr_nightfall_final" ) ) )
 	{
 		if ( !GetActiveRoundTimer() && InSetup() )
 			SetSetup( false );
@@ -17873,7 +17873,16 @@ CHandle< CTeamTrainWatcher > CTFGameRules::GetPayloadToBlock( int blockingTeam )
 			// find our cart!
 			if ( TFGameRules()->HasMultipleTrains() )
 			{
-				// find the red cart
+				// find the blue cart
+				CTeamTrainWatcher *watcher = NULL;
+				while( ( watcher = dynamic_cast< CTeamTrainWatcher * >( gEntList.FindEntityByClassname( watcher, "team_train_watcher" ) ) ) != NULL )
+				{
+					if ( watcher->GetTeamNumber() == TF_TEAM_BLUE && !watcher->IsDisabled() )
+					{
+						m_redPayloadToBlock = watcher;
+						break;
+					}
+				}
 			}
 			else
 			{
@@ -17899,7 +17908,16 @@ CHandle< CTeamTrainWatcher > CTFGameRules::GetPayloadToBlock( int blockingTeam )
 		{
 			if ( TFGameRules()->HasMultipleTrains() )
 			{
-				// find the blue cart
+				// find the red cart
+				CTeamTrainWatcher *watcher = NULL;
+				while( ( watcher = dynamic_cast< CTeamTrainWatcher * >( gEntList.FindEntityByClassname( watcher, "team_train_watcher" ) ) ) != NULL )
+				{
+					if ( watcher->GetTeamNumber() == TF_TEAM_RED && !watcher->IsDisabled() )
+					{
+						m_bluePayloadToBlock = watcher;
+						break;
+					}
+				}
 			}
 			else
 			{
