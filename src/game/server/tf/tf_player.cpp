@@ -396,8 +396,6 @@ public:
 	CNetworkVar( int, m_iDamageCustom );
 	CNetworkVar( int, m_iTeam );
 	CNetworkVar( int, m_iClass );
-	CNetworkVar( bool, m_bGoldRagdoll );
-	CNetworkVar( bool, m_bIceRagdoll );
 	CNetworkVar( bool, m_bCritOnHardHit );
 	CNetworkVar( float, m_flHeadScale );
 	CNetworkVar( float, m_flTorsoScale );
@@ -425,8 +423,6 @@ IMPLEMENT_SERVERCLASS_ST_NOBASE( CTFRagdoll, DT_TFRagdoll )
 	SendPropInt( SENDINFO( m_iTeam ), 3, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iClass ), 4, SPROP_UNSIGNED ),			
 	SendPropUtlVector( SENDINFO_UTLVECTOR( m_hRagWearables ), 8, SendPropEHandle( NULL, 0 ) ),
-	SendPropBool( SENDINFO( m_bGoldRagdoll ) ),
-	SendPropBool( SENDINFO( m_bIceRagdoll ) ),
 	SendPropBool( SENDINFO( m_bCritOnHardHit ) ),
 	SendPropFloat( SENDINFO( m_flHeadScale ) ),
 	SendPropFloat( SENDINFO( m_flTorsoScale ) ),
@@ -10320,8 +10316,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		m_iActiveWeaponTypePriorToDeath = 0;
 	}
 
-	int iIceRagdoll = 0;
-
 	CTFPlayer *pInflictor = ToTFPlayer( info.GetInflictor() );
 	if ( ( IsHeadshot( info.GetDamageCustom() ) ) && pPlayerAttacker )
 	{
@@ -10336,11 +10330,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	else if ( ( TF_DMG_CUSTOM_BACKSTAB == info.GetDamageCustom() ) && pInflictor )
 	{
 		CTF_GameStats.Event_Backstab( pInflictor );
-
-		if ( pKillerWeapon )
-		{
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( pKillerWeapon, iIceRagdoll, freeze_backstab_victim );
-		}
 	}
 
 	bool bCloakedCorpse = false;
@@ -10351,12 +10340,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		{
 			bCloakedCorpse = true;
 		}
-	}
-
-	int iGoldRagdoll = 0;
-	if ( pKillerWeapon )
-	{
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pKillerWeapon, iGoldRagdoll, set_turn_to_gold );
 	}
 
 	int iRagdollsBecomeAsh = 0;
@@ -10387,7 +10370,7 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 	if ( bGib || bRagdoll )
 	{
 
-		CreateRagdollEntity( bGib, bBurning, bElectrocuted, bOnGround, bCloakedCorpse, iGoldRagdoll != 0, iIceRagdoll != 0, iRagdollsBecomeAsh != 0, iCustomDamage, ( iCritOnHardHit != 0 ) );
+		CreateRagdollEntity( bGib, bBurning, bElectrocuted, bOnGround, bCloakedCorpse, iRagdollsBecomeAsh != 0, iCustomDamage, ( iCritOnHardHit != 0 ) );
 	}
 
 
@@ -12975,7 +12958,7 @@ void CTFPlayer::CreateRagdollEntity( void )
 //-----------------------------------------------------------------------------
 // Purpose: Create a ragdoll entity to pass to the client.
 //-----------------------------------------------------------------------------
-void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bElectrocuted, bool bOnGround, bool bCloakedCorpse, bool bGoldRagdoll, bool bIceRagdoll, bool bBecomeAsh, int iDamageCustom, bool bCritOnHardHit )
+void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bElectrocuted, bool bOnGround, bool bCloakedCorpse, bool bBecomeAsh, int iDamageCustom, bool bCritOnHardHit )
 {
 	// If we already have a ragdoll destroy it.
 	CTFRagdoll *pRagdoll = dynamic_cast<CTFRagdoll*>( m_hRagdoll.Get() );
@@ -13003,8 +12986,6 @@ void CTFPlayer::CreateRagdollEntity( bool bGib, bool bBurning, bool bElectrocute
 		pRagdoll->m_iDamageCustom = iDamageCustom;
 		pRagdoll->m_iTeam = GetTeamNumber();
 		pRagdoll->m_iClass = GetPlayerClass()->GetClassIndex();
-		pRagdoll->m_bGoldRagdoll = bGoldRagdoll;
-		pRagdoll->m_bIceRagdoll = bIceRagdoll;
 		pRagdoll->m_bBecomeAsh = bBecomeAsh;
 		pRagdoll->m_bCritOnHardHit = bCritOnHardHit;
 		pRagdoll->m_flHeadScale = m_flHeadScale;
@@ -13203,20 +13184,6 @@ void CTFPlayer::CreateFeignDeathRagdoll( const CTakeDamageInfo& info, bool bGib,
 		pRagdoll->m_flHandScale = m_flHandScale;
 
 		{
-			int iGoldRagdoll = 0;
-			if ( info.GetWeapon() )
-			{
-				 CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iGoldRagdoll, set_turn_to_gold );
-			}
-			pRagdoll->m_bGoldRagdoll = iGoldRagdoll != 0;
-
-			int iIceRagdoll = 0;
-			if ( info.GetWeapon() )
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iIceRagdoll, set_turn_to_ice );
-			}
-			pRagdoll->m_bIceRagdoll = iIceRagdoll != 0;
-
 			int iRagdollsBecomeAsh = 0;
 			if ( info.GetWeapon() )
 			{

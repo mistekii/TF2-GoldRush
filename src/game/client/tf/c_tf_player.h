@@ -1038,17 +1038,12 @@ private:
 	bool  m_bCloaked;
 	bool  m_bBecomeAsh;
 	int	  m_iDamageCustom;
-	bool  m_bGoldRagdoll;
-	bool  m_bIceRagdoll;
-	CountdownTimer m_freezeTimer;
-	CountdownTimer m_frozenTimer;
 	int	  m_iTeam;
 	int	  m_iClass;
 	float m_flBurnEffectStartTime;	// start time of burning, or 0 if not burning
 	bool  m_bRagdollOn;
 	bool  m_bDeathAnim;
 	bool  m_bOnGround;
-	bool  m_bFixedConstraints;
 	matrix3x4_t m_mHeadAttachment;
 	bool  m_bBaseTransform;
 	float m_flPercentInvisible;
