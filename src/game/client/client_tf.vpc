@@ -15,7 +15,6 @@ $Include "$SRCDIR\game\client\client_base.vpc"
 $include "$SRCDIR\game\shared\tf\tf_gcmessages_include.vpc"
 $include "$SRCDIR\game\shared\tf\tf_proto_def_messages_include.vpc"
 $Include "$SRCDIR\game\client\client_econ_base.vpc"
-$Include "$SRCDIR\vpc_scripts\source_saxxyawards.vpc" [!$SOURCESDK]
 $Include "$SRCDIR\utils\itemtest_lib\itemtest_lib_support.vpc" [$WORKSHOP_IMPORT_ENABLE]
 
 $Configuration
@@ -24,7 +23,6 @@ $Configuration
 	{
 		$AdditionalIncludeDirectories	".\hl2;.\hl2\elements;.\tf;.\tf\vgui;..\statemachine;$SRCDIR\game\shared\multiplayer;$SRCDIR\game\shared\tf;$SRCDIR\gcsdk\steamextra;$BASE;.\econ"
 		$PreprocessorDefinitions		"$BASE;TF_CLIENT_DLL;USES_ECON_ITEMS;ENABLE_GC_MATCHMAKING;GLOWS_ENABLE;USE_DYNAMIC_ASSET_LOADING;VOTING_ENABLED;NEXT_BOT"
-		$PreprocessorDefinitions		"$BASE;SAXXYMAINMENU_ENABLED" [$SAXXYAWARDS_ENABLE]
 		$PreprocessorDefinitions		"$BASE;WORKSHOP_IMPORT_ENABLED" [$WORKSHOP_IMPORT_ENABLE]
 		$PreprocessorDefinitions		"$BASE;SIXENSE" [!$SOURCESDK]
 		$PreprocessorDefinitions		"$BASE;DISABLE_GC_CONNECTION;DISABLE_IN_SOURCESDK;INVENTORY_VIA_WEBAPI" [$SOURCESDK]
@@ -355,8 +353,6 @@ $Project "Client (TF Goldrush Dev)"
 			$File	"$SRCDIR\game\shared\tf\tf_gamestats_shared.h"
 			$File	"tf\tf_hud_minigame.cpp"
 			$File	"tf\tf_hud_minigame.h"
-			$File	"tf\tf_hud_saxxycontest.cpp"
-			$File	"tf\tf_hud_saxxycontest.h"
 			$File	"tf\tf_hud_target_id.cpp"
 			$File	"tf\tf_hud_target_id.h"
 			$File	"tf\tf_hud_teamgoal.cpp"
