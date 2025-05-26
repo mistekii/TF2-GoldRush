@@ -22,6 +22,10 @@
 #include "func_simpleladder.h"
 #endif
 
+#ifdef TF_DLL
+#include "entity_tfstart.h" 
+#endif
+
 // NOTE: This has to be the last file included!
 #include "tier0/memdbgon.h"
 
@@ -3393,6 +3397,38 @@ void CNavMesh::CreateNavAreasFromNodes( void )
 // adds walkable positions for any/all positions a mod specifies
 void CNavMesh::AddWalkableSeeds( void )
 {
+#ifdef TF_DLL
+	int iFoundSpawns = 0;
+	int iFoundSpawnsNoGround = 0;
+	// Get as many spawns as possible, across all stages
+	for ( int iTFTeamSpawn = 0; iTFTeamSpawn < ITFTeamSpawnAutoList::AutoList().Count(); ++iTFTeamSpawn )
+	{
+		CTFTeamSpawn* spawnSpot = static_cast<CTFTeamSpawn*>( ITFTeamSpawnAutoList::AutoList()[iTFTeamSpawn] );
+
+		if ( spawnSpot )
+		{
+			// snap it to the sampling grid
+			Vector pos = spawnSpot->GetAbsOrigin();
+			pos.x = TheNavMesh->SnapToGrid( pos.x );
+			pos.y = TheNavMesh->SnapToGrid( pos.y );
+
+			Vector normal;
+			if ( FindGroundForNode( &pos, &normal ) )
+			{
+				AddWalkableSeed( pos, normal );
+				iFoundSpawns++;
+			}
+			else
+			{
+				iFoundSpawnsNoGround++;
+			}
+		}
+	}
+	Msg("Found %d team spawns. %d without ground. \n", iFoundSpawns, iFoundSpawnsNoGround);
+
+	return;
+#endif // TF_DLL
+
 	CBaseEntity *spawn = gEntList.FindEntityByClassname( NULL, GetPlayerSpawnName() );
 
 	if (spawn )
@@ -4662,15 +4698,20 @@ CNavNode *CNavMesh::GetNextWalkableSeedNode( void )
 	if ( m_seedIdx >= m_walkableSeeds.Count() )
 		return NULL;
 
-	WalkableSeedSpot spot = m_walkableSeeds[ m_seedIdx ];
-	++m_seedIdx;
+	while ( true )
+	{
+		WalkableSeedSpot spot = m_walkableSeeds[m_seedIdx];
+		++m_seedIdx;
 
-	// check if a node exists at this location
-	CNavNode *node = CNavNode::GetNode( spot.pos );
-	if ( node )
-		return NULL;
-
-	return new CNavNode( spot.pos, spot.normal, NULL, false );
+		// check if a node exists at this location
+		CNavNode* node = CNavNode::GetNode(spot.pos);
+		if ( !node )
+		{
+			return new CNavNode(spot.pos, spot.normal, NULL, false);
+		}
+		if ( m_seedIdx >= m_walkableSeeds.Count() )
+			return NULL;
+	}
 }
 
 

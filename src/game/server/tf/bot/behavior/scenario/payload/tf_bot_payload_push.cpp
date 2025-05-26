@@ -14,6 +14,8 @@
 #include "bot/behavior/scenario/payload/tf_bot_payload_push.h"
 #include "bot/behavior/medic/tf_bot_medic_heal.h"
 #include "bot/behavior/engineer/tf_bot_engineer_build.h"
+#include "bot/behavior/tf_bot_seek_and_destroy.h"
+#include "bot/behavior/scenario/payload/tf_bot_payload_block.h"
 
 
 extern ConVar tf_bot_path_lookahead_range;
@@ -44,11 +46,7 @@ ActionResult< CTFBot >	CTFBotPayloadPush::Update( CTFBot *me, float interval )
 
 	if ( TFGameRules()->InSetup() )
 	{
-		// wait until the gates open, then path
-		m_path.Invalidate();
-		m_repathTimer.Start( RandomFloat( 1.0f, 2.0f ) );
-
-		return Continue();
+		return SuspendFor( new CTFBotSeekAndDestroy( RandomFloat( 4.0f, 16.0f ) ), "Seek and destroy until the gates open." );
 	}
 
 	CTeamTrainWatcher *trainWatcher = TFGameRules()->GetPayloadToPush( me->GetTeamNumber() );
@@ -61,6 +59,47 @@ ActionResult< CTFBot >	CTFBotPayloadPush::Update( CTFBot *me, float interval )
 	if ( !cart )
 	{
 		return Continue();
+	}
+
+	int iEnemyTeam;
+	// Get the enemy team
+	if ( me->GetTeamNumber() == TF_TEAM_BLUE )
+	{
+		iEnemyTeam = TF_TEAM_RED;
+	}
+	else
+	{
+		iEnemyTeam = TF_TEAM_BLUE;
+	}
+
+	// Payload race specific behavior
+	if ( TFGameRules()->HasMultipleTrains() )
+	{
+		CTeamTrainWatcher *enemyTrainWatcher = TFGameRules()->GetPayloadToPush( iEnemyTeam );
+		CBaseEntity* enemyCart = enemyTrainWatcher->GetTrainEntity();
+
+		float fEnemyProgress = enemyTrainWatcher->GetTrainProgress();
+		float fMyProgress = trainWatcher->GetTrainProgress();
+
+		if ( !enemyTrainWatcher->IsDisabled() && enemyTrainWatcher->GetCapturerCount() > 0 )
+		{
+			// the cart is being pushed ahead - block it
+			if ( !m_moveToBlockTimer.HasStarted() )
+			{
+				m_moveToBlockTimer.Start( RandomFloat( 0.5f, 3.0f ) );
+			}
+		}
+
+		if ( m_moveToBlockTimer.HasStarted() && m_moveToBlockTimer.IsElapsed() )
+		{
+			m_moveToBlockTimer.Invalidate();
+
+			if ( enemyTrainWatcher->GetCapturerCount() >= 0 )
+			{
+				// the cart is not yet blocked - move to block it!
+				return SuspendFor( new CTFBotPayloadBlock, "Moving to block the enemy cart's forward motion" );
+			}
+		}
 	}
 
 
