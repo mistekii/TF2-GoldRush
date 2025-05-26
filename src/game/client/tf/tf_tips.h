@@ -33,7 +33,6 @@ public:
 	const wchar_t *GetRandomTip( int &iClassUsed ); // iClassUsed will be filled in with the class that was selected
 	const wchar_t *GetNextClassTip( int iClass );
 	const wchar_t *GetArenaTip( void );
-	const wchar_t *GetAbuseReportTip( void );
 	void GetRandomCaptainCanteenImages( const char **ppchBody, const char **ppchMisc, const char **ppchHat );
 
 private:
