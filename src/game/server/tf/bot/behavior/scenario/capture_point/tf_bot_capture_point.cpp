@@ -13,6 +13,7 @@
 #include "bot/behavior/scenario/capture_point/tf_bot_capture_point.h"
 #include "bot/behavior/scenario/capture_point/tf_bot_defend_point.h"
 #include "bot/behavior/tf_bot_seek_and_destroy.h"
+#include "bot/behavior/tf_bot_move_to_gate.h"
 
 
 extern ConVar tf_bot_path_lookahead_range;
@@ -40,11 +41,7 @@ ActionResult< CTFBot >	CTFBotCapturePoint::Update( CTFBot *me, float interval )
 {
 	if ( TFGameRules()->InSetup() )
 	{
-		// wait until the gates open, then path
-		m_path.Invalidate();
-		m_repathTimer.Start( RandomFloat( 1.0f, 2.0f ) );
-
-		return Continue();
+		return SuspendFor( new CTFBotMoveToGate, "Wait until the gates open." );
 	}
 
 	CTeamControlPoint *point = me->GetMyControlPoint();

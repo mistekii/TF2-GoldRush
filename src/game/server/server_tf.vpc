@@ -448,6 +448,8 @@ $Project "Server (TF Goldrush Dev)"
 					$File	"tf\bot\behavior\tf_bot_escort.h"
 					$File	"tf\bot\behavior\tf_bot_use_item.cpp"
 					$File	"tf\bot\behavior\tf_bot_use_item.h"
+					$File	"tf\bot\behavior\tf_bot_move_to_gate.cpp"
+					$File	"tf\bot\behavior\tf_bot_move_to_gate.h"
 					
 					$Folder	"Scenario"
 					{

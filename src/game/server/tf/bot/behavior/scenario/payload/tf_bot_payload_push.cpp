@@ -16,6 +16,7 @@
 #include "bot/behavior/engineer/tf_bot_engineer_build.h"
 #include "bot/behavior/tf_bot_seek_and_destroy.h"
 #include "bot/behavior/scenario/payload/tf_bot_payload_block.h"
+#include "bot/behavior/tf_bot_move_to_gate.h"
 
 
 extern ConVar tf_bot_path_lookahead_range;
@@ -46,7 +47,7 @@ ActionResult< CTFBot >	CTFBotPayloadPush::Update( CTFBot *me, float interval )
 
 	if ( TFGameRules()->InSetup() )
 	{
-		return SuspendFor( new CTFBotSeekAndDestroy( RandomFloat( 4.0f, 16.0f ) ), "Seek and destroy until the gates open." );
+		return SuspendFor( new CTFBotMoveToGate, "Wait until the gates open." );
 	}
 
 	CTeamTrainWatcher *trainWatcher = TFGameRules()->GetPayloadToPush( me->GetTeamNumber() );
