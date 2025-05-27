@@ -74,7 +74,6 @@ protected:
 	vgui::Label				*m_pMoveableKeyLabel;
 	CIconPanel				*m_pMoveableIconBG;
 	CTFSpectatorGUIHealth	*m_pTargetHealth;
-	vgui::ImagePanel		*m_pTargetAmmoIcon;
 	vgui::ImagePanel		*m_pTargetKillStreakIcon;
 	CAvatarImagePanel		*m_pAvatarImage;
 

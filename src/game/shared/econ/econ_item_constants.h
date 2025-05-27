@@ -942,7 +942,6 @@ enum EHoliday
 	kHoliday_HalloweenOrFullMoon,
 	kHoliday_HalloweenOrFullMoonOrValentines,
 	kHoliday_AprilFools,
-	kHoliday_Soldier,
 	kHoliday_Summer,
 	kHolidayCount,
 };

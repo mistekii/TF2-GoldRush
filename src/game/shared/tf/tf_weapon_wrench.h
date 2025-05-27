@@ -37,7 +37,6 @@ public:
 
 	virtual bool		Holster( CBaseCombatWeapon *pSwitchingTo );
 
-	bool				IsPDQ( void ) { int iMode = 0; CALL_ATTRIB_HOOK_INT( iMode, wrench_builds_minisentry ); return iMode==1; };
 	float				GetConstructionValue( void );
 	float				GetRepairAmount( void );
 #ifdef GAME_DLL

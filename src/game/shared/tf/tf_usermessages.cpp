@@ -106,8 +106,6 @@ void RegisterUserMessages()
 	usermessages->Register( "BonusDucks", 2 );	// ent index, ignoretimer
 	usermessages->Register( "EOTLDuckEvent", 7 ); // IsCreated (vs IsPickedUp), ID of Creator, ID of Victim, ID of Toucher, iDuckTeam, Count, IsGolden
 
-	usermessages->Register( "PlayerPickupWeapon", -1 );
-
 	usermessages->Register( "SdkRequestEquipment", -1 );
 
 	usermessages->Register( "BuiltObject", 3 ); // object type, object mode (entrance vs. exit), index

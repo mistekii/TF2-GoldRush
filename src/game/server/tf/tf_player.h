@@ -423,7 +423,7 @@ public:
 
 	// Death & Ragdolls.
 	virtual void CreateRagdollEntity( void );
-	void CreateRagdollEntity( bool bGib, bool bBurning, bool bElectrocuted, bool bOnGround, bool bCloakedCorpse, bool bGoldRagdoll, bool bIceRagdoll, bool bBecomeAsh, int iDamageCustom = 0, bool bCritOnHardHit = false );
+	void CreateRagdollEntity( bool bGib, bool bBurning, bool bElectrocuted, bool bOnGround, bool bCloakedCorpse, bool bBecomeAsh, int iDamageCustom = 0, bool bCritOnHardHit = false );
 	void DestroyRagdoll( void );
 	CNetworkHandle( CBaseEntity, m_hRagdoll );	// networked entity handle 
 	virtual bool ShouldGib( const CTakeDamageInfo &info ) OVERRIDE;
@@ -1067,9 +1067,6 @@ private:
 	float				m_flAccumulatedHealthRegen;	// Regeneration can be in small amounts, so we accumulate it and apply when it's > 1
 	float				m_flNextAmmoRegenAt;
 	float				m_flLastHealthRegenAt;
-	float				m_flAccumulatedRuneHealthRegen;
-	float				m_flNextRuneAmmoRegenAt;
-	float				m_flLastRuneHealthRegenAt;
 	float				m_flAccumulatedAmmoRegens[TF_AMMO_SECONDARY+1];	// Only support regenerating primary & secondary right now
 
 	// Bots.
@@ -1415,8 +1412,6 @@ public:
 	bool IsMaxHealthDraining( void ) { return m_nMaxHealthDrainBucket != 0.0; }
 
 private:
-	float m_flSendPickupWeaponMessageTime;
-
 	void ModifyDamageInfo( CTakeDamageInfo *pInfo, const CBaseEntity *pTarget );
 
 	CNetworkHandle( CBaseCombatWeapon, m_hSecondaryLastWeapon );

@@ -22,7 +22,6 @@
 #include "tf_imagepanel.h"
 #include "c_tf_weapon_builder.h"
 #include "tf_weapon_minigun.h"
-#include "tf_weapon_medigun.h"
 #include "tf_weapon_throwable.h"
 #include "tf_weapon_smg.h"
 #include "halloween/tf_weapon_spellbook.h"
@@ -62,9 +61,6 @@ static const char *GetDefaultMeterTextForLoadoutPosition( int iLoadout )
 		outMeters.AddToHead( hNewMeter ); \
 		hNewMeter->SetVisible( false ); \
 	}
-
-
-extern ConVar tf_rocketpack_cost;
 
 
 using namespace vgui;
@@ -119,7 +115,6 @@ void CItemEffectMeterManager::SetPlayer( C_TFPlayer* pPlayer )
 {
 	StopListeningForAllEvents();
 	ListenForGameEvent( "post_inventory_application" );	
-	ListenForGameEvent( "localplayer_pickup_weapon" );
 	ListenForGameEvent( "localplayer_respawn" );
 
 	ClearExistingMeters();
@@ -153,8 +148,7 @@ void CItemEffectMeterManager::FireGameEvent( IGameEvent *event )
 
 	bool bNeedsUpdate = false;
 
-	if ( FStrEq( "localplayer_pickup_weapon", type ) ||
-		 FStrEq( "localplayer_respawn", type ) )
+	if ( FStrEq( "localplayer_respawn", type ) )
 	{
 		bNeedsUpdate = true;
 	}
@@ -315,7 +309,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 		break;
 	}
 	case TF_CLASS_MEDIC:
-		DECLARE_ITEM_EFFECT_METER( CWeaponMedigun, TF_WEAPON_MEDIGUN, true, "resource/UI/HudItemEffectMeter_Scout.res" );
 		DECLARE_ITEM_EFFECT_METER( CTFBonesaw, TF_WEAPON_BONESAW, false, "resource/UI/HUDItemEffectMeter_Organs.res" );
 		break;
 	}

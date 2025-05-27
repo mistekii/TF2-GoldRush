@@ -111,7 +111,6 @@ CTargetID::CTargetID( const char *pElementName ) :
 	m_pMoveableIconBG = NULL;
 	m_pMoveableKeyLabel = NULL;
 	m_pTargetHealth = new CTFSpectatorGUIHealth( this, "SpectatorGUIHealth" );
-	m_pTargetAmmoIcon = NULL;
 	m_pTargetKillStreakIcon = NULL;
 	m_bLayoutOnUpdate = false;
 
@@ -234,7 +233,6 @@ void CTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
 		m_pMoveableKeyLabel = dynamic_cast<Label *>( m_pMoveableSubPanel->FindChildByName("MoveableKeyLabel") );
 	}
 	m_hFont = scheme->GetFont( "TargetID", true );
-	m_pTargetAmmoIcon = dynamic_cast<vgui::ImagePanel *>( FindChildByName( "AmmoIcon" ) );
 	m_pTargetKillStreakIcon = dynamic_cast<vgui::ImagePanel *>( FindChildByName( "KillStreakIcon" ) );
 	m_pAvatarImage = dynamic_cast< CAvatarImagePanel* >( FindChildByName( "AvatarImage" ) );
 }
@@ -598,9 +596,8 @@ void CTargetID::UpdateID( void )
 			bool bHeavy = pLocalTFPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS );
 
 			// See if the player wants to fill in the data string
-			bool bIsAmmoData = false;
 			bool bIsKillStreakData = false;
-			pPlayer->GetTargetIDDataString( bDisguisedTarget, sDataString, sizeof(sDataString), bIsAmmoData, bIsKillStreakData );
+			pPlayer->GetTargetIDDataString( bDisguisedTarget, sDataString, sizeof(sDataString), bIsKillStreakData );
 			if ( pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || bInSameTeam || bSpy || bDisguisedEnemy || bMedic || bHeavy )
 			{
 				printFormatString = "#TF_playerid_sameteam";
@@ -644,15 +641,6 @@ void CTargetID::UpdateID( void )
 					pszPrepend = L"";
 				}
 				g_pVGuiLocalize->ConstructString_safe( sIDString, g_pVGuiLocalize->Find(printFormatString), 2, pszPrepend, wszPlayerName );
-			}
-
-			// Show target's clip state to attached medics
-			bool bShowClipInfo = bIsAmmoData &&
-								 sDataString[0] && 
-								 ToTFPlayer( pLocalTFPlayer->MedicGetHealTarget() ) == pPlayer;
-			if ( m_pTargetAmmoIcon && m_pTargetAmmoIcon->IsVisible() != bShowClipInfo )
-			{
-				m_pTargetAmmoIcon->SetVisible( bShowClipInfo );
 			}
 
 			bool bShowKillStreak = bIsKillStreakData && sDataString[0];

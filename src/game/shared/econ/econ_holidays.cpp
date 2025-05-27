@@ -328,8 +328,6 @@ static CDateBasedHoliday	g_Holiday_EndOfTheLine				( "eotl_launch",	"2014-12-03"
 
 static CDateBasedHoliday	g_Holiday_CommunityUpdate			( "community_update", "2015-09-01", "2015-11-05" );
 
-static CDateBasedHolidayNoSpecificYear	g_Holiday_Soldier		( "soldier", "04-12", "04-14" );
-
 // only setup for 2024 right now...need to figure out how we want future events to run and maybe remove the year
 static CDateBasedHoliday	g_Holiday_Summer( "summer", "2024-07-01", "2024-09-16" );
 
@@ -348,7 +346,6 @@ static IIsHolidayActive *s_HolidayChecks[] =
 	&g_Holiday_HalloweenOrFullMoon,					// kHoliday_HalloweenOrFullMoon
 	&g_Holiday_HalloweenOrFullMoonOrValentines,		// kHoliday_HalloweenOrFullMoonOrValentines
 	&g_Holiday_AprilFools,							// kHoliday_AprilFools
-	&g_Holiday_Soldier,								// kHoliday_Soldier
 	&g_Holiday_Summer,								// kHoliday_Summer
 };
 

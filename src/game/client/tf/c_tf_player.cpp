@@ -483,8 +483,6 @@ IMPLEMENT_CLIENTCLASS_DT_NOBASE( C_TFRagdoll, DT_TFRagdoll, CTFRagdoll )
 	RecvPropInt( RECVINFO( m_iTeam ) ),
 	RecvPropInt( RECVINFO( m_iClass ) ),		
 	RecvPropUtlVector( RECVINFO_UTLVECTOR( m_hRagWearables ), 8,	RecvPropEHandle(NULL, 0, 0) ),
-	RecvPropBool( RECVINFO( m_bGoldRagdoll ) ),
-	RecvPropBool( RECVINFO( m_bIceRagdoll ) ),
 	RecvPropBool( RECVINFO( m_bCritOnHardHit ) ),
 	RecvPropFloat( RECVINFO( m_flHeadScale ) ),
 	RecvPropFloat( RECVINFO( m_flTorsoScale ) ),
@@ -510,10 +508,6 @@ C_TFRagdoll::C_TFRagdoll()
 	m_bBecomeAsh = false;
 	m_flBurnEffectStartTime = 0.0f;
 	m_iDamageCustom = 0;
-	m_bGoldRagdoll = false;
-	m_bIceRagdoll = false;
-	m_freezeTimer.Invalidate();
-	m_frozenTimer.Invalidate();
 	m_iTeam = -1;
 	m_iClass = -1;
 	m_nForceBone = -1;
@@ -521,7 +515,6 @@ C_TFRagdoll::C_TFRagdoll()
 	m_bDeathAnim = false;
 	m_bOnGround = false;
 	m_bBaseTransform = false;
-	m_bFixedConstraints = false;
 	m_flTimeToDissolve = 0.3f;
 	m_bCritOnHardHit = false;
 	m_flHeadScale = 1.f;
@@ -675,22 +668,6 @@ void C_TFRagdoll::CreateTFRagdoll()
 		C_TFPlayer::AdjustSkinIndexForZombie( m_iClass, m_nSkin );
 	}
 
-	// We check against new-style (special flag to indicate goldification) and old style (custom damage type)
-	// to maintain old demos involving the golden wrench.
-	if ( m_bGoldRagdoll || m_iDamageCustom == TF_DMG_CUSTOM_GOLD_WRENCH )
-	{
-		EmitSound( "Saxxy.TurnGold" );
-		m_bFixedConstraints = true;
-	}
-
-	if ( m_bIceRagdoll )
-	{
-		EmitSound( "Icicle.TurnToIce" );
-		ParticleProp()->Create( "xms_icicle_impact_dryice", PATTACH_ABSORIGIN_FOLLOW );
-		m_freezeTimer.Start( RandomFloat( 0.1f, 0.75f ) );
-		m_frozenTimer.Start( RandomFloat( 9.0f, 11.0f ) );
-	}
-
 #ifdef _DEBUG
 	DevMsg( 2, "CreateTFRagdoll %d %d\n", gpGlobals->framecount, pPlayer ? pPlayer->entindex() : 0 );
 #endif
@@ -760,7 +737,7 @@ void C_TFRagdoll::CreateTFRagdoll()
 	// Play a death anim depending on the custom damage type.
 	bool bPlayDeathInAir = false;
 	int iDeathSeq = -1;
-	if ( pPlayer && !m_bGoldRagdoll )
+	if ( pPlayer )
 	{
 		iDeathSeq = pPlayer->m_Shared.GetSequenceForDeath( this, m_bBurning, m_iDamageCustom );
 
@@ -776,7 +753,7 @@ void C_TFRagdoll::CreateTFRagdoll()
 		{
 			// we only want to show the death anims 25% of the time, unless this is a demoman kill taunt
 			// always play backstab animations for the ice ragdoll
-			if ( !m_bIceRagdoll && !tf_always_deathanim.GetBool() && (RandomFloat( 0, 1 ) > 0.25f) )
+			if ( !tf_always_deathanim.GetBool() && (RandomFloat( 0, 1 ) > 0.25f) )
 			{
 				iDeathSeq = -1;
 			}
@@ -800,13 +777,6 @@ void C_TFRagdoll::CreateTFRagdoll()
 		// Play the death anim.
 		ResetSequence( iDeathSeq );
 		m_bDeathAnim = true;
-	}
-	else if ( m_bIceRagdoll )
-	{
-		// couldn't play death anim because we were in midair - go ridig immediately
-		m_freezeTimer.Invalidate();
-		m_frozenTimer.Invalidate();
-		m_bFixedConstraints = true;
 	}
 
 	// Fade out the ragdoll in a while
@@ -867,7 +837,7 @@ void C_TFRagdoll::CreateTFRagdoll()
 		
 		if ( bBoneArraysInited )
 		{
-			InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt, m_bFixedConstraints );
+			InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt );
 		}
 	}
 	else
@@ -909,77 +879,10 @@ void C_TFRagdoll::CreateTFRagdoll()
 	}
 
 	const char *materialOverrideFilename = NULL;
-
-	if ( m_bFixedConstraints )
-	{
-		if ( m_bGoldRagdoll )
-		{
-			// Gold texture...we've been turned into a golden corpse!
-			materialOverrideFilename = "models/player/shared/gold_player.vmt";
-		}
-	}
-
-	if ( m_bIceRagdoll )
-	{
-		// Ice texture...we've been turned into an ice statue!
-		materialOverrideFilename = "models/player/shared/ice_player.vmt";
-	}
-
-	if ( materialOverrideFilename )
-	{
-		// Ice texture...we've been turned into an ice statue!
-		m_MaterialOverride.Init( materialOverrideFilename, TEXTURE_GROUP_CLIENT_EFFECTS );
-
-		// override all of our wearables, too
-		for ( C_BaseEntity *pEntity = ClientEntityList().FirstBaseEntity(); pEntity; pEntity = ClientEntityList().NextBaseEntity(pEntity) )
-		{
-			if ( pEntity->GetFollowedEntity() == this )
-			{
-				CEconEntity *pItem = dynamic_cast< CEconEntity * >( pEntity );
-				if ( pItem )
-				{
-					pItem->SetMaterialOverride( m_iTeam, materialOverrideFilename );
-				}
-			}
-		}
-	}
 }
 
 float C_TFRagdoll::FrameAdvance( float flInterval )
 {
-	// if we're in the process of becoming an ice statue, freeze
-	if ( m_freezeTimer.HasStarted() && !m_freezeTimer.IsElapsed() )
-	{
-		// play the backstab anim until the timer is up
-		return BaseClass::FrameAdvance( flInterval );
-	}
-
-	if ( m_frozenTimer.HasStarted() )
-	{
-		if ( m_frozenTimer.IsElapsed() )
-		{
-			// holding frozen time is up - turn to a stiff ragdoll and fall over
-			m_frozenTimer.Invalidate();
-
-			m_nRenderFX = kRenderFxRagdoll;
-
-			matrix3x4_t boneDelta0[MAXSTUDIOBONES];
-			matrix3x4_t boneDelta1[MAXSTUDIOBONES];
-			matrix3x4_t currentBones[MAXSTUDIOBONES];
-			const float boneDt = 0.1f;
-			GetRagdollInitBoneArrays( boneDelta0, boneDelta1, currentBones, boneDt );
-			InitAsClientRagdoll( boneDelta0, boneDelta1, currentBones, boneDt, true );
-
-			SetAbsVelocity( Vector( 0,0,0 ) );
-			m_bRagdollOn = true;
-		}
-		else
-		{
-			// don't move at all
-			return 0.0f;
-		}
-	}
-
 	float fRes = BaseClass::FrameAdvance( flInterval );
 
 	if ( !m_bRagdollOn && IsSequenceFinished() && m_bDeathAnim )
@@ -3841,8 +3744,6 @@ C_TFPlayer::C_TFPlayer() :
 	ListenForGameEvent( "damage_resisted" );
 	ListenForGameEvent( "player_changeclass" );
 	ListenForGameEvent( "player_abandoned_match" );
-	ListenForGameEvent( "rocketpack_launch" );
-	ListenForGameEvent( "rocketpack_landed" );
 
 	//AddPhonemeFile
 	engine->AddPhonemeFile( "scripts/game_sounds_vo_phonemes.txt" );
@@ -8364,11 +8265,7 @@ Vector C_TFPlayer::GetChaseCamViewOffset( CBaseEntity *target )
 {
 	if ( target->IsBaseObject() )
 	{
-		CBaseObject* pObj = dynamic_cast<CBaseObject*>( target );
-		if ( pObj && pObj->IsMiniBuilding() )
-			return Vector(0,0,40);
-		else
-			return Vector(0,0,64);
+		return Vector(0,0,64);
 	}
 
 	return BaseClass::GetChaseCamViewOffset( target );
@@ -9131,7 +9028,7 @@ CON_COMMAND_F( spectate_random_server_extend_time, "extend the timer we're spect
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsAmmoData, bool &bIsKillStreakData )
+void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData )
 {
 	Assert( iMaxLenInBytes >= sizeof(sDataString[0]) );
 	// Make sure the output string is always initialized to a null-terminated string,
@@ -9211,32 +9108,16 @@ void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLen
 						g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_noheal_unknown" ), 0 );
 					}
 				}
-
-				// Show target's clip state to attached medics
-				if ( !sDataString[0] && m_nActiveWpnClip >= 0 )
-				{
-					C_TFPlayer *pTFHealTarget = ToTFPlayer( pLocalPlayer->MedicGetHealTarget() );
-					if ( pTFHealTarget && pTFHealTarget == this )
-					{
-						wchar_t wszClip[10];
-						V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_nActiveWpnClip );
-						g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
-						bIsAmmoData = true;
-					}
-				}
 			}
 		}
 
-		if ( !bIsAmmoData )
+		// Check for kill streak data
+		if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
 		{
-			// Check for kill streak data
-			if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
-			{
-				bIsKillStreakData = true;
-				wchar_t wszClip[10];
-				V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
-				g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
-			}
+			bIsKillStreakData = true;
+			wchar_t wszClip[10];
+			V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
+			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
 		}
 	}
 }
@@ -10313,8 +10194,7 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		}
 	}
 	else if ( FStrEq( event->GetName(), "rocket_jump" ) 
-			  || FStrEq( event->GetName(), "sticky_jump" )
-			  || FStrEq( event->GetName(), "rocketpack_launch" ) )
+			  || FStrEq( event->GetName(), "sticky_jump" ) )
 	{
 		// Play a special sound when blast jumping with weapons that don't hurt the player
 		const int iUserID = event->GetInt( "userid" );
@@ -10363,8 +10243,7 @@ void C_TFPlayer::FireGameEvent( IGameEvent *event )
 		}
 	}
 	else if ( FStrEq( event->GetName(), "rocket_jump_landed" ) 
-			  || FStrEq( event->GetName(), "sticky_jump_landed" )
-			  || FStrEq( event->GetName(), "rocketpack_landed" ) )
+			  || FStrEq( event->GetName(), "sticky_jump_landed" ) )
 	{
 		const int iUserID = event->GetInt( "userid" );
 		if ( iUserID == GetUserID() )

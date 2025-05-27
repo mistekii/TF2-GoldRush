@@ -30,8 +30,6 @@ enum
 
 #define SENTRYGUN_MAX_HEALTH	150
 
-#define SENTRYGUN_MINI_MAX_HEALTH	100
-
 #define SENTRY_MAX_RANGE 1100.0f		// magic numbers are evil, people. adding this #define to demystify the value. (MSB 5/14/09)
 #define SENTRY_MAX_RANGE_SQRD 1210000.0f
 
@@ -88,8 +86,7 @@ public:
 	int				GetFireAttachment( void );
 
 	void            OnKilledEnemy(CBasePlayer* pVictim);
-	
-	virtual void	MakeMiniBuilding( CTFPlayer* pPlayer );
+
 	virtual void	MakeCarriedObject( CTFPlayer *pCarrier );
 	void			MakeScaledBuilding( CTFPlayer* pPlayer );
 
@@ -105,8 +102,6 @@ public:
 	void			SetShieldLevel( int nLevel, float flDuration ) { m_nShieldLevel = nLevel; m_flShieldFadeTime = gpGlobals->curtime + flDuration; }
 
 	virtual int		GetMaxUpgradeLevel( void ) OVERRIDE;
-
-	virtual int		GetMiniBuildingStartingHealth( void ) OVERRIDE { return SENTRYGUN_MINI_MAX_HEALTH; }
 
 	void RemoveAllAmmo();
 
@@ -191,9 +186,6 @@ private:
 	CNetworkVar( bool, m_bPlayerControlled );
 	CNetworkVar( uint32, m_nShieldLevel );
 	float m_flShieldFadeTime;
-
-	// PDQ Sentry
-	CNetworkVar( bool, m_bPDQSentry );
 
 	//cached attachment indeces
 	int m_iAttachments[4];

@@ -187,9 +187,6 @@ public:
 	virtual int		Command_Repair( CTFPlayer *pActivator, float flAmount, float flRepairMod, float flRepairToMetalRatio = 3.f, bool bSendEvent = true );
 	virtual void	DoWrenchHitEffect( Vector hitLoc, bool bRepairHit, bool bUpgradeHit );
 
-	virtual bool	ShouldBeMiniBuilding( CTFPlayer* pPlayer );
-	virtual void	MakeMiniBuilding( CTFPlayer* pPlayer );
-
 	virtual void	ChangeTeam( int iTeamNum ) OVERRIDE;			// Assign this entity to a team.
 
 	// Handling object inactive
@@ -279,8 +276,6 @@ public:
 
 	void			ForceQuickBuild() { m_bForceQuickBuild = true; }
 
-	virtual int		GetMiniBuildingStartingHealth( void ) { return 100; }
-
 	virtual int		GetMaxHealthForCurrentLevel( void );
 	bool			IsUsingReverseBuild( void ){ return ( GetReversesBuildingConstructionSpeed() != 0.0f ); }
 	void			ResetPlacement( void );
@@ -330,8 +325,6 @@ public:
 	virtual int		UpdateTransmitState( void );
 	virtual int		ShouldTransmit( const CCheckTransmitInfo *pInfo );
 	virtual void	SetTransmit( CCheckTransmitInfo *pInfo, bool bAlways );
-	
-	bool			IsMiniBuilding( void ) const { return m_bMiniBuilding; }
 
 	virtual bool ShouldBlockNav() const OVERRIDE { return false; }
 
@@ -344,8 +337,6 @@ public:
 	Vector GetBuildOrigin() { return m_vecBuildOrigin; }
 	Vector GetBuildCenterOfMass() { return m_vecBuildCenterOfMass; }
 protected:
-
-	virtual bool CanBeUpgraded() const { return !IsMiniBuilding(); }
 	
 	virtual int  GetUpgradeMetalRequired();
 
@@ -455,8 +446,6 @@ protected:
 	// Carried
 	CNetworkVar( bool, m_bCarried );
 	CNetworkVar( bool, m_bCarryDeploy );
-
-	CNetworkVar( bool, m_bMiniBuilding );
 
 	float m_flPlasmaDisableTime;
 	CNetworkVar( bool, m_bPlasmaDisable );

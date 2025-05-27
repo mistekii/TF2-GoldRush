@@ -65,7 +65,6 @@ C_ObjectSentrygun::C_ObjectSentrygun()
 	m_flNextNearMissCheck = 0.f;
 
 	m_iOldModelIndex = 0;
-	m_bOldCarried = false;
 	m_bRecreateShield = false;
 	m_bRecreateLaserBeam = false;
 }
@@ -77,7 +76,6 @@ void C_ObjectSentrygun::UpdateOnRemove( void )
 {
 	DestroyLaserBeam();
 	DestroyShield();
-	DestroySiren();
 
 	BaseClass::UpdateOnRemove();
 }
@@ -160,20 +158,6 @@ void C_ObjectSentrygun::OnDataChanged( DataUpdateType_t updateType )
 	if ( GetModelIndex() != m_iOldModelIndex )
 	{
 		m_iOldModelIndex = GetModelIndex();
-
-		if ( IsMiniBuilding() )
-		{
-			CStudioHdr *pStudiohdr = GetModelPtr();
-			int bodyGroup = FindBodygroupByName( "mini_sentry_light" );
-			if ( bodyGroup < pStudiohdr->numbodyparts() )
-			{
-				mstudiobodyparts_t *pbodypart = pStudiohdr->pBodypart( bodyGroup );
-				if ( pbodypart->base > 0 )
-				{
-					SetBodygroup( bodyGroup, 1 );
-				}
-			}
-		}
 	}
 
 	if ( m_bPlayerControlled != m_bOldPlayerControlled || m_bRecreateLaserBeam )
@@ -203,20 +187,6 @@ void C_ObjectSentrygun::OnDataChanged( DataUpdateType_t updateType )
 		m_nOldShieldLevel = m_nShieldLevel;
 		m_bRecreateShield = false;
 	}
-
-	if ( IsCarried() != m_bOldCarried )
-	{
-		m_bOldCarried = IsCarried();
-		if ( IsCarried() )
-		{
-			DestroySiren();
-		}
-	}
-
-	if ( ShouldBeActive() && !IsDisabled() && IsMiniBuilding() && !m_hSirenEffect )
-	{
-		CreateSiren();
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -224,8 +194,6 @@ void C_ObjectSentrygun::OnDataChanged( DataUpdateType_t updateType )
 //-----------------------------------------------------------------------------
 void C_ObjectSentrygun::OnGoActive( void )
 {
-	CreateSiren();
-
 	BaseClass::OnGoActive();
 }
 
@@ -234,8 +202,6 @@ void C_ObjectSentrygun::OnGoActive( void )
 //-----------------------------------------------------------------------------
 void C_ObjectSentrygun::OnGoInactive( void )
 {
-	DestroySiren();
-
 	BaseClass::OnGoInactive();
 }
 
@@ -244,8 +210,6 @@ void C_ObjectSentrygun::OnGoInactive( void )
 //-----------------------------------------------------------------------------
 void C_ObjectSentrygun::OnStartDisabled( void )
 {
-	DestroySiren();
-
 	BaseClass::OnStartDisabled();
 }
 
@@ -254,8 +218,6 @@ void C_ObjectSentrygun::OnStartDisabled( void )
 //-----------------------------------------------------------------------------
 void C_ObjectSentrygun::OnEndDisabled( void )
 {
-	CreateSiren();
-
 	BaseClass::OnEndDisabled();
 }
 
@@ -368,40 +330,6 @@ void C_ObjectSentrygun::DestroyShield( void )
 	{
 		ParticleProp()->StopEmission( m_hShieldEffect );
 		m_hShieldEffect = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::CreateSiren( void )
-{
-	if ( !IsMiniBuilding() )
-		return;
-
-	if ( IsCarried() )
-		return;
-
-	if ( m_hSirenEffect )
-		return;
-
-	const char* flashlightName = "cart_flashinglight";
-	if ( GetTeamNumber() == TF_TEAM_RED )
-	{
-		flashlightName = "cart_flashinglight_red";
-	}
-	m_hSirenEffect = ParticleProp()->Create( flashlightName, PATTACH_POINT_FOLLOW, "siren" );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_ObjectSentrygun::DestroySiren( void )
-{
-	if ( m_hSirenEffect )
-	{
-		ParticleProp()->StopEmission( m_hSirenEffect );
-		m_hSirenEffect = NULL;
 	}
 }
 
@@ -682,16 +610,8 @@ void C_ObjectSentrygun::OnPlacementStateChanged( bool bValidPlacement )
 {
 	if ( bValidPlacement && ( m_iPlacementBodygroup >= 0 ) && ( m_iPlacementBodygroup_Mini >= 0 ) )
 	{
-		if ( IsMiniBuilding() )
-		{
-			SetBodygroup( m_iPlacementBodygroup, 0 );
-			SetBodygroup( m_iPlacementBodygroup_Mini, 1 );
-		}
-		else
-		{
-			SetBodygroup( m_iPlacementBodygroup, 1 );
-			SetBodygroup( m_iPlacementBodygroup_Mini, 0 );
-		}
+		SetBodygroup( m_iPlacementBodygroup, 1 );
+		SetBodygroup( m_iPlacementBodygroup_Mini, 0 );
 	}
 	else
 	{
@@ -728,21 +648,6 @@ void C_ObjectSentrygun::DebugDamageParticles( void )
 void C_ObjectSentrygun::BuildTransformations( CStudioHdr *hdr, Vector *pos, Quaternion q[], const matrix3x4_t& cameraTransform, int boneMask, CBoneBitList &boneComputed )
 {
 	BaseClass::BuildTransformations( hdr, pos, q, cameraTransform, boneMask, boneComputed );
-
-	if ( !IsMiniBuilding() )
-		return;
-
-	if ( IsBuilding() || IsPlacing() )
-		return;
-
-	
-	//Vector position;
-	//for ( int i=0; i<8; ++i )
-	//{
-	//	matrix3x4_t &transform = GetBoneForWrite( i );
-	//	MatrixGetColumn( transform, 3, position );
-	//	MatrixSetColumn( Vector(0,0,-4) + position, 3, transform );
-	//}
 }
 
 //-----------------------------------------------------------------------------

@@ -2309,15 +2309,6 @@ USER_MESSAGE( BonusDucks )
 	}
 }
 
-USER_MESSAGE( PlayerPickupWeapon )
-{
-	IGameEvent *event = gameeventmanager->CreateEvent( "localplayer_pickup_weapon" );
-	if ( event )
-	{
-		gameeventmanager->FireEventClientSide( event );
-	}
-}
-
 USER_MESSAGE( BuiltObject )
 {
 	int nObjType = (int)msg.ReadByte();

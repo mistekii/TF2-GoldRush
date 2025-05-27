@@ -162,7 +162,6 @@ IMPLEMENT_SERVERCLASS_ST(CBaseObject, DT_BaseObject)
 	SendPropBool(SENDINFO(m_bPlacing) ),
 	SendPropBool(SENDINFO(m_bCarried) ),
 	SendPropBool(SENDINFO(m_bCarryDeploy) ),
-	SendPropBool(SENDINFO(m_bMiniBuilding) ),
 	SendPropFloat(SENDINFO(m_flPercentageConstructed), 8, 0, 0.0, 1.0f ),
 	SendPropInt(SENDINFO(m_fObjectFlags), OF_BIT_COUNT, SPROP_UNSIGNED ),
 	SendPropEHandle(SENDINFO(m_hBuiltOnEntity)),
@@ -248,7 +247,6 @@ CBaseObject::CBaseObject()
 	m_iHealthOnPickup = 0;
 	m_iLifetimeDamage = 0;
 	m_bCannotDie = false;
-	m_bMiniBuilding = false;
 	m_flPlasmaDisableTime = 0;
 	m_bPlasmaDisable = false;
 
@@ -1363,11 +1361,6 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 			gameeventmanager->FireEvent( event, true );	// don't send to clients
 		}
 	}
-	else if ( IsMiniBuilding() )
-	{
-		int iHealth = GetMaxHealthForCurrentLevel() / 2;
-		SetHealth( iHealth );
-	}
 	else
 	{
 		SetHealth( OBJECT_CONSTRUCTION_STARTINGHEALTH );
@@ -1433,47 +1426,12 @@ bool CBaseObject::StartBuilding( CBaseEntity *pBuilder )
 	// instantly play the build anim
 	DetermineAnimation();
 
-	if ( IsMiniBuilding() && ( GetType() != OBJ_DISPENSER ) )
-	{
-		// Set the skin after placement mode.
-		m_nSkin = ( GetTeamNumber() == TF_TEAM_RED ) ? 2 : 3;
-	}
-
 	if ( ShouldQuickBuild() )
 	{
 		DoQuickBuild();
 	}
 
 	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CBaseObject::ShouldBeMiniBuilding( CTFPlayer* pPlayer )
-{
-	if ( !pPlayer )
-		return false;
-
-	CTFWrench* pWrench = dynamic_cast<CTFWrench*>( pPlayer->Weapon_OwnsThisID( TF_WEAPON_WRENCH ) );
-	if ( !pWrench )
-		return false;
-
-	if ( !pWrench->IsPDQ() )
-		return false;
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void CBaseObject::MakeMiniBuilding( CTFPlayer* pPlayer )
-{
-	if ( !ShouldBeMiniBuilding( pPlayer ) || IsMiniBuilding() )
-		return;
-
-	m_bMiniBuilding = true;
 }
 
 //-----------------------------------------------------------------------------
@@ -2047,7 +2005,7 @@ bool CBaseObject::Construct( float flHealth )
 		// Minibuildings build health at a reduced rate
 		// Staging_engy
 		{
-			SetHealth( Min( (float)GetMaxHealth(), m_flHealth + (IsMiniBuilding() ? (flHealth * 0.5f) : flHealth) ) );
+			SetHealth( Min( (float)GetMaxHealth(), m_flHealth + flHealth ) );
 		}
 
 		// Return true if we're constructed now
@@ -2184,13 +2142,6 @@ void CBaseObject::CreateObjectGibs( void )
 	int nMetalPerGib = nTotalMetal / m_aGibs.Count();
 	int nLeftOver = nTotalMetal % m_aGibs.Count();
 
-	if ( IsMiniBuilding() )
-	{
-		// STAGING_ENGY
-		nMetalPerGib = 0;
-		nLeftOver = 0;
-	}
-
 	int i;
 	for ( i=0; i<m_aGibs.Count(); i++ )
 	{
@@ -2239,11 +2190,6 @@ CTFAmmoPack* CBaseObject::CreateAmmoPack( const char *pchModel, int nMetal )
 		pAmmoPack->m_takedamage = DAMAGE_YES;		
 		pAmmoPack->SetHealth( 900 );
 		pAmmoPack->m_bObjGib = true;
-
-		if ( IsMiniBuilding() )
-		{
-			pAmmoPack->SetModelScale( 0.6f );
-		}
 	}
 
 	return pAmmoPack;
@@ -2771,9 +2717,6 @@ void CBaseObject::DoWrenchHitEffect( Vector hitLoc, bool bRepairHit, bool bUpgra
 //-----------------------------------------------------------------------------
 bool CBaseObject::CheckUpgradeOnHit( CTFPlayer *pPlayer )
 {
-	if ( !CanBeUpgraded() )
-		return false;
-
 	if ( m_bCarryDeploy )
 		return false;
 
@@ -2830,9 +2773,6 @@ bool CBaseObject::CanBeUpgraded( CTFPlayer *pPlayer )
 {
 	// Already upgrading
 	if ( IsUpgrading() )
-		return false;
-
-	if ( IsMiniBuilding() )
 		return false;
 
 	// only engineers
@@ -3679,13 +3619,13 @@ void CBaseObject::InputDisable( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 int CBaseObject::GetMaxHealthForCurrentLevel( void )
 {
-	int iMaxHealth = IsMiniBuilding() ? GetMiniBuildingStartingHealth() : GetBaseHealth();
+	int iMaxHealth = GetBaseHealth();
 	if ( GetOwner() )
 	{
 		CALL_ATTRIB_HOOK_INT_ON_OTHER( GetOwner(), iMaxHealth, mult_engy_building_health );
 	}
 	
-	if ( !IsMiniBuilding() && ( GetUpgradeLevel() > 1 ) )
+	if ( GetUpgradeLevel() > 1 )
 	{
 		float flMultiplier = pow( UPGRADE_LEVEL_HEALTH_MULTIPLIER, GetUpgradeLevel() - 1 );
 		iMaxHealth = (int)( iMaxHealth * flMultiplier );
