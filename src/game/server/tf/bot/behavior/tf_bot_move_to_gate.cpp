@@ -58,6 +58,17 @@ ActionResult< CTFBot >	CTFBotMoveToGate::Update( CTFBot *me, float interval )
 			cart = trainWatcher->GetTrainEntity();
 		}
 
+		int gateAttribute;
+		// Get the enemy team
+		if ( me->GetTeamNumber() == TF_TEAM_BLUE )
+		{
+			gateAttribute = TF_NAV_BLUE_SETUP_GATE;
+		}
+		else
+		{
+			gateAttribute = TF_NAV_RED_SETUP_GATE;
+		}
+
 		// Look for valid positions near the gate/exit
 		FOR_EACH_VEC( TheNavAreas, it )
 		{
@@ -70,7 +81,7 @@ ActionResult< CTFBot >	CTFBotMoveToGate::Update( CTFBot *me, float interval )
 				isCanidate = true;
 			}
 
-			if ( area->HasAttributeTF( TF_NAV_BLUE_SETUP_GATE ) )
+			if ( area->HasAttributeTF( gateAttribute ) )
 			{
 				isCanidate = true;
 			}
