@@ -213,6 +213,8 @@ CON_COMMAND( togglescores, "Toggles score panel")
 TFViewport::TFViewport()
 {
 	ivgui()->AddTickSignal( GetVPanel(), 0 );
+	
+	m_bPlayGameStartupMusic = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -229,6 +231,8 @@ TFViewport::~TFViewport()
 void TFViewport::Start( IGameUIFuncs *pGameUIFuncs, IGameEventManager2 * pGameEventManager )
 {
 	BaseClass::Start( pGameUIFuncs, pGameEventManager );
+
+	m_bPlayGameStartupMusic = true;
 }
 
 void TFViewport::ApplySchemeSettings( vgui::IScheme *pScheme )
@@ -416,4 +420,12 @@ void TFViewport::OnScreenSizeChanged( int iOldWide, int iOldTall )
 void TFViewport::OnTick()
 {
 	m_pAnimController->UpdateAnimations( gpGlobals->curtime );
+
+	if ( m_bPlayGameStartupMusic )
+	{
+		// conn: Play our startup music. This is our job now instead of gameui's. And we do it better, with SOUNDSCRIPTZ!
+		engine->ClientCmd_Unrestricted( "playgamesound music.gamestartup" );
+
+		m_bPlayGameStartupMusic = false;
+	}
 }

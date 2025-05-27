@@ -48,6 +48,7 @@ public:
 private:
 	void CenterWindow( vgui::Frame *win );
 
+	bool m_bPlayGameStartupMusic;
 };
 
 

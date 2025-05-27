@@ -1,0 +1,19 @@
+"music.gamestartup"
+{
+	"channel"	"CHAN_STATIC"
+	"soundlevel"	"SNDLVL_NONE"
+	"volume"	"1.00"
+	"rndwave"
+	{
+		"wave"	"#ui/gamestartup1.mp3"	// Team Fortress 2
+		"wave"	"#ui/gamestartup2.mp3"	// Playing with Danger
+		"wave"	"#ui/gamestartup3.mp3"	// Rocket Jump Waltz
+		"wave"	"#ui/gamestartup4.mp3"	// The Art of War
+		"wave"	"#ui/gamestartup5.mp3"	// Faster Than a Speeding Bullet
+		"wave"	"#ui/gamestartup6.mp3"	// Petite Chou-Fleur
+		"wave"	"#ui/gamestartup7.mp3"	// Right Behind You
+		"wave"	"#ui/gamestartup8.mp3"	// Intruder Alert
+		"wave"	"#ui/gamestartup9.mp3"	// Drunken Pipe-Bomb
+		"wave"	"#ui/gamestartup10.mp3"	// More Gun
+	}
+}

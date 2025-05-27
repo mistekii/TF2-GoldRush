@@ -1186,6 +1186,13 @@ void CHLClient::PostInit()
 		r_lightmap_bicubic.SetValue( info.m_nMaxDXSupportLevel >= 95 || ( info.m_nMaxDXSupportLevel >= 90 && IsLinux() ) );
 		r_lightmap_bicubic_set.SetValue( true );
 	}
+
+#ifdef TF_CLIENT_DLL
+	// conn: Since we don't have access to gameui, we have to disable this the stupid way.
+	// We have our own way of playing startup music that isnt based on hardcoded filenames. See TFViewport::OnTick()
+	CommandLine()->AppendParm( "-nostartupsound", "" );
+#endif
+
 }
 
 //-----------------------------------------------------------------------------
