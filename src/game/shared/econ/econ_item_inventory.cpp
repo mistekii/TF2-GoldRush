@@ -1761,7 +1761,8 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 	FOR_EACH_MAP_FAST( itemMap, i )
 	{
 		GameItemDefinition_t* pItemDef = dynamic_cast<GameItemDefinition_t*>( itemMap[i] );
-
+		
+	#ifdef CLIENT_DLL
 		CAchievementMgr *pAchievementMgr = dynamic_cast<CAchievementMgr *>( engine->GetAchievementMgr() );
 		const AchievementAward_t* pAchievementAward = GetItemSchema()->GetAchievementRewardByDefIndex( pItemDef->GetDefinitionIndex() );
 
@@ -1787,6 +1788,7 @@ void CPlayerInventory::SOCacheSubscribed( const CSteamID & steamIDOwner, GCSDK::
 			if ( !pAchievement->IsAchieved() )
 				continue;
 		}
+	#endif
 
 		// Create the item
 		CEconItem* pItem = new CEconItem();
