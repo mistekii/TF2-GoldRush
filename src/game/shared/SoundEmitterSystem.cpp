@@ -1047,10 +1047,10 @@ void Playgamesound_f( const CCommand &args )
 	}
 	else
 	{
-		Msg("Can't play until a game is started.\n");
-		// UNDONE: Make something like this work?
-		//CBroadcastRecipientFilter filter;
-		//g_SoundEmitterSystem.EmitSound( filter, 1, args[1], 0.0, 0, 0, &vec3_origin, 0, NULL );
+		const char *sound = soundemitterbase->GetWavFileForSound(args[1], GENDER_NONE);
+		char command[512];
+		Q_snprintf(command, sizeof(command), "play \"%s\"", sound);
+		engine->ClientCmd_Unrestricted(command);
 	}
 }
 
