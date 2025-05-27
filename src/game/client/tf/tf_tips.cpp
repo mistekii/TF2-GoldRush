@@ -100,21 +100,6 @@ const wchar_t *CTFTips::GetRandomTip( int &iClassUsed )
 {
 	Init();
 
-	// Chance of reminding players about the Abuse Reporter.
-	// The chance is very high for the first 20 hours of play since newbies get picked on a lot.
-	int abuseHintChance = 3;
-
-	if ( CTFStatPanel::GetTotalHoursPlayed() < 20.0f )
-	{
-		abuseHintChance = 33;
-	}
-
-	if ( RandomInt( 1, 100 ) <= abuseHintChance )
-	{
-		iClassUsed = RandomInt( TF_FIRST_NORMAL_CLASS, TF_LAST_NORMAL_CLASS );
-		return GetAbuseReportTip();
-	}
-
 	// pick a random tip
 	int iTip = RandomInt( 0, m_iTipCountAll-1 );
 	// walk through each class until we find the class this tip lands in
@@ -213,20 +198,6 @@ const wchar_t *CTFTips::GetTip( int iClass, int iTip )
 	UTIL_ReplaceKeyBindings( wzFmt, 0, wzTip, sizeof( wzTip ) );
 
 	return wzTip;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Returns tip about using the Abuse Reporter
-//-----------------------------------------------------------------------------
-const wchar_t *CTFTips::GetAbuseReportTip( void )
-{
-	static wchar_t wzAbuseTip[512] = L"";
-
-	// replace any commands with their bound keys
-	const wchar_t *wzFmt = g_pVGuiLocalize->Find( "Tip_Abuse_Report" );
-	UTIL_ReplaceKeyBindings( wzFmt, 0, wzAbuseTip, sizeof( wzAbuseTip ) );
-
-	return wzAbuseTip;
 }
 
 void CTFTips::GetRandomCaptainCanteenImages( const char **ppchBody, const char **ppchMisc, const char **ppchHat )

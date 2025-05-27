@@ -137,7 +137,6 @@
 
 #if defined( TF_CLIENT_DLL )
 #include "tf_gc_client.h"
-#include "abuse_report.h"
 #endif
 
 #ifdef USES_ECON_ITEMS
@@ -1026,13 +1025,6 @@ int CHLClient::Init( CreateInterfaceFn appSystemFactory, CreateInterfaceFn physi
 	#if defined( TF_CLIENT_DLL )
 	IGameSystem::Add( CustomTextureToolCacheGameSystem() );
 	#endif
-
-#if defined( TF_CLIENT_DLL )
-	if ( g_AbuseReportMgr != NULL )
-	{
-		IGameSystem::Add( g_AbuseReportMgr );
-	}
-#endif
 
 #if defined( CLIENT_DLL ) && defined( COPY_CHECK_STRESSTEST )
 	IGameSystem::Add( GetPredictionCopyTester() );

@@ -79,7 +79,6 @@
 "+showscores"	"#Valve_Display_Scores"
 "screenshot"	"#Valve_Take_Screen_Shot"
 "save_replay"	"#Replay_SaveReplay"
-"abuse_report_queue"			"#AbuseReport_QueueCommandName"
 "quit"			"#Valve_Quit_Game"
 "toggleconsole"	"#Valve_Console_Toggle"
 "askconnect_accept"	"#Valve_Accept_Redirect"
