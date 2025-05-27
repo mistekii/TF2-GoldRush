@@ -165,36 +165,11 @@ wchar_t* ReadChatTextString( bf_read &msg, OUT_Z_BYTECAP(outSizeInBytes) wchar_t
 	szString[0] = 0;
 	msg.ReadString( szString, sizeof(szString) );
 
+	RemoveColorMarkup( szString );
+
 	g_pVGuiLocalize->ConvertANSIToUnicode( szString, pOut, outSizeInBytes );
 
 	StripEndNewlineFromString( pOut );
-
-	// converts color control characters into control characters for the normal color
-	for ( wchar_t *test = pOut; test && *test; ++test )
-	{
-		if ( *test && (*test < COLOR_MAX ) )
-		{
-			if ( *test == COLOR_HEXCODE || *test == COLOR_HEXCODE_ALPHA )
-			{
-				// mark the next seven or nine characters. one for the control character and six or eight for the code itself.
-				const int nSkip = ( *test == COLOR_HEXCODE ? 7 : 9 );
-				for ( int i = 0; i < nSkip && *test != 0; i++, test++ )
-				{
-					*test = COLOR_NORMAL;
-				}
-
-				// if we reached the end of the string first, then back up
-				if ( *test == 0 )
-				{
-					--test;
-				}
-			}
-			else
-			{
-				*test = COLOR_NORMAL;
-			}
-		}
-	}
 
 	return pOut;
 }
@@ -792,7 +767,7 @@ void CBaseHudChat::MsgFunc_SayText( bf_read &msg )
 	CLocalPlayerFilter filter;
 	C_BaseEntity::EmitSound( filter, SOUND_FROM_LOCAL_PLAYER, "HudChat.Message" );
 
-	Msg( "%s", szString );
+	Msg( "%s", RemoveColorMarkup(szString) );
 }
 
 int CBaseHudChat::GetFilterForString( const char *pString )
@@ -927,7 +902,7 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 		{
 			Q_strncat( szString, "\n", sizeof(szString), 1 );
 		}
-		Msg( "%s", ConvertCRtoNL( szString ) );
+		Msg( "%s", RemoveColorMarkup(ConvertCRtoNL( szString )) );
 		break;
 
 	case HUD_PRINTTALK:
@@ -939,7 +914,7 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 			Q_strncat( szString, "\n", sizeof(szString), 1 );
 		}
 		Printf( CHAT_FILTER_NONE, "%s", ConvertCRtoNL( szString ) );
-		Msg( "%s", ConvertCRtoNL( szString ) );
+		Msg( "%s", RemoveColorMarkup(ConvertCRtoNL( szString )) );
 		break;
 
 	case HUD_PRINTCONSOLE:
@@ -950,7 +925,7 @@ void CBaseHudChat::MsgFunc_TextMsg( bf_read &msg )
 		{
 			Q_strncat( szString, "\n", sizeof(szString), 1 );
 		}
-		Msg( "%s", ConvertCRtoNL( szString ) );
+		Msg( "%s", RemoveColorMarkup(ConvertCRtoNL( szString )) );
 		break;
 	}
 }
