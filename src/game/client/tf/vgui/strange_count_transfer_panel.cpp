@@ -26,21 +26,6 @@ public:
 		, m_pCorrespondingItem( pCorrespondingItem )
 		, m_mapXifierClassCount( CaselessStringLessThan )
 	{
-		int nCount = InventoryManager()->GetLocalInventory()->GetItemCount();
-		for( int i=0; i<nCount; ++i )
-		{
-			if ( !BIsItemStrange( InventoryManager()->GetLocalInventory()->GetItem( i ) ) )
-				continue;
-
-			const char *pItemXifier = InventoryManager()->GetLocalInventory()->GetItem( i )->GetItemDefinition()->GetXifierRemapClass();
-			auto idx = m_mapXifierClassCount.Find( pItemXifier );
-			if ( idx == m_mapXifierClassCount.InvalidIndex() )
-			{
-				idx = m_mapXifierClassCount.Insert( pItemXifier, 0 );
-			}
-
-			m_mapXifierClassCount[ idx ] = m_mapXifierClassCount[ idx ] + 1;
-		}
 	}
 
 	void ApplySchemeSettings( vgui::IScheme *pScheme )
@@ -75,30 +60,21 @@ public:
 				return "#TF_StrangeCount_Transfer_TypeMismatch";
 		}
 
-		const char *pItemXifier = pItem->GetItemDefinition()->GetXifierRemapClass();
-		auto idx = m_mapXifierClassCount.Find( pItemXifier );
 		int nCount = 0;
-		if ( !pItemXifier )
+		// find atleast 1 other matching item
+		CPlayerInventory *pInventory = InventoryManager()->GetLocalInventory();
+		if ( pInventory )
 		{
-			// if no xifier, find atleast 1 other matching item
-			CPlayerInventory *pInventory = InventoryManager()->GetLocalInventory();
-			if ( pInventory )
+			for ( int i = 0; i < pInventory->GetItemCount(); i++ )
 			{
-				for ( int i = 0; i < pInventory->GetItemCount(); i++ )
+				CEconItemView *pIterItem = pInventory->GetItem( i );
+				if ( pIterItem->GetItemDefIndex() == pItem->GetItemDefIndex() && BIsItemStrange(pIterItem) )
 				{
-					CEconItemView *pIterItem = pInventory->GetItem( i );
-					if ( pIterItem->GetItemDefIndex() == pItem->GetItemDefIndex() && BIsItemStrange(pIterItem) )
-					{
-						// find 2 or more, yourself and another
-						if ( ++nCount >= 2 )
-							return NULL;
-					}
+					// find 2 or more, yourself and another
+					if ( ++nCount >= 2 )
+						return NULL;
 				}
 			}
-		}
-		else if ( idx != m_mapXifierClassCount.InvalidIndex() )
-		{
-			nCount = m_mapXifierClassCount[ idx ];
 		}
 
 		if ( nCount < 2 )

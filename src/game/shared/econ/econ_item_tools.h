@@ -475,23 +475,6 @@ public:
 #endif // CLIENT_DLL
 };
 //---------------------------------------------------------------------------------------
-class CEconTool_Festivizer : public CEconTool_Xifier
-{
-public:
-	CEconTool_Festivizer( const char *pszTypeName, const char *pszUseString, item_capabilities_t unCapabilities, KeyValues *pUsageKV )
-		: CEconTool_Xifier( pszTypeName, pszUseString, unCapabilities, pUsageKV )
-	{
-	}
-
-	virtual bool CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const;
-
-
-#ifdef CLIENT_DLL
-	virtual void OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const;
-#endif // CLIENT_DLL
-};
-
-//---------------------------------------------------------------------------------------
 class CEconTool_Unusualifier : public CEconTool_Xifier
 {
 public:

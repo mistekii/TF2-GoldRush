@@ -316,9 +316,6 @@ void CEmbeddedItemModelPanel::SetItem( CEconItemView *pItem )
 			
 	}
 
-	static CSchemaAttributeDefHandle pAttr_is_festivized( "is_festivized" );
-	m_bIsFestivized = pAttr_is_festivized && m_pItem->FindAttribute( pAttr_is_festivized );
-
 	m_bIsPaintKitItem = GetPaintKitDefIndex( m_pItem );
 
 	m_bUseRenderTargetAsIcon = ShouldUseRenderTargetAsIcon();
@@ -418,17 +415,6 @@ void CEmbeddedItemModelPanel::SetItem( CEconItemView *pItem )
 						for ( int i = 0; i < iNumAttachedModels; ++i )
 						{
 							attachedmodel_t	*pModel = m_pItem->GetItemDefinition()->GetAttachedModelData( iTeam, i );
-							LoadAttachedModel( pModel );
-						}
-					}
-
-					// Festive
-					if ( m_bIsFestivized )
-					{
-						const int iNumAttachedModels = m_pItem->GetItemDefinition()->GetNumAttachedModelsFestivized( iTeam );
-						for ( int i = 0; i < iNumAttachedModels; ++i )
-						{
-							attachedmodel_t	*pModel = m_pItem->GetItemDefinition()->GetAttachedModelDataFestivized( iTeam, i );
 							LoadAttachedModel( pModel );
 						}
 					}
@@ -1052,9 +1038,6 @@ ITexture *CEmbeddedItemModelPanel::GetCachedGeneratedIcon()
 
 bool CEmbeddedItemModelPanel::ShouldUseRenderTargetAsIcon() const
 {
-	if ( m_bIsFestivized )
-		return true;
-
 	float flUseCacheIcon = 0.f;
 	static CSchemaAttributeDefHandle pAttrib_UseModelCacheIcon( "use_model_cache_icon" );
 	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( m_pItem, pAttrib_UseModelCacheIcon, &flUseCacheIcon ) && flUseCacheIcon != 0.f )

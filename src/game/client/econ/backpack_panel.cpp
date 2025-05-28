@@ -160,7 +160,6 @@ enum EItemCustomizationRemoveType
 	kCustomizationRemove_UpgradeCard,
 	kCustomizationRemove_KillStreak,
 	kCustomizationRemove_GiftedBy,
-	kCustomizationRemove_Festivizer,
 };
 
 typedef bool (* HasRefurbishablePropertyFunc_t)( const CEconItemView *pEconItemView, const char *pArg, int iUserData );
@@ -232,7 +231,6 @@ static RefurbishableProperty g_RemoveableAttributes[] =
 	{ &HasCustomAttribute,		NULL,								"makers mark id",		"#RefurbishItem_RemoveMakersMarkCombo",		"#RefurbishItem_RemoveMakersMarkTitle",		"#RefurbishItem_RemoveMakersMark",		kCustomizationRemove_MakersMark,		kNoUserData },	// was this item crafted by a specific dude?
 	{ &HasCustomAttribute,		NULL,								"killstreak tier",		"#RefurbishItem_RemoveKillStreakCombo",		"#RefurbishItem_RemoveKillStreakTitle",		"#RefurbishItem_RemoveKillStreak",		kCustomizationRemove_KillStreak,		kNoUserData },	// Killstreak Effect
 	{ &HasCustomAttribute,		NULL,								"gifter account id",	"#RefurbishItem_RemoveGifterCombo",			"#RefurbishItem_RemoveGifterTitle",			"#RefurbishItem_RemoveGifter",			kCustomizationRemove_GiftedBy,			kNoUserData },	// Gifted by
-	{ &HasCustomAttribute,		NULL,								"is_festivized",		"#RefurbishItem_RemoveFestivizerCombo",		"#RefurbishItem_RemoveFestivizerTitle",		"#RefurbishItem_RemoveFestivizer",		kCustomizationRemove_Festivizer,		kNoUserData },	// Festivizer
 
 	//"gifter account id",		// who gifted us this item? (will also remove "event date")
 };
@@ -3142,9 +3140,6 @@ void CTFRemoveItemCustomizationConfirmDialog::OnCommand( const char *command )
 				break;
 			case kCustomizationRemove_GiftedBy:
 				SendGCSimpleAttributeRemovalMessage( &m_Item, "giftedby", k_EMsgGCRemoveGiftedBy );
-				break;
-			case kCustomizationRemove_Festivizer:
-				SendGCSimpleAttributeRemovalMessage( &m_Item, "festivizer", k_EMsgGCRemoveFestivizer );
 				break;
 			default:
 				AssertMsg( false, "Unknown item customization removal type!" );

@@ -1032,29 +1032,6 @@ void CTFPlayerModelPanel::EquipItem( CEconItemView *pItem )
 				LoadAndAttachAdditionalModel( pModel->m_pszModelName, pItem );
 			}
 		}
-
-		// Festive
-		// Set attached models if viewable third-person.
-		static CSchemaAttributeDefHandle pAttr_is_festivized( "is_festivized" );
-		if ( pAttr_is_festivized && pItem->FindAttribute( pAttr_is_festivized ) )
-		{
-			const int iNumAttachedModels = pItemDef->GetNumAttachedModelsFestivized( iTeam );
-			for ( int i = 0; i < iNumAttachedModels; ++i )
-			{
-				attachedmodel_t	*pModel = pItemDef->GetAttachedModelDataFestivized( iTeam, i );
-
-				if ( !( pModel->m_iModelDisplayFlags & kAttachedModelDisplayFlag_WorldModel ) )
-					continue;
-
-				if ( !pModel->m_pszModelName )
-				{
-					Warning( "econ item definition '%s' attachment (team %d idx %d) has no model\n", pItemDef->GetDefinitionName(), iTeam, i );
-					continue;
-				}
-
-				LoadAndAttachAdditionalModel( pModel->m_pszModelName, pItem );
-			}
-		}
 	}
 
 	// Hide any item associated groups.

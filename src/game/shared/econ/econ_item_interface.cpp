@@ -307,17 +307,6 @@ bool IEconItemInterface::IsMarketable() const
 			|| GetQuality() == AE_COLLECTORS || GetQuality() == AE_PAINTKITWEAPON )
 			return true;
 
-		// All festive items are from time-limited holiday crates and are listable. This code seems
-		// safe. (...) (This code is in fact so safe that if we just do a substring match we'll also
-		// allow "A Rather Festive Tree".)
-		if ( !V_strncmp( pItemDef->GetDefinitionName(), "Festive", 7 ) )
-			return true;
-
-		// All botkiller items come from MvM rewards and are listable. This does a substring search
-		// to find all varieties (gold, silver, rust, etc.), etc.
-		if ( V_strstr( pItemDef->GetDefinitionName(), " Botkiller " ) )
-			return true;
-
 		// Mvm V2 Robit Parts
 		if ( V_strstr( pItemDef->GetDefinitionName(), "Robits " ) )
 			return true;

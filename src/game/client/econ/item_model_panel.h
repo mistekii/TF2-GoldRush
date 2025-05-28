@@ -152,7 +152,6 @@ private:
 	bool					m_bGreyedOut;
 	bool					m_bModelIsHidden;
 
-	bool					m_bIsFestivized;
 	bool					m_bIsPaintKitItem;
 	bool					m_bUseRenderTargetAsIcon; // same as m_bUseItemRenderTarget but set by attribute instead of res file
 

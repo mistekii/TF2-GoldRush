@@ -1082,7 +1082,6 @@ struct perteamvisuals_t
 	int			iSkin;
 	bool		bUsePerClassBodygroups;
 	CUtlVector<attachedmodel_t>	m_AttachedModels;
-	CUtlVector<attachedmodel_t>	m_AttachedModelsFestive;	// Attr controlled Festive Attachments
 	CUtlVector<attachedparticlesystem_t> m_AttachedParticles;
 	CUtlVector<animation_on_wearable_t> m_Animations;
 	CUtlVector<activity_on_wearable_t> m_Activities;
@@ -1295,7 +1294,6 @@ public:
 	int			GetArmoryRemap( void ) const		{ return m_iArmoryRemap; }
 	int			GetStoreRemap( void ) const			{ return m_iStoreRemap; }
 	item_definition_index_t GetSetItemRemap() const { return m_unSetItemRemapDefIndex; }		// what def index do we consider ourself for purposes of determining "is an item equipped that satisfies this set slot?" (ie., Festive Huntsman -> Huntsman); default is to point to itself
-	const char *GetXifierRemapClass() const			{ return m_pszXifierRemapClass; }
 	const char	*GetBaseFunctionalItemName() const	{ return m_pszBaseFunctionalItemName; }
 	const char *GetParticleSuffix() const			{ return m_pszParticleSuffix; }
 
@@ -1379,9 +1377,6 @@ public:
 	// Attached models
 	int						GetNumAttachedModels( int iTeam ) const;
 	attachedmodel_t			*GetAttachedModelData( int iTeam, int iIdx ) const;
-
-	int						GetNumAttachedModelsFestivized( int iTeam ) const;
-	attachedmodel_t			*GetAttachedModelDataFestivized( int iTeam, int iIdx ) const;
 
 	// Attached particle systems
 	int						GetNumAttachedParticles( int iTeam ) const;
@@ -1609,9 +1604,6 @@ private:
 	// Contains information on how to describe items with this attribute in the Armory
 	const char		*m_pszArmoryDesc;
 
-	// Temporary(?) solution to allow xifiers to work on botkiller and festive variants of weapons
-	const char		*m_pszXifierRemapClass;
-
 	// Base item name -- used for grouping weapon functionality
 	const char		*m_pszBaseFunctionalItemName;
 
@@ -1751,38 +1743,6 @@ inline attachedmodel_t *CEconItemDefinition::GetAttachedModelData( int iTeam, in
 		return NULL;
 
 	return &pVisuals->m_AttachedModels[iIdx];
-#else
-	return NULL;
-#endif
-}
-//-----------------------------------------------------------------------------
-inline int CEconItemDefinition::GetNumAttachedModelsFestivized( int iTeam ) const
-{
-#ifndef CSTRIKE_DLL
-	iTeam = GetBestVisualTeamData( iTeam );
-	perteamvisuals_t *pVisuals = GetPerTeamVisual(iTeam);
-	if ( iTeam < 0 || iTeam >= TEAM_VISUAL_SECTIONS || !pVisuals )
-		return 0;
-	return pVisuals->m_AttachedModelsFestive.Count();
-#else
-	return 0;
-#endif
-}
-//-----------------------------------------------------------------------------
-inline attachedmodel_t *CEconItemDefinition::GetAttachedModelDataFestivized( int iTeam, int iIdx ) const
-{
-#ifndef CSTRIKE_DLL
-	iTeam = GetBestVisualTeamData( iTeam );
-	perteamvisuals_t *pVisuals = GetPerTeamVisual(iTeam);
-	Assert( pVisuals );
-	if ( iTeam < 0 || iTeam >= TEAM_VISUAL_SECTIONS || !pVisuals )
-		return NULL;
-
-	Assert( iIdx < pVisuals->m_AttachedModelsFestive.Count() );
-	if ( iIdx >= pVisuals->m_AttachedModelsFestive.Count() )
-		return NULL;
-
-	return &pVisuals->m_AttachedModelsFestive[iIdx];
 #else
 	return NULL;
 #endif

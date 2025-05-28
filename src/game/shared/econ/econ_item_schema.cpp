@@ -2311,7 +2311,6 @@ m_pItemCollectionDef( NULL ),
 m_pszArmoryRemap( NULL ),
 m_pszStoreRemap( NULL ),
 m_unSetItemRemapDefIndex( INVALID_ITEM_DEF_INDEX ),
-m_pszXifierRemapClass( NULL ),
 m_pszBaseFunctionalItemName( NULL ),
 m_pszParticleSuffix( NULL ),
 m_pszCollectionReference( NULL ),
@@ -2497,15 +2496,6 @@ void CEconItemDefinition::BInitVisualBlockFromKV( KeyValues *pKVItem, CUtlVector
 						int iAtt = pVisData->m_AttachedModels.AddToTail();
 						pVisData->m_AttachedModels[iAtt].m_iModelDisplayFlags = pKVAttachedModelData->GetInt( "model_display_flags", kAttachedModelDisplayFlag_MaskAll );
 						pVisData->m_AttachedModels[iAtt].m_pszModelName = pKVAttachedModelData->GetString( "model", NULL );
-					}
-				}
-				else if ( !Q_stricmp( pszEntry, "attached_models_festive" ) )
-				{
-					FOR_EACH_SUBKEY( pKVEntry, pKVAttachedModelData )
-					{
-						int iAtt = pVisData->m_AttachedModelsFestive.AddToTail();
-						pVisData->m_AttachedModelsFestive[iAtt].m_iModelDisplayFlags = pKVAttachedModelData->GetInt( "model_display_flags", kAttachedModelDisplayFlag_MaskAll );
-						pVisData->m_AttachedModelsFestive[iAtt].m_pszModelName = pKVAttachedModelData->GetString( "model", NULL );
 					}
 				}
 				else if ( !Q_stricmp( pszEntry, "attached_particlesystems" ) )
@@ -2732,12 +2722,6 @@ void CEconItemDefinition::GeneratePrecacheModelStrings( bool bDynamicLoad, CUtlV
 		for ( int model = 0; model < pPerTeamVisuals->m_AttachedModels.Count(); model++ )
 		{
 			out_pVecModelStrings->AddToTail( pPerTeamVisuals->m_AttachedModels[model].m_pszModelName );
-		}
-
-		// Festive
-		for ( int model = 0; model < pPerTeamVisuals->m_AttachedModelsFestive.Count(); model++ )
-		{
-			out_pVecModelStrings->AddToTail( pPerTeamVisuals->m_AttachedModelsFestive[model].m_pszModelName );
 		}
 	}
 
@@ -3251,7 +3235,6 @@ bool CEconItemDefinition::BInitFromKV( KeyValues *pKVItem, CUtlVector<CUtlString
 	m_pszArmoryRemap = m_pKVItem->GetString( "armory_remap", NULL );
 	m_pszStoreRemap = m_pKVItem->GetString( "store_remap", NULL );
 
-	m_pszXifierRemapClass = m_pKVItem->GetString( "xifier_class_remap", NULL );
 	m_pszBaseFunctionalItemName = m_pKVItem->GetString( "base_item_name", "" );
 	m_pszParticleSuffix = m_pKVItem->GetString( "particle_suffix", NULL );
 
@@ -4048,11 +4031,6 @@ IEconTool *CEconItemSchema::CreateEconToolImpl( const char *pszToolType, const c
 			if ( pUsageKV )								return NULL;
 
 			return new CEconTool_StrangeCountTransfer( pszToolType, unCapabilities );
-		}
-
-		if ( !V_stricmp( pszToolType, "paintkit_weapon_festivizer" ) )
-		{
-			return new CEconTool_Festivizer( pszToolType, pszUseString, unCapabilities, pUsageKV );
 		}
 
 		if ( !V_stricmp( pszToolType, "unusualifier" ) )

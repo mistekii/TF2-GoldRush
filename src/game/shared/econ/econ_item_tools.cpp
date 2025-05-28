@@ -200,18 +200,7 @@ bool CEconTool_StrangeCountTransfer::AreItemsEligibleForStrangeCountTransfer( co
 	if ( !pItem1 || !pItem2 )
 		return false;
 
-	const char *pItem1Xifier = pItem1->GetItemDefinition()->GetXifierRemapClass();
-	const char *pItem2Xifier = pItem2->GetItemDefinition()->GetXifierRemapClass();
-
-	// if no xifier class, check if the item defs are the same
-	if ( !pItem1Xifier || !pItem2Xifier )
-	{
-		if ( pItem1->GetItemDefinition() != pItem2->GetItemDefinition() )
-		{
-			return false;
-		}
-	}
-	else if ( V_stricmp( pItem1Xifier, pItem2Xifier ) != 0 )
+	if ( pItem1->GetItemDefinition() != pItem2->GetItemDefinition() )
 	{
 		return false;
 	}
@@ -1010,14 +999,6 @@ bool CEconTool_Xifier::ItemDefMatch( const CEconItemDefinition* pTargetItemDef, 
 		// Item def match counts
 		if ( pTargetItemDef == pSubjectItemDef )
 			return true;
-
-		// If these item defs have the same XifierRemapClass then they are allowed to match as well
-		if ( pTargetItemDef->GetXifierRemapClass() && *pTargetItemDef->GetXifierRemapClass() 
-			&& pSubjectItemDef->GetXifierRemapClass() && *pSubjectItemDef->GetXifierRemapClass() )
-		{
-			if (BStringsEqual(pSubjectItemDef->GetXifierRemapClass(), pTargetItemDef->GetXifierRemapClass()))
-				return true;
-		}
 	}
 
 	return false;
@@ -1051,25 +1032,6 @@ bool CEconTool_KillStreakifier::CanApplyTo( const IEconItemInterface *pTool, con
 	static CSchemaAttributeDefHandle pAttribDef_KillStreakEffect( "killstreak tier" );
 	float flEffectIndex = 0.0;
 	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pToolSubject, pAttribDef_KillStreakEffect, &flEffectIndex ) )
-		return false;
-
-	// Default rules
-	return CEconTool_Xifier::CanApplyTo( pTool, pToolSubject );
-}
-
-//-----------------------------------------------------------------------------
-bool CEconTool_Festivizer::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	const CEconItemDefinition *pSubjectItemDef = pToolSubject->GetItemDefinition();
-	if ( !pSubjectItemDef )
-		return false;
-
-	// Make sure the item doesn't already have an effect
-	static CSchemaAttributeDefHandle pAttribDef_Festivizer( "is_festivized" );
-	if ( FindAttribute( pToolSubject, pAttribDef_Festivizer ) )
 		return false;
 
 	// Default rules

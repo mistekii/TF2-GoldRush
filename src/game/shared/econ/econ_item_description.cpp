@@ -713,17 +713,6 @@ static void GenerateLocalizedFullItemName
 		}
 	}
 
-	
-	static CSchemaAttributeDefHandle pAttrDef_IsFestivized( "is_festivized" );
-	enum { kFestiveLength = 64, };
-	locchar_t szIsFestivized[kFestiveLength] = LOCCHAR( "" );
-	bool bFestivized = false;
-	if ( pAttrDef_IsFestivized && pEconItem->FindAttribute( pAttrDef_IsFestivized ) )
-	{
-		bFestivized = true;
-		bUseProperName = false;
-	}
-
 	// Check to see if we have a quality text override attribute.  We can get this when a temporary item
 	// comes in from a crafting recipe that needs to get its name generated, and wants to specify that it 
 	// takes in any quality
@@ -824,16 +813,6 @@ static void GenerateLocalizedFullItemName
 			loc_scpy_safe( szAustraliumSkin, pAustraliumLocalizedString );
 		}
 	}
-	
-	// Festivized
-	if ( bFestivized )
-	{
-		const locchar_t *pFestivizedLocalizedString = pLocalizationProvider->Find( "ItemNameFestive" );
-		if ( pFestivizedLocalizedString )
-		{
-			loc_scpy_safe( szIsFestivized, pFestivizedLocalizedString );
-		}
-	}
 
 	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || unQuality == AE_PAINTKITWEAPON || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
 								 ? "ItemNameNormalOrUniqueQualityFormat" 
@@ -856,9 +835,6 @@ static void GenerateLocalizedFullItemName
 			}
 		}
 	}
-
-	// Strange Unusual Festive Killstreak Australium ducks
-	loc_scpy_safe( szQuality, CConstructLocalizedString( pLocalizationProvider->Find( pszQualityFormat ), szQuality, szIsFestivized, szKillStreak, szAustraliumSkin, szDuckBadge ) );
 
 	enum { kLocalizedCrateSeriesLength = 128, };
 	locchar_t szLocalizedCrateSeries[ kLocalizedCrateSeriesLength ] = LOCCHAR("");
