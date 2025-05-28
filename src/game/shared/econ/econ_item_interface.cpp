@@ -316,11 +316,6 @@ bool IEconItemInterface::IsMarketable() const
 		if ( FindAttribute( pAttr_killstreak ) )
 			return true;
 
-		// Australium Items
-		static CSchemaAttributeDefHandle pAttrDef_IsAustralium( "is australium item" );
-		if ( FindAttribute( pAttrDef_IsAustralium ) )
-			return true;
-
 		// Glitch GateHat Replacement Item
 		static CSchemaItemDefHandle pItemDef_GlitchedCircuit( "Glitched Circuit Board" );
 		if ( pItemDef == pItemDef_GlitchedCircuit )

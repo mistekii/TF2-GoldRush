@@ -11293,24 +11293,7 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			iDeathFlags |= TF_DEATH_PURGATORY;
 		}
 
-		// Australium Guns get a Gold Background
 		IHasAttributes *pAttribInterface = GetAttribInterface( info.GetWeapon() );
-		if ( pAttribInterface )
-		{
-			int iIsAustralium = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iIsAustralium, is_australium_item );
-			if ( iIsAustralium )
-			{
-				iDeathFlags |= TF_DEATH_AUSTRALIUM;
-			}
-
-			int iIsGoldenWeapon = 0;
-			CALL_ATTRIB_HOOK_INT_ON_OTHER( info.GetWeapon(), iIsGoldenWeapon, set_turn_to_gold );
-			if ( iIsGoldenWeapon )
-			{
-				iDeathFlags |= TF_DEATH_AUSTRALIUM;
-			}
-		}
 
 		// We call this directly since we need more information than provided in the event alone.
 		if ( FStrEq( eventName, "player_death" ) )

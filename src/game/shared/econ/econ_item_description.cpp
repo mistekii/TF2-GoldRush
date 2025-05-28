@@ -802,18 +802,6 @@ static void GenerateLocalizedFullItemName
 		}
 	}
 
-	static CSchemaAttributeDefHandle pAttrDef_IsAustralium( "is australium item" );
-	enum { kAustraliumLength = 64, };
-	locchar_t szAustraliumSkin[ kAustraliumLength ] = LOCCHAR("");
-	if ( pAttrDef_IsAustralium && pEconItem->FindAttribute( pAttrDef_IsAustralium ) )
-	{
-		const locchar_t *pAustraliumLocalizedString = pLocalizationProvider->Find( "ItemNameAustralium" );
-		if ( pAustraliumLocalizedString )
-		{
-			loc_scpy_safe( szAustraliumSkin, pAustraliumLocalizedString );
-		}
-	}
-
 	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || unQuality == AE_PAINTKITWEAPON || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
 								 ? "ItemNameNormalOrUniqueQualityFormat" 
 								 : "ItemNameQualityFormat";

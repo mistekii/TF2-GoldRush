@@ -1614,7 +1614,6 @@ enum testitem_botanims_t
 #define TF_DEATH_INTERRUPTED			0x0040	// interrupted a player doing an important game event (like capping or carrying flag)
 #define TF_DEATH_GIBBED					0x0080	// player was gibbed
 #define TF_DEATH_PURGATORY				0x0100	// player died while in purgatory
-#define TF_DEATH_AUSTRALIUM				0x0200	// player killed by a Australium Weapon
 
 #define MAX_DECAPITATIONS		4
 
