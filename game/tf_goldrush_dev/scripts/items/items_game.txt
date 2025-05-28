@@ -10520,25 +10520,6 @@
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
 			"drop_sound"		"ui/item_heavy_gun_drop.wav"
 		}
-		"131"
-		{
-			"name"			"The Chargin' Targe"
-			"prefab"	"valve weapon_targe"
-			"first_sale_date"	"2010/09/29"
-			"holiday_restriction"	"halloween_or_fullmoon"
-			"xifier_class_remap"	"weapon_targe"
-		}
-		"132"
-		{
-			"name"	"The Eyelander"
-			"prefab"	"valve weapon_eyelander"
-			"first_sale_date"	"2010/09/29"
-			"holiday_restriction"	"halloween_or_fullmoon"
-			"static_attrs"
-			{
-				"min_viewmodel_offset"		"10 0 -11"				
-			}
-		}
 		"133"
 		{
 			"name"			"The Gunboats"
@@ -11156,6 +11137,72 @@
 			}
 			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
 			"drop_sound"		"ui/item_metal_weapon_drop.wav"
+		}
+		"307"
+		{
+			"name"	"The Ullapool Caber"
+			"first_sale_date"	"2010/12/08"
+			"item_class"	"tf_weapon_stickbomb"
+			"craft_class"	"weapon"
+			"craft_material_type"	"weapon"
+			"tags"
+			{
+				"can_deal_damage"		"1"
+				"can_deal_gib_damage"	"1"
+				"can_be_equipped_by_soldier_or_demo"	"1"
+			}
+			"show_in_armory"	"1"
+			"item_type_name"	"#TF_Weapon_StickBomb"
+			"item_name"	"#TF_UllapoolCaber"
+			"item_description"	"#TF_UllapoolCaber_Desc"
+			"item_logname"	"ullapool_caber"
+			"item_iconname"	"ullapool_caber"
+			"item_slot"	"melee"
+			"item_quality"	"unique"
+			"propername"	"1"
+			"min_ilevel"	"10"
+			"max_ilevel"	"10"
+			"image_inventory" "backpack/workshop/weapons/c_models/c_caber/c_caber"
+			"image_inventory_size_w"		"128"
+			"image_inventory_size_h"		"82"
+			"inspect_panel_dist" 				"35"			
+			"model_player"	"models/workshop/weapons/c_models/c_caber/c_caber.mdl"
+			"attach_to_hands" "1"
+			"used_by_classes"
+			{
+				"demoman"	"1"
+			}
+			"static_attrs"
+			{
+				"min_viewmodel_offset"		"12 0 -17"				
+			}
+			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
+			"drop_sound"		"ui/item_metal_weapon_drop.wav"
+			"attributes"
+			{
+				"fire rate penalty"
+				{
+					"attribute_class"	"mult_postfiredelay"
+					"value"	"1.2"
+				}
+				"single wep deploy time increased"
+				{
+					"attribute_class"	"mult_single_wep_deploy_time"
+					"value"	"2.0"
+				}
+				"crit mod disabled"
+				{
+					"attribute_class"	"mult_crit_chance"
+					"value"	"0"
+				}
+			}
+		}
+		"308"
+		{
+			"name"			"The Loch-n-Load"
+			"prefab" "weapon_lochnload"
+			"first_sale_date"	"2010/12/08"
+			"particle_suffix"	"loch_n_load"
 		}
 	}
 	"attributes"
@@ -19104,8 +19151,8 @@
 		"TF_SOLDIER_ACHIEVE_PROGRESS1"	"128"
 		"TF_SOLDIER_ACHIEVE_PROGRESS2"	"127"
 		"TF_SOLDIER_ACHIEVE_PROGRESS3"	"129"
-		"TF_DEMOMAN_ACHIEVE_PROGRESS1"	"131"
-		"TF_DEMOMAN_ACHIEVE_PROGRESS2"	"132"
+		"TF_DEMOMAN_ACHIEVE_PROGRESS1"	"308"
+		"TF_DEMOMAN_ACHIEVE_PROGRESS2"	"307"
 		"TF_DEMOMAN_ACHIEVE_PROGRESS3"	"130"
 		"TF_ENGINEER_ACHIEVE_PROGRESS1" "141"
 		"TF_ENGINEER_ACHIEVE_PROGRESS2" "155"
