@@ -741,8 +741,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	SendPropDataTable( "tfnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_TFNonLocalPlayerExclusive), SendProxy_SendNonLocalDataTable ),
 
 	SendPropBool( SENDINFO( m_bAllowMoveDuringTaunt ) ),
-	SendPropBool( SENDINFO( m_bIsReadyToHighFive ) ),
-	SendPropEHandle( SENDINFO( m_hHighFivePartner ) ),
 	SendPropInt( SENDINFO( m_nForceTauntCam ), 2, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flTauntYaw ), 0, SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_nActiveTauntSlot ) ),
@@ -883,8 +881,6 @@ CTFPlayer::CTFPlayer()
 
 	m_flCommentOnCarrying = 0;
 
-	m_bIsReadyToHighFive = false;
-	m_hHighFivePartner = NULL;
 	m_nForceTauntCam = 0;
 	m_bAllowMoveDuringTaunt = false;
 	m_bTauntForceMoveForward = false;
@@ -1080,7 +1076,7 @@ void CTFPlayer::TFPlayerThink()
 	UpdateCustomAttributes();
 
 	// Time to finish the current random expression? Or time to pick a new one?
-	if ( IsAlive() && !IsReadyToTauntWithPartner() && ( m_flNextSpeakWeaponFire < gpGlobals->curtime ) && m_flNextRandomExpressionTime >= 0 && gpGlobals->curtime > m_flNextRandomExpressionTime )
+	if ( IsAlive() && ( m_flNextSpeakWeaponFire < gpGlobals->curtime ) && m_flNextRandomExpressionTime >= 0 && gpGlobals->curtime > m_flNextRandomExpressionTime )
 	{
 		// Random expressions need to be cleared, because they don't loop. So if we
 		// pick the same one again, we want to restart it.
@@ -2973,8 +2969,6 @@ void CTFPlayer::Spawn()
 	m_bCollideWithSentry = false;
 	m_calledForMedicTimer.Invalidate();
 	m_placedSapperTimer.Invalidate();
-
-	m_bIsReadyToHighFive = false;
 
 	m_nForceTauntCam = 0;
 	m_bAllowedToRemoveTaunt = true;
@@ -14296,113 +14290,6 @@ void CTFPlayer::DoNoiseMaker( void )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Finds an open space for a high five partner. flTolerance specifies the maximum amount that should be allowed underneath position.
-//-----------------------------------------------------------------------------
-bool CTFPlayer::FindOpenTauntPartnerPosition( const CEconItemView *pEconItemView, Vector &position, float *flTolerance )
-{
-	if ( !pEconItemView || !pEconItemView->IsValid() )
-		return false;
-
-	const GameItemDefinition_t *pItemDef = pEconItemView->GetItemDefinition();
-	if ( !pItemDef || !pItemDef->GetTauntData() )
-	{
-		position = GetAbsOrigin();
-		*flTolerance = tf_highfive_height_tolerance.GetFloat();
-		return false;
-	}
-
-	const float flTauntSeparationForwardDistance = tf_highfive_separation_forward.GetFloat() != 0 ? tf_highfive_separation_forward.GetFloat() : pItemDef->GetTauntData()->GetTauntSeparationForwardDistance();
-	const float flTauntSeparationRightDistance = tf_highfive_separation_right.GetFloat() != 0 ? tf_highfive_separation_right.GetFloat() : pItemDef->GetTauntData()->GetTauntSeparationRightDistance();
-
-	bool ret = true;
-	Vector forward, right;
-	AngleVectors( GetAbsAngles(), &forward, &right, NULL );
-
-	Vector vecStart = GetAbsOrigin();
-	Vector vecEnd = vecStart + ( forward * flTauntSeparationForwardDistance ) + ( right * flTauntSeparationRightDistance );
-	*flTolerance = tf_highfive_height_tolerance.GetFloat();
-	trace_t result;
-	CTraceFilterIgnoreTeammates filter( this, COLLISION_GROUP_NONE, GetAllowedTauntPartnerTeam() );
-	UTIL_TraceHull( vecStart, vecEnd + ( forward * 2 ), VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result );
-
-	if ( result.DidHit() )
-	{
-		// something's directly in front of us, but let's allow for a little bit of variation since we might be standing on an uneven displacement
-		trace_t result2;
-		vecStart = GetAbsOrigin() + Vector( 0, 0, *flTolerance );
-		vecEnd = vecStart + ( forward * flTauntSeparationForwardDistance ) + ( right * flTauntSeparationRightDistance );
-		UTIL_TraceHull( vecStart, vecEnd + ( forward * 2 ), VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result2 );
-
-		// Now we can allow for twice the space underneath us.
-		*flTolerance *= 2;
-
-		if ( result2.DidHit() )
-		{
-			// Not enough space in front of us.
-			ret = false;
-		}
-		else
-		{
-			position = vecEnd;
-		}
-	}
-	else
-	{
-		position = vecEnd;
-	}
-
-	if( ret )
-	{
-		Vector vecStartCenter = WorldSpaceCenter();
-		// Scale up how far we test.  Dont even let them get close.
-		Vector vecEndSuperSafe = vecStartCenter + ( forward * flTauntSeparationForwardDistance * 2.f ) + ( right * flTauntSeparationRightDistance );
-
-		// Dont allow crossing through the spawn room visualizers
-		ret = !PointsCrossRespawnRoomVisualizer( vecStartCenter, vecEndSuperSafe );
-	}
-
-
-	return ret;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFPlayer::IsAllowedToInitiateTauntWithPartner( const CEconItemView *pEconItemView, char *pszErrorMessage, int cubErrorMessage )
-{
-	Vector vecEnd;
-	float flTolerance;
-
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return true;
-
-	bool ret = FindOpenTauntPartnerPosition( pEconItemView, vecEnd, &flTolerance );
-
-	// Check that there isn't too much space underneath the destination.
-	if ( ret )
-	{
-		trace_t result3;
-		CTraceFilterIgnoreTeammates filter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-		UTIL_TraceHull( vecEnd, vecEnd - Vector( 0, 0, flTolerance ), VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result3 );
-		if ( !result3.DidHit() )
-		{
-			if ( pszErrorMessage && cubErrorMessage > 0 )
-			{
-				V_strncpy( pszErrorMessage, "#TF_PartnerTaunt_TooHigh", cubErrorMessage );
-			}
-
-			ret = false;
-		}
-	}
-	else if ( pszErrorMessage && cubErrorMessage > 0 )
-	{
-		V_strncpy( pszErrorMessage, "#TF_PartnerTaunt_Blocked", cubErrorMessage );
-	}
-
-	return ret;
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 bool CTFPlayer::IsWormsGearEquipped( void ) const
@@ -14566,7 +14453,6 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 		if ( pEconItemView->FindAttribute( pAttrDef_TauntPressAndHold, &iLongTaunt ) && iLongTaunt != 0 )
 		{
 			iTauntIndex = TAUNT_LONG;
-			iTauntConcept = pTauntData->IsPartnerTaunt() ? MP_CONCEPT_PARTNER_TAUNT_READY : iTauntConcept;
 			m_bIsTauntInitiator = true;
 
 			ParseSharedTauntDataFromEconItemView( pEconItemView );
@@ -14578,20 +14464,6 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 			attrib_value_t iTauntMimic = 0;
 			pEconItemView->FindAttribute( pAttrDef_TauntMimic, &iTauntMimic );
 			m_bTauntMimic = iTauntMimic != 0;
-
-			// check if we can initiate partner taunt (ignore mimic taunt to allow Conga initiation)
-			char szClientError[64];
-			if ( !m_bTauntMimic && pTauntData->IsPartnerTaunt() && !IsAllowedToInitiateTauntWithPartner( pEconItemView, szClientError, ARRAYSIZE( szClientError ) ) )
-			{
-				CSingleUserRecipientFilter filter( this );
-				EmitSound_t params;
-				params.m_pSoundName = "Player.DenyWeaponSelection";
-				EmitSound( filter, entindex(), params );
-
-				TFGameRules()->SendHudNotification( filter, szClientError, "ico_notify_partner_taunt" );
-
-				return false;
-			}
 		}
 
 		// Store this off so eventually we can let clients know which item ID is doing this taunt.
@@ -14719,42 +14591,6 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 				{
 					// If there's no prop scene, our weapon is being repurposed
 					pWeapon->SetIsBeingRepurposedForTaunt( true );
-				}
-			}
-		}
-
-		// check for achievement
-		static CSchemaItemDefHandle congaTaunt( "Conga Taunt" );
-		if ( pEconItemView->GetItemDefinition() == congaTaunt )
-		{
-			CUtlVector< CTFPlayer * > vecPlayers;
-			CollectPlayers( &vecPlayers, TF_TEAM_RED, COLLECT_ONLY_LIVING_PLAYERS );
-			CollectPlayers( &vecPlayers, TF_TEAM_BLUE, COLLECT_ONLY_LIVING_PLAYERS, APPEND_PLAYERS );
-
-			CUtlVector< CTFPlayer * > vecCongaLine;
-
-			FOR_EACH_VEC( vecPlayers, i )
-			{
-				CTFPlayer *pPlayer = vecPlayers[i];
-				if ( pPlayer && pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) )
-				{
-					// is this player doing the Conga?
-					if ( pPlayer->GetTauntEconItemView() && ( pPlayer->GetTauntEconItemView()->GetItemDefinition() == congaTaunt ) )
-					{
-						vecCongaLine.AddToTail( pPlayer );
-					}
-				}
-			}
-
-			if ( vecCongaLine.Count() >= 10 )
-			{
-				FOR_EACH_VEC( vecCongaLine, i )
-				{
-					CTFPlayer *pPlayer = vecCongaLine[i];
-					if ( pPlayer )
-					{
-						pPlayer->AwardAchievement( ACHIEVEMENT_TF_TAUNT_CONGA_LINE );
-					}
 				}
 			}
 		}
@@ -14917,10 +14753,6 @@ void CTFPlayer::OnTauntSucceeded( const char* pszSceneName, int iTauntIndex /*= 
 	{
 		m_flTauntRemoveTime = gpGlobals->curtime;
 		m_bAllowedToRemoveTaunt = false;
-		if ( iTauntConcept == MP_CONCEPT_PARTNER_TAUNT_READY )
-		{
-			GetReadyToTauntWithPartner();
-		}
 
 		m_flTauntYaw = BodyAngles().y;
 
@@ -15270,11 +15102,6 @@ void CTFPlayer::StopTaunt( bool bForceRemoveProp /* = true */ )
 		m_hTauntProp = NULL;
 	}
 
-	if ( IsReadyToTauntWithPartner() )
-	{
-		CancelTauntWithPartner();
-	}
-
 	StopTauntSoundLoop();
 
 	// reset the FOV
@@ -15283,7 +15110,6 @@ void CTFPlayer::StopTaunt( bool bForceRemoveProp /* = true */ )
 		SetFOV( this, m_iPreTauntFOV );
 	}
 
-	m_hHighFivePartner = NULL;
 	m_bAllowMoveDuringTaunt = false;
 	m_flTauntOutroTime = 0.f;
 	m_bTauntForceMoveForward = false;
@@ -15363,7 +15189,6 @@ float CTFPlayer::PlayTauntOutroScene()
 			m_bInitTaunt = true;
 
 			flDuration = PlayScene( pszOutroScene );
-			OnTauntSucceeded( pszOutroScene, TAUNT_MISC_ITEM, MP_CONCEPT_HIGHFIVE_SUCCESS );
 
 			m_bInitTaunt = false;
 
@@ -15402,21 +15227,6 @@ void CTFPlayer::HandleTauntCommand( int iTauntSlot )
 	}
 	else
 	{
-		// Check if I should accept taunt with partner
-		CTFPlayer *initiator = FindPartnerTauntInitiator();
-		if ( initiator )
-		{
-			if ( initiator->m_bTauntMimic )
-			{
-				MimicTauntFromPartner( initiator );
-			}
-			else
-			{
-				AcceptTauntWithPartner( initiator );
-			}
-			return;
-		}
-
 		// does this weapon prevent player from doing manual taunt?
 		CTFWeaponBase *pActiveWeapon = m_Shared.GetActiveTFWeapon();
 		if ( !pActiveWeapon || !pActiveWeapon->AllowTaunts() )
@@ -16096,128 +15906,6 @@ void CTFPlayer::DoTauntAttack( void )
 			}
 		}
 	}
-	else if ( iTauntAttack == TAUNTATK_HIGHFIVE_PARTICLE )
-	{
-		if ( m_hHighFivePartner.Get() )
-		{
-			QAngle bodyAngles = BodyAngles();
-			bodyAngles.x = 0;
-			Vector vecForward, vecRight, vecUp;
-			AngleVectors( bodyAngles, &vecForward, &vecRight, &vecUp );
-
-			//Msg( "forward: %f %f %f   right: %f %f %f   up: %f %f %f\n", vecForward.x, vecForward.y, vecForward.z,
-			//	vecRight.x, vecRight.y, vecRight.z,
-			//	vecUp.x, vecUp.y, vecUp.z );
-
-			Vector vecParticle = GetAbsOrigin() + (vecForward * 30.0f) + (vecRight * -3.0f) + (vecUp * 87.0f);
-			//Msg( "particle: %f %f %f\n", vecParticle.x, vecParticle.y, vecParticle.z );
-
-			CEffectData	data;
-			data.m_nHitBox = GetParticleSystemIndex( GetTeamNumber() == TF_TEAM_RED ? "highfive_red" : "highfive_blue" );
-			data.m_vOrigin = vecParticle;
-			data.m_vAngles = vec3_angle;
-
-			CPASFilter filter( data.m_vOrigin );
-			filter.SetIgnorePredictionCull( true );
-
-			te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-		}
-	}
-	else if ( iTauntAttack == TAUNTATK_RPS_PARTICLE )
-	{
-		if ( m_hHighFivePartner.Get() )
-		{
-			bool bInitiatorWin = ( m_iTauntRPSResult / 3 ) == 0;
-
-			// figure out for RPS
-			// 0:rock 1:paper 2:scissors
-			int iInitiator = m_iTauntRPSResult % 3;
-			int iReceiver = ( iInitiator + ( bInitiatorWin ? 2 : 1 ) ) % 3;
-
-			// offset to get the correct particle name
-			if ( bInitiatorWin )
-			{
-				iInitiator += 3;
-			}
-			else
-			{
-				iReceiver += 3;
-			}
-
-			if ( GetTeamNumber() == TF_TEAM_BLUE )
-			{
-				iInitiator += 6;
-			}
-
-			if ( m_hHighFivePartner->GetTeamNumber() == TF_TEAM_BLUE )
-			{
-				iReceiver += 6;
-			}
-
-			DispatchRPSEffect( this, s_pszTauntRPSParticleNames[iInitiator] );
-			DispatchRPSEffect( m_hHighFivePartner.Get(), s_pszTauntRPSParticleNames[iReceiver] );
-
-			// setup time to kill the opposing team loser
-			if ( GetTeamNumber() != m_hHighFivePartner->GetTeamNumber() )
-			{
-				m_iTauntAttack = TAUNTATK_RPS_KILL;
-				m_flTauntAttackTime = m_flTauntRemoveTime - 1.2f;
-			}
-
-			IGameEvent *event = gameeventmanager->CreateEvent( "rps_taunt_event" );
-			if ( event )
-			{
-				int iInitiatorRPS = m_iTauntRPSResult % 3;
-				int iReceiverRPS = ( iInitiatorRPS + ( bInitiatorWin ? 2 : 1 ) ) % 3;
-
-				event->SetInt( "winner", bInitiatorWin ? entindex() : m_hHighFivePartner.Get()->entindex() );
-				event->SetInt( "winner_rps", bInitiatorWin ? iInitiatorRPS : iReceiverRPS );
-				event->SetInt( "loser", bInitiatorWin ? m_hHighFivePartner.Get()->entindex() : entindex() );
-				event->SetInt( "loser_rps",  bInitiatorWin ? iReceiverRPS : iInitiatorRPS );
-				gameeventmanager->FireEvent( event );
-			}
-		}
-	}
-	else if ( iTauntAttack == TAUNTATK_RPS_KILL )
-	{
-		if ( m_hHighFivePartner.Get() )
-		{
-			bool bInitiatorWin = ( m_iTauntRPSResult / 3 ) == 0;
-
-			CTFPlayer *pWinner = NULL;
-			CTFPlayer *pLoser = NULL;
-			if ( bInitiatorWin )
-			{
-				pWinner = this;
-				pLoser = m_hHighFivePartner.Get();
-			}
-			else
-			{
-				pWinner = m_hHighFivePartner.Get();
-				pLoser = this;
-			}
-			
-			// gib the loser
-			pLoser->m_bSuicideExplode = true;
-			pLoser->TakeDamage( CTakeDamageInfo( pWinner, pWinner, NULL, 999, DMG_GENERIC, 0 ) );
-		}
-	}
-	// Particle Being played in VCD instead
-	//else if ( iTauntAttack == TAUNTATK_FLIP_LAND_PARTICLE )
-	//{
-	//	if ( m_hHighFivePartner.Get() )
-	//	{
-	//		CEffectData	data;
-	//		data.m_nHitBox = GetParticleSystemIndex( GetTeamNumber() == TF_TEAM_RED ? "taunt_flip_land_red" : "taunt_flip_land_blue" );
-	//		data.m_vOrigin = m_hHighFivePartner.Get()->GetAbsOrigin();
-	//		data.m_vAngles = m_hHighFivePartner.Get()->GetAbsAngles();
-
-	//		CPASFilter filter( data.m_vOrigin );
-	//		filter.SetIgnorePredictionCull( true );
-
-	//		te->DispatchEffect( filter, 0.0, data.m_vOrigin, "ParticleEffect", data );
-	//	}
-	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -18359,38 +18047,6 @@ CEconItemView	*CTFPlayer::ItemTesting_GetTestItem( int iClass, int iSlot )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFPlayer::GetReadyToTauntWithPartner( void )
-{
-	m_bIsReadyToHighFive = true;
-
-	/*IGameEvent *pEvent = gameeventmanager->CreateEvent( "player_highfive_start" );
-	if ( pEvent )
-	{
-		pEvent->SetInt( "entindex", entindex() );
-
-		gameeventmanager->FireEvent( pEvent );
-	}*/
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::CancelTauntWithPartner( void )
-{
-	m_bIsReadyToHighFive = false;
-
-	/*IGameEvent *pEvent = gameeventmanager->CreateEvent( "player_highfive_cancel" );
-	if ( pEvent )
-	{
-		pEvent->SetInt( "entindex", entindex() );
-
-		gameeventmanager->FireEvent( pEvent );
-	}*/
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFPlayer::StopTauntSoundLoop()
 {
 	if ( !m_strTauntSoundLoopName.IsEmpty() )
@@ -18402,433 +18058,6 @@ void CTFPlayer::StopTauntSoundLoop()
 
 		m_strTauntSoundLoopName = "";
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Look for a nearby players who has started a 
-// high five and is waiting for a partner
-//-----------------------------------------------------------------------------
-CTFPlayer *CTFPlayer::FindPartnerTauntInitiator( void )
-{
-	if ( tf_highfive_debug.GetBool() )
-		Msg( "%s looking for a partner taunt initiator.\n", GetPlayerName() );
-
-	CTFPlayer *pTargetInitiator = NULL;
-	float flDistSqrToTargetInitiator = FLT_MAX;
-
-	CUtlVector< CTFPlayer* > playerList;
-	CollectPlayers( &playerList, GetAllowedTauntPartnerTeam(), true );
-	for( int t=0; t<playerList.Count(); ++t )
-	{
-		CTFPlayer *pPlayer = playerList[t];
-
-		if ( pPlayer == this )
-			continue;
-
-		// don't allow bot to taunt with each other
-		if ( pPlayer->IsBot() && IsBot() )
-			continue;
-
-		if ( !pPlayer->IsReadyToTauntWithPartner() )
-			continue;
-
-		if ( tf_highfive_debug.GetBool() )
-			Msg( "%s is ready to %s.\n", pPlayer->GetPlayerName(), pPlayer->m_TauntEconItemView.GetStaticData()->GetDefinitionName() );
-
-		Vector toPartner = pPlayer->GetAbsOrigin() - GetAbsOrigin();
-		float flDistSqrToPlayer = toPartner.LengthSqr();
-		if ( flDistSqrToPlayer > Square( tf_highfive_max_range.GetFloat() ) )
-		{
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - but that player was too far away.\n" );
-				
-			// too far away
-			continue;
-		}
-
-		// skip if this player is too far to be our initiator
-		if ( flDistSqrToPlayer >= flDistSqrToTargetInitiator )
-		{
-			if ( tf_highfive_debug.GetBool() )
-			{
-				Msg( " - is further than the current potential initiator.\n" );
-			}
-			continue;
-		}
-
-		toPartner.NormalizeInPlace();
-			
-		Vector forward;
-		EyeVectors( &forward );
-
-		// check if I'm facing this player
-		if ( DotProduct( toPartner, forward ) < 0.6f )
-		{
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - but we are not looking at that player.\n" );
-
-			// we are not looking at this partner
-			continue;
-		}
-
-		bool bShouldCheckFacing = !pPlayer->m_bTauntMimic;
-		// check if the player is facing us
-		if ( bShouldCheckFacing )
-		{
-			Vector partnerForward = pPlayer->BodyDirection2D();
-			float toPartnerDotProduct = DotProduct( toPartner, partnerForward );
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - dot product to partner is %f\n", toPartnerDotProduct );
-
-			if ( toPartnerDotProduct > -0.6f )
-			{
-				if ( tf_highfive_debug.GetBool() )
-					Msg( " - but that player is not facing us.\n" );
-
-				// they are not facing us
-				continue;
-			}
-		}
-
-		// check if there's something between us
-		trace_t result;
-		CTraceFilterIgnoreTeammates filter( this, COLLISION_GROUP_NONE, GetAllowedTauntPartnerTeam() );
-		UTIL_TraceHull( GetAbsOrigin(), pPlayer->GetAbsOrigin(), VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result );
-		if ( result.DidHit() )
-		{
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - entity [%i %s %s] in between. tracing again with tolerance.\n",
-					result.GetEntityIndex(),
-					result.m_pEnt ? result.m_pEnt->GetClassname() : "NULL",
-					result.surface.name );
-
-			Vector offset( 0, 0, tf_highfive_height_tolerance.GetFloat() );
-			trace_t result2;
-			UTIL_TraceHull( GetAbsOrigin() + offset, pPlayer->GetAbsOrigin() + offset, VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result2 );
-			if ( result2.DidHit() )
-			{
-				if ( tf_highfive_debug.GetBool() )
-					Msg( " - entity [%i %s %s] in between.\n",
-					result2.GetEntityIndex(),
-					result2.m_pEnt ? result2.m_pEnt->GetClassname() : "NULL",
-					result2.surface.name );
-
-				// something is in between us
-				continue;
-			}
-		}
-
-		// Check to see if there's a spawn room visualizer between us and our partner
-		if( PointsCrossRespawnRoomVisualizer( WorldSpaceCenter(), pPlayer->WorldSpaceCenter() ) )
-		{
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - spawn room visualizer in between.\n" );
-
-			continue;
-		}
-
-		// update to closer target player
-		if ( flDistSqrToPlayer < flDistSqrToTargetInitiator )
-		{
-			// success!
-			if ( tf_highfive_debug.GetBool() )
-				Msg( " - is potentially the closest target player.\n" );
-			flDistSqrToTargetInitiator = flDistSqrToPlayer;	
-			pTargetInitiator = pPlayer;
-		}
-		else if ( tf_highfive_debug.GetBool() )
-		{
-			Msg( " - is further than the current target player.\n" );
-		}
-	}
-
-	// pick the closest target player over the closest player
-	return pTargetInitiator;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static bool SelectPartnerTaunt( const GameItemDefinition_t *pItemDef, CTFPlayer *initiator, CTFPlayer *receiver, const char **pszInitiatorScene, const char **pszReceiverScene )
-{
-	static CSchemaItemDefHandle pItemDef_rpsTaunt( "RPS Taunt" );
-	static CSchemaItemDefHandle pItemDef_TauntNeckSnap( "Taunt: Neck Snap" );
-
-	CTFTauntInfo *pTauntData = pItemDef->GetTauntData();
-	if ( !pTauntData )
-		return false;
-
-	int iInitiatorClass = initiator->GetPlayerClass()->GetClassIndex();
-	int iReceiverClass = receiver->GetPlayerClass()->GetClassIndex();
-
-	// check if we have any scene
-	const int iInitiatorSceneCount = pTauntData->GetPartnerTauntInitiatorSceneCount( iInitiatorClass );
-	const int iReceiverSceneCount = pTauntData->GetPartnerTauntReceiverSceneCount( iReceiverClass );
-	if ( iInitiatorSceneCount == 0 ||
-		 iReceiverSceneCount == 0 )
-	{
-		return false;
-	}
-
-	int iInitiator = 0;
-	int iReceiver = 0;
-	if ( pItemDef == pItemDef_rpsTaunt )
-	{
-		Assert( iInitiatorSceneCount == 6 && iReceiverSceneCount == 6 );
-
-		int iWinner = RandomInt( 0, 2 );
-		int iLoser =  ( ( iWinner + 2 ) % 3 ) + 3;
-
-		/*static const char* s_pszRPS[3] = { "rock", "paper", "scissor" };
-		DevMsg( "%s beats %s\n", s_pszRPS[iWinner], s_pszRPS[iLoser%3] );*/
-
-		if ( RandomInt( 0, 1 ) )
-		{
-			iInitiator = iWinner;
-			iReceiver = iLoser;
-		}
-		else
-		{
-			iInitiator = iLoser;
-			iReceiver = iWinner;
-		}
-
-		initiator->SetRPSResult( iInitiator );
-	}
-	else if ( pItemDef == pItemDef_TauntNeckSnap )
-	{
-		Assert( iInitiatorSceneCount == 2 && iReceiverSceneCount > 0 );
-
-		iInitiator = 0;
-		iReceiver = ( iReceiverClass != TF_CLASS_SOLDIER ) ? 0 : 1;
-	}
-	else
-	{
-		// randomly select a player to pick 0 (could be silent taunt)
-		// and other player select a different one if there's any
-		if ( RandomInt( 0, 1 ) == 0 )
-		{
-			iReceiver = iReceiverSceneCount > 1 ? RandomInt( 1, iReceiverSceneCount - 1 ) : 0;
-		}
-		else
-		{
-			iInitiator = iInitiatorSceneCount > 1 ? RandomInt( 1, iInitiatorSceneCount - 1 ) : 0;
-		}
-	}
-
-	*pszInitiatorScene = pTauntData->GetPartnerTauntInitiatorScene( iInitiatorClass, iInitiator );
-	*pszReceiverScene = pTauntData->GetPartnerTauntReceiverScene( iReceiverClass, iReceiver );
-
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::AcceptTauntWithPartner( CTFPlayer *initiator )
-{
-	if ( !initiator )
-	{
-		return;
-	}
-
-	if ( tf_highfive_debug.GetBool() )
-		Msg( "%s doing %s with initiator %s.\n", GetPlayerName(), initiator->m_TauntEconItemView.GetStaticData()->GetDefinitionName(), initiator->GetPlayerName() );
-
-	// make sure this won't get us stuck
-	Vector newOrigin;
-	float flTolerance;
-	if ( !initiator->FindOpenTauntPartnerPosition( &initiator->m_TauntEconItemView, newOrigin, &flTolerance ))
-	{
-		if ( tf_highfive_debug.GetBool() )
-			Msg( " - but there is no open space for us.\n" );
-
-		return;
-	}
-
-	trace_t result;
-	CTraceFilterIgnoreTeammates filter( this, COLLISION_GROUP_NONE, GetTeamNumber() );
-	UTIL_TraceHull( newOrigin, newOrigin - Vector( 0, 0, flTolerance ), VEC_HULL_MIN, VEC_HULL_MAX, MASK_PLAYERSOLID, &filter, &result );
-	if ( !result.DidHit() )
-	{
-		if ( tf_highfive_debug.GetBool() )
-			Msg( " - there's too much space underneath where we need to be.\n" );
-
-		return;
-	}
-	else
-	{
-		newOrigin = result.endpos;
-	}
-
-	trace_t	stucktrace;
-	UTIL_TraceEntity( this, newOrigin, newOrigin, MASK_PLAYERSOLID, &filter, &stucktrace );
-	if ( stucktrace.startsolid != 0 )
-	{
-		if ( tf_highfive_debug.GetBool() )
-			Msg( " - but we'd get stuck on entity [%i %s %s] going in front of %s.\n",
-			stucktrace.GetEntityIndex(),
-			stucktrace.m_pEnt ? stucktrace.m_pEnt->GetClassname() : "NULL",
-			stucktrace.surface.name,
-			initiator->GetPlayerName() );
-
-		return;
-	}
-
-	// move us into facing position with initiator
-	SetAbsOrigin( newOrigin );
-	QAngle newAngles = initiator->GetAbsAngles();
-	// turn 180 degree to face the initiator
-	newAngles[YAW] = AngleNormalize( newAngles[YAW] - 180 );
-	SetAbsAngles( newAngles );
-
-	m_bIsReadyToHighFive = false;
-	initiator->m_bIsReadyToHighFive = false;
-
-	// note who our partner is so we can lock our facing toward them on the client
-	m_hHighFivePartner = initiator;
-	initiator->m_hHighFivePartner = this;
-
-	if ( initiator->m_hTauntScene.Get() )
-	{
-		StopScriptedScene( initiator, initiator->m_hTauntScene );
-		initiator->m_hTauntScene = NULL;
-
-		initiator->StopTauntSoundLoop();
-	}
-
-	const char *pszInitiatorScene = NULL;
-	const char *pszOurScene = NULL;
-	const GameItemDefinition_t *pItemDef = initiator->m_TauntEconItemView.GetItemDefinition();
-	if ( !SelectPartnerTaunt( pItemDef, initiator, this, &pszInitiatorScene, &pszOurScene ) )
-	{
-		if ( tf_highfive_debug.GetBool() )
-		{
-			Msg( "SpeakConceptIfAllowed failed on partner taunt initiator. Aborting taunt.\n" );
-		}
-		AssertMsg( false, "SpeakConceptIfAllowed failed on partner taunt initiator. Aborting taunt." );
-
-		initiator->m_flTauntRemoveTime = gpGlobals->curtime;
-		initiator->m_bAllowedToRemoveTaunt = true;
-
-		return;
-	}
-	m_TauntEconItemView = initiator->m_TauntEconItemView;
-
-	int initiatorConcept = MP_CONCEPT_HIGHFIVE_SUCCESS_FULL;
-	int ourConcept = MP_CONCEPT_HIGHFIVE_SUCCESS;
-
-	CMultiplayer_Expresser *pInitiatorExpresser = initiator->GetMultiplayerExpresser();
-	Assert( pInitiatorExpresser );
-
-	pInitiatorExpresser->AllowMultipleScenes();
-
-	// extend initiator's taunt duration to include actual high five
-	initiator->m_bInitTaunt = true;
-
-	initiator->PlayScene( pszInitiatorScene );
-	
-	if ( tf_highfive_debug.GetBool() )
-		Msg( " concept %i started fine for initiator %s.\n", initiatorConcept, initiator->GetPlayerName() );
-
-	initiator->m_Shared.m_iTauntIndex = TAUNT_MISC_ITEM;
-	initiator->m_Shared.m_iTauntConcept.Set( initiatorConcept );
-	initiator->m_flTauntRemoveTime = gpGlobals->curtime + GetSceneDuration( pszInitiatorScene ) + 0.2f;
-	initiator->m_bAllowedToRemoveTaunt = true;
-
-	initiator->m_iTauntAttack = TAUNTATK_NONE;
-	initiator->m_flTauntAttackTime = 0.f;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntAttackName( "taunt attack name" );
-	const char* pszTauntAttackName = NULL;
-	if ( FindAttribute_UnsafeBitwiseCast<CAttribute_String>( pItemDef, pAttrDef_TauntAttackName, &pszTauntAttackName ) )
-	{
-		initiator->m_iTauntAttack = GetTauntAttackByName( pszTauntAttackName );
-	}
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntAttackTime( "taunt attack time" );
-	float flTauntAttackTime = 0.f;
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItemDef, pAttrDef_TauntAttackTime, &flTauntAttackTime ) )
-	{
-		initiator->m_flTauntAttackTime = gpGlobals->curtime + flTauntAttackTime;
-	}
-
-	if ( GetActiveWeapon() )
-	{
-		m_iPreTauntWeaponSlot = GetActiveWeapon()->GetSlot();
-	}
-
-	PlayScene( pszOurScene );
-	OnTauntSucceeded( pszOurScene, TAUNT_MISC_ITEM, ourConcept );
-
-	const char *pszTauntSound = pItemDef->GetCustomSound( initiator->GetTeamNumber(), 0 );
-	if ( pszTauntSound )
-	{
-		// each participant hears the sound without PAS attenuation, but everyone else gets the PAS attenuation
-		EmitSound_t params;
-		params.m_pSoundName = pszTauntSound;
-
-		CSingleUserRecipientFilter soundFilterInitiator( initiator );
-		initiator->EmitSound( soundFilterInitiator, initiator->entindex(), params );
-
-		CSingleUserRecipientFilter soundFilter( this );
-		EmitSound( soundFilter, this->entindex(), params );
-
-		CPASAttenuationFilter attenuationFilter( this, params.m_pSoundName );
-		attenuationFilter.RemoveRecipient( this );
-		attenuationFilter.RemoveRecipient( initiator );
-		initiator->EmitSound( attenuationFilter, initiator->entindex(), params );
-	}
-
-	/*static CSchemaItemDefHandle highfiveTaunt( "High Five Taunt" );
-	if ( pItemDef == highfiveTaunt )
-	{
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( "player_highfive_success" );
-		if ( pEvent )
-		{
-			pEvent->SetInt( "initiator_entindex", initiator->entindex() );
-			pEvent->SetInt( "partner_entindex", entindex() );
-
-			gameeventmanager->FireEvent( pEvent );
-		}
-	}*/
-
-	initiator->m_bInitTaunt = false;
-	pInitiatorExpresser->DisallowMultipleScenes();
-
-	// check for taunt achievements
-	if ( TFGameRules() && ( TFGameRules()->GetGameType() == TF_GAMETYPE_CP ) )
-	{
-		if ( !IsBot() && !initiator->IsBot() && ( GetTeamNumber() == initiator->GetTeamNumber() ) )
-		{
-			if ( IsCapturingPoint() && initiator->IsCapturingPoint() )
-			{
-				AwardAchievement( ACHIEVEMENT_TF_TAUNT_WHILE_CAPPING );
-				initiator->AwardAchievement( ACHIEVEMENT_TF_TAUNT_WHILE_CAPPING );
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::MimicTauntFromPartner( CTFPlayer *initiator )
-{
-	Assert( initiator->m_bAllowMoveDuringTaunt );
-	if ( initiator->m_TauntEconItemView.IsValid() && initiator->m_TauntEconItemView.GetItemDefinition() != NULL )
-	{
-		PlayTauntSceneFromItem( &initiator->m_TauntEconItemView );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-extern ConVar tf_allow_all_team_partner_taunt;
-int CTFPlayer::GetAllowedTauntPartnerTeam() const
-{
-	return tf_allow_all_team_partner_taunt.GetBool() ? TEAM_ANY : GetTeamNumber();
 }
 
 //-----------------------------------------------------------------------------

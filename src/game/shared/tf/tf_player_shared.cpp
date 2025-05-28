@@ -171,8 +171,6 @@ ConVar tf_feign_death_speed_duration( "tf_feign_death_speed_duration", "3.0", FC
 
 ConVar tf_allow_taunt_switch( "tf_allow_taunt_switch", "0", FCVAR_REPLICATED, "0 - players are not allowed to switch weapons while taunting, 1 - players can switch weapons at the start of a taunt (old bug behavior), 2 - players can switch weapons at any time during a taunt." );
 
-ConVar tf_allow_all_team_partner_taunt( "tf_allow_all_team_partner_taunt", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-
 // AFTERBURN
 const float tf_afterburn_max_duration = 10.f;
 const float tf_afterburn_duration_ratio_second_degree = 0.4f;
@@ -5734,7 +5732,6 @@ void CTFPlayerShared::OnRemoveDisguised( void )
 
 	// They may have called for medic and created a visible medic bubble
 	m_pOuter->StopSaveMeEffect( true );
-	m_pOuter->StopTauntWithMeEffect();
 
 	UpdateCritBoostEffect( kCritBoost_ForceRefresh );
 	m_pOuter->UpdateSpyStateChange();
@@ -10724,17 +10721,6 @@ bool CTFPlayer::CanMoveDuringTaunt()
 			return true;
 		}
 #endif // GAME_DLL
-
-
-		if ( m_bAllowMoveDuringTaunt )
-		{
-			return true;
-		}
-
-		if ( IsReadyToTauntWithPartner() || CTFPlayerSharedUtils::ConceptIsPartnerTaunt( m_Shared.m_iTauntConcept ) )
-		{
-			return false;
-		}
 	}
 
 	return false;
@@ -12138,11 +12124,6 @@ CEconItemView *CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( CTFPlayer *pT
 		*pEntity = NULL;
 	}
 	return NULL;
-}
-
-bool CTFPlayerSharedUtils::ConceptIsPartnerTaunt( int iConcept )
-{
-	return iConcept == MP_CONCEPT_HIGHFIVE_SUCCESS_FULL || iConcept == MP_CONCEPT_HIGHFIVE_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------

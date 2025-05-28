@@ -2536,8 +2536,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropDataTable( "tfnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFNonLocalPlayerExclusive) ),
 
 	RecvPropBool( RECVINFO( m_bAllowMoveDuringTaunt ) ),
-	RecvPropBool( RECVINFO( m_bIsReadyToHighFive ) ),
-	RecvPropEHandle( RECVINFO( m_hHighFivePartner ) ),
 	RecvPropInt( RECVINFO( m_nForceTauntCam ) ),
 	RecvPropFloat( RECVINFO( m_flTauntYaw ) ),
 	RecvPropInt( RECVINFO( m_nActiveTauntSlot ) ),
@@ -2627,7 +2625,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flBurnEffectStartTime = 0;
 	m_pDisguisingEffect = NULL;
 	m_pSaveMeEffect = NULL;
-	m_pTauntWithMeEffect = NULL;
 	m_hOldObserverTarget = NULL;
 	m_iOldObserverMode = OBS_MODE_NONE;
 	m_pStunnedEffect = NULL;
@@ -4213,7 +4210,6 @@ void C_TFPlayer::HandleTaunting( void )
 				m_Shared.InCond( TF_COND_TAUNTING ) ||
 				m_Shared.IsControlStunned() ||
 				m_Shared.IsLoser() ||
-				m_bIsReadyToHighFive ||
 				m_nForceTauntCam ||
 				m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) ||
 				m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) ||
@@ -4238,7 +4234,7 @@ void C_TFPlayer::HandleTaunting( void )
 	if (	( !IsAlive() && m_nForceTauntCam < 2 ) || 
 			(
 				m_bWasTaunting && !m_Shared.InCond( TF_COND_TAUNTING ) && !m_Shared.IsControlStunned() && 
-				!m_Shared.InCond( TF_COND_PHASE ) && !m_Shared.IsLoser() && !m_bIsReadyToHighFive &&
+				!m_Shared.InCond( TF_COND_PHASE ) && !m_Shared.IsLoser() &&
 				!m_nForceTauntCam && !m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) &&
 				!m_Shared.InCond( TF_COND_HALLOWEEN_THRILLER ) &&
 				!m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) &&
@@ -4517,15 +4513,6 @@ void C_TFPlayer::ClientThink()
 		( m_Shared.InCond( TF_COND_DISGUISED ) && IsEnemyPlayer() && ( GetPercentInvisible() > 0 ) ) )
 	{
 		StopSaveMeEffect( true );
-	}
-
-	if ( ShouldTauntHintIconBeVisible() )
-	{
-		CreateTauntWithMeEffect();
-	}
-	else
-	{
-		StopTauntWithMeEffect();
 	}
 
 	if ( IsLocalPlayer() )
@@ -5122,8 +5109,7 @@ bool C_TFPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 	BaseClass::CreateMove( flInputSampleTime, pCmd );
 
-	// Don't avoid players if in the middle of a high five. This prevents high-fivers from becoming separated.
-	if ( !bInTaunt || ( !m_bIsReadyToHighFive && !CTFPlayerSharedUtils::ConceptIsPartnerTaunt( m_Shared.m_iTauntConcept ) ) )
+	if ( !bInTaunt )
 	{
 		AvoidPlayers( pCmd );
 	}
@@ -6489,54 +6475,6 @@ void C_TFPlayer::StopSaveMeEffect( bool bForceRemoveInstantly /*= false*/ )
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::CreateTauntWithMeEffect()
-{
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalPlayer || this == pLocalPlayer )
-		return;
-
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
-
-	if ( !m_pTauntWithMeEffect )
-	{
-		const char *pszImageName;
-		const char *pszParticleName;
-		if ( GetTeamNumber() != pLocalPlayer->GetTeamNumber() )
-		{
-			pszImageName = "../Effects/speech_taunt";
-			pszParticleName = "speech_taunt_all";
-		}
-		else if ( GetTeamNumber() == TF_TEAM_RED )
-		{
-			pszImageName = "../Effects/speech_taunt_red";
-			pszParticleName = "speech_taunt_red";
-		}
-		else
-		{
-			pszImageName = "../Effects/speech_taunt_blue";
-			pszParticleName = "speech_taunt_blue";
-		}
-		m_pTauntWithMeEffect = ParticleProp()->Create( pszParticleName, PATTACH_POINT_FOLLOW, "head" );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::StopTauntWithMeEffect()
-{
-	if ( m_pTauntWithMeEffect )
-	{
-		ParticleProp()->StopEmissionAndDestroyImmediately( m_pTauntWithMeEffect );		
-		m_pTauntWithMeEffect = NULL;
-	}
-}
 
 
 //-----------------------------------------------------------------------------
@@ -8656,25 +8594,6 @@ const Vector& C_TFPlayer::GetRenderOrigin( void )
 	}
 
 	return BaseClass::GetRenderOrigin();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-ConVar tf_taunt_hint_max_distance( "tf_taunt_hint_max_distance", "256", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT );
-bool C_TFPlayer::ShouldTauntHintIconBeVisible() const
-{
-	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalTFPlayer || pLocalTFPlayer == this || pLocalTFPlayer->IsTaunting() )
-		return false;
-
-	if ( IsTaunting() && IsReadyToTauntWithPartner() )
-	{
-		return GetAbsOrigin().DistToSqr( pLocalTFPlayer->GetAbsOrigin() ) <  Square( tf_taunt_hint_max_distance.GetFloat() );
-	}
-	
-	return false;
 }
 
 

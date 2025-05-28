@@ -696,14 +696,9 @@ private:
 
 // Taunts
 public:
-	bool				IsReadyToTauntWithPartner( void ) const { return m_bIsReadyToHighFive; }
-	CTFPlayer *			GetTauntPartner( void )		{ return m_hHighFivePartner; }
 	float				GetTauntYaw( void )				{ return m_flTauntYaw; }
 	float				GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void				SetTauntYaw( float flTauntYaw );
-	CTFPlayer *			FindPartnerTauntInitiator( void );
-	void				AcceptTauntWithPartner( CTFPlayer *initiator );
-	void				MimicTauntFromPartner( CTFPlayer *initiator );
 	bool				CanMoveDuringTaunt();
 	bool				ShouldStopTaunting();
 	bool				IsTauntInitiator() const { return m_bIsTauntInitiator; }
@@ -711,7 +706,6 @@ public:
 	float				GetTauntMoveAcceleration() const { return m_flTauntMoveAccelerationTime; }
 	float				GetTauntMoveSpeed() const { return m_flTauntForceMoveForwardSpeed; }
 	float				GetTauntTurnAccelerationTime() const { return m_flTauntTurnAccelerationTime; }
-	virtual int			GetAllowedTauntPartnerTeam() const;
 	CEconItemView		*GetTauntEconItemView() { return m_TauntEconItemView.IsValid() ? &m_TauntEconItemView : NULL; }
 
 	int					GetTauntConcept( CEconItemDefinition *pItemDef );
@@ -723,8 +717,6 @@ public:
 	bool				IsTaunting( void ) const { return m_Shared.InCond( TF_COND_TAUNTING ); }
 	void				DoTauntAttack( void );
 	bool				IsAllowedToTaunt( void );
-	bool				FindOpenTauntPartnerPosition( const CEconItemView *pEconItemView, Vector &position, float *flTolerance );
-	bool				IsAllowedToInitiateTauntWithPartner( const CEconItemView *pEconItemView, char *pszErrorMessage = NULL, int cubErrorMessage = 0 );
 	void				CancelTaunt( void );
 	void				StopTaunt( bool bForceRemoveProp = true );
 	void				EndLongTaunt();
@@ -836,16 +828,12 @@ public:
 	void ScriptStunPlayer( float flTime, float flReductionAmount, int iStunFlags = TF_STUN_MOVEMENT, HSCRIPT hAttacker = NULL );
 
 private:
-	void				GetReadyToTauntWithPartner( void );
-	void				CancelTauntWithPartner( void );
 	void				StopTauntSoundLoop();
 	float				PlayTauntOutroScene();
 	float				PlayTauntRemapInputScene();
 	void				ParseSharedTauntDataFromEconItemView( const CEconItemView *pEconItemView );
 
 	CNetworkVar( bool, m_bAllowMoveDuringTaunt );
-	CNetworkVar( bool, m_bIsReadyToHighFive );
-	CNetworkHandle( CTFPlayer, m_hHighFivePartner );
 	CNetworkVar( int, m_nForceTauntCam );
 	CNetworkVar( float, m_flTauntYaw );
 	CNetworkVar( int, m_nActiveTauntSlot );

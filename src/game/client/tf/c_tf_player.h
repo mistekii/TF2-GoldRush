@@ -221,8 +221,6 @@ public:
 	void CreateSaveMeEffect( MedicCallerType nType = CALLER_TYPE_NORMAL );
 	void StopSaveMeEffect( bool bForceRemoveInstantly = false );
 
-	void CreateTauntWithMeEffect();
-	void StopTauntWithMeEffect();
 
 	void CreateKart();
 	void RemoveKart();
@@ -390,7 +388,6 @@ public:
 	int		GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 
 	//-----------------------------------------------------------------------------------------------------
-	bool ShouldTauntHintIconBeVisible() const;
 	virtual bool IsHealthBarVisible( void ) const OVERRIDE;
 
 	bool	CanStartPhase( void );
@@ -418,8 +415,6 @@ public:
 	float			GetTauntMoveAcceleration() const { return m_flTauntMoveAccelerationTime; }
 	float			GetTauntMoveSpeed() const { return m_flTauntForceMoveForwardSpeed; }
 	float			GetTauntTurnAccelerationTime() const { return m_flTauntTurnAccelerationTime; }
-	bool			IsReadyToTauntWithPartner( void ) const { return m_bIsReadyToHighFive; }
-	CTFPlayer *		GetTauntPartner( void )		{ return m_hHighFivePartner; }
 	float			GetTauntYaw( void )				{ return m_flTauntYaw; }
 	float			GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void			SetTauntYaw( float flTauntYaw );
@@ -569,7 +564,6 @@ private:
 
 	// Medic callout particle effect
 	CNewParticleEffect	*m_pSaveMeEffect;
-	CNewParticleEffect	*m_pTauntWithMeEffect;
 
 	bool m_bUpdateObjectHudState;
 	bool	m_bBodygroupsDirty;
@@ -646,8 +640,6 @@ private:
 	float			m_flTauntMoveAccelerationTime;
 	float			m_flTauntTurnSpeed;
 	float			m_flTauntTurnAccelerationTime;
-	bool			m_bIsReadyToHighFive;
-	CNetworkHandle( C_TFPlayer, m_hHighFivePartner );
 	int				m_nForceTauntCam;
 	float			m_flTauntYaw;
 	float			m_flPrevTauntYaw;

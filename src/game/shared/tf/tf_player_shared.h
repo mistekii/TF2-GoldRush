@@ -1127,7 +1127,6 @@ class CTFPlayerSharedUtils
 {
 public:
 	static CEconItemView *GetEconItemViewByLoadoutSlot( CTFPlayer *pTFPlayer, int iSlot, CEconEntity **pEntity = NULL );
-	static bool ConceptIsPartnerTaunt( int iConcept );
 	static CTFWeaponBuilder *GetBuilderForObjectType( CTFPlayer *pTFPlayer, int iObjectType );
 };
 

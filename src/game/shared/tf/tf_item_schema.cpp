@@ -699,7 +699,6 @@ CTFTauntInfo::CTFTauntInfo()
 	m_flTauntSeparationForwardDistance = 0;
 	m_flTauntSeparationRightDistance = 0;
 	m_flMinTauntTime = 2.f;
-	m_bIsPartnerTaunt = false;
 	m_bStopTauntIfMoved = false;
 
 	m_nFOV = 0;
@@ -785,23 +784,6 @@ bool CTFTauntInfo::BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErro
 			if ( !InitPerClassStringVectorArray( pSubKey, m_vecOutroScenes, pVecErrors ) ) 
 				return false;
 		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntInitiatorScenes, pVecErrors ) ) 
-				return false;
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntReceiverScenes, pVecErrors ) )
-				return false;
-		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_initiator_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntInitiatorScenes, pVecErrors ) )
-				return false;
-		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_receiver_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntReceiverScenes, pVecErrors ) )
-				return false;
-		}
 		else if ( !V_strcmp( pszKeyName, "custom_taunt_input_remap" ) )
 		{
 			if ( !InitTauntInputRemap( pSubKey, m_vecTauntInputRemap, pVecErrors ) )
@@ -839,10 +821,6 @@ bool CTFTauntInfo::BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErro
 		else if ( !V_strcmp( pszKeyName, "min_taunt_time" ) )
 		{
 			m_flMinTauntTime = pSubKey->GetFloat();
-		}
-		else if ( !V_strcmp( pszKeyName, "is_partner_taunt" ) )
-		{
-			m_bIsPartnerTaunt = pSubKey->GetBool();
 		}
 		else if ( !V_strcmp( pszKeyName, "stop_taunt_if_moved" ) )
 		{

@@ -99,8 +99,6 @@ public:
 
 	virtual bool IsDebugFilterMatch( const char *name ) const;	// return true if we match the given debug symbol
 
-	virtual int	GetAllowedTauntPartnerTeam() const OVERRIDE { return GetTeamNumber(); }
-
 	// CTFBot specific
 	CTeamControlPoint *GetMyControlPoint( void ) const;				// return point we want to capture, or need to defend
 	void ClearMyControlPoint( void );
