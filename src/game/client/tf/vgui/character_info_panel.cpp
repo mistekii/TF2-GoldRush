@@ -279,20 +279,6 @@ void CCharacterInfoPanel::OnCommand( const char *command )
 {
 	if ( FStrEq( command, "back" ) )
 	{
-		// If we're inspecting an item, just close the inspection panel
-		if ( m_pLoadoutPanel->GetInspectionPanel()->IsVisible() )
-		{
-			m_pLoadoutPanel->GetInspectionPanel()->OnCommand( "close" );
-			// This is such a hack.  I don't have time to figure this out, so we're just going
-			// to special case this.  Don't "open" the CHAP_LOADOUT if the backback was up or
-			// else we'll get sucked back to CHAP_LOADOUT
-			if ( !m_pLoadoutPanel->GetBackpackPanel()->IsVisible() )
-			{
-				m_pLoadoutPanel->OpenSubPanel( CHAP_LOADOUT );
-			}
-			return;
-		}
-
 		// If we're at the base loadout page, or if we want to force it, close the dialog completely...
 		// NOTE: Right now we don't support closing from the item selection screen.
 		const int iShowingPanel = m_pLoadoutPanel->GetShowingPanel();
@@ -357,14 +343,6 @@ void CCharacterInfoPanel::OpenLoadoutToCrafting( void )
 void CCharacterInfoPanel::OpenLoadoutToArmory( void ) 
 { 
 	m_pLoadoutPanel->OpenToArmory();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CCharacterInfoPanel::OpenToPaintkitPreview( CEconItemView* pItem, bool bFixedItem, bool bFixedPaintkit )
-{
-	m_pLoadoutPanel->OpenToPaintkitPreview( pItem, bFixedItem, bFixedPaintkit );
 }
 
 //-----------------------------------------------------------------------------

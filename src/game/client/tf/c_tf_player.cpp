@@ -99,7 +99,6 @@
 #include "debugoverlay_shared.h"
 #include "tf_hud_chat.h"
 #include <vgui_controls/AnimationController.h>
-#include "econ_paintkit.h"
 #include "soundstartparams.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 
@@ -2346,170 +2345,46 @@ EXPOSE_INTERFACE( CProxyAnimatedWeaponSheen, IMaterialProxy, "AnimatedWeaponShee
 
 //-----------------------------------------------------------------------------
 // StatTrakIllum proxy
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CStatTrakIllumProxy : public CResultProxy
 {
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-private:
-	CFloatInput	m_flMinVal;
-	CFloatInput	m_flMaxVal;
 };
 
 
 bool CStatTrakIllumProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flMinVal.Init( pMaterial, pKeyValues, "minVal", 0.5 ) )
-		return false;
-
-	if ( !m_flMaxVal.Init( pMaterial, pKeyValues, "maxVal", 1 ) )
-		return false;
-
-	return true;
+	return false;
 }
 
-void CStatTrakIllumProxy::OnBind( void *pC_BaseEntity )
+void CStatTrakIllumProxy::OnBind(void* pC_BaseEntity)
 {
-
-	if ( !pC_BaseEntity )
-		return;
-
-	C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	if ( pEntity )
-	{
-		// StatTrak modules are children of their accompanying viewmodels
-		C_BaseViewModel *pViewModel = dynamic_cast<C_BaseViewModel*>( pEntity->GetMoveParent() );
-		if ( pViewModel )
-		{
-			//SetFloatResult( Lerp( pViewModel->GetStatTrakGlowMultiplier(), m_flMinVal.GetFloat(), m_flMaxVal.GetFloat() ) );
-			SetFloatResult( 0.75f );
-			return;
-		}
-	}
-
 }
 
 EXPOSE_INTERFACE( CStatTrakIllumProxy, IMaterialProxy, "StatTrakIllum" IMATERIAL_PROXY_INTERFACE_VERSION );
 //-----------------------------------------------------------------------------
 // StatTrak 'kill odometer' support: given a numerical value expressed as a string, pick a texture frame to represent a given digit
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CStatTrakDigitProxy : public CResultProxy
 {
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-	virtual bool HelperOnBindGetStatTrakScore( void *pC_BaseEntity, int *piScore );
-
-private:
-	CFloatInput	m_flDisplayDigit; // the particular digit we want to display
-	CFloatInput	m_flTrimZeros;
 };
 
 
 bool CStatTrakDigitProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flDisplayDigit.Init( pMaterial, pKeyValues, "displayDigit", 0 ) )
-		return false;
-
-	if ( !m_flTrimZeros.Init( pMaterial, pKeyValues, "trimZeros", 0 ) )
-		return false;
-
-	return true;
-}
-
-bool CStatTrakDigitProxy::HelperOnBindGetStatTrakScore( void *pC_BaseEntity, int *piScore )
-{
-	if ( !pC_BaseEntity )
-		return false;
-
-	if ( !piScore )
-		return false;
-
-	bool bReturnValue = false;
-	uint32 unScore = 0;
-	C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	if ( pEntity )
-	{
-		// StatTrak modules are children of their accompanying viewmodels
-		C_ViewmodelAttachmentModel *pViewModel = dynamic_cast<C_ViewmodelAttachmentModel*>( pEntity->GetMoveParent() );
-		if ( pViewModel )
-		{
-			//C_TFPlayer *pPlayer = ToTFPlayer( pViewModel->GetOwnerEntity() );
-			//if ( pPlayer )
-			CTFWeaponBase *pWeap = dynamic_cast<CTFWeaponBase*>( pViewModel->GetOwnerEntity() );
-			if ( pWeap )
-			{
-				
-				// Use the strange prefix if the weapon has one.
-				if ( pWeap->GetAttributeContainer()->GetItem()->FindAttribute( GetKillEaterAttr_Score( 0 ), &unScore ) )
-				{
-					*piScore = unScore;
-					bReturnValue = true;
-				}
-			}
-		}
-	}
-	else
-	{
-		// No Base entity, may be a straight econ item view (item model panel)
-		IClientRenderable *pRend = (IClientRenderable *)pC_BaseEntity;
-		if ( pRend )
-		{
-			const CEconItemView *pItem = dynamic_cast< CEconItemView* >( pRend );
-			if ( pItem && pItem->FindAttribute( GetKillEaterAttr_Score( 0 ), &unScore ) )
-			{
-				*piScore = unScore;
-				bReturnValue = true;
-			}
-		}
-	}
-	return bReturnValue;
+	return false;
 }
 
 
 void CStatTrakDigitProxy::OnBind( void *pC_BaseEntity )
 {
-	int nKillEaterAltScore = 0;
-
-	bool bHasScoreToDisplay = HelperOnBindGetStatTrakScore( pC_BaseEntity, &nKillEaterAltScore );
-	if ( !bHasScoreToDisplay )
-	{	// Error?
-		//SetFloatResult( (int)fmod( gpGlobals->curtime, 10.0f ) );
-		SetFloatResult( 0 );
-		return;
-	}
-
-
-	int iDesiredDigit = (int)m_flDisplayDigit.GetFloat();
-
-	// trim preceding zeros
-	if ( m_flTrimZeros.GetFloat() > 0 )
-	{
-		if ( pow( 10.0f, iDesiredDigit ) > nKillEaterAltScore )
-		{
-			SetFloatResult( 10.0f ); //assumed blank frame
-			return;
-		}
-	}
-
-	// get the [0-9] value of the digit we want
-	int iDigitCount = MIN( iDesiredDigit, 10 );
-	for ( int i = 0; i < iDigitCount; i++ )
-	{
-		nKillEaterAltScore /= 10;
-	}
-	nKillEaterAltScore %= 10;
-
-	SetFloatResult( nKillEaterAltScore );
 }
 
 EXPOSE_INTERFACE( CStatTrakDigitProxy, IMaterialProxy, "StatTrakDigit" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -2522,93 +2397,16 @@ class CStatTrakIconProxy : public CResultProxy
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-private:
-	//CFloatInput	m_flMinVal;
-
 };
 
 
 bool CStatTrakIconProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	/*if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flMinVal.Init( pMaterial, pKeyValues, "minVal", 0.5 ) )
-		return false;
-
-	if ( !m_flMaxVal.Init( pMaterial, pKeyValues, "maxVal", 1 ) )
-		return false;*/
-
-	return CResultProxy::Init( pMaterial, pKeyValues );
+	return false;
 }
-
-ConVar tf_stattrak_icon_offset_x( "tf_stattrak_icon_offset_x", "0", FCVAR_DEVELOPMENTONLY );
-ConVar tf_stattrak_icon_offset_y( "tf_stattrak_icon_offset_y", "0", FCVAR_DEVELOPMENTONLY );
-ConVar tf_stattrak_icon_scale( "tf_stattrak_icon_scale", "1.0", FCVAR_DEVELOPMENTONLY );
 
 void CStatTrakIconProxy::OnBind( void *pC_BaseEntity )
 {
-	// Find the StatTracker Type and Lookup the offset, for now hacks!
-	//if ( !pC_BaseEntity )
-	//	return;
-
-	//C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	//if ( pEntity )
-	//{
-	//	// StatTrak modules are children of their accompanying viewmodels
-	//	C_BaseViewModel *pViewModel = dynamic_cast<C_BaseViewModel*>( pEntity->GetMoveParent() );
-	//	if ( pViewModel )
-	//	{
-	//		//SetFloatResult( Lerp( pViewModel->GetStatTrakGlowMultiplier(), m_flMinVal.GetFloat(), m_flMaxVal.GetFloat() ) );
-	//		SetFloatResult( 0.75f );
-	//		return;
-	//	}
-	//}
-
-
-	Vector2D center( 0.5, 0.5 );
-	Vector2D translation( 0, 0 );
-
-	VMatrix mat, temp;
-	mat.Identity();
-	//if ( m_pCenterVar )
-	//{
-	//	m_pCenterVar->GetVecValue( center.Base(), 2 );
-	//}
-	//MatrixBuildTranslation( mat, -center.x, -center.y, 0.0f );
-
-	//if ( m_pScaleVar )
-	//{
-	//	Vector2D scale;
-	//	m_pScaleVar->GetVecValue( scale.Base(), 2 );
-	//	MatrixBuildScale( temp, scale.x, scale.y, 1.0f );
-	//	MatrixMultiply( temp, mat, mat );
-	//}
-
-	//if ( m_pRotateVar )
-	//{
-	//	float angle = m_pRotateVar->GetFloatValue();
-	//	MatrixBuildRotateZ( temp, angle );
-	//	MatrixMultiply( temp, mat, mat );
-	//}
-	//MatrixBuildTranslation( temp, center.x, center.y, 0.0f );
-	//MatrixMultiply( temp, mat, mat );
-
-	//if ( m_pTranslateVar )
-	{
-		//m_pTranslateVar->GetVecValue( translation.Base(), 2 );
-		MatrixBuildTranslation( temp, tf_stattrak_icon_offset_x.GetFloat(), tf_stattrak_icon_offset_y.GetFloat(), 0.0f );
-		MatrixMultiply( temp, mat, mat );
-	}
-
-	m_pResult->SetMatrixValue( mat );
-
-	if ( ToolsEnabled() )
-	{
-		ToolFramework_RecordMaterialParams( GetMaterial() );
-	}
-
 }
 
 EXPOSE_INTERFACE( CStatTrakIconProxy, IMaterialProxy, "StatTrakIcon" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -2636,302 +2434,18 @@ struct TextureVarSetter
 
 //-----------------------------------------------------------------------------
 // Purpose: Used for weapon skins.
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CWeaponSkinProxy : public IMaterialProxy
 {
 public:
-	CWeaponSkinProxy( void )
-	: m_pMaterial( NULL )
-	, m_pBaseTextureVar( NULL )
-	, m_pBaseTextureOrig( NULL )
-	, m_nGeneration( CRTime::RTime32TimeCur() )
-	{
-	}
-
-	~CWeaponSkinProxy()
-	{
-		SafeRelease( &m_pBaseTextureOrig );
-	}
-
-	inline ITexture* GetWeaponSkinBaseLowRes( bool bPlayerIsLocalPlayer, itemid_t nID, int iTeam ) const
-	{
-		if ( !bPlayerIsLocalPlayer )
-			return NULL;
-		
-		CPlayerInventory *pLocalInv = TFInventoryManager()->GetLocalInventory();
-		if ( !pLocalInv )
-			return NULL;
-
-		return pLocalInv->GetWeaponSkinBaseLowRes( nID, iTeam );
-	}
-
-	inline bool TestAndSetBaseTexture()
-	{
-		if ( m_pBaseTextureOrig )
-		{
-			return true;
-		}
-
-		Assert( m_pBaseTextureVar != NULL );
-
-		// If the material is in the process of being async loaded, the var won't be a 
-		// texture yet, it'll be a string. 
-		if ( !m_pBaseTextureVar->IsTexture() )
-			return false;
-
-		ITexture* baseTexture = m_pBaseTextureVar->GetTextureValue();
-		Assert( baseTexture != NULL );
-		SafeAssign( &m_pBaseTextureOrig, baseTexture );
-		return true;
-	}
-
 	virtual bool Init( IMaterial *pMaterial, KeyValues* pKeyValues )
 	{
-		// We don't support DX8
-		ConVarRef mat_dxlevel( "mat_dxlevel" );
-		if ( mat_dxlevel.GetInt() < 90 )
-			return false;
-
-		Assert( pMaterial );
-		m_pMaterial = pMaterial;
-
-		bool bFound = false;
-		m_pBaseTextureVar = m_pMaterial->FindVar( "$basetexture", &bFound );
-		if ( !bFound ) 
-			return false;
-
-		// If we are doing load on demand, this might not be ready yet. 
-		// If not, then don't set it so the OnBind code knows not to rely on it.
-		// We don't actually care if the code succeeds here.
-		TestAndSetBaseTexture();
-	
-		return true;
-
+		return false;
 	}
 
-	virtual void OnBind( void *pC_BaseEntity )
+	virtual void OnBind(void* pC_BaseEntity)
 	{
-		tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
-
-		// If the base texture isn't ready yet, we cannot composite. So just bail out. Not even sure what 
-		// we could feasibly do in this case to workaround this, we don't have a texture to use yet.
-		if ( !TestAndSetBaseTexture() )
-			return;
-
-		Assert( m_pBaseTextureVar );
-
-		// This will set the texture when it goes out of scope. We can override with other textures along the way.
-		// This handles the return cases gracefully.
-		TextureVarSetter setter( m_pBaseTextureVar, m_pBaseTextureOrig );
-
-
-		CEconItemView *pItem = GetEconItemViewFromProxyEntity( pC_BaseEntity );
-		if ( !pItem )
-			return;
-
-		C_TFPlayer *pOwner = GetOwnerFromProxyEntity( pC_BaseEntity );
-		int desiredW = m_pBaseTextureOrig->GetActualWidth();
-		int desiredH = m_pBaseTextureOrig->GetActualHeight();
-		const bool cbPlayerIsLocalPlayer = C_TFPlayer::GetLocalTFPlayer() && pOwner == C_TFPlayer::GetLocalTFPlayer();
-
-		// Doing material overrides from the econ definitions can cause the same 
-		// item to be referred to from multiple materials. The code treats the 
-		// override material as the controller material. 
-		const IMaterial* pMaterialOverride = pItem->GetMaterialOverride( pItem->GetTeamNumber() );
-		const bool cbIsControllingMaterial = pMaterialOverride == NULL || pMaterialOverride == m_pMaterial;
-
-		// if we're not using high res, check if we should down res
-		// We may force low res for some composites. 
-		if ( pItem->ShouldWeaponSkinUseLowRes() || ( !pItem->ShouldWeaponSkinUseHighRes() && !cbPlayerIsLocalPlayer ) )
-		{
-			const int cDropMips = 2;
-			desiredW = Max( 1, desiredW >> cDropMips );
-			desiredH = Max( 1, desiredH >> cDropMips );
-		}
-
-		// If the object's generation isn't equal to when we told it, we need to regenerate it.
-		if ( cbIsControllingMaterial && ( pItem->GetWeaponSkinGeneration() != m_nGeneration || pItem->GetWeaponSkinGenerationTeam() != pItem->GetTeamNumber() ) )
-		{
-			// Skip this so we dont see a pop in staging
-			{
-				pItem->SetWeaponSkinBase( NULL );
-				pItem->SetWeaponSkinBaseCompositor( NULL );
-			}
-		}
-
-		ITexture* pWeaponSkinBase = pItem->GetWeaponSkinBase();
-
-		// If we have already completed the composite and stored it (or if there was an error)
-		// indicate that here.
-		if ( pWeaponSkinBase )
-		{
-			{
-				setter.SetTexture( pWeaponSkinBase );
-				// If the texture is the correct res already, we're done!
-				if ( desiredW == pWeaponSkinBase->GetActualWidth() && desiredH == pWeaponSkinBase->GetActualHeight() )
-					return;
-			}
-		}
-
-		// If we're doing material overrides, we may get in twice--but the non-controlling material should
-		// bail out now.
-		if ( !cbIsControllingMaterial )
-			return;
-
-		ITextureCompositor* pWeaponSkinBaseCompositor = pItem->GetWeaponSkinBaseCompositor();
-
-		bool bUseLowRes = false;
-
-		if ( pWeaponSkinBaseCompositor )
-		{
-			ECompositeResolveStatus status = pWeaponSkinBaseCompositor->GetResolveStatus();
-
-			bool cleanupCompositor = false;
-
-			switch ( status )
-			{
-			case ECRS_Idle: 
-				Assert( !"Unexpected state, shouldn't be idle here." );
-				break;
-
-			case ECRS_Scheduled:
-				// This is fine, this happens when multiple views ask for the same composite on the 
-				// same frame. For example, a Model Panel and the world view. 
-				bUseLowRes = true;
-				break;
-
-			case ECRS_PendingTextureLoads:
-				// Totally fine, try again later.
-				bUseLowRes = true;
-				break;
-
-			case ECRS_PendingComposites:
-				// Totally fine, try again later.
-				bUseLowRes = true;
-				break;
-
-			case ECRS_Error:
-				// Had an error, just show the current base texture forever. 
-				// Is this a reasonable error handler? Seems like it is, though maybe
-				// we want to show the error texture for at least dev mode.
-				Assert( !"Error while compositing, should figure out wtf.");
-				pItem->SetWeaponSkinBase( m_pBaseTextureOrig );
-				cleanupCompositor = true;
-				break;
-
-			case ECRS_Complete:
-				// Success! Use the new texture for all time. Or whatever.
-				pWeaponSkinBase = pWeaponSkinBaseCompositor->GetResultTexture();
-				pItem->SetWeaponSkinBase( pWeaponSkinBase );
-				setter.SetTexture( pWeaponSkinBase );
-				cleanupCompositor = true;
-				break;
-
-			default:
-				Assert( !"Unexpected return value from ITextureCompositor::GetResolveStatus" );
-				break;
-			};
-
-			if ( cleanupCompositor )
-			{
-				pItem->SetWeaponSkinBaseCompositor( NULL );
-				pWeaponSkinBaseCompositor = NULL;
-			}
-
-			if ( bUseLowRes )
-			{
-				ITexture* pTex = GetWeaponSkinBaseLowRes( cbPlayerIsLocalPlayer, pItem->GetItemID(), pItem->GetTeamNumber() );
-				if ( pTex )
-					setter.SetTexture( pTex );
-			}
-
-			return;
-		}
-
-		// Start the composite. 
-		KeyValues* rootKV = NULL;
-		float flWear = 0;
-		if ( !GetPaintKitWear( pItem, flWear ) )
-		{
-			return;
-		}
-		int nWear = EconWear_ToIntCategory( flWear );
-
-		uint32 unPaintKitDefIndex = uint32(-1);
-		if ( !GetPaintKitDefIndex( pItem, &unPaintKitDefIndex ) )
-		{
-			return;
-		}
-
-
-		const GameItemDefinition_t* tfItemDef = pItem->GetItemDefinition();
-		if ( tfItemDef )
-		{
-			const CPaintKitDefinition* pDef = assert_cast< const CPaintKitDefinition* >( GetProtoScriptObjDefManager()->GetDefinition( ProtoDefID_t( DEF_TYPE_PAINTKIT_DEFINITION, unPaintKitDefIndex ) ) );
-			if ( pDef )
-			{
-				rootKV = pDef->GetItemPaintKitDefinitionKV( tfItemDef->GetRemappedItemDefIndex(), nWear );
-			}
-		}
-
-		uint32 nCompositeFlags = 0;
-
-		if ( rootKV )
-		{
-			uint64 seed = pItem->GetOriginalID();
-			static CSchemaAttributeDefHandle pAttr_CustomPaintKitSeedLo( "custom_paintkit_seed_lo" );
-			static CSchemaAttributeDefHandle pAttr_CustomPaintKitSeedHi( "custom_paintkit_seed_hi" );
-
-			uint32 unLowVal, unHighVal;
-			const bool bHasLowVal = pItem->FindAttribute( pAttr_CustomPaintKitSeedLo, &unLowVal ),
-					   bHasHighVal = pItem->FindAttribute( pAttr_CustomPaintKitSeedHi, &unHighVal );
-
-			// We should have both, or neither.  We should never have just one
-			Assert( bHasLowVal == bHasHighVal );
-
-			// override the seed if we have custom attr
-			if ( bHasLowVal && bHasHighVal )
-			{
-				seed = ((uint64)unHighVal << 32) | (uint64)unLowVal;
-			}
-
-
-			Assert( pItem->GetTeamNumber() != TEAM_UNASSIGNED );
-			int teamNum = pItem->GetTeamNumber() != TEAM_UNASSIGNED ? pItem->GetTeamNumber() : TF_TEAM_RED;
-
-			char finalItemName[_MAX_PATH];
-			V_sprintf_safe( finalItemName, "%d_%d_wear_%02d", pItem->GetItemDefIndex(), unPaintKitDefIndex, nWear );
-
-			SafeAssign( &pWeaponSkinBaseCompositor, materials->NewTextureCompositor( desiredW, desiredH, finalItemName, teamNum, seed, rootKV, nCompositeFlags ) );
-			if ( pWeaponSkinBaseCompositor )
-			{
-				pWeaponSkinBaseCompositor->ScheduleResolve();
-				pItem->SetWeaponSkinGeneration( m_nGeneration );
-				pItem->SetWeaponSkinGenerationTeam( teamNum );
-
-				if ( pWeaponSkinBaseCompositor->GetResolveStatus() != ECRS_Complete )
-				{
-					// Normal case
-					pItem->SetWeaponSkinBaseCompositor( pWeaponSkinBaseCompositor );
-
-					// Try to sub out the low res, if it's ready.
-					ITexture* pTex = GetWeaponSkinBaseLowRes( cbPlayerIsLocalPlayer, pItem->GetItemID(), pItem->GetTeamNumber() );
-					if ( pTex )
-						setter.SetTexture( pTex );
-				}
-				else 
-				{
-					// Had a cache hit, so add the texture here.
-					pWeaponSkinBase = pWeaponSkinBaseCompositor->GetResultTexture();
-					pItem->SetWeaponSkinBase( pWeaponSkinBase );
-					setter.SetTexture( pWeaponSkinBase );
-				}
-
-				SafeRelease( pWeaponSkinBaseCompositor );
-				return;
-			} 
-		}
-
 	}
 
 	virtual void Release() { delete this; }
@@ -2939,13 +2453,6 @@ public:
 
 private:
 	IMaterial			*m_pMaterial;
-
-	IMaterialVar		*m_pBaseTextureVar;
-	ITexture			*m_pBaseTextureOrig;
-
-	RTime32				m_nGeneration;
-
-	bool				m_bForceUpdate;
 };
 
 EXPOSE_INTERFACE( CWeaponSkinProxy, IMaterialProxy, "WeaponSkin" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -3463,18 +2970,6 @@ void C_TFPlayer::UpdateClientSideAnimation()
 	else
 	{
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
-	}
-
-	// StatTrak Module Test
-	// Update ViewModels
-	// We only update the view model for the local player.
-	//if ( IsLocalPlayer() )
-	{
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon )
-		{
-			pWeapon->UpdateAllViewmodelAddons();
-		}
 	}
 
 	BaseClass::UpdateClientSideAnimation();

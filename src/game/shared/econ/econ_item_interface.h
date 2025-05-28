@@ -496,27 +496,6 @@ protected:
 	bool IsTemporarilyUntradable() const;
 };
 
-bool GetPaintKitWear( const IEconItemInterface *pItem, float &flWear );
-
-template <typename TAttributeContainerType>
-bool GetPaintKitDefIndex( const TAttributeContainerType *pAttrContainer, uint32 *punPaintKitDefIndex = NULL )
-{
-	static CSchemaAttributeDefHandle pAttrDef_PaintKitProtoDefIndex( "paintkit_proto_def_index" );
-	uint32 unPaintKitDefIndex;
-	if ( pAttrDef_PaintKitProtoDefIndex && FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pAttrContainer, pAttrDef_PaintKitProtoDefIndex, &unPaintKitDefIndex ) )
-	{
-		if ( punPaintKitDefIndex )
-		{
-			*punPaintKitDefIndex = unPaintKitDefIndex;
-		}
-		return true;
-	}
-
-	return false;
-}
-
-bool GetStattrak( const IEconItemInterface *pItem, CAttribute_String *pAttrModule = NULL );
-const char *GetPaintKitMaterialOverride( const IEconItemInterface *pItem );
 const CEconItemCollectionDefinition* GetCollection( const IEconItemInterface* pItem );
 
 //-----------------------------------------------------------------------------

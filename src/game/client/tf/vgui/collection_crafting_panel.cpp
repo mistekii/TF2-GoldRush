@@ -38,9 +38,6 @@ CCollectionCraftingPanel::CCollectionCraftingPanel( vgui::Panel *parent, CItemMo
 	m_pSelectingItemModelPanel = NULL;
 
 	m_pTradeUpContainer = new EditablePanel( this, "TradeUpContainer" );
-	m_pInspectPanel = new CTFItemInspectionPanel( this, "NewItemPanel" );
-	m_pInspectPanel->SetOptions( true, true, false );
-	m_pCosmeticResultItemModelPanel = new CItemModelPanel( m_pInspectPanel, "CosmeticResultItemModelPanel" );
 	m_pStampPanel = new ImagePanel( this, "Stamp" );
 	m_pStampButton = new CExButton( this, "ApplyStampButton", "" );
 
@@ -117,12 +114,6 @@ void CCollectionCraftingPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
 		m_pDrawingPanel->SetType( DRAWING_PANEL_TYPE_CRAFTING );
 	}
-
-	m_pItemNamePanel = m_pInspectPanel->FindControl< CItemModelPanel >( "ItemName" );
-	Assert( m_pItemNamePanel );
-
-	// Hide the BG image.  The crafting panel has a BG already
-	m_pInspectPanel->SetControlVisible( "BGImage", false, true );
 }
 
 //-----------------------------------------------------------------------------
@@ -355,7 +346,6 @@ void CCollectionCraftingPanel::OnCommand( const char *command )
 			pszLocalized = g_pVGuiLocalize->Find( m_vecResultStrings[ RandomInt( 0, m_vecResultStrings.Count() - 1 ) ] );
 		}
 		
-		m_pInspectPanel->SetDialogVariable( "resultstring", pszLocalized );
 		return;
 	}
 	else if( Q_strnicmp( "playsound", command, 9 ) == 0 )
@@ -513,8 +503,6 @@ void CCollectionCraftingPanel::SetVisible( bool bVisible )
 
 	if ( bVisible )
 	{
-		m_pInspectPanel->SetVisible( false );
-
 		EditablePanel* pDimmer = FindControl< EditablePanel >( "Dimmer" );
 		if ( pDimmer )
 		{
@@ -607,7 +595,6 @@ void CCollectionCraftingPanel::SetWaitingForItem( eEconItemOrigin eOrigin )
 	m_bShowing = true;
 	EconUI()->SetPreventClosure( true );
 
-	m_pInspectPanel->SetVisible( false );
 	EditablePanel* pDimmer = FindControl< EditablePanel >( "Dimmer" );
 	if ( pDimmer )
 	{
@@ -623,7 +610,6 @@ void CCollectionCraftingPanel::SetWaitingForItem( eEconItemOrigin eOrigin )
 	m_pTradeUpContainer->SetVisible( false );
 
 	// reset
-	m_pInspectPanel->SetItemCopy( NULL );
 	m_pCosmeticResultItemModelPanel->SetItem( NULL );
 	
 	// Do not use Derived SetVisible since it does extra animations we do not want here
@@ -697,16 +683,12 @@ void CCollectionCraftingPanel::OnThink()
 					static CSchemaAttributeDefHandle pAttrib_WeaponAllowInspect( "weapon_allow_inspect" );
 					if ( pNewEconItemView->FindAttribute( pAttrib_WeaponAllowInspect ) )
 					{
-						m_pInspectPanel->SetItemCopy( pNewEconItemView );
-						m_pInspectPanel->SetSpecialAttributesOnly( true );
 						m_pCosmeticResultItemModelPanel->SetItem( NULL );
 					}
 					else //( IsMiscSlot( pNewEconItemView->GetStaticData()->GetDefaultLoadoutSlot() ) )
 					{
 						m_pCosmeticResultItemModelPanel->SetItem( pNewEconItemView );
 						m_pCosmeticResultItemModelPanel->SetNameOnly( false );
-						m_pInspectPanel->SetSpecialAttributesOnly( true );
-						m_pInspectPanel->SetItemCopy( NULL );
 					}
 
 					// Acknowledge the item

@@ -6,7 +6,6 @@
 #include "econ_item_constants.h"
 #include "econ_dynamic_recipe.h"
 #include "schemainitutils.h"
-#include "econ_paintkit.h"
 
 
 
@@ -27,7 +26,6 @@ const unsigned int g_CapabilityApplicationMap[] =
 	// ...then we check to see if the tool target has
 	// this capability
 
-	ITEM_CAP_PAINTABLE,										// ITEM_CAP_PAINTABLE
 	ITEM_CAP_NAMEABLE,										// ITEM_CAP_NAMEABLE
 	ITEM_CAP_DECODABLE,										// ITEM_CAP_DECODABLE
 	0,														// ITEM_CAP_UNUSED; was ITEM_CAP_CAN_MOD_SOCKET
@@ -39,7 +37,6 @@ const unsigned int g_CapabilityApplicationMap[] =
 	ITEM_CAP_CAN_COLLECT,									// ITEM_CAP_CAN_COLLECT
 	0,														// ITEM_CAP_CAN_CRAFT_COUNT
 	0,														// ITEM_CAP_CAN_CRAFT_MARK
-	ITEM_CAP_PAINTABLE_TEAM_COLORS | ITEM_CAP_PAINTABLE,	// ITEM_CAP_PAINTABLE_TEAM_COLORS
 	0,														// ITEM_CAP_CAN_BE_RESTORED
 	ITEM_CAP_CAN_USE_STRANGE_PARTS,							// ITEM_CAP_CAN_USE_STRANGE_PARTS
 	ITEM_CAP_CAN_CARD_UPGRADE,								// ITEM_CAP_CAN_CARD_UPGRADE
@@ -967,9 +964,6 @@ bool CEconTool_Xifier::CanApplyTo( const IEconItemInterface *pTool, const IEconI
 		uint8 unSubjectRarity = pToolSubject->GetRarity();
 		if ( unSubjectRarity == k_unItemRarity_Any || unSubjectRarity == 0 || unSubjectRarity > m_ItemRarityRestriction )
 			return false;
-
-		if ( !GetStattrak( pToolSubject ) )
-			return false;
 	}
 
 	// Check if we have a restriction as an attribute
@@ -1010,10 +1004,6 @@ bool CEconTool_Strangifier::CanApplyTo( const IEconItemInterface *pTool, const I
 
 	// Do not allow for already strange items
 	if ( pToolSubject->BIsStrange() )
-		return false;
-
-	// Don't allow for War Painted items if the rarity is not required
-	if ( GetPaintKitDefIndex( pToolSubject ) && GetRarityRestriction() == k_unItemRarity_Any )
 		return false;
 
 	// Default rules

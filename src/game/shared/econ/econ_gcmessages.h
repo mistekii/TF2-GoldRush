@@ -83,13 +83,6 @@ struct MsgGCUnlockCrate_t
 	uint64 m_unSubjectItemID;	// the crate to be decoded
 };
 
-// k_EMsgGCPaintItem
-struct MsgGCPaintItem_t
-{
-	uint64 m_unToolItemID;		// the Paint Can item
-	uint64 m_unSubjectItemID;	// the item to be painted
-};
-
 // k_EMsgGCGiftWrapItem
 struct MsgGCGiftWrapItem_t
 {

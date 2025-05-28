@@ -428,15 +428,8 @@ void CInputPanelItemModelPanel::SetBlankState()
 			SetAttribOnly( true );
 			SetTextYPos( 0 );
 			//SetNoItemText( pDefaultItem->GetItemName(), NULL, NULL );
-			const wchar_t *pszItemname = pDefaultItem->GetItemName();
-			if ( V_wcscmp( pszItemname, g_pVGuiLocalize->Find( "#TF_ItemName_Item" ) ) == 0 && pDefaultItem->GetQuality() == AE_PAINTKITWEAPON )
-			{
-				SetNoItemText( g_pVGuiLocalize->Find( "paintkitweapon" ), NULL, NULL );
-			}
-			else
-			{
-				SetNoItemText( pDefaultItem->GetItemName(), NULL, NULL );
-			}
+
+			SetNoItemText( pDefaultItem->GetItemName(), NULL, NULL );
 		}
 		else
 		{

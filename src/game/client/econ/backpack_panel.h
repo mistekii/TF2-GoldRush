@@ -12,7 +12,6 @@
 #endif
 
 #include "base_loadout_panel.h"
-#include "tf_item_inspection_panel.h"
 
 #define BACKPACK_SLOTS_PER_PAGE		50
 #define BACKPACK_ROWS				5
@@ -85,8 +84,6 @@ public:
 	MESSAGE_FUNC( DoRefurbishItem, "Context_RefurbishItem" );
 	MESSAGE_FUNC( DoGetItemFromStore, "Context_GetItemFromStore" );
 	MESSAGE_FUNC( DoInspectModel, "Context_InspectModel" );
-	MESSAGE_FUNC( DoPreviewPaintkitsOnItem, "Context_PreviewPaintkitsOnItem" );
-	MESSAGE_FUNC( DoPreviewItemsWithPaintkit, "Context_PreviewItemsWithPaintkit" );
 	MESSAGE_FUNC( DoBuyKeyAndOpenCrate, "Context_BuyKeyAndOpenCrate" );
 	MESSAGE_FUNC( DoOpenCrateWithKey, "Context_OpenCrateWithKey" );
 	MESSAGE_FUNC( DoStrangeCountTransfer, "Context_OpenStrangeCountTransfer" );
@@ -94,7 +91,6 @@ public:
 	MESSAGE_FUNC( DoHalloweenOffering, "Context_HalloweenOffering" );
 	MESSAGE_FUNC( DoCraftCommonStatClock, "Context_CraftCommonStatClock" );
 	void DoEquipForClass( int nClass );
-	void DoPaint( int nPaintItemIndex, bool bUseStore, bool bUseMarket );
 	void DoStrangePart( int nStrangePartIndex, bool bUseMarket );
 	enum ESelection
 	{
@@ -171,7 +167,6 @@ protected:
 	int			GetPageButtonIndexAtPos( int x, int y );
 	void		SetPageButtonTextColorBasedOnContents();
 
-	void		AddPaintToContextMenu( Menu *pPaintSubMenu, item_definition_index_t iPaintDef, bool bAddCommerce );
 	void		AddCommerceToContextMenu( Menu *pMenu, const char* pszActionFmt, item_definition_index_t iItemDefIndex, bool bAddMarket, bool bAddStore );
 	void		AddCommerceSubmenus( Menu *pSubMenu, item_definition_index_t iItemDef, const char* pszActionFmt );
 	void		DoGiftToPlayer( );
@@ -246,7 +241,6 @@ protected:
 
 	CDynamicRecipePanel* m_pDynamicRecipePanel;
 	CItemSlotPanel* m_pItemSlotPanel;
-	CUtlVector< item_definition_index_t > m_vecPaintCans;
 	CUtlVector< item_definition_index_t > m_vecStrangeParts;
 
 	DHANDLE<CStrangeCountTransferPanel> m_pStrangeToolPanel;

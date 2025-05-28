@@ -98,7 +98,6 @@ enum EItemAction
 	k_EItemActionPurchase					 = 14,
 	k_EItemActionNameChanged_Add			 = 15,
 	k_EItemActionUnlockCrate_Add			 = 16,
-	k_EItemActionPaintItem_Add				 = 17,
 	k_EItemActionAutoGrantItem				 = 18,
 	k_EItemActionCrossGameAchievement		 = 19,
 	k_EItemActionAddItemToSocket_Add		 = 20,
@@ -110,7 +109,6 @@ enum EItemAction
 	k_EItemActionAwardGift_Receiver			 = 26,
 	k_EItemActionNameChanged_Remove			 = 27,
 	k_EItemActionUnlockCrate_Remove			 = 28,
-	k_EItemActionPaintItem_Remove			 = 29,
 	k_EItemActionAddItemToSocket_Remove		 = 30,
 	k_EItemActionAddSocketToItem_Remove		 = 31,
 	k_EItemActionRemoveSocketItem_Remove	 = 32,
@@ -126,8 +124,6 @@ enum EItemAction
 	k_EItemActionAwardThirdPartyPromo		 = 42,
 	k_EItemActionRemoveItemName_Remove		 = 43,
 	k_EItemActionRemoveItemName_Add			 = 44,
-	k_EItemActionRemoveItemPaint_Remove		 = 45,
-	k_EItemActionRemoveItemPaint_Add		 = 46,
 	k_EItemActionHalloweenDrop				 = 47,
 	k_EItemActionSteamWorkshopContributor	 = 48,
 	k_EItemActionManualOwnershipChange		 = 49,			// when we have bad bugs that corrupt item data and have to fix up rows in the DB by hand
@@ -264,8 +260,6 @@ enum EItemAction
 
 	k_EItemActionCYOABloodMoneyPurchase				= 231,
 
-	k_EItemActionPaintKitConsume_Remove				= 232,
-	k_EItemActionPaintKitConsume_Add				= 233,
 	k_EItemActionDeletedAccountTerminated			= 234,
 
 	// The "OneOffRefund" asset api, for setting up specific/manual refund offers that may also restore related items to
@@ -400,7 +394,6 @@ enum eEconItemOrigin
 	kEconItemOrigin_TradeUp,
 	kEconItemOrigin_ViralCompetitiveBetaPassSpread,
 	kEconItemOrigin_CYOABloodMoneyPurchase,
-	kEconItemOrigin_Paintkit,
 	kEconItemOrigin_UntradableFreeContractReward,
 
 	kEconItemOrigin_Max,
@@ -506,15 +499,14 @@ enum EEconItemQuality
 	AE_COMPLETED        = 12,
 	AE_HAUNTED          = 13,
 	AE_COLLECTORS       = 14,
-	AE_PAINTKITWEAPON   = 15,
 
-	AE_RARITY_DEFAULT   = 16,
-	AE_RARITY_COMMON    = 17,
-	AE_RARITY_UNCOMMON  = 18,
-	AE_RARITY_RARE      = 19,
-	AE_RARITY_MYTHICAL  = 20,
-	AE_RARITY_LEGENDARY = 21,
-	AE_RARITY_ANCIENT   = 22,
+	AE_RARITY_DEFAULT   = 15,
+	AE_RARITY_COMMON    = 16,
+	AE_RARITY_UNCOMMON  = 17,
+	AE_RARITY_RARE      = 18,
+	AE_RARITY_MYTHICAL  = 19,
+	AE_RARITY_LEGENDARY = 20,
+	AE_RARITY_ANCIENT   = 21,
 
 	AE_MAX_TYPES,
 	AE_DEPRECATED_UNIQUE = 3,
@@ -830,7 +822,6 @@ enum unacknowledged_item_inventory_positions_t
 	UNACK_ITEM_QUEST_MERASMISSION_OUTPUT,
 	UNACK_ITEM_VIRAL_COMPETITIVE_BETA_PASS_SPREAD,
 	UNACK_ITEM_CYOA_BLOOD_MONEY_PURCHASE,
-	UNACK_ITEM_PAINTKIT,
 #ifdef ENABLE_STORE_RENTAL_BACKEND
 	UNACK_ITEM_RENTAL_PURCHASE,
 #endif

@@ -52,19 +52,10 @@ COMPILE_TIME_ASSERT( ITEM_MODEL_IMAGE_CACHE_SIZE == ARRAYSIZE( g_ItemModelPanelR
 CItemMaterialCustomizationIconPanel::CItemMaterialCustomizationIconPanel( vgui::Panel *pParent, const char *pName ) 
 	: BaseClass( pParent, pName )
 {
-	m_iPaintSplat = -1;
 }
 
 CItemMaterialCustomizationIconPanel::~CItemMaterialCustomizationIconPanel()
 {
-	if ( vgui::surface() )
-	{
-		if ( m_iPaintSplat != -1 )
-		{
-			vgui::surface()->DestroyTextureID( m_iPaintSplat );
-			m_iPaintSplat = -1;
-		}
-	}
 }
 
 // Custom painting
@@ -82,21 +73,6 @@ void CItemMaterialCustomizationIconPanel::PaintBackground( void )
 			DrawQuad( 0, 1 );
 			surface()->DrawSetColor(COLOR_WHITE);
 		}
-	}
-
-	for ( int i = 0; i < m_colPaintColors.Size(); i++ )
-	{
-		const Color& c = m_colPaintColors[i];
-
-		if ( m_iPaintSplat == -1 )
-		{
-			m_iPaintSplat = surface()->CreateNewTextureID();
-			surface()->DrawSetTextureFile( m_iPaintSplat, "vgui/backpack_jewel_paint_splatter", true, false);
-		}
-		surface()->DrawSetTexture( m_iPaintSplat );
-		surface()->DrawSetColor( c.r(), c.g(), c.b(), GetAlpha() );
-		DrawQuad( i, m_colPaintColors.Size() );
-		surface()->DrawSetColor(COLOR_WHITE);
 	}
 
 	// Clean up
@@ -267,8 +243,6 @@ void CEmbeddedItemModelPanel::SetItem( CEconItemView *pItem )
 	SetMDL( MDLHANDLE_INVALID );
 	m_ItemModel.m_bDisabled = true;
 	m_ItemModel.m_MDL.SetMDL( MDLHANDLE_INVALID );
-	m_StatTrackModel.m_bDisabled = true;
-	m_StatTrackModel.m_MDL.SetMDL( MDLHANDLE_INVALID );
 
 	m_AttachedModels.Purge();
 
@@ -315,8 +289,6 @@ void CEmbeddedItemModelPanel::SetItem( CEconItemView *pItem )
 		m_bWeaponAllowInspect = false;
 			
 	}
-
-	m_bIsPaintKitItem = GetPaintKitDefIndex( m_pItem );
 
 	m_bUseRenderTargetAsIcon = ShouldUseRenderTargetAsIcon();
 
@@ -420,56 +392,6 @@ void CEmbeddedItemModelPanel::SetItem( CEconItemView *pItem )
 					}
 				}
 
-				// Stattrak
-				CAttribute_String attrModule;
-				if ( GetStattrak( m_pItem, &attrModule ) )
-				{
-					// Allow for already strange items
-					bool bIsStrange = false;
-					if ( m_pItem->GetQuality() == AE_STRANGE || m_pItem->GetItemQuality() == AE_STRANGE )
-					{
-						bIsStrange = true;
-					}
-
-					if ( !bIsStrange )
-					{
-						// Go over the attributes of the item, if it has any strange attributes the item is strange and don't apply
-						for ( int i = 0; i < GetKillEaterAttrCount(); i++ )
-						{
-							if ( m_pItem->FindAttribute( GetKillEaterAttr_Score( i ) ) )
-							{
-								bIsStrange = true;
-								break;
-							}
-						}
-					}
-
-					if ( bIsStrange )
-					{
-						static CSchemaAttributeDefHandle pAttr_moduleScale( "weapon_stattrak_module_scale" );
-						// Does it have a stat track module
-						m_flStatTrackScale = 1.0f;
-						uint32 unFloatAsUint32 = 1;
-						if ( m_pItem->FindAttribute( pAttr_moduleScale, &unFloatAsUint32 ) )
-						{
-							m_flStatTrackScale = (float&)unFloatAsUint32;
-						}
-
-						MDLHandle_t hStatTrackMDL = mdlcache->FindMDL( attrModule.value().c_str() );
-						if ( mdlcache->IsErrorModel( hStatTrackMDL ) )
-						{
-							hStatTrackMDL = MDLHANDLE_INVALID;
-						}
-						m_StatTrackModel.m_MDL.SetMDL( hStatTrackMDL );
-						mdlcache->Release( hStatTrackMDL ); // counterbalance addref from within FindMDL
-
-						m_StatTrackModel.m_MDL.m_pProxyData = static_cast<IClientRenderable*>(pItem);
-						m_StatTrackModel.m_bDisabled = false;
-						m_StatTrackModel.m_MDL.m_nSequence = ACT_IDLE;
-						SetIdentityMatrix( m_StatTrackModel.m_MDLToWorld );
-					}
-				}
-
 				int iTeam = GetLocalPlayerTeam(),
 					iSkin = iTeam;
 
@@ -542,11 +464,7 @@ bool CEmbeddedItemModelPanel::IsLoadingWeaponSkin( void ) const
 
 	if ( m_pItem && m_pItem->IsValid() )
 	{
-		if ( m_bWeaponAllowInspect && m_bIsPaintKitItem )
-		{
-			return m_pItem->GetWeaponSkinBaseCompositor() != NULL || !m_pCachedWeaponIcon || !m_pCachedWeaponIcon->GetTexture();
-		}
-		else if ( UseRenderTargetAsIcon() )
+		if ( UseRenderTargetAsIcon() )
 		{
 			return !m_pCachedWeaponIcon || !m_pCachedWeaponIcon->GetTexture();
 		}
@@ -960,27 +878,12 @@ void CEmbeddedItemModelPanel::Paint( void )
 
 	// check if we should cache rt from this frame to a texture
 	bool bShouldCacheToTexture = !m_pCachedWeaponIcon && !m_bForceUseModel;
-	if ( m_bIsPaintKitItem )
-	{
-		bShouldCacheToTexture &= bDrawWeaponWithSkin;
-	}
-	else
-	{
-		bShouldCacheToTexture &= UseRenderTargetAsIcon();
-	}
+	bShouldCacheToTexture &= UseRenderTargetAsIcon();
 
 	// copy the rendered weapon skin from the render target
 	if ( bShouldCacheToTexture )
 	{
 		uint64 nPaintKitDef = 0; m_pItem->GetID();
-
-		// Include our paintkit defindex, incase we don't have a SO-backed item (meaning GetID() will
-		// return the same thing for all instances).
-		attrib_value_t val;
-		if ( GetPaintKitDefIndex( m_pItem, &val ) )
-		{
-			nPaintKitDef = val;
-		}
 
 		char buffer[_MAX_PATH];
 		V_sprintf_safe( buffer, "proc/icon/item%d_id%lld%lld_w%d_h%d", m_pItem->GetItemDefIndex(), m_pItem->GetID(), nPaintKitDef, iWidth, iHeight );
@@ -1192,39 +1095,6 @@ bool CEmbeddedItemModelPanel::UpdateParticle(
 }
 
 
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-bool CEmbeddedItemModelPanel::RenderStatTrack( CStudioHdr *pStudioHdr, matrix3x4_t *pWorldMatrix )
-{
-	// Draw the merge MDLs.
-	if ( !m_StatTrackModel.m_bDisabled )
-	{
-		matrix3x4_t matMergeBoneToWorld[MAXSTUDIOBONES];
-
-		// Get the merge studio header.
-		studiohdr_t *pStatTrackStudioHdr = m_StatTrackModel.m_MDL.GetStudioHdr();
-		matrix3x4_t *pMergeBoneToWorld = &matMergeBoneToWorld[0];
-
-		// If we have a valid mesh, bonemerge it. If we have an invalid mesh we can't bonemerge because
-		// it'll crash trying to pull data from the missing header.
-		if ( pStatTrackStudioHdr != NULL )
-		{
-			CStudioHdr mergeHdr( pStatTrackStudioHdr, g_pMDLCache );
-			m_StatTrackModel.m_MDL.SetupBonesWithBoneMerge( &mergeHdr, pMergeBoneToWorld, pStudioHdr, pWorldMatrix, m_StatTrackModel.m_MDLToWorld );
-			for ( int i=0; i<mergeHdr.numbones(); ++i )
-			{
-				MatrixScaleBy( m_flStatTrackScale, pMergeBoneToWorld[i] );
-			}
-			m_StatTrackModel.m_MDL.Draw( m_StatTrackModel.m_MDLToWorld, pMergeBoneToWorld );
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
 bool CEmbeddedItemModelPanel::RenderAttachedModels( CStudioHdr *pStudioHdr, matrix3x4_t *pWorldMatrix )
 {
 	// Draw the merge MDLs.
@@ -1258,7 +1128,6 @@ void CEmbeddedItemModelPanel::RenderingRootModel( IMatRenderContext *pRenderCont
 	{
 		// no model means not using pedestal. just use pStudioHdr to find the attachment points
 		UpdateParticle( pRenderContext, pStudioHdr, mdlHandle, pWorldMatrix );
-		RenderStatTrack( pStudioHdr, pWorldMatrix );
 		RenderAttachedModels( pStudioHdr, pWorldMatrix );
 		return;
 	}
@@ -1300,7 +1169,6 @@ void CEmbeddedItemModelPanel::RenderingRootModel( IMatRenderContext *pRenderCont
 
 		// update particle with the actual item model pItemStudioHdr
 		UpdateParticle( pRenderContext, &HDR, mdlHandle, pBoneToWorld );
-		RenderStatTrack( &HDR, pBoneToWorld );
 		RenderAttachedModels( &HDR, pBoneToWorld );
 	}
 }
@@ -1344,7 +1212,6 @@ CItemModelPanel::CItemModelPanel( vgui::Panel *parent, const char *name ) : vgui
 {
 	m_pModelPanel = NULL;
 	m_pItemNameLabel = NULL;
-	m_pPaintIcon = NULL;
 	m_pTF2Icon = NULL;
 	m_pItemAttribLabel = NULL;
 	m_pItemCollectionNameLabel = NULL;
@@ -1428,7 +1295,6 @@ void CItemModelPanel::ApplySchemeSettings( vgui::IScheme *pScheme )
 	m_pIsLoanerImage = NULL;
 	m_pSeriesLabel = NULL;
 	m_pMatchesLabel = NULL;
-	m_pPaintIcon = NULL;
 	m_pTF2Icon = NULL;
 	m_pFontNameSmallest = NULL;
 	m_pFontNameSmall = NULL;
@@ -1496,11 +1362,6 @@ void CItemModelPanel::LoadResFileForCurrentItem( bool bForceLoad )
 	if ( m_bIsMouseOverPanel && pItem )
 	{
 		const CEconItemCollectionDefinition *pCollection = pItem->GetItemDefinition()->GetItemCollectionDefinition();
-		if ( !pCollection )
-		{
-			// see if this is part of paintkit collection
-			pCollection = GetItemSchema()->GetPaintKitCollectionFromItem( pItem );
-		}
 
 		bCollectionMouseover = pCollection != NULL;
 	}
@@ -1601,11 +1462,6 @@ void CItemModelPanel::LoadResFileForCurrentItem( bool bForceLoad )
 		m_pMatchesLabel->SetMouseInputEnabled( false );
 	}
 
-	m_pPaintIcon = dynamic_cast<CItemMaterialCustomizationIconPanel*>( FindChildByName( "paint_icon", true ) );
-	if ( m_pPaintIcon )
-	{
-		m_pPaintIcon->SetMouseInputEnabled( false );
-	}
 	m_pTF2Icon = dynamic_cast<vgui::ScalableImagePanel*>( FindChildByName( "tf2_icon", true ) );
 	if ( m_pTF2Icon )
 	{
@@ -1873,10 +1729,6 @@ void CItemModelPanel::PerformLayout( void )
 			if ( m_bIsMouseOverPanel && pItem && !m_bHideCollectionPanel )
 			{
 				const CEconItemCollectionDefinition *pCollection = pItem->GetItemDefinition()->GetItemCollectionDefinition();
-				if ( !pCollection )
-				{
-					pCollection = GetItemSchema()->GetPaintKitCollectionFromItem( pItem );
-				}
 
 				if ( pCollection && m_pItemCollectionListLabel && m_pItemCollectionNameLabel && m_pItemCollectionHighlight )
 				{
@@ -1895,11 +1747,6 @@ void CItemModelPanel::PerformLayout( void )
 	int xpos = m_iBaseWide - XRES(1);
 	int ypos = YRES(1);
 
-	if ( m_pPaintIcon && m_pPaintIcon->IsVisible() )
-	{
-		m_pPaintIcon->SetPos( xpos - m_pPaintIcon->GetWide(), ypos );
-		ypos += m_pPaintIcon->GetTall() * 0.9;
-	}
 	if ( m_pTF2Icon && m_pTF2Icon->IsVisible() )
 	{
 		m_pTF2Icon->SetPos( xpos - m_pTF2Icon->GetWide() + m_iTF2IconOffsetX, ypos + m_iTF2IconOffsetY );
@@ -2893,10 +2740,6 @@ void CItemModelPanel::SetNoItemText( const wchar_t *pwszTitleOverride, const wch
 //-----------------------------------------------------------------------------
 void CItemModelPanel::HideAllModifierIcons()
 {
-	if ( m_pPaintIcon )
-	{
-		m_pPaintIcon->SetVisible( false );
-	}
 	if ( m_pTF2Icon )
 	{
 		m_pTF2Icon->SetVisible( false );
@@ -3072,42 +2915,9 @@ void CItemModelPanel::UpdatePanels( void )
 		return;
 	}
 
-	if ( m_pPaintIcon )
-	{
-		m_pPaintIcon->SetVisible( false );
-		if ( !m_bHideModel && !m_bHidePaintIcon )
-		{
-			// Empty out our list of paint colors. We may or may not put things back in -- an empty
-			// list at the end means "don't draw the paint icon".
-			m_pPaintIcon->m_colPaintColors.RemoveAll();
-
-			// Fetch custom texture, if any
-			m_pPaintIcon->m_hUGCId = m_ItemData.GetCustomUserTextureID();
-			if ( m_pPaintIcon->m_hUGCId != 0 )
-				m_pPaintIcon->SetVisible( true );
-
-			// Don't show paint icons on any tools, their icon contains the color
-			const bool bIsEconTool = m_ItemData.GetItemDefinition()->IsTool();
-
-			// Has the item been painted?
-			int iRGB0 = m_ItemData.GetModifiedRGBValue( false ),
-				iRGB1 = m_ItemData.GetModifiedRGBValue( true );
-
-			if ( !bIsEconTool && (iRGB0 != 0 || iRGB1 != 0))
-			{
-				m_pPaintIcon->SetVisible( true );
-				m_pPaintIcon->m_colPaintColors.AddToTail( Color( clamp( (iRGB0 & 0xFF0000) >> 16, 0, 255 ), clamp( (iRGB0 & 0xFF00) >> 8, 0, 255 ), clamp( (iRGB0 & 0xFF), 0, 255 ), 255 ) );
-				if ( iRGB0 != iRGB1 )
-				{
-					m_pPaintIcon->m_colPaintColors.AddToTail( Color( clamp( (iRGB1 & 0xFF0000) >> 16, 0, 255 ), clamp( (iRGB1 & 0xFF00) >> 8, 0, 255 ), clamp( (iRGB1 & 0xFF), 0, 255 ), 255 ) );
-				}
-			}
-		}
-	}
-
 	if ( m_pTF2Icon )
 	{
-		if ( m_bHideModel || m_bHidePaintIcon )
+		if ( m_bHideModel )
 		{
 			m_pTF2Icon->SetVisible( false );
 		}
@@ -3202,14 +3012,7 @@ void CItemModelPanel::UpdatePanels( void )
 			}
 			if ( bIsStrange )
 			{
-				if ( GetStattrak( &m_ItemData ) )
-				{
-					m_pIsStrangeImage->SetImage( "viewmode_statclock" );
-				}
-				else
-				{
-					m_pIsStrangeImage->SetImage( "viewmode_strange" );
-				}
+				m_pIsStrangeImage->SetImage( "viewmode_strange" );
 				m_pIsStrangeImage->SetVisible( true );
 			}
 		}

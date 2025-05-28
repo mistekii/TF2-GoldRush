@@ -545,58 +545,6 @@ void CTFPlayerModelPanel::SwitchHeldItemTo( CEconItemView *pItem )
 	EquipItem( pItem );
 	m_iCurrentSlotIndex = pItem->GetStaticData()->GetLoadoutSlot( m_iCurrentClassIndex );
 
-	m_StatTrackModel.m_bDisabled = true;
-	m_StatTrackModel.m_MDL.SetMDL( MDLHANDLE_INVALID );
-
-	CAttribute_String attrModule;
-	if ( GetStattrak( m_pHeldItem, &attrModule ) )
-	{
-		// Allow for already strange items
-		bool bIsStrange = false;
-		if ( m_pHeldItem->GetQuality() == AE_STRANGE )
-		{
-			bIsStrange = true;
-		}
-
-		if ( !bIsStrange )
-		{
-			// Go over the attributes of the item, if it has any strange attributes the item is strange and don't apply
-			for ( int i = 0; i < GetKillEaterAttrCount(); i++ )
-			{
-				if ( m_pHeldItem->FindAttribute( GetKillEaterAttr_Score( i ) ) )
-				{
-					bIsStrange = true;
-					break;
-				}
-			}
-		}
-
-		if ( bIsStrange )
-		{
-			static CSchemaAttributeDefHandle pAttr_moduleScale( "weapon_stattrak_module_scale" );
-			// Does it have a stat track module
-			m_flStatTrackScale = 1.0f;
-			uint32 unFloatAsUint32 = 1;
-			if ( m_pHeldItem->FindAttribute( pAttr_moduleScale, &unFloatAsUint32 ) )
-			{
-				m_flStatTrackScale = (float&)unFloatAsUint32;
-			}
-
-			MDLHandle_t hStatTrackMDL = mdlcache->FindMDL( attrModule.value().c_str() );
-			if ( mdlcache->IsErrorModel( hStatTrackMDL ) )
-			{
-				hStatTrackMDL = MDLHANDLE_INVALID;
-			}
-			m_StatTrackModel.m_MDL.SetMDL( hStatTrackMDL );
-			mdlcache->Release( hStatTrackMDL ); // counterbalance addref from within FindMDL
-
-			m_StatTrackModel.m_MDL.m_pProxyData = static_cast<IClientRenderable*>(pItem);
-			m_StatTrackModel.m_bDisabled = false;
-			m_StatTrackModel.m_MDL.m_nSequence = ACT_IDLE;
-			SetIdentityMatrix( m_StatTrackModel.m_MDLToWorld );
-		}
-	}
-
 	SetSequenceLayers( NULL, 0 );
 
 	// See if our VCD is overridden

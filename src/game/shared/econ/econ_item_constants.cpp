@@ -29,7 +29,6 @@ const char *g_szQualityStrings[] =
 	"completed",
 	"haunted",
 	"collectors",
-	"paintkitWeapon",
 
 	"default",		// AE_RARITY_DEFAULT,
 	"common",		// AE_RARITY_COMMON,
@@ -93,7 +92,6 @@ const char *g_szQualityColorStrings[] =
 	"QualityColorCompleted",
 	"QualityColorHaunted",				// AE_HAUNTED
 	"QualityColorCollectors",			// AE_COLLECTORS
-	"QualityColorPaintkitWeapon",		// AE_PAINTKITWEAPON
 
 	"ItemRarityDefault"		, // AE_RARITY_DEFAULT,
 	"ItemRarityCommon"		, // AE_RARITY_COMMON,
@@ -134,7 +132,6 @@ const char *g_szQualityLocalizationStrings[] =
 	"#completed",
 	"#haunted",
 	"#collectors",
-	"#paintkitWeapon",
 
 	"#Rarity_Default",
 	"#Rarity_Common",
@@ -176,7 +173,6 @@ int g_nRarityScores[] =
 	103,	// AE_COMPLETED,		// Unused
 	13,		// AE_HAUNTED
 	12,		// AE_COLLECTORS
-	8,		// AE_PAINTKITWEAPON
 	7,		// AE_RARITY_DEFAULT,
 	6,		// AE_RARITY_COMMON,
 	5,		// AE_RARITY_UNCOMMON,
@@ -374,7 +370,6 @@ const char *g_pszItemPickupMethodStrings[] =
 	"#NewItemMethod_QuestMerasmissionOutput", //UNACK_ITEM_QUEST_MERASMISSION_OUTPUT
 	"#NewItemMethod_ViralCompetitiveBetaPassSpread", //UNACK_ITEM_VIRAL_COMPETITIVE_BETA_PASS_SPREAD
 	"#NewItemMethod_BloodMoneyPurchase", //UNACK_ITEM_CYOA_BLOOD_MONEY_PURCHASE
-	"#NewItemMethod_PaintKit", //UNACK_ITEM_PAINTKIT
 #ifdef ENABLE_STORE_RENTAL_BACKEND
 	"#NewItemMethod_RentalPurchase",	// UNACK_ITEM_RENTAL_PURCHASE
 #endif
@@ -446,7 +441,6 @@ const char *g_pszItemFoundMethodStrings[] =
 	"#Item_QuestMerasmissionOutput", // UNACK_ITEM_QUEST_MERASMISSION_OUTPUT
 	"#Item_ViralCompetitiveBetaPassSpread", //UNACK_ITEM_VIRAL_COMPETITIVE_BETA_PASS_SPREAD
 	"#Item_CYOABloodMoneyPurchase", // UNACK_ITEM_CYOA_BLOOD_MONEY_PURCHASE
-	"#Item_Painkit", // UNACK_ITEM_PAINTKIT
 #ifdef ENABLE_STORE_RENTAL_BACKEND
 	NULL,						// UNACK_ITEM_RENTAL_PURCHASE
 #endif
@@ -639,9 +633,6 @@ const char* GetCollectionCraftingInvalidReason( const IEconItemInterface *pTestI
 		return "#TF_CollectionCrafting_NoItem";
 	}
 
-	uint32 nPaintkitDefindex = 0;
-	bool bIsPaintkit = GetPaintKitDefIndex( pTestItem, &nPaintkitDefindex );
-
 	// Needs to have a collection
 	const CEconItemCollectionDefinition* pTestCollection = GetCollection( pTestItem );
 	if ( !pTestCollection )
@@ -658,26 +649,6 @@ const char* GetCollectionCraftingInvalidReason( const IEconItemInterface *pTestI
 		for( int i=0; i < pTestCollection->m_iItemDefs.Count() && !bFound; ++i )
 		{
 			bFound |= pTestCollection->m_iItemDefs[i] == nThisDefIndex;
-
-			// Paintkit items get extra checks.  We want to test if the item has a 
-			// paintkit defindex that corresponds to the paintkit defindex of one
-			// of the items in the collection.  That is, if you have a Pizza Minigun,
-			// then it's technically within the collection that contains the
-			// Pizza War Paint.
-			if ( !bIsPaintkit )
-				continue;
-			
-			uint32 nCollectionItemPaintkitDefindex = 0;
-			const CEconItemDefinition* pCollectionItemDef = GetItemSchema()->GetItemDefinition( pTestCollection->m_iItemDefs[i] );
-			if ( !GetPaintKitDefIndex( pCollectionItemDef, &nCollectionItemPaintkitDefindex ) )
-				continue;
-
-			if ( nCollectionItemPaintkitDefindex == nPaintkitDefindex )
-			{
-				// This is our source War Paint
-				bFound = true;
-				pEffectiveItemDef = pCollectionItemDef;			
-			}
 		}
 
 		if ( !bFound )
@@ -856,8 +827,7 @@ const char* GetHalloweenOfferingInvalidReason( const IEconItemInterface *pTestIt
 		if ( eQuality == AE_RARITY1 
 			|| eQuality == AE_VINTAGE 
 			|| eQuality == AE_HAUNTED
-			|| eQuality == AE_COLLECTORS 
-			|| eQuality == AE_PAINTKITWEAPON 
+			|| eQuality == AE_COLLECTORS
 		) {
 			return NULL;
 		}

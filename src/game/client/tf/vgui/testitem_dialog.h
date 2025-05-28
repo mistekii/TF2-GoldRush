@@ -66,7 +66,6 @@ private:
 	void	SetEntryStep( testitem_entrysteps_t iStep );
 	void	OpenSelectModelDialog( void );
 	void	SetupItemComboBox( vgui::ComboBox *pComboBox );
-	void	SetupPaintColorComboBox( void );
 	void	SetupUnusualEffectComboBox( void );
 	void	HandleClassCheckbuttonChecked( vgui::Panel *pPanel );
 

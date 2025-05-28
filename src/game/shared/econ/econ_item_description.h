@@ -221,7 +221,6 @@ private:
 	virtual void Generate_HolidayRestriction( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_QualityDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_ItemRarityDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
-	virtual void Generate_WearAmountDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_ItemDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_Bundle( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_GiftedBy( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
@@ -235,7 +234,6 @@ private:
 	virtual void Generate_UnusualifierEffectList( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 #endif // PROJECT_TF
 	virtual void Generate_XifierToolTargetItem( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
-	virtual void Generate_Painted( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_Uses( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_LootListDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
 	virtual void Generate_EventDetail( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem );
@@ -338,9 +336,8 @@ private:
 enum EGenerateLocalizedFullItemNameFlag_t
 {
 	k_EGenerateLocalizedFullItemName_Default = 0,
-	k_EGenerateLocalizedFullItemName_WithPaintWear = ( 1 << 0 ),
-	k_EGenerateLocalizedFullItemName_WithoutCustomName = ( 1 << 1 ),
-	k_EGenerateLocalizedFullItemName_WithoutQuality = ( 1 << 2 ),
+	k_EGenerateLocalizedFullItemName_WithoutCustomName = ( 1 << 0 ),
+	k_EGenerateLocalizedFullItemName_WithoutQuality = ( 1 << 1 ),
 };
 
 //-----------------------------------------------------------------------------

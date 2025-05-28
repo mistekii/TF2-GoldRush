@@ -23,7 +23,7 @@
 #include "materialsystem/itexture.h"
 #include "materialsystem/itexturecompositor.h"
 
-#include "econ_paintkit.h"
+#include "tf_proto_script_obj_def.h"
 
 #if ( defined( _MSC_VER ) && _MSC_VER >= 1900 )
 #define timezone _timezone
@@ -131,7 +131,6 @@ const char *g_EffectTypes[NUM_EFFECT_TYPES] =
 //-----------------------------------------------------------------------------
 const char *g_Capabilities[] =
 {
-	"paintable",				// ITEM_CAP_PAINTABLE
 	"nameable",					// ITEM_CAP_NAMEABLE
 	"decodable",				// ITEM_CAP_DECODABLE
 	"can_craft_if_purchased",	// ITEM_CAP_CAN_BE_CRAFTED_IF_PURCHASED
@@ -143,7 +142,6 @@ const char *g_Capabilities[] =
 	"can_collect",				// ITEM_CAP_CAN_COLLECT
 	"can_craft_count",			// ITEM_CAP_CAN_CRAFT_COUNT
 	"can_craft_mark",			// ITEM_CAP_CAN_CRAFT_MARK
-	"paintable_team_colors",	// ITEM_CAP_PAINTABLE_TEAM_COLORS
 	"can_be_restored",			// ITEM_CAP_CAN_BE_RESTORED
 	"strange_parts",			// ITEM_CAP_CAN_USE_STRANGE_PARTS
 	"can_card_upgrade",			// ITEM_CAP_CAN_CARD_UPGRADE
@@ -537,42 +535,6 @@ static int SortCollectionByRarity( item_definition_index_t const *a, item_defini
 	}
 
 	bool bIsRarityEqual = ( pItemA->GetRarity() == pItemB->GetRarity() );
-	
-	// If same Rarity, leave in current position?
-	uint32 unPaintKitDefIndexA, unPaintKitDefIndexB;
-	if ( bIsRarityEqual && GetPaintKitDefIndex( pItemA, &unPaintKitDefIndexA ) && GetPaintKitDefIndex( pItemB, &unPaintKitDefIndexB ) )
-	{
-#ifdef CLIENT_DLL
-		// Sort by localized name
-		// paintkits sort by paintkit name
-		const CPaintKitDefinition* pPaintKitDefA = assert_cast< const CPaintKitDefinition* >( GetProtoScriptObjDefManager()->GetDefinition( ProtoDefID_t( DEF_TYPE_PAINTKIT_DEFINITION, unPaintKitDefIndexA ) ) );
-		const CPaintKitDefinition* pPaintKitDefB = assert_cast< const CPaintKitDefinition* >( GetProtoScriptObjDefManager()->GetDefinition( ProtoDefID_t( DEF_TYPE_PAINTKIT_DEFINITION, unPaintKitDefIndexB ) ) );
-
-		locchar_t pPaintKitStrA[MAX_ITEM_NAME_LENGTH];
-		locchar_t pPaintKitStrB[MAX_ITEM_NAME_LENGTH];
-
-		const wchar_t *wpszFormatString = g_pVGuiLocalize->Find( "#ToolPaintKit_ItemDescFormat" );
-		if ( !wpszFormatString )
-		{
-			wpszFormatString = L"%s1 %s2";
-		}
-		g_pVGuiLocalize->ConstructString_safe( pPaintKitStrA,
-				wpszFormatString,
-				2,
-				g_pVGuiLocalize->Find( pPaintKitDefA->GetDescriptionToken() ),
-				g_pVGuiLocalize->Find( pItemA->GetItemBaseName() ) );
-
-		g_pVGuiLocalize->ConstructString_safe( pPaintKitStrB,
-				wpszFormatString,
-				2,
-				g_pVGuiLocalize->Find( pPaintKitDefB->GetDescriptionToken() ),
-				g_pVGuiLocalize->Find( pItemB->GetItemBaseName() ) );
-
-		return V_wcscmp( pPaintKitStrA, pPaintKitStrB );
-#else
-		return 0;
-#endif
-	}
 
 	// If same Rarity, leave in current position?
 	if ( bIsRarityEqual )
@@ -3769,7 +3731,6 @@ CEconItemSchema::CEconItemSchema( )
 ,	m_mapRecipes( DefLessFunc(int) )
 ,	m_mapItemsSorted( DefLessFunc(int) )
 ,	m_mapToolsItems( DefLessFunc(int) )
-,	m_mapPaintKitTools( DefLessFunc(uint32) )
 ,	m_mapBaseItems( DefLessFunc(int) )
 ,	m_unVersion( 0 )
 #if defined(CLIENT_DLL) || defined(GAME_DLL)
@@ -3875,15 +3836,6 @@ IEconTool *CEconItemSchema::CreateEconToolImpl( const char *pszToolType, const c
 			if ( unCapabilities != ITEM_CAP_NONE )		return NULL;
 
 			return new CEconTool_KeylessCase( pszToolType, pszUseString );
-		}
-
-		if ( !V_stricmp( pszToolType, "paint_can" ) )
-		{
-			// Error checking -- make sure we aren't setting properties in the schema that we don't support.
-			if ( pszUsageRestriction )					return NULL;
-			if ( pUsageKV )								return NULL;
-
-			return new CEconTool_PaintCan( pszToolType, unCapabilities );
 		}
 
 		if ( !V_stricmp( pszToolType, "name" ) )
@@ -4015,11 +3967,6 @@ IEconTool *CEconItemSchema::CreateEconToolImpl( const char *pszToolType, const c
 		if ( !V_stricmp( pszToolType, "unusualifier" ) )
 		{
 			return new CEconTool_Unusualifier( pszToolType, pszUseString, unCapabilities, pUsageKV );
-		}
-
-		if ( !V_stricmp( pszToolType, "paintkit" ) )
-		{
-			return new CEconTool_PaintKit( pszToolType, pszUseString, unCapabilities );
 		}
 	}
 
@@ -4236,7 +4183,6 @@ void CEconItemSchema::Reset( void )
 	m_mapQualities.Purge();
 	m_mapItemsSorted.Purge();
 	m_mapToolsItems.Purge();
-	m_mapPaintKitTools.Purge();
 	m_mapBaseItems.Purge();
 	m_mapRecipes.PurgeAndDeleteElements();
 	m_vecTimedRewards.Purge();
@@ -5172,7 +5118,6 @@ bool CEconItemSchema::BInitItems( KeyValues *pKVItems, CUtlVector<CUtlString> *p
 	m_mapItems.PurgeAndDeleteElements();
 	m_mapItemsSorted.Purge();
 	m_mapToolsItems.Purge();
-	m_mapPaintKitTools.Purge();
 	m_mapBaseItems.Purge();
 	m_vecBundles.Purge();
 
@@ -5224,18 +5169,6 @@ bool CEconItemSchema::BInitItems( KeyValues *pKVItems, CUtlVector<CUtlString> *p
 				if ( pItemDef->IsTool() )
 				{
 					m_mapToolsItems.Insert( nItemIndex, pItemDef );
-
-					// found paintkit tool, add to paintkit map
-					if ( pItemDef->GetEconTool() && !V_strcmp( pItemDef->GetEconTool()->GetTypeName(), "paintkit" ) )
-					{
-						uint32 unPaintKitDefIndex;
-						SCHEMA_INIT_CHECK( GetPaintKitDefIndex( pItemDef, &unPaintKitDefIndex ), "PaintKit Item [%d] is missing paintkit def index attr", pItemDef->GetDefinitionIndex() );
-						int iMapIndex = m_mapPaintKitTools.Find( unPaintKitDefIndex );
-						SCHEMA_INIT_CHECK( iMapIndex == m_mapPaintKitTools.InvalidIndex(), "Duplicate paintkit def index [%d]. Trying to add to item [%d], but item [%d] already has it.",
-											unPaintKitDefIndex, pItemDef->GetDefinitionIndex(), m_mapPaintKitTools[ iMapIndex ]->GetDefinitionIndex() );
-
-						m_mapPaintKitTools.Insert( unPaintKitDefIndex, pItemDef );
-					}
 				}
 
 				if ( pItemDef->IsBaseItem() )
@@ -7062,47 +6995,5 @@ bool ItemHasUnusualAttribute( const IEconItemInterface *pItem, const CEconItemAt
 	}
 	
 	return false;
-}
-
-bool IsPaintKitTool( const CEconItemDefinition *pItemDef )
-{
-	static CSchemaItemDefHandle pPaintkitToolItemDef( "Paintkit" );
-	return pItemDef->GetRemappedItemDefIndex() == pPaintkitToolItemDef->GetDefinitionIndex();
-}
-
-
-const CEconItemDefinition *CEconItemSchema::GetPaintKitItemDefinition( uint32 unPaintKitDefIndex ) const
-{
-	int iIndex = m_mapPaintKitTools.Find( unPaintKitDefIndex );
-	if ( iIndex != m_mapPaintKitTools.InvalidIndex() )
-	{
-		return m_mapPaintKitTools[ iIndex ];
-	}
-
-	return NULL;
-}
-
-
-const CEconItemCollectionDefinition *CEconItemSchema::GetPaintKitCollectionFromItem( const IEconItemInterface *pItem, uint32 *pUnPaintKitDefIndex /*= NULL*/ ) const
-{
-	Assert( pItem );
-	
-	const CEconItemCollectionDefinition *pCollection = NULL;
-	uint32 unPaintKitDef;
-	if ( GetPaintKitDefIndex( pItem, &unPaintKitDef ) )
-	{
-		const CEconItemDefinition *pPaintKitItemDef = GetPaintKitItemDefinition( unPaintKitDef );
-		if ( pPaintKitItemDef )
-		{
-			pCollection = pPaintKitItemDef->GetItemCollectionDefinition();
-		}
-
-		if ( pUnPaintKitDefIndex )
-		{
-			*pUnPaintKitDefIndex = unPaintKitDef;
-		}
-	}
-
-	return pCollection;
 }
 

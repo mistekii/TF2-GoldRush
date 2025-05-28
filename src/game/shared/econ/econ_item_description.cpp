@@ -10,7 +10,6 @@
 #include "localization_provider.h"
 #include "rtime.h"
 #include "econ_dynamic_recipe.h"
-#include "econ_paintkit.h"
 
 
 	#ifndef EXTERNALTESTS_DLL
@@ -341,7 +340,6 @@ void CEconItemDescription::GenerateDescriptionLines( const CLocalizationProvider
 	{
 		Generate_CraftTag( pLocalizationProvider, pEconItem );
 		Generate_StyleDesc( pLocalizationProvider, pEconItem );
-		Generate_Painted( pLocalizationProvider, pEconItem );
 
 		Generate_HolidayRestriction( pLocalizationProvider, pEconItem );	
 #ifdef PROJECT_TF
@@ -516,50 +514,6 @@ CStrangeRankLocalizationGenerator::CStrangeRankLocalizationGenerator( const CLoc
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------
-void Econ_ConcatPaintKitName( locchar_t( &out_pItemName )[MAX_ITEM_NAME_LENGTH], locchar_t *pPaintKitStr, const CLocalizationProvider *pLocalizationProvider, const CEconItemDefinition *pItemDef )
-{
-	if ( !pItemDef )
-		return;
-
-	if ( !pPaintKitStr )
-	{
-		Assert( pPaintKitStr );
-		return;
-	}
-
-	locchar_t tempName[MAX_ITEM_NAME_LENGTH];
-	loc_scpy_safe( tempName, out_pItemName );
-
-	const wchar_t *wpszFormatString = g_pVGuiLocalize->Find( "#ToolPaintKit_ItemDescFormat" );
-	if ( !wpszFormatString )
-	{
-		wpszFormatString = L"%s1 %s2";
-	}
-	g_pVGuiLocalize->ConstructString_safe( out_pItemName,
-			wpszFormatString,
-			2,
-			pPaintKitStr,
-			tempName );
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------
-void Econ_ConcatPaintKitWear( locchar_t( &out_pItemName )[MAX_ITEM_NAME_LENGTH], const CLocalizationProvider *pLocalizationProvider, float flWear )
-{
-	if ( flWear <= 0.0 )
-	{
-	}
-
-	locchar_t tempName[MAX_ITEM_NAME_LENGTH];
-	loc_scpy_safe( tempName, out_pItemName );
-
-	g_pVGuiLocalize->ConstructString_safe( out_pItemName,
-		LOCCHAR( "%s1 (%s2)" ),
-		2,
-		tempName,
-		pLocalizationProvider->Find( GetWearLocalizationString( flWear ) ) 
-	);
-}
-// ---------------------------------------------------------------------------------------------------------------------------
 static bool GetLocalizedBaseItemName( locchar_t (&szItemName)[MAX_ITEM_NAME_LENGTH], const CLocalizationProvider *pLocalizationProvider, const CEconItemDefinition *pEconItemDefinition )
 {
 	if ( pEconItemDefinition->GetItemBaseName() )
@@ -588,7 +542,6 @@ static void GenerateLocalizedFullItemName
 	locchar_t (&out_pItemName)[MAX_ITEM_NAME_LENGTH],
 	const CLocalizationProvider	*pLocalizationProvider,
 	const IEconItemInterface	*pEconItem,
-	EGenerateLocalizedFullItemNameFlag_t eFlagsMask,
 	bool						bHashContextOff
 )
 {
@@ -610,20 +563,6 @@ static void GenerateLocalizedFullItemName
 	bool bIgnoreWear = false;
 	bool bIgnoreQuality = false;
 	bool bHasCustomName = false;
-	uint32 unPaintKitDefIndex = 0;
-	bool bIsPaintKitItem = GetPaintKitDefIndex( pEconItem, &unPaintKitDefIndex );
-	if ( bIsPaintKitItem )
-	{
-		if ( eFlagsMask == k_EGenerateLocalizedFullItemName_Default )
-		{
-			bIgnoreWear = true;
-
-			if ( ( unQuality != AE_STRANGE ) && ( unQuality != AE_SELFMADE ) )
-			{
-				bIgnoreQuality = true;
-			}
-		}
-	}
 
 	// Figure out which localization pattern we're using. By default we assume we're using the common "[Quality] [Item Name]"
 	// format, but if we're a unique item with an article we'll change this later on.
@@ -675,7 +614,7 @@ static void GenerateLocalizedFullItemName
 												 ? attrQualityTextOverride.value().c_str()
 												 : EconQuality_GetLocalizationString( (EEconItemQuality)unQuality );
 
-		if ( unQuality > 0 && pszQualityLocalizationString && unQuality != AE_PAINTKITWEAPON )
+		if ( unQuality > 0 && pszQualityLocalizationString )
 		{
 			// Unique items use proper names, but not if we have a quality text override
 			if ( unQuality == AE_UNIQUE && !attrQualityTextOverride.has_value() )
@@ -738,7 +677,7 @@ static void GenerateLocalizedFullItemName
 		}
 	}
 
-	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || unQuality == AE_PAINTKITWEAPON || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
+	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
 								 ? "ItemNameNormalOrUniqueQualityFormat" 
 								 : "ItemNameQualityFormat";
 
@@ -853,7 +792,7 @@ static void GenerateLocalizedFullItemName
 				else
 				{
 					locchar_t loc_ItemName[MAX_ITEM_NAME_LENGTH];
-					GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, k_EGenerateLocalizedFullItemName_Default, false );
+					GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, false );
 			
 					loc_scpy_safe( szDynamicRecipeOutputName,
 						   CConstructLocalizedString( pLocalizationProvider->Find( "ItemNameDynamicRecipeTargetNameFormat" ),
@@ -863,28 +802,6 @@ static void GenerateLocalizedFullItemName
 		}
 	}
 
-
-	// PaintKit and Wear
-	if ( !bHasCustomName )
-	{
-		if ( bIsPaintKitItem )
-		{
-			tmZone( TELEMETRY_LEVEL1, TMZF_NONE, "%s - Paintkit", __FUNCTION__ );
-			// find paintkit name
-			const CPaintKitDefinition* pPaintKitDef = assert_cast< const CPaintKitDefinition* >( GetProtoScriptObjDefManager()->GetDefinition( ProtoDefID_t( DEF_TYPE_PAINTKIT_DEFINITION, unPaintKitDefIndex ) ) );
-			locchar_t *pPaintKitStr = pPaintKitDef ? pLocalizationProvider->FindSafe( pPaintKitDef->GetDescriptionToken() ) : NULL;
-
-			Econ_ConcatPaintKitName( szItemName, pPaintKitStr, pLocalizationProvider, pEconItemDefinition );
-			if ( !bIgnoreWear )
-			{
-				float flWear = 0;
-				if ( GetPaintKitWear( pEconItem, flWear ) )
-				{
-					Econ_ConcatPaintKitWear( szItemName, pLocalizationProvider, flWear );
-				}
-			}
-		}
-	}
 
 	locchar_t *pNameLocalizationFormat = pLocalizationProvider->Find( pszLocalizationPattern );
 
@@ -937,10 +854,7 @@ void CEconItemDescription::Generate_ItemName( const CLocalizationProvider *pLoca
 	{
 		locchar_t loc_ItemName[MAX_ITEM_NAME_LENGTH];
 
-		EGenerateLocalizedFullItemNameFlag_t eNameFlag = k_EGenerateLocalizedFullItemName_Default;
-	 
-
-		GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, pEconItem, eNameFlag, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
+		GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, pEconItem, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
 
 		AddDescLine( loc_ItemName, /* this will be ignored: */ ATTRIB_COL_LEVEL, kDescLineFlag_Name );
 	}
@@ -1017,46 +931,6 @@ bool CEconItemDescription::BGenerate_ItemLevelDesc_StrangeNameAndStats( const CL
 	CStrangeRankLocalizationGenerator RankGenerator( pLocalizationProvider, pEconItem, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
 	if ( !RankGenerator.IsValid() )
 		return false;
-	
-	// For Collection Items
-	if ( GetPaintKitDefIndex( pEconItem ) )
-	{
-		AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( "Attrib_stattrakmodule" ), RankGenerator.GetRankLocalized() ), 
-			ATTRIB_COL_STRANGE, 
-			kDescLineFlag_Misc 
-		);
-		
-		// Are we tracking alternate stats as well?
-		for ( int i = 0; i < GetKillEaterAttrCount(); i++ )
-		{
-			const CEconItemAttributeDefinition *pKillEaterAltAttrDef = GetKillEaterAttr_Score( i ),
-				*pKillEaterAltScoreTypeAttrDef = GetKillEaterAttr_Type( i );
-			if ( !pKillEaterAltAttrDef || !pKillEaterAltScoreTypeAttrDef )
-				continue;
-
-			uint32 unKillEaterAltScore;
-			if ( !pEconItem->FindAttribute( pKillEaterAltAttrDef, &unKillEaterAltScore ) )
-				continue;
-
-			// Older items can optionally not specify a type attribute at all and have an implicit "I'm tracking
-			// kills" zeroth attribute. We require a score type for any slot besides that.
-			if ( i != 0 && !pEconItem->FindAttribute( pKillEaterAltScoreTypeAttrDef ) )
-				continue;
-
-			const uint32 unKillEaterAltType = GetScoreTypeForKillEaterAttr( pEconItem, pKillEaterAltScoreTypeAttrDef );
-
-			AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( "ItemTypeDescKillEaterAltv2" ),
-				unKillEaterAltScore,
-				GetLocalizedStringForKillEaterTypeAttr( pLocalizationProvider, unKillEaterAltType ),
-				*CStrangeRestrictionAttrWrapper( pLocalizationProvider, GetLocalizedStringForStrangeRestrictionAttr( pLocalizationProvider, pEconItem, i ) ) ),
-				ATTRIB_COL_LEVEL,
-				kDescLineFlag_Misc );		// strange item scores past the first are not considered part of the type
-		}
-
-		return true;
-	} // End Collection Items
-
-	// Normal old way
 
 	// Look for Limited Item Attr
 	bool bLimitedQuantity = false;
@@ -1268,8 +1142,8 @@ void CEconItemDescription::Generate_ItemLevelDesc( const CLocalizationProvider *
 	if ( BGenerate_ItemLevelDesc_StrangeNameAndStats( pLocalizationProvider, pEconItem, locTypename ) )
 		return;
 
-	// Not strange, but if you are paint kitted or have a collection reference dont create this
-	if ( GetPaintKitDefIndex( pEconItem ) || pItemDef->GetCollectionReference() )
+	// Not strange, but if you have a collection reference dont create this
+	if ( pItemDef->GetCollectionReference() )
 		return;
 
 	// If we didn't generate a fancy strange name, we fall back to our default behavior.
@@ -1409,41 +1283,11 @@ void CEconItemDescription::Generate_ItemRarityDesc( const CLocalizationProvider 
 	const locchar_t *locTypename = pLocalizationProvider->Find( pItemDef->GetItemTypeName() );
 	const locchar_t *loc_WearText = LOCCHAR("");
 
-	float flWear = 0;
-	if ( GetPaintKitWear( pEconItem, flWear ) )
-	{
-		loc_WearText = pLocalizationProvider->Find( GetWearLocalizationString( flWear ) );
-	}
-	else
-	{
-		pszTooltip = "TFUI_InvTooltip_RarityNoWear";
-	}
+	pszTooltip = "TFUI_InvTooltip_RarityNoWear";
 
 	AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( pszTooltip ), loc_RarityText, locTypename, loc_WearText ), colorRarity, kDescLineFlag_Misc );
 }
 
-
-//-----------------------------------------------------------------------------
-void CEconItemDescription::Generate_WearAmountDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
-{
-	if ( !GetPaintKitDefIndex( pEconItem ) )
-		return;
-
-	Assert( pLocalizationProvider );
-	Assert( pEconItem );
-
-	float flWear = 0;
-	if ( GetPaintKitWear( pEconItem, flWear ) )
-	{
-		locchar_t loc_WearText[MAX_ATTRIBUTE_DESCRIPTION_LENGTH];
-		
-		loc_scpy_safe( loc_WearText, pLocalizationProvider->Find( "#TFUI_InvTooltip_Wear" ) );
-		loc_scat_safe( loc_WearText, LOCCHAR( " " ) );
-		loc_scat_safe( loc_WearText, pLocalizationProvider->Find( GetWearLocalizationString( flWear ) ) );
-
-		AddDescLine( loc_WearText, ATTRIB_COL_NEUTRAL, kDescLineFlag_Misc );
-	}
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1974,7 +1818,7 @@ void CEconItemDescription::Generate_DynamicRecipe( const CLocalizationProvider *
 
 			locchar_t lineItem[256];
 			locchar_t loc_ItemName[MAX_ITEM_NAME_LENGTH];
-			GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, k_EGenerateLocalizedFullItemName_Default, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
+			GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
 
 			loc_sprintf_safe( lineItem,
 			                  ( LOCCHAR_FMT_LOCPRINTF LOCCHAR( " x %d" ) ),
@@ -2003,7 +1847,7 @@ void CEconItemDescription::Generate_DynamicRecipe( const CLocalizationProvider *
 		}
 
 		locchar_t loc_ItemName[MAX_ITEM_NAME_LENGTH];
-		GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, k_EGenerateLocalizedFullItemName_Default, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
+		GenerateLocalizedFullItemName( loc_ItemName, pLocalizationProvider, &tempItem, TF_ANTI_IDLEBOT_VERIFICATION_ONLY_ARG_BOOL_TRUE( m_pHashContext == NULL ) );
 
 		AddDescLine( loc_ItemName, /* this will be ignored: */ ATTRIB_COL_ITEMSET_MISSING, kDescLineFlag_Misc );
 
@@ -2154,54 +1998,6 @@ void CEconItemDescription::Generate_XifierToolTargetItem( const CLocalizationPro
 					 szTargetItemName ),
 					 ATTRIB_COL_NEUTRAL,
 					 kDescLineFlag_Desc );
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEconItemDescription::Generate_Painted( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
-{
-	Assert( pLocalizationProvider );
-	Assert( pEconItem );
-
-	static CSchemaAttributeDefHandle pAttrDef_PaintEffect( "Paint Effect" );
-
-	float fPaintEffectType;
-	if ( pAttrDef_PaintEffect && FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pEconItem, pAttrDef_PaintEffect, &fPaintEffectType ) )
-	{
-		if ( fPaintEffectType == 1 )
-		{
-			LocalizedAddDescLine( pLocalizationProvider, "Econ_Paint_Effect_Oscillating", ATTRIB_COL_NEUTRAL, kDescLineFlag_Misc );
-		}
-		else if ( fPaintEffectType == 2 )
-		{
-			LocalizedAddDescLine( pLocalizationProvider, "Econ_Paint_Effect_Position", ATTRIB_COL_NEUTRAL, kDescLineFlag_Misc );
-		}
-		else if ( fPaintEffectType == 3 )
-		{
-			LocalizedAddDescLine( pLocalizationProvider, "Econ_Paint_Effect_LowHealthWarning", ATTRIB_COL_NEUTRAL, kDescLineFlag_Misc );
-		}
-	}
-
-	// Find the name of the paint we have applied in the least efficient way imaginable!
-	const CEconItemDefinition *pItemDef = pEconItem->GetItemDefinition();
-	static CSchemaAttributeDefHandle pAttrDef_ShowPaint( "show paint description" );
-	if ( pItemDef && ( !pItemDef->IsTool() || FindAttribute( pEconItem, pAttrDef_ShowPaint ) ) )
-	{
-		const CEconItemDefinition *pTempDef = GetPaintItemDefinitionForPaintedItem( pEconItem );
-		if ( pTempDef )
-		{
-			const locchar_t *locLocalizedPaintName = pLocalizationProvider->Find( pTempDef->GetItemBaseName() );
-
-			if ( locLocalizedPaintName )
-			{
-				AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( "Econ_Paint_Name" ),
-							 locLocalizedPaintName ),
-							 ATTRIB_COL_LEVEL,
-							 kDescLineFlag_Misc );
-			}
-		}
 	}
 }
 
@@ -2578,16 +2374,6 @@ void CEconItemDescription::Generate_CollectionDesc( const CLocalizationProvider 
 	if ( !pItemDef )
 		return;
 
-	// For War Painted items (not War Paints themselves) we want highlight the row of the
-	// War Paint itself in the collection.  Look up our corresponding War Paint's item def
-	// and use that as our own if there is one.
-	uint32 nPaintkitDefindex = 0;
-	if ( GetPaintKitDefIndex( pEconItem, &nPaintkitDefindex ) )
-	{
-		auto pPaintkitItemDef = GetItemSchema()->GetPaintKitItemDefinition( nPaintkitDefindex );
-		pItemDef = pPaintkitItemDef ? pPaintkitItemDef : pItemDef;
-	}
-
 	const CEconItemCollectionDefinition *pCollection = GetCollection( pEconItem );
 	if ( !pCollection )
 		return;
@@ -2644,14 +2430,6 @@ void CEconItemDescription::Generate_CollectionDesc( const CLocalizationProvider 
 						auto& vecItemsWithDefindex = pLocalInv->GetItemsWithDefindex( pItemDef->GetDefinitionIndex() );
 						if ( !vecItemsWithDefindex.IsEmpty() )
 							return &vecItemsWithDefindex;
-
-						uint32 unPaintkitDefidnex = 0;
-						if ( GetPaintKitDefIndex( pItemDef, &unPaintkitDefidnex ) )
-						{
-							auto& vecItemsWithPaintkit = pLocalInv->GetItemsWithPaintkitDefindex( unPaintkitDefidnex );
-							if ( !vecItemsWithPaintkit.IsEmpty() )
-								return &vecItemsWithPaintkit;
-						}
 
 						return NULL;
 					};
@@ -3541,7 +3319,7 @@ CEconItemLocalizedFullNameGenerator::CEconItemLocalizedFullNameGenerator( const 
 	Assert( pItemDef );
 
 	CGameItemDefinition_EconItemInterfaceWrapper EconItemDefinitionWrapper( pItemDef, eQuality );
-	GenerateLocalizedFullItemName( m_loc_LocalizedItemName, pLocalizationProvider, &EconItemDefinitionWrapper, k_EGenerateLocalizedFullItemName_Default, bUseProperName );
+	GenerateLocalizedFullItemName( m_loc_LocalizedItemName, pLocalizationProvider, &EconItemDefinitionWrapper, bUseProperName );
 }
 
 // --------------------------------------------------------------------------
@@ -3683,7 +3461,7 @@ CEconItemLocalizedMarketNameGenerator::CEconItemLocalizedMarketNameGenerator( co
 	Assert( pItem );
 
 	CMarketNameGenerator_EconItemInterfaceWrapper EconItemWrapper( pItem );
-	GenerateLocalizedFullItemName( m_loc_LocalizedItemName, pLocalizationProvider, &EconItemWrapper, k_EGenerateLocalizedFullItemName_WithPaintWear, bUseProperName );
+	GenerateLocalizedFullItemName( m_loc_LocalizedItemName, pLocalizationProvider, &EconItemWrapper, bUseProperName );
 }
 
 #endif // BUILD_ITEM_NAME_AND_DESC

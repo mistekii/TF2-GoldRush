@@ -794,7 +794,7 @@ private:
 
 	// If this is true the attribute is counted as "instance" data for purposes of asset class in the Steam Economy. Non-instance
 	// properties are considered things that can differentiate items at a fundamental level (ie., definition index, quality); instance
-	// properties are more things like additional customizations -- score for strange items, paint color, etc.
+	// properties are more things like additional customizations -- score for strange items, etc.
 	bool		m_bInstanceData;
 	EAssetClassAttrExportRule_t	m_eAssetClassAttrExportRule;			// if this is true the attribute will not be exported for asset class
 	uint32		m_unAssetClassBucket;									// if this is set then attribute value is bucketed when exported for asset class
@@ -1104,28 +1104,26 @@ struct perteamvisuals_t
 enum item_capabilities_t
 {
 	ITEM_CAP_NONE					= 0,
-	ITEM_CAP_PAINTABLE				= 1 << 0,
-	ITEM_CAP_NAMEABLE				= 1 << 1,
-	ITEM_CAP_DECODABLE				= 1 << 2,
-	ITEM_CAP_CAN_BE_CRAFTED_IF_PURCHASED = 1 << 3,		// was ITEM_CAP_CAN_MOD_SOCKET
-	ITEM_CAP_CAN_CUSTOMIZE_TEXTURE	= 1 << 4,
-	ITEM_CAP_USABLE					= 1 << 5,
-	ITEM_CAP_USABLE_GC				= 1 << 6,
-	ITEM_CAP_CAN_GIFT_WRAP			= 1 << 7,
-	ITEM_CAP_USABLE_OUT_OF_GAME		= 1 << 8,
-	ITEM_CAP_CAN_COLLECT			= 1 << 9,
-	ITEM_CAP_CAN_CRAFT_COUNT		= 1 << 10,
-	ITEM_CAP_CAN_CRAFT_MARK			= 1 << 11,
-	ITEM_CAP_PAINTABLE_TEAM_COLORS	= 1 << 12,
-	ITEM_CAP_CAN_BE_RESTORED		= 1 << 13,		// can users remove properties (paint, nametag, etc.) from this item via the in-game UI?
-	ITEM_CAP_CAN_USE_STRANGE_PARTS	= 1 << 14,
-	ITEM_CAP_CAN_CARD_UPGRADE		= 1 << 15,
-	ITEM_CAP_CAN_STRANGIFY			= 1 << 16,
-	ITEM_CAP_CAN_CONSUME			= 1 << 17,
-	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 18,		// IT'S A VERB OKAY
-	ITEM_CAP_HAS_SLOTS				= 1 << 19,
-	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 20,
-	NUM_ITEM_CAPS					= 21,
+	ITEM_CAP_NAMEABLE				= 1 << 0,
+	ITEM_CAP_DECODABLE				= 1 << 1,
+	ITEM_CAP_CAN_BE_CRAFTED_IF_PURCHASED = 1 << 2,		// was ITEM_CAP_CAN_MOD_SOCKET
+	ITEM_CAP_CAN_CUSTOMIZE_TEXTURE	= 1 << 3,
+	ITEM_CAP_USABLE					= 1 << 4,
+	ITEM_CAP_USABLE_GC				= 1 << 5,
+	ITEM_CAP_CAN_GIFT_WRAP			= 1 << 6,
+	ITEM_CAP_USABLE_OUT_OF_GAME		= 1 << 7,
+	ITEM_CAP_CAN_COLLECT			= 1 << 8,
+	ITEM_CAP_CAN_CRAFT_COUNT		= 1 << 9,
+	ITEM_CAP_CAN_CRAFT_MARK			= 1 << 10,
+	ITEM_CAP_CAN_BE_RESTORED		= 1 << 11,		// can users remove properties (nametag, etc.) from this item via the in-game UI?
+	ITEM_CAP_CAN_USE_STRANGE_PARTS	= 1 << 12,
+	ITEM_CAP_CAN_CARD_UPGRADE		= 1 << 13,
+	ITEM_CAP_CAN_STRANGIFY			= 1 << 14,
+	ITEM_CAP_CAN_CONSUME			= 1 << 15,
+	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 16,		// IT'S A VERB OKAY
+	ITEM_CAP_HAS_SLOTS				= 1 << 17,
+	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 18,
+	NUM_ITEM_CAPS					= 19,
 };
 
 enum { ITEM_CAP_DEFAULT		 = ITEM_CAP_CAN_CRAFT_MARK | ITEM_CAP_CAN_BE_RESTORED | ITEM_CAP_CAN_USE_STRANGE_PARTS | ITEM_CAP_CAN_CARD_UPGRADE | ITEM_CAP_CAN_STRANGIFY | ITEM_CAP_CAN_CONSUME | ITEM_CAP_CAN_GIFT_WRAP };	// what are the default capabilities on an item?
@@ -1201,8 +1199,7 @@ public:
 	}
 
 	// When the client attempts to apply a tool to a specific other item in their inventory, this function
-	// will be called. This is called from the UI is response to things like putting paint on an item,
-	// using a key to unlock a crate, etc.
+	// will be called. This is called from the UI is response to things like using a key to unlock a crate, etc.
 	virtual void OnClientApplyTool( class C_EconItemView *pTool, class C_EconItemView *pSubject, vgui::Panel *pParent ) const
 	{
 		Assert( !"IEconTool::OnClientApplyTool(): unimplemented call!" );
@@ -2594,10 +2591,6 @@ public:
 	typedef CUtlDict<CEconOperationDefinition*> OperationDefinitionMap_t;
 	const OperationDefinitionMap_t &GetOperationDefinitions() const { return m_dictOperationDefinitions; }
 	const CEconOperationDefinition* GetOperationByName( const char* pszName ) const;
-
-	typedef CUtlMap< uint32, const CEconItemDefinition* > PaintKitItemDefinitionMap_t;
-	const CEconItemDefinition *GetPaintKitItemDefinition( uint32 unPaintKitDefIndex ) const;
-	const CEconItemCollectionDefinition *GetPaintKitCollectionFromItem( const IEconItemInterface *pItem, uint32 *pUnPaintKitDefIndex = NULL ) const;
 	
 
 #if defined(CLIENT_DLL) || defined(GAME_DLL)
@@ -2866,9 +2859,6 @@ private:
 	// List of all the tool items, is a sublist of mapItems
 	ToolsItemDefinitionMap_t							m_mapToolsItems;
 
-	// List of all paintkit tool item definitions
-	PaintKitItemDefinitionMap_t							m_mapPaintKitTools;
-
 	// List of all base items, is a sublist of mapItems
 	BaseItemDefinitionMap_t								m_mapBaseItems;
 
@@ -3126,7 +3116,6 @@ private:
 void MergeDefinitionPrefab( KeyValues *pKVWriteItem, KeyValues *pKVSourceItem );
 bool IsUnusualAttribute( const CEconItemAttributeDefinition *pAttrDef );
 bool ItemHasUnusualAttribute( const IEconItemInterface *pItem, const CEconItemAttributeDefinition **pUnusualAttribute = NULL, uint32 *pUnAttributeValue = NULL );
-bool IsPaintKitTool( const CEconItemDefinition *pItemDef );
 bool CheckValveSignature(const void *data, uint32 nDataSize, const void *signature, uint32 nSignatureSize);
 bool TF_CheckSignature(const char* fileName, const char *pathID, CUtlBuffer& bufRawData);
 

@@ -800,20 +800,6 @@ private:
 //---------------------------------------------------------------------------------------
 // Purpose:
 //---------------------------------------------------------------------------------------
-class CEconTool_PaintCan : public IEconTool
-{
-public:
-	CEconTool_PaintCan( const char *pszTypeName, item_capabilities_t unCapabilities ) : IEconTool( pszTypeName, NULL, NULL, unCapabilities ) { }
-
-#ifdef CLIENT_DLL
-	virtual void OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const;
-	virtual void OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const;
-#endif // CLIENT_DLL
-};
-
-//---------------------------------------------------------------------------------------
-// Purpose:
-//---------------------------------------------------------------------------------------
 class CEconTool_GiftWrap : public IEconTool
 {
 public:
@@ -896,19 +882,6 @@ public:
 
 #ifdef CLIENT_DLL
 	virtual void OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const;
-#endif // CLIENT_DLL
-};
-
-//---------------------------------------------------------------------------------------
-class CEconTool_PaintKit : public IEconTool
-{
-public:
-	CEconTool_PaintKit( const char *pszTypeName, const char *pszUseString, item_capabilities_t unCapabilities )
-		: IEconTool( pszTypeName, pszUseString, NULL, unCapabilities ) {}
-
-#ifdef CLIENT_DLL
-	virtual void OnClientUseConsumable( class C_EconItemView *pItem, vgui::Panel *pParent ) const OVERRIDE;
-	virtual bool ShouldDisplayAsUseableOnItemsInArmory() const OVERRIDE { return false; }
 #endif // CLIENT_DLL
 };
 

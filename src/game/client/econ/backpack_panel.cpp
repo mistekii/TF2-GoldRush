@@ -82,7 +82,6 @@ const char *g_szItemBorders[][5] =
 	{ "BackpackItemBorder_Haunted",		"BackpackItemMouseOverBorder_Haunted",		"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_Haunted",		"BackpackItemGreyedOutSelectedBorder_Haunted"		},		// AE_HAUNTED
 	{ "BackpackItemBorder_Collectors",	"BackpackItemMouseOverBorder_Collectors",	"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_Collectors",	"BackpackItemGreyedOutSelectedBorder_Collectors"	},		// AE_COLLECTORS
 
-	{ "BackpackItemBorder_PaintkitWeapon",	"BackpackItemMouseOverBorder_PaintkitWeapon",	"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_PaintkitWeapon",	"BackpackItemGreyedOutSelectedBorder_PaintkitWeapon"	},	// AE_Paintkit
 	{ "BackpackItemBorder_RarityDefault",	"BackpackItemMouseOverBorder_RarityDefault",	"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_RarityDefault",	"BackpackItemGreyedOutSelectedBorder_RarityDefault"		}, // AE_RARITY_DEFAULT,
 	{ "BackpackItemBorder_RarityCommon",	"BackpackItemMouseOverBorder_RarityCommon",		"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_RarityCommon",		"BackpackItemGreyedOutSelectedBorder_RarityCommon"		}, // AE_RARITY_COMMON,
 	{ "BackpackItemBorder_RarityUncommon",	"BackpackItemMouseOverBorder_RarityUncommon",	"BackpackItemSelectedBorder",	"BackpackItemGreyedOutBorder_RarityUncommon",	"BackpackItemGreyedOutSelectedBorder_RarityUncommon"	}, // AE_RARITY_UNCOMMON,
@@ -248,17 +247,6 @@ static bool HasResettableScoreAttributes ( const CEconItemView *pEconItemView, c
 	}
 
 	return false;
-}
-
-bool BCanPreviewPaintKit( const CEconItemView* pItem )
-{
-	if ( !pItem || !pItem->IsValid() )
-		return false;
-
-	if ( IsPaintKitTool( pItem->GetItemDefinition() ) )
-		return true;
-
-	return IsValidPickupWeaponSlot( pItem->GetItemDefinition()->GetDefaultLoadoutSlot() );
 }
 
 //-----------------------------------------------------------------------------
@@ -862,7 +850,6 @@ void CBackpackPanel::FireGameEvent( IGameEvent *event )
 			m_bInitializedSeenItems = true;
 		}
 
-		m_vecPaintCans.Purge();
 		m_vecStrangeParts.Purge();
 		const CEconItemSchema::ToolsItemDefinitionMap_t &toolDefs = GetItemSchema()->GetToolsItemDefinitionMap();
 
@@ -874,15 +861,8 @@ void CBackpackPanel::FireGameEvent( IGameEvent *event )
 			if ( !pEconTool )
 				continue;
 
-			// Paint can list
-			// Ignore the stock paintcan thats only for armory purposes
-			if ( !V_strcmp( pEconTool->GetTypeName(), "paint_can" ) && pItemDef_BasePaintCan != pItemDef ) 
-			{
-				// Paint Can
-				m_vecPaintCans.AddToTail( pItemDef->GetDefinitionIndex() );
-			}
 			// Strange Parts List
-			else if ( !V_strcmp( pEconTool->GetTypeName(), "strange_part" ) )
+			if ( !V_strcmp( pEconTool->GetTypeName(), "strange_part" ) )
 			{
 				m_vecStrangeParts.AddToTail( pItemDef->GetDefinitionIndex() );
 			}
@@ -1763,81 +1743,6 @@ void CBackpackPanel::AddCommerceSubmenus( Menu *pSubMenu, item_definition_index_
 	}
 
 }
-//-----------------------------------------------------------------------------
-void CBackpackPanel::AddPaintToContextMenu( Menu *pPaintSubMenu, item_definition_index_t iPaintDef, bool bAddCommerce )
-{
-	GameItemDefinition_t * pPaintCanDef = dynamic_cast<GameItemDefinition_t*>( GEconItemSchema().GetItemDefinition( iPaintDef ) );
-	if ( !pPaintCanDef )
-		return;
-
-	wchar_t wBuff[256];
-	char cBuff[256];
-	V_swprintf_safe( wBuff, L"     %ls", g_pVGuiLocalize->Find( pPaintCanDef->GetItemBaseName() ) );
-
-	char szItemName[256];
-	g_pVGuiLocalize->ConvertUnicodeToANSI( g_pVGuiLocalize->Find( pPaintCanDef->GetItemBaseName() ), szItemName, sizeof( szItemName ) );
-	V_sprintf_safe( cBuff, "     %s", szItemName );
-
-	uint32 unPaintRGB0 = 0;
-	uint32 unPaintRGB1 = 0;
-
-	static CSchemaAttributeDefHandle pAttrDef_PaintRGB( "set item tint RGB" );
-	static CSchemaAttributeDefHandle pAttrDef_PaintRGB2( "set item tint RGB 2" );
-
-	float fRGB = 0.0f;
-
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pPaintCanDef, pAttrDef_PaintRGB, &fRGB ) && fRGB != 0.0f )
-	{
-		unPaintRGB0 = fRGB;
-
-		// We may or may not have a secondary paint color as well. If we don't, we just use the primary
-		// paint color to fill both slots.
-		if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pPaintCanDef, pAttrDef_PaintRGB2, &fRGB ) )
-		{
-			unPaintRGB1 = fRGB;
-		}
-		else
-		{
-			unPaintRGB1 = unPaintRGB0;
-		}
-	}
-
-	if ( !bAddCommerce )
-	{
-		int nIndex = pPaintSubMenu->AddMenuItem( "", new KeyValues( "Command", "command", CFmtStr( "paint%d", iPaintDef ) ), this );
-		vgui::MenuItem *pMenuItem = pPaintSubMenu->GetMenuItem( nIndex );
-		pMenuItem->SetText( wBuff );
-		pMenuItem->InvalidateLayout( true, false );
-
-		CItemMaterialCustomizationIconPanel *pCustomPanel = new CItemMaterialCustomizationIconPanel( pMenuItem, "paint" );
-		pCustomPanel->SetZPos( -100 );
-		pCustomPanel->SetTall( 30 );
-		pCustomPanel->SetWide( 30 );
-		pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( ( unPaintRGB0 & 0xFF0000 ) >> 16, 0, 255 ), clamp( ( unPaintRGB0 & 0xFF00 ) >> 8, 0, 255 ), clamp( ( unPaintRGB0 & 0xFF ), 0, 255 ), 255 ) );
-		pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( ( unPaintRGB1 & 0xFF0000 ) >> 16, 0, 255 ), clamp( ( unPaintRGB1 & 0xFF00 ) >> 8, 0, 255 ), clamp( ( unPaintRGB1 & 0xFF ), 0, 255 ), 255 ) );
-	}
-	else
-	{
-		// 
-		const char *pszContextMenuBorder = "NotificationDefault";
-		const char *pszContextMenuFont = "HudFontMediumSecondary";
-
-		Menu *pSubMenu = new Menu( this, "PaintSubMenu" );
-		pSubMenu->SetBorder( scheme()->GetIScheme( GetScheme() )->GetBorder( pszContextMenuBorder ) );
-		pSubMenu->SetFont( scheme()->GetIScheme( GetScheme() )->GetFont( pszContextMenuFont, IsProportional() ) );
-		int iPos = pPaintSubMenu->AddCascadingMenuItem( cBuff, this, pSubMenu );
-
-		CItemMaterialCustomizationIconPanel *pCustomPanel = new CItemMaterialCustomizationIconPanel( pPaintSubMenu, "paint" );
-		pCustomPanel->SetZPos( 100 );
-		pCustomPanel->SetPos( 0, iPos * pPaintSubMenu->GetMenuItemHeight() );
-		pCustomPanel->SetTall( 30 );
-		pCustomPanel->SetWide( 30 );
-		pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( ( unPaintRGB0 & 0xFF0000 ) >> 16, 0, 255 ), clamp( ( unPaintRGB0 & 0xFF00 ) >> 8, 0, 255 ), clamp( ( unPaintRGB0 & 0xFF ), 0, 255 ), 255 ) );
-		pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( ( unPaintRGB1 & 0xFF0000 ) >> 16, 0, 255 ), clamp( ( unPaintRGB1 & 0xFF00 ) >> 8, 0, 255 ), clamp( ( unPaintRGB1 & 0xFF ), 0, 255 ), 255 ) );
-
-		AddCommerceSubmenus( pSubMenu, iPaintDef, "paint" );
-	}
-}
 //
 // Add commerce context options for an item.  Adds 'Store' and 'Market' options if appropriate (and Pricing) other wise just click to use
 //
@@ -1986,18 +1891,10 @@ void CBackpackPanel::OpenContextMenu()
 		float flInspect = 0;
 		static CSchemaAttributeDefHandle pAttrib_CosmeticAllowInspect( "cosmetic_allow_inspect" );
 		if ( pItem && pItem->IsValid() && pItem->GetItemDefinition()->CanBackpackInspect() &&
-			( BCanPreviewPaintKit( pItem ) || pItem->GetItemDefinition()->GetCollectionReference() != NULL || ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItem, pAttrib_CosmeticAllowInspect, &flInspect ) && flInspect != 0.f ) )
+			( pItem->GetItemDefinition()->GetCollectionReference() != NULL || ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItem, pAttrib_CosmeticAllowInspect, &flInspect ) && flInspect != 0.f ) )
 			)
 		{
-			if ( IsPaintKitTool( pItemDef ) )
-			{
-				// If they clicked on a paintkit item, let them preview the paintkit on all of the items it supports 
-				contextMenuBuilder.AddMenuItem( "#Context_InspectModel", new KeyValues( "Context_PreviewItemsWithPaintkit" ), "primaryaction" );
-			}
-			else
-			{
-				contextMenuBuilder.AddMenuItem( "#Context_InspectModel", new KeyValues( "Context_InspectModel" ), "primaryaction" );
-			}
+			contextMenuBuilder.AddMenuItem( "#Context_InspectModel", new KeyValues( "Context_InspectModel" ), "primaryaction" );
 		}
 
 		// Add equip sub menu
@@ -2113,67 +2010,6 @@ void CBackpackPanel::OpenContextMenu()
 			if ( CEconSharedToolSupport::ToolCanApplyToDefinition( dynamic_cast<const GameItemDefinition_t *>( pDescTagDef ), pItemDef ) )
 			{
 				contextMenuBuilder.AddMenuItem( "#Context_Description", new KeyValues( "DoDescription" ), "customization" );
-			}
-
-			// Add paint options sub menu
-			if ( m_vecPaintCans.Count() > 0 )
-			{
-				GameItemDefinition_t * pPaintCanDef = dynamic_cast<GameItemDefinition_t*>( GEconItemSchema().GetItemDefinition( m_vecPaintCans[0] ) );
-				if ( pPaintCanDef && CEconSharedToolSupport::ToolCanApplyToDefinition( dynamic_cast<const GameItemDefinition_t *>( pPaintCanDef ), pItemDef ) )
-				{
-					Menu *pPaintSubMenu = NULL;
-					pPaintSubMenu = new Menu( this, "PaintSubMenu" );
-					pPaintSubMenu->SetBorder( scheme()->GetIScheme( GetScheme() )->GetBorder( pszContextMenuBorder ) );
-					pPaintSubMenu->SetFont( scheme()->GetIScheme( GetScheme() )->GetFont( pszContextMenuFont, IsProportional() ) );
-					contextMenuBuilder.AddCascadingMenuItem( "#Context_Paint", pPaintSubMenu, "customization" );
-
-					CUtlVector<item_definition_index_t> vecOwnedPaints;
-					CUtlVector<item_definition_index_t> vecStorePaints;
-
-					// Find out if the user owns this item or not and place in the proper bucket
-					CPlayerInventory *pLocalInv = TFInventoryManager()->GetLocalInventory();
-
-					FOR_EACH_VEC( m_vecPaintCans, i )
-					{	
-						if ( pLocalInv && pLocalInv->FindFirstItembyItemDef( m_vecPaintCans[i] ) )
-						{
-							vecOwnedPaints.AddToTail( m_vecPaintCans[i] );
-						}
-						else
-						{
-							vecStorePaints.AddToTail( m_vecPaintCans[i] );
-						}
-					}
-
-					if ( vecOwnedPaints.Count() > 0 )
-					{
-						// Add Header and loop
-						int nIndex = pPaintSubMenu->AddMenuItem( "", new KeyValues( "Command", "command", "" ), this );
-						vgui::MenuItem *pMenuItem = pPaintSubMenu->GetMenuItem( nIndex );
-						pMenuItem->SetText( g_pVGuiLocalize->Find( "#TF_Owned" ) );
-						pMenuItem->InvalidateLayout( true, false );
-
-						FOR_EACH_VEC( vecOwnedPaints, i )
-						{
-							AddPaintToContextMenu( pPaintSubMenu, vecOwnedPaints[i], false );
-						}
-					}
-
-					pPaintSubMenu->AddSeparator();
-					if ( vecStorePaints.Count() > 0 )
-					{
-						// Add Header and loop
-						int nIndex = pPaintSubMenu->AddMenuItem( "", new KeyValues( "Command", "command", "" ), this );
-						vgui::MenuItem *pMenuItem = pPaintSubMenu->GetMenuItem( nIndex );
-						pMenuItem->SetText( g_pVGuiLocalize->Find( "#TF_Commerce" ) );
-						pMenuItem->InvalidateLayout( true, false );
-
-						FOR_EACH_VEC( vecStorePaints, i )
-						{
-							AddPaintToContextMenu( pPaintSubMenu, vecStorePaints[i], true );
-						}
-					}
-				}
 			}
 
 			// Strange Parts
@@ -3705,69 +3541,23 @@ void CBackpackPanel::DoInspectModel()
 	if ( !pItem )
 		return;
 
-	if ( BCanPreviewPaintKit( pItem ) )
+	bool bClassCanUse = false;
+	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; ++iClass )
 	{
-		CCharacterInfoPanel* pCharInfo = dynamic_cast< CCharacterInfoPanel* >( EconUI() );
-		pCharInfo->OpenToPaintkitPreview( vecSelected[0]->GetItem(), true, true );
+		if ( pItem->GetStaticData()->CanBeUsedByClass( iClass ) )
+		{
+			m_pInspectCosmeticPanel->PreviewItem( iClass, pItem );
+			bClassCanUse = true;
+			break;
+		}
 	}
-	else
+
+	if ( !bClassCanUse )
 	{
-		bool bClassCanUse = false;
-		for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; ++iClass )
-		{
-			if ( pItem->GetStaticData()->CanBeUsedByClass( iClass ) )
-			{
-				m_pInspectCosmeticPanel->PreviewItem( iClass, pItem );
-				bClassCanUse = true;
-				break;
-			}
-		}
-
-		if ( !bClassCanUse )
-		{
-			m_pInspectCosmeticPanel->PreviewItem( TF_FIRST_NORMAL_CLASS, pItem );
-		}
-
-		m_pInspectCosmeticPanel->SetVisible( true );
+		m_pInspectCosmeticPanel->PreviewItem( TF_FIRST_NORMAL_CLASS, pItem );
 	}
-}
 
-void CBackpackPanel::DoPreviewPaintkitsOnItem()
-{
-	CUtlVector< CItemModelPanel* > vecSelected;
-	GetSelectedPanels( SELECT_FIRST, vecSelected );
-
-	if ( vecSelected.IsEmpty() )
-		return;
-
-	CEconItemView *pItem = vecSelected[0]->GetItem();
-	if ( !pItem )
-		return;
-
-	if ( !BCanPreviewPaintKit( pItem ) )
-		return;
-
-	CCharacterInfoPanel* pCharInfo = dynamic_cast< CCharacterInfoPanel* >( EconUI() );
-	pCharInfo->OpenToPaintkitPreview( vecSelected[0]->GetItem(), true, false );
-}
-
-void CBackpackPanel::DoPreviewItemsWithPaintkit()
-{
-	CUtlVector< CItemModelPanel* > vecSelected;
-	GetSelectedPanels( SELECT_FIRST, vecSelected );
-
-	if ( vecSelected.IsEmpty() )
-		return;
-
-	CEconItemView *pItem = vecSelected[0]->GetItem();
-	if ( !pItem )
-		return;
-
-	if ( !BCanPreviewPaintKit( pItem ) )
-		return;
-
-	CCharacterInfoPanel* pCharInfo = dynamic_cast< CCharacterInfoPanel* >( EconUI() );
-	pCharInfo->OpenToPaintkitPreview( vecSelected[0]->GetItem(), false, true );
+	m_pInspectCosmeticPanel->SetVisible( true );
 }
 
 
@@ -3781,22 +3571,13 @@ void CBackpackPanel::OpenInspectModelPanelAndCopyItem( CEconItemView *pItemView 
 
 	// Figure out which preview to show
 	float flInspect = 0;
-	static CSchemaAttributeDefHandle pAttrib_WeaponAllowInspect( "weapon_allow_inspect" );
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItemView, pAttrib_WeaponAllowInspect, &flInspect ) && flInspect != 0.f )
+	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; ++iClass )
 	{
-		CCharacterInfoPanel* pCharInfo = dynamic_cast< CCharacterInfoPanel* >( EconUI() );
-		pCharInfo->OpenToPaintkitPreview( pItemView, false, false );
-	}
-	else
-	{
-		for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; ++iClass )
+		if ( pItemView->GetStaticData()->CanBeUsedByClass( iClass ) )
 		{
-			if ( pItemView->GetStaticData()->CanBeUsedByClass( iClass ) )
-			{
-				m_pInspectCosmeticPanel->PreviewItemCopy( iClass, pItemView );
-				m_pInspectCosmeticPanel->SetVisible( true );
-				break;
-			}
+			m_pInspectCosmeticPanel->PreviewItemCopy( iClass, pItemView );
+			m_pInspectCosmeticPanel->SetVisible( true );
+			break;
 		}
 	}
 }
@@ -3879,25 +3660,6 @@ void CBackpackPanel::DoEquipForClass( int nClass )
 	EconUI()->OpenEconUI( -nClass );
 }
 
-//-----------------------------------------------------------------------------
-// Purpose: Given a paint can index, offer to use one or buy one
-//-----------------------------------------------------------------------------
-void CBackpackPanel::DoPaint( int nPaintItemIndex, bool bUseStore, bool bUseMarket )
-{
-	if ( !bUseStore && !bUseMarket )
-	{
-		AttemptToUseItem( nPaintItemIndex );
-	}
-
-	if ( bUseStore )
-	{
-		AttemptToShowItemInStore( nPaintItemIndex );
-	}
-	else if ( bUseMarket )
-	{
-		AttemptToShowItemInMarket( nPaintItemIndex );
-	}
-}
 //-----------------------------------------------------------------------------
 // Purpose: Given a strange part index, offer to use one or buy one (Market)
 //-----------------------------------------------------------------------------
@@ -4106,21 +3868,6 @@ void CBackpackPanel::OnCommand( const char *command )
 	{
 		int nClass = atoi( command + 10 );
 		DoEquipForClass( nClass );
-	}
-	else if ( !V_strnicmp( command, "paint", 5 ) )
-	{
-		int nIndex = atoi( command + 5 );
-		DoPaint( nIndex, false, false );
-	}
-	else if ( !V_strnicmp( command, "market_paint", 12 ) )
-	{
-		int nIndex = atoi( command + 12 );
-		DoPaint( nIndex, false, true );
-	}
-	else if ( !V_strnicmp( command, "store_paint", 11 ) )
-	{
-		int nIndex = atoi( command + 11 );
-		DoPaint( nIndex, true, false );
 	}
 	else if ( !V_strnicmp( command, "strangepart_", 12 ) )
 	{
