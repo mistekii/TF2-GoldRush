@@ -1484,44 +1484,6 @@ GC_REG_JOB( GCSDK::CGCClient, CGCCraftResponse, "CGCCraftResponse", k_EMsgGCCraf
 
 
 //-----------------------------------------------------------------------------
-// Purpose: GC Msg handler to receive the Saxxy broadcast message
-//-----------------------------------------------------------------------------
-class CGSaxxyBroadcast : public GCSDK::CGCClientJob
-{
-public:
-	CGSaxxyBroadcast( GCSDK::CGCClient *pClient ) : GCSDK::CGCClientJob( pClient ) {}
-
-	virtual bool BYieldingRunGCJob( GCSDK::IMsgNetPacket *pNetPacket )
-	{
-		GCSDK::CProtoBufMsg<CMsgTFSaxxyBroadcast> msg( pNetPacket );
-
-		CEconNotification *pNotification = new CEconNotification();
-		pNotification->SetText( "#TF_Event_Saxxy_Deleted" );
-		pNotification->SetLifetime( 30.0f );
-
-		{
-			// Who deleted this?
-			wchar_t wszPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-			UTIL_GetFilteredPlayerNameAsWChar( CSteamID(), msg.Body().has_user_name() ? msg.Body().user_name().c_str() : NULL, wszPlayerName );
-			pNotification->AddStringToken( "owner", wszPlayerName );
-
-			// What category was the Saxxy for?
-			char szCategory[MAX_ATTRIBUTE_DESCRIPTION_LENGTH];
-			Q_snprintf( szCategory, sizeof( szCategory ), "Replay_Contest_Category%d", msg.Body().category_number() );
-
-			pNotification->AddStringToken( "category", g_pVGuiLocalize->Find( szCategory ) );
-		}
-
-		NotificationQueue_Add( pNotification );
-
-		return true;
-	}
-
-};
-
-GC_REG_JOB( GCSDK::CGCClient, CGSaxxyBroadcast, "CGSaxxyBroadcast", k_EMsgGCSaxxyBroadcast, GCSDK::k_EServerTypeGCClient );
-
-//-----------------------------------------------------------------------------
 // Purpose: GC Msg handler to receive any generic item deletion notification
 //-----------------------------------------------------------------------------
 class CClientItemBroadcastNotificationJob : public GCSDK::CGCClientJob
@@ -1557,86 +1519,6 @@ public:
 };
 
 GC_REG_JOB( GCSDK::CGCClient, CClientItemBroadcastNotificationJob, "CClientItemBroadcastNotificationJob", k_EMsgGCTFSpecificItemBroadcast, GCSDK::k_EServerTypeGCClient );
-
-//-----------------------------------------------------------------------------
-// Purpose: GC Msg handler to receive the Saxxy Awarded broadcast message
-//-----------------------------------------------------------------------------
-class CGSaxxyAwardedBroadcast : public GCSDK::CGCClientJob
-{
-private:
-	// embedded notification for custom trigger
-	class CSaxxyAwardedNotification : public CEconNotification
-	{
-	public:
-		CSaxxyAwardedNotification()
-		{
-			SetSoundFilename( "vo/announcer_success.mp3" );
-		}
-
-		virtual EType NotificationType() { return eType_Trigger; }
-
-		virtual void Trigger()
-		{
-			if ( steamapicontext && steamapicontext->SteamFriends() )
-			{
-				steamapicontext->SteamFriends()->ActivateGameOverlayToWebPage( "http://www.teamfortress.com/saxxyawards/winners.php" );
-			}
-			MarkForDeletion();
-		}
-	};
-
-public:
-
-	CGSaxxyAwardedBroadcast( GCSDK::CGCClient *pClient ) : GCSDK::CGCClientJob( pClient ) {}
-
-	virtual bool BYieldingRunGCJob( GCSDK::IMsgNetPacket *pNetPacket )
-	{
-		GCSDK::CProtoBufMsg< CMsgSaxxyAwarded > msg( pNetPacket );
-
-		CEconNotification *pNotification = new CSaxxyAwardedNotification();
-		pNotification->SetText( "#TF_Event_Saxxy_Awarded" );
-		pNotification->SetLifetime( 30.0f );
-
-		{
-			// Winners
-			CFmtStr1024 strWinners;
-			for ( int i = 0; i < msg.Body().winner_names_size(); ++i )
-			{
-				char szPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-				V_strcpy_safe( szPlayerName, msg.Body().winner_names( i ).c_str() );
-				UTIL_GetFilteredPlayerName( CSteamID(), szPlayerName );
-				strWinners.Append( szPlayerName );
-				if ( i + 1 < msg.Body().winner_names_size() )
-				{
-					strWinners.Append( "\n" );
-				}
-			}
-			wchar_t wszPlayerNames[ 1024 ];
-			g_pVGuiLocalize->ConvertANSIToUnicode( strWinners.Access(), wszPlayerNames, sizeof( wszPlayerNames ) );
-			pNotification->AddStringToken( "winners", wszPlayerNames );
-
-			// year
-			CRTime cTime;
-			cTime.SetToCurrentTime();
-			cTime.SetToGMT( false );
-			locchar_t wszYear[10];
-			loc_sprintf_safe( wszYear, LOCCHAR( "%04u" ), cTime.GetYear() );
-			pNotification->AddStringToken( "year", wszYear );
-
-			// What category was the Saxxy for?
-			char szCategory[MAX_ATTRIBUTE_DESCRIPTION_LENGTH];
-			Q_snprintf( szCategory, sizeof( szCategory ), "Replay_Contest_Category%d", msg.Body().category() );
-			pNotification->AddStringToken( "category", g_pVGuiLocalize->Find( szCategory ) );
-		}
-
-		NotificationQueue_Add( pNotification );
-
-		return true;
-	}
-
-};
-
-GC_REG_JOB( GCSDK::CGCClient, CGSaxxyAwardedBroadcast, "CGSaxxyAwardedBroadcast", k_EMsgGCSaxxy_Awarded, GCSDK::k_EServerTypeGCClient );
 
 //-----------------------------------------------------------------------------
 // Purpose: GC Msg handler to receive a generic system broadcast message

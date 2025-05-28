@@ -1482,21 +1482,6 @@ wpntranslation_class_weapons_t pszWpnEntTranslationList[] =
 		}
 	},
 	{
-		"saxxy",
-		{
-			"",							// TF_CLASS_UNDEFINED = 0,
-			"tf_weapon_bat",			// TF_CLASS_SCOUT,
-			"tf_weapon_club",			// TF_CLASS_SNIPER,
-			"tf_weapon_shovel",			// TF_CLASS_SOLDIER,
-			"tf_weapon_bottle",			// TF_CLASS_DEMOMAN,
-			"tf_weapon_bonesaw",		// TF_CLASS_MEDIC,
-			"tf_weapon_fireaxe",		// TF_CLASS_HEAVYWEAPONS,		HWG uses a fireaxe because he doesn't have a default melee weapon of his own; also I am a terrible person
-			"tf_weapon_fireaxe",		// TF_CLASS_PYRO,
-			"tf_weapon_knife",			// TF_CLASS_SPY,
-			"tf_weapon_wrench",			// TF_CLASS_ENGINEER,		
-		}
-	},
-	{
 		"tf_weapon_throwable",
 		{
 			"",											// TF_CLASS_UNDEFINED = 0,

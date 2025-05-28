@@ -2233,8 +2233,6 @@ void CTFPlayer::PrecacheTFPlayer()
 	PrecacheScriptSound( "Camera.SnapShot" );
 	PrecacheScriptSound( "TFPlayer.Dissolve" );
 
-	PrecacheScriptSound( "Saxxy.TurnGold" );
-
 	PrecacheScriptSound( "Icicle.TurnToIce" );
 	PrecacheScriptSound( "Icicle.HitWorld" );
 	PrecacheScriptSound( "Icicle.Melt" );

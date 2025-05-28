@@ -342,9 +342,6 @@ void CEconItemDescription::GenerateDescriptionLines( const CLocalizationProvider
 		Generate_StyleDesc( pLocalizationProvider, pEconItem );
 
 		Generate_HolidayRestriction( pLocalizationProvider, pEconItem );	
-#ifdef PROJECT_TF
-		Generate_SaxxyAwardDesc( pLocalizationProvider, pEconItem );
-#endif // PROJECT_TF
 		Generate_VisibleAttributes( pLocalizationProvider, pEconItem );
 
 		Generate_QualityDesc( pLocalizationProvider, pEconItem );		
@@ -1717,51 +1714,6 @@ void CEconItemDescription::Generate_FriendlyHat( const CLocalizationProvider *pL
 		return;
 
 	AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( "#Attrib_NewUsersHelped" ), (uint32)pPlayerInfo->Obj().num_new_users_helped() ), ATTRIB_COL_POSITIVE, kDescLineFlag_Misc );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEconItemDescription::Generate_SaxxyAwardDesc( const CLocalizationProvider *pLocalizationProvider, const IEconItemInterface *pEconItem )
-{
-	Assert( pLocalizationProvider );
-	Assert( pEconItem );
-
-	// Don't display anything for items besides the Saxxy itself.
-	static CSchemaItemDefHandle pItemDef_Saxxy( "Saxxy" );
-	static CSchemaItemDefHandle pItemDef_MemoryMaker( "Memory Maker" );
-	if ( ( !pItemDef_Saxxy || pEconItem->GetItemDefinition() != pItemDef_Saxxy ) &&
-		 ( !pItemDef_MemoryMaker || pEconItem->GetItemDefinition() != pItemDef_MemoryMaker ) )
-	{
-		return;
-	}
-
-	// Output our award category if present, or abort if absent.
-	static CSchemaAttributeDefHandle pAttrDef_SaxxyAwardCategory( "saxxy award category" );
-	static CSchemaAttributeDefHandle pAttrDef_EventDate( "event date" );
-
-	uint32 unAwardCategory,
-		   unEventDate;
-	if ( !pEconItem->FindAttribute( pAttrDef_SaxxyAwardCategory, &unAwardCategory ) ||
-		 !pEconItem->FindAttribute( pAttrDef_EventDate, &unEventDate ) )
-	{
-		return;
-	}
-
-	CRTime cTime( unEventDate );
-	cTime.SetToGMT( false );
-
-	const char *pszFormatString = "#Attrib_SaxxyAward";
-	if ( pEconItem->GetItemDefinition() == pItemDef_MemoryMaker )
-	{
-		pszFormatString = "#Attrib_MemoryMakerAward";
-	}
-
-	AddDescLine( CConstructLocalizedString( pLocalizationProvider->Find( pszFormatString ),
-											pLocalizationProvider->Find( CFmtStr( "Replay_Contest_Category%d", unAwardCategory ).Access() ),
-											(uint32)cTime.GetYear() ),
-			     ATTRIB_COL_POSITIVE,
-				 kDescLineFlag_Misc );
 }
 
 //-----------------------------------------------------------------------------
