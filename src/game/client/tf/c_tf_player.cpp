@@ -2535,12 +2535,10 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropDataTable( "tflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFLocalPlayerExclusive) ),
 	RecvPropDataTable( "tfnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFNonLocalPlayerExclusive) ),
 
-	RecvPropBool( RECVINFO( m_bAllowMoveDuringTaunt ) ),
 	RecvPropInt( RECVINFO( m_nForceTauntCam ) ),
 	RecvPropFloat( RECVINFO( m_flTauntYaw ) ),
 	RecvPropInt( RECVINFO( m_nActiveTauntSlot ) ),
 	RecvPropInt( RECVINFO( m_iTauntItemDefIndex ) ),
-	RecvPropFloat( RECVINFO( m_flCurrentTauntMoveSpeed ) ),
 	RecvPropFloat( RECVINFO( m_flVehicleReverseTime ) ),
 
 	RecvPropFloat( RECVINFO( m_flMvMLastDamageTime ) ),
@@ -2588,7 +2586,6 @@ BEGIN_PREDICTION_DATA( C_TFPlayer )
 	DEFINE_PRED_FIELD( m_nMuzzleFlashParity, FIELD_CHARACTER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE  ),
 	DEFINE_PRED_FIELD( m_hOffHandWeapon, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flTauntYaw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flCurrentTauntMoveSpeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flVehicleReverseTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flHelpmeButtonPressTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
@@ -2649,7 +2646,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_bWasTaunting = false;
 	m_angTauntPredViewAngles.Init();
 	m_angTauntEngViewAngles.Init();
-	m_pTauntSoundLoop = NULL;
 
 	m_flWaterImpactTime = 0.0f;
 //	m_rtSpottedInPVSTime = 0;
@@ -3575,28 +3571,6 @@ void C_TFPlayer::UpdateKartSounds()
 		controller.SoundDestroy( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] );
 		m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] = NULL;
 	}
-
-	if ( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] )
-	{
-		float flTargetPitch = RemapValClamped( GetCurrentTauntMoveSpeed(), 0.f, tf_halloween_kart_dash_speed.GetFloat(), tf_halloween_kart_sound_slow_pitch.GetFloat(), tf_halloween_kart_sound_fast_pitch.GetFloat() );
-		controller.SoundChangePitch( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ], flTargetPitch, 0.1f );
-	}
-
-	// Uncomment this (if) when we have a tire screech sound
-	//if ( ( m_iKartState & CTFPlayerShared::kKartState_Driving ) && GetCurrentTauntMoveSpeed() < 300.f )
-	//{
-	//	if ( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] == NULL )
-	//	{
-	//		CBroadcastRecipientFilter filter;
-	//		m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] = controller.SoundCreate( filter, entindex(), "BumperCar.GoLoop" );
-	//		controller.Play( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ], 1.f, 80.f );
-	//	}
-	//}
-	//else if ( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] )
-	//{
-	//	controller.SoundDestroy( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] );
-	//	m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] = NULL;
-	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -4616,7 +4590,6 @@ void C_TFPlayer::Touch( CBaseEntity *pOther )
 			{
 				// Stop moving
 				SetAbsVelocity( vec3_origin );
-				SetCurrentTauntMoveSpeed( 0 );
 				m_Shared.RemoveCond( TF_COND_HALLOWEEN_KART_DASH );
 			}
 		}
@@ -5043,47 +5016,11 @@ bool C_TFPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		int nCurrentButtons = pCmd->buttons;
 		pCmd->buttons = 0;
 
-		if ( !CanMoveDuringTaunt() )
-		{
-			pCmd->forwardmove = 0.0f;
-			pCmd->sidemove = 0.0f;
-			pCmd->upmove = 0.0f;
+		pCmd->forwardmove = 0.0f;
+		pCmd->sidemove = 0.0f;
+		pCmd->upmove = 0.0f;
 
-			VectorCopy( angMoveAngle, pCmd->viewangles );
-		}
-		else
-		{
-			float flSign = pCmd->sidemove != 0.f ? 1.f : -1.f;
-			float flMaxTurnSpeed = m_flTauntTurnSpeed;
-			if ( m_flTauntTurnAccelerationTime > 0.f )
-			{
-				flTauntTurnSpeed = clamp( flTauntTurnSpeed + flSign * ( flInputSampleTime / m_flTauntTurnAccelerationTime ) * flMaxTurnSpeed, 0.f, flMaxTurnSpeed );
-			}
-			else
-			{
-				flTauntTurnSpeed = flMaxTurnSpeed;
-			}
-			
-			float flSmoothTurnSpeed = 0.f;
-			if ( flMaxTurnSpeed > 0.f )
-			{
-				flSmoothTurnSpeed = SimpleSpline( flTauntTurnSpeed / flMaxTurnSpeed ) * flMaxTurnSpeed;
-			}
-
-			// only let these button through
-			if ( pCmd->sidemove < 0 )
-			{
-				angMoveAngle += QAngle( 0.f, flSmoothTurnSpeed * flInputSampleTime, 0.f );
-			}
-			else if( pCmd->sidemove > 0 )
-			{
-				angMoveAngle += QAngle( 0.f, -flSmoothTurnSpeed * flInputSampleTime, 0.f );
-			}
-			pCmd->buttons = nCurrentButtons & ( IN_MOVELEFT | IN_MOVERIGHT | IN_FORWARD | IN_BACK );
-			pCmd->sidemove = 0.0f;
-
-			VectorCopy( angMoveAngle, pCmd->viewangles );
-		}
+		VectorCopy( angMoveAngle, pCmd->viewangles );
 
 		// allow remap taunt keys to go through
 		CTFTauntInfo *pTaunt = m_TauntEconItemView.GetStaticData()->GetTauntData();
@@ -7382,14 +7319,6 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 		{
 			pWpn->GetAppropriateWorldOrViewModel()->FireEvent( origin, angles, AE_CL_BODYGROUP_SET_VALUE, options );
 		}
-	}
-	else if ( event == AE_TAUNT_ENABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = true;
-	}
-	else if ( event == AE_TAUNT_DISABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = false;
 	}
 	else if ( event == AE_CL_EXCLUDE_PLAYER_SOUND )
 	{

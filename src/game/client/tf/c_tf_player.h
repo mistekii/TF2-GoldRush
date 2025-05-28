@@ -409,20 +409,13 @@ public:
 	void			SetBodygroupsDirty( void );
 	void			RecalcBodygroupsIfDirty( void );
 
-	bool			CanMoveDuringTaunt();
 	bool			ShouldStopTaunting();
-	bool			IsTauntForceMovingForward() const { return m_bTauntForceMoveForward; }
-	float			GetTauntMoveAcceleration() const { return m_flTauntMoveAccelerationTime; }
-	float			GetTauntMoveSpeed() const { return m_flTauntForceMoveForwardSpeed; }
-	float			GetTauntTurnAccelerationTime() const { return m_flTauntTurnAccelerationTime; }
 	float			GetTauntYaw( void )				{ return m_flTauntYaw; }
 	float			GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void			SetTauntYaw( float flTauntYaw );
 	int				GetActiveTauntSlot() const { return m_nActiveTauntSlot; }
 	void			PlayTauntSoundLoop( const char *pszSoundLoopName );
 	void			StopTauntSoundLoop();
-	float			GetCurrentTauntMoveSpeed() const { return m_flCurrentTauntMoveSpeed; }
-	void			SetCurrentTauntMoveSpeed( float flSpeed ) { m_flCurrentTauntMoveSpeed = flSpeed; }
 	float			GetVehicleReverseTime() const { return m_flVehicleReverseTime; }
 	void			SetVehicleReverseTime( float flTime ) { m_flVehicleReverseTime = flTime; }
 
@@ -634,12 +627,6 @@ private:
 
 	QAngle			m_angEyeAngles;
 
-	bool			m_bAllowMoveDuringTaunt;
-	bool			m_bTauntForceMoveForward;
-	float			m_flTauntForceMoveForwardSpeed;
-	float			m_flTauntMoveAccelerationTime;
-	float			m_flTauntTurnSpeed;
-	float			m_flTauntTurnAccelerationTime;
 	int				m_nForceTauntCam;
 	float			m_flTauntYaw;
 	float			m_flPrevTauntYaw;
@@ -647,7 +634,6 @@ private:
 	int				m_nPrevTauntSlot;
 	item_definition_index_t	m_iTauntItemDefIndex;
 	item_definition_index_t m_iPrevTauntItemDefIndex;
-	float			m_flCurrentTauntMoveSpeed;
 	float			m_flVehicleReverseTime;
 
 	int				m_nTauntSequence;

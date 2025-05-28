@@ -10698,38 +10698,6 @@ void CTFPlayer::GetActiveSets( CUtlVector<const CEconItemSetDefinition *> *pItem
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::CanMoveDuringTaunt()
-{
-
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-	{
-		if ( ( TFGameRules()->GetRoundRestartTime() > -1.f ) && ( (int)( TFGameRules()->GetRoundRestartTime() - gpGlobals->curtime ) <= mp_tournament_readymode_countdown.GetInt() ) )
-			return false;
-
-		if ( TFGameRules()->PlayersAreOnMatchSummaryStage() )
-			return false;
-	}
-
-	if ( m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		return true;
-
-	if ( m_Shared.InCond( TF_COND_TAUNTING ) || m_Shared.InCond( TF_COND_HALLOWEEN_THRILLER ) )
-	{
-#ifdef GAME_DLL
-		if ( tf_allow_sliding_taunt.GetBool() )
-		{
-			return true;
-		}
-#endif // GAME_DLL
-	}
-
-	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFPlayer::ShouldStopTaunting()
 {
 	// stop taunt if we're under water
@@ -10745,31 +10713,6 @@ bool CTFPlayer::ShouldStopTaunting()
 //-----------------------------------------------------------------------------
 void CTFPlayer::ParseSharedTauntDataFromEconItemView( const CEconItemView *pEconItemView )
 {
-	static CSchemaAttributeDefHandle pAttrDef_TauntForceMoveForward( "taunt force move forward" );
-	attrib_value_t attrTauntForceMoveForward = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntForceMoveForward, &attrTauntForceMoveForward );
-	m_bTauntForceMoveForward = attrTauntForceMoveForward != 0; 
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntMoveSpeed( "taunt move speed" );
-	attrib_value_t attrTauntMoveSpeed = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntMoveSpeed, &attrTauntMoveSpeed );
-	m_flTauntForceMoveForwardSpeed = (float&)attrTauntMoveSpeed;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntMoveAccelerationTime( "taunt move acceleration time" );
-	attrib_value_t attrTauntMoveAccelerationTime = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntMoveAccelerationTime, &attrTauntMoveAccelerationTime );
-	m_flTauntMoveAccelerationTime = (float&)attrTauntMoveAccelerationTime;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntTurnSpeed( "taunt turn speed" );
-	attrib_value_t attrTauntTurnSpeed = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntTurnSpeed, &attrTauntTurnSpeed );
-	m_flTauntTurnSpeed = (float&)attrTauntTurnSpeed;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntTurnAccelerationTime( "taunt turn acceleration time" );
-	attrib_value_t attrTauntTurnAccelerationTime = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntTurnAccelerationTime, &attrTauntTurnAccelerationTime );
-	m_flTauntTurnAccelerationTime = (float&)attrTauntTurnAccelerationTime;
-
 #ifdef CLIENT_DLL
 	CTFTauntInfo *pTauntInfo = pEconItemView->GetStaticData()->GetTauntData();
 	if ( pTauntInfo )
@@ -11058,166 +11001,10 @@ ConVar tf_halloween_kart_pitch_fast_follow_rate( "tf_halloween_kart_pitch_fast_f
 
 void CTFPlayerShared::CreateVehicleMove( float flInputSampleTime, CUserCmd *pCmd )
 {
-	const float flSign = pCmd->sidemove == 0.f ? 0.f : Sign( pCmd->sidemove );
-
-	// Compute target turn speed
-	const float flVel = m_pOuter->GetAbsVelocity().Length2D();
-	const float flNormalizedSpeed = Clamp( flVel / tf_halloween_kart_dash_speed.GetFloat(), 0.0f, 1.0f );
-	float flTargetTurnSpeed;
-	if ( flNormalizedSpeed == 0.f )
-	{
-		flTargetTurnSpeed = flSign * tf_halloween_kart_stationary_turn_speed.GetFloat();
-	}
-	else if ( Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) < 0 )
-	{
-		flTargetTurnSpeed = Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) * flSign * tf_halloween_kart_reverse_turn_speed.GetFloat();
-	}
-	else
-	{
-		const float flSmoothCurveVal = SmoothCurve_Tweak( flNormalizedSpeed, tf_halloween_kart_turning_curve_peak_position.GetFloat() );
-		flTargetTurnSpeed = Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) * flSign * RemapValClamped( flSmoothCurveVal, 0.f, 1.f, tf_halloween_kart_slow_turn_speed.GetFloat(), tf_halloween_kart_fast_turn_speed.GetFloat() );
-	}
-
-	float flTurnAccel = 0.f;
-	// Compute turn accelleration
-	if ( flSign == Sign( m_flCurrentTauntTurnSpeed ) )
-	{
-		flTurnAccel = RemapValClamped( flNormalizedSpeed, 0.f, 1.f, tf_halloween_kart_slow_turn_accel_speed.GetFloat(), tf_halloween_kart_fast_turn_accel_speed.GetFloat() );
-	}
-	else
-	{	// When not trying to turn, or turning the opposite way you're already turning
-		// accelerate much faster
-		flTurnAccel = tf_halloween_kart_return_turn_accell.GetFloat();
-	}
-
-	// Turn faster in the air
-	if ( !(m_pOuter->GetFlags() & FL_ONGROUND) )
-	{
-		flTurnAccel *= tf_halloween_kart_air_turn_scale.GetFloat();
-	}
-
-	// Get actual turn speed
-	m_flCurrentTauntTurnSpeed = Approach( flTargetTurnSpeed, m_flCurrentTauntTurnSpeed, flTurnAccel * flInputSampleTime );
-
-	const float flMaxPossibleTurnSpeed = Max( tf_halloween_kart_slow_turn_speed.GetFloat(), tf_halloween_kart_fast_turn_speed.GetFloat() );
-	m_flCurrentTauntTurnSpeed = clamp( m_flCurrentTauntTurnSpeed, -flMaxPossibleTurnSpeed, flMaxPossibleTurnSpeed );
-
-#ifdef DEBUG
-	#ifdef CLIENT_DLL
-		engine->Con_NPrintf( 4, "Turn: %3.2f", m_flCurrentTauntTurnSpeed );
-		engine->Con_NPrintf( 5, "TargetTurn: %3.2f", flTargetTurnSpeed );
-		engine->Con_NPrintf( 6, "TurnAccell: %3.2f", flTurnAccel );
-	#else
-		engine->Con_NPrintf( 4+3, "Turn: %3.2f", m_flCurrentTauntTurnSpeed );
-		engine->Con_NPrintf( 5+3, "TargetTurn: %3.2f", flTargetTurnSpeed );
-		engine->Con_NPrintf( 6+3, "TurnAccell: %3.2f", flTurnAccel );
-	#endif
-#endif
-
-#ifdef CLIENT_DLL
-	// Turn!
-	m_angVehicleMoveAngles -= QAngle( 0.f, m_flCurrentTauntTurnSpeed * flInputSampleTime, 0.f );
-
-	// We want our pitch to slowly catch up to the pitch of the player's model
-	const float flTargetPitch = tf_halloween_kart_pitch.GetFloat() + m_pOuter->m_PlayerAnimState->GetRenderAngles()[PITCH];
-	const float flStepSpeed = fabs( flTargetPitch - tf_halloween_kart_pitch.GetFloat() ) < fabs( m_angVehicleMovePitchLast - tf_halloween_kart_pitch.GetFloat() ) ? tf_halloween_kart_pitch_fast_follow_rate.GetFloat() : tf_halloween_kart_pitch_slow_follow_rate.GetFloat();
-	const float flPitchDiff = fabs( flTargetPitch - m_angVehicleMovePitchLast );
-	const float flPitchStep = flPitchDiff * flStepSpeed;
-
-	m_angVehicleMovePitchLast = Approach( flTargetPitch, m_angVehicleMovePitchLast, flPitchStep * gpGlobals->frametime );
-
-	m_angVehicleMoveAngles[PITCH] = m_angVehicleMovePitchLast;
-	pCmd->weaponselect = 0;
-	pCmd->buttons &= IN_MOVELEFT | IN_MOVERIGHT | IN_ATTACK | IN_ATTACK2 | IN_FORWARD | IN_BACK | IN_JUMP;
-	VectorCopy( m_angVehicleMoveAngles, pCmd->viewangles );
-
-	m_pOuter->SetLocalAngles( m_angVehicleMoveAngles );
-
-	// Fill out our kart state for the local client
-	m_pOuter->m_iKartState = 0;
-
-	// Hitting the gas
-	if ( pCmd->buttons & IN_FORWARD )
-	{
-		m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Driving;
-	}
-	else if ( pCmd->buttons & IN_BACK )	// Hitting the brakes
-	{
-		// slowing down
-		if ( m_pOuter->GetCurrentTauntMoveSpeed() > 0 )
-		{
-			m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Braking;
-		}
-		// if we are already stopped, look for new input to start going backwards
-		else 
-		{
-			// check for new input, else do nothing
-			if ( ( pCmd->buttons & IN_BACK )
-				|| m_pOuter->GetCurrentTauntMoveSpeed() < 0
-				|| m_pOuter->GetVehicleReverseTime() < gpGlobals->curtime
-			) 
-			{
-
-				m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Reversing;
-			}
-			else
-			{
-				m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Stopped;
-			}
-		}
-	}
-#endif
 }
 
 void CTFPlayerShared::VehicleThink( void )
 {
-#ifdef CLIENT_DLL
-	m_pOuter->UpdateKartSounds();
-
-	// Ordered list of effects.  Lower on the list has higher prescedence
-	static WheelEffect_t wheelEffects[] =
-	{
-		WheelEffect_t( 20.f, "kart_dust_trail_red", "kart_dust_trail_blue" )
-	};
-
-	const float flCurrentSpeed = m_pOuter->GetCurrentTauntMoveSpeed();
-	const WheelEffect_t* pDesiredEffect = NULL;
-
-	if ( InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		// Go through the effects, and figure out which effect to use
-		for( int i=0; i < ARRAYSIZE(wheelEffects); ++ i )
-		{
-			const WheelEffect_t& effect = wheelEffects[ i ];
-			if ( effect.m_flMinTriggerSpeed <= flCurrentSpeed )
-			{
-				pDesiredEffect = &effect;
-			}
-		}
-	}
-
-
-	// Start/stop effects if the desired effect is different
-	if ( pDesiredEffect != m_pWheelEffect )
-	{
-		C_BaseAnimating * pKart = m_pOuter->GetKart();
-		if ( !pKart )
-			return;
-
-		m_pWheelEffect = pDesiredEffect;
-
-		// New effect
-		if ( pDesiredEffect )
-		{
-			const char *pszEffectName =  pDesiredEffect->m_pszParticleName[ m_pOuter->GetTeamNumber() ];
-			m_pOuter->CreateKartEffect( pszEffectName );
-		}
-		else // Turn off current effect
-		{
-			m_pOuter->StopKartEffect();
-		}
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -106,8 +106,6 @@ public:
 	virtual Vector GetPlayerViewOffset( bool ducked ) const;
 	bool			ChargeMove( void );
 	bool			StunMove( void );
-	bool			TauntMove( void );
-	void			VehicleMove( void );
 	bool			HighMaxSpeedMove( void );
 	virtual float	GetAirSpeedCap( void );
 
@@ -299,9 +297,6 @@ void CTFGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 	// Handle player stun.
 	StunMove();
 
-	// Handle player taunt move
-	TauntMove();
-
 	// Handle scouts that can move really fast with buffs
 	HighMaxSpeedMove();
 
@@ -448,94 +443,6 @@ bool CTFGameMovement::StunMove()
 }
 
 
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CTFGameMovement::TauntMove( void )
-{
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		VehicleMove();
-	}
-	else if ( m_pTFPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && m_pTFPlayer->CanMoveDuringTaunt() )
-	{
-		m_pTFPlayer->SetTauntYaw( mv->m_vecViewAngles[YAW] );
-
-		bool bForceMoveForward = m_pTFPlayer->IsTauntForceMovingForward();
-		float flMaxMoveSpeed = m_pTFPlayer->GetTauntMoveSpeed();
-		float flAcceleration = m_pTFPlayer->GetTauntMoveAcceleration();
-
-		float flMoveDir = 0.f;
-		if ( !bForceMoveForward )
-		{
-			// Grab analog inputs, normalized to [0,1], to allow controller to also drive taunt movement.
-			if ( mv->m_flForwardMove > 0 && cl_forwardspeed.GetFloat() > 0 )
-			{
-				flMoveDir += mv->m_flForwardMove / cl_forwardspeed.GetFloat();
-			}
-			else if ( mv->m_flForwardMove < 0 && cl_backspeed.GetFloat() > 0 )
-			{
-				flMoveDir += mv->m_flForwardMove / cl_backspeed.GetFloat();
-			}
-
-			// No need to read buttons explicitly anymore, since that input is already included in m_flForwardMove
-			/*	if ( mv->m_nButtons & IN_FORWARD )
-				flMoveDir += 1.f;
-			if ( mv->m_nButtons & IN_BACK )
-				flMoveDir += -1.f;	  */
-
-			// Clamp to [0,1], just in case.
-			if ( flMoveDir > 1.0f )
-			{
-				flMoveDir = 1.0f;
-			}
-			else if ( flMoveDir < -1.0f )
-			{
-				flMoveDir = -1.0f;
-			}
-		}
-		else
-		{
-			flMoveDir = 1.f;
-		}
-
-		bool bMoving = flMoveDir != 0.f;
-		float flSign = bMoving ? 1.f : -1.f;
-		if ( flAcceleration > 0.f )
-		{
-			m_pTFPlayer->SetCurrentTauntMoveSpeed( clamp( m_pTFPlayer->GetCurrentTauntMoveSpeed() + flSign * ( gpGlobals->frametime / flAcceleration ) * flMaxMoveSpeed, 0.f, flMaxMoveSpeed ) );
-		}
-		else
-		{
-			m_pTFPlayer->SetCurrentTauntMoveSpeed( flMaxMoveSpeed );
-		}
-
-		// don't allow taunt to move if the player cannot move
-		if ( !m_pTFPlayer->CanPlayerMove() )
-		{
-			flMaxMoveSpeed = 0.f;
-		}
-			
-		float flSmoothMoveSpeed = 0.f;
-		if ( flMaxMoveSpeed > 0.f )
-		{
-			flSmoothMoveSpeed = SimpleSpline( m_pTFPlayer->GetCurrentTauntMoveSpeed() / flMaxMoveSpeed ) * flMaxMoveSpeed;
-		}
-
-		mv->m_flMaxSpeed = flMaxMoveSpeed;
-		mv->m_flForwardMove = flMoveDir * flSmoothMoveSpeed;
-		mv->m_flClientMaxSpeed = flMaxMoveSpeed;
-
-		return true;
-	}
-	else
-	{
-		m_pTFPlayer->SetCurrentTauntMoveSpeed( 0.f );
-	}
-
-	return false;
-}
-
 ConVar tf_halloween_kart_dash_speed( "tf_halloween_kart_dash_speed", "1000", FCVAR_CHEAT | FCVAR_REPLICATED );
 ConVar tf_halloween_kart_dash_accel( "tf_halloween_kart_dash_accel", "750", FCVAR_CHEAT | FCVAR_REPLICATED );
 
@@ -552,152 +459,6 @@ ConVar tf_halloween_kart_idle_speed( "tf_halloween_kart_idle_speed", "0", FCVAR_
 ConVar tf_halloween_kart_coast_accel( "tf_halloween_kart_coast_accel", "300", FCVAR_CHEAT | FCVAR_REPLICATED );
 
 ConVar tf_halloween_kart_bombhead_scale( "tf_halloween_kart_bombhead_scale", "1.5f", FCVAR_CHEAT | FCVAR_REPLICATED );
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFGameMovement::VehicleMove( void )
-{
-	// Reset Flags
-	m_pTFPlayer->m_iKartState = 0;
-	m_pTFPlayer->SetTauntYaw( mv->m_vecViewAngles[YAW] );
-
-	float flMaxMoveSpeed = tf_halloween_kart_normal_speed.GetFloat();
-
-	float flTargetSpeed = tf_halloween_kart_idle_speed.GetFloat();
-	// Just standard accell by default
-	float flAcceleration = tf_halloween_kart_coast_accel.GetFloat();
-
-	bool bInput = false;
-
-	// Hitting the gas
-	if ( mv->m_flForwardMove > 0.0f )
-	{
-		// Grab normalized analog input (no need to check key input explicitly, since it's already baked into m_flForwardMove
-		float flNormalizedForwardInput = cl_forwardspeed.GetFloat() > 0.0f ? mv->m_flForwardMove / cl_forwardspeed.GetFloat() : 0.0f;
-		if ( flNormalizedForwardInput > 1.0f )
-		{
-			flNormalizedForwardInput = 1.0f;
-		}
-
-		// Target normal speed
-		flTargetSpeed = tf_halloween_kart_normal_speed.GetFloat();
-		// Use normal accell speed if it's faster than our current speed
-		if ( flTargetSpeed > m_pTFPlayer->GetCurrentTauntMoveSpeed() )
-		{
-			if ( m_pTFPlayer->GetCurrentTauntMoveSpeed() < tf_halloween_kart_slowmoving_threshold.GetFloat() )
-			{
-				flAcceleration = tf_halloween_kart_slowmoving_accel.GetFloat() * flNormalizedForwardInput;
-			}
-			else
-			{
-				flAcceleration = tf_halloween_kart_normal_accel.GetFloat() * flNormalizedForwardInput;
-			}
-		}
-
-		bInput = true;
-		m_pTFPlayer->m_iKartState |= CTFPlayerShared::kKartState_Driving;
-	}
-	else if ( mv->m_flForwardMove < 0.0f )	// Hitting the brakes
-	{
-		// Grab normalized analog input (no need to check key input explicitly, since it's already baked into m_flForwardMove. And flip the sign, since we're going backwards.
-		float flNormalizedForwardInput = cl_backspeed.GetFloat() > 0.0f ? mv->m_flForwardMove / cl_backspeed.GetFloat() : 0.0f;
-		if ( flNormalizedForwardInput < -1.0f )
-		{
-			flNormalizedForwardInput = 1.0f;
-		}
-		else
-		{
-			flNormalizedForwardInput = -flNormalizedForwardInput;
-		}
-
-		// slowing down
-		if ( m_pTFPlayer->GetCurrentTauntMoveSpeed() > 0 )
-		{
-			// Target brake speed
-			flTargetSpeed = tf_halloween_kart_brake_speed.GetFloat();
-			// Use brake accell speed if it's slower than our current speed
-			if ( flTargetSpeed < m_pTFPlayer->GetCurrentTauntMoveSpeed() )
-			{
-				flAcceleration = tf_halloween_kart_brake_accel.GetFloat() * flNormalizedForwardInput;
-			}
-			m_pTFPlayer->m_iKartState |= CTFPlayerShared::kKartState_Braking;
-		}
-		// if we are already stopped, look for new input to start going backwards
-		else 
-		{
-			// check for new input, else do nothing
-			if ( mv->m_flOldForwardMove >= 0.0f  || m_pTFPlayer->GetCurrentTauntMoveSpeed() < 0 || m_pTFPlayer->GetVehicleReverseTime() < gpGlobals->curtime )
-			{
-				// going backwards, keep going backwards
-				flTargetSpeed = tf_halloween_kart_reverse_speed.GetFloat();
-				// Use brake accell speed if it's slower than our current speed
-				if ( flTargetSpeed < m_pTFPlayer->GetCurrentTauntMoveSpeed() )
-				{
-					flAcceleration = tf_halloween_kart_brake_accel.GetFloat() * flNormalizedForwardInput;
-				}
-				m_pTFPlayer->m_iKartState |= CTFPlayerShared::kKartState_Reversing;
-			}
-			else
-			{
-				// Stall for 1 second then start reversing
-				if ( m_pTFPlayer->GetVehicleReverseTime() == FLT_MAX )
-				{
-					m_pTFPlayer->SetVehicleReverseTime( gpGlobals->curtime + 0.6f );
-				}
-				m_pTFPlayer->m_iKartState |= CTFPlayerShared::kKartState_Stopped;
-			}
-		}
-
-		bInput = true;
-	}
-	
-	if ( m_pTFPlayer->GetCurrentTauntMoveSpeed() > 0 )
-	{
-		m_pTFPlayer->SetVehicleReverseTime( FLT_MAX );
-	}
-
-	// braking?
-	if ( bInput && Sign( m_pTFPlayer->GetCurrentTauntMoveSpeed() ) != Sign( flTargetSpeed ) )
-	{
-		flAcceleration = tf_halloween_kart_brake_accel.GetFloat();
-	}
-
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) )
-	{
-		flMaxMoveSpeed *= tf_halloween_kart_bombhead_scale.GetFloat();
-		flAcceleration *= tf_halloween_kart_bombhead_scale.GetFloat();
-	}
-
-	float flTargetMoveSpeed = Approach( flTargetSpeed, m_pTFPlayer->GetCurrentTauntMoveSpeed(), flAcceleration * gpGlobals->frametime );
-	float flSmoothMoveSpeed = Bias( fabs( m_pTFPlayer->GetCurrentTauntMoveSpeed() ) / flMaxMoveSpeed, 0.7f ) * flMaxMoveSpeed * Sign( flTargetMoveSpeed );
-
-	// Boost slams the accelerator
-	if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART_DASH ) )
-	{
-		flTargetSpeed = tf_halloween_kart_dash_speed.GetFloat();
-		flMaxMoveSpeed = tf_halloween_kart_dash_speed.GetFloat();
-		flTargetMoveSpeed = flTargetSpeed;
-		flSmoothMoveSpeed = flTargetSpeed;
-		flAcceleration = tf_halloween_kart_dash_accel.GetFloat();
-	}
-
-	m_pTFPlayer->SetCurrentTauntMoveSpeed( flTargetMoveSpeed );
-	float flLeanAccel = flTargetSpeed > flSmoothMoveSpeed ? flAcceleration : flTargetSpeed < flSmoothMoveSpeed ? -flAcceleration : 0.f;
-	flLeanAccel = Sign( m_pTFPlayer->GetCurrentTauntMoveSpeed() ) != Sign( flTargetSpeed ) ? -flLeanAccel : flLeanAccel;
-	m_pTFPlayer->m_PlayerAnimState->Vehicle_LeanAccel( flLeanAccel );
-
-#ifdef DEBUG
-	engine->Con_NPrintf( 0, "Speed:  %3.2f", m_pTFPlayer->GetCurrentTauntMoveSpeed() );
-	engine->Con_NPrintf( 1, "Target: %3.2f", flTargetSpeed );
-	engine->Con_NPrintf( 2, "Accell: %3.2f", flAcceleration );
-#endif
-			
-	mv->m_flMaxSpeed = flMaxMoveSpeed;
-	mv->m_flForwardMove = flSmoothMoveSpeed;
-	mv->m_flClientMaxSpeed = flMaxMoveSpeed;
-	mv->m_flSideMove = 0.f; // No sideways movement
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1664,64 +1425,6 @@ void CTFGameMovement::WalkMove( void )
 //-----------------------------------------------------------------------------
 void CTFGameMovement::CheckKartWallBumping()
 {
-	// Karts need to drop their velocity when they bump into things
-	if ( !m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		return;
-
-	const float flCurrentSpeed = m_pTFPlayer->GetCurrentTauntMoveSpeed();
-	const float flMaxSpeed = mv->m_vecVelocity.Length();
-	const float flClampedSpeed = clamp( flCurrentSpeed, -flMaxSpeed, flMaxSpeed );
-
-	m_pTFPlayer->SetCurrentTauntMoveSpeed( flClampedSpeed );
-	// We hit a wall at a good speed
-	if ( fabs( flCurrentSpeed ) > 100.f && ( flCurrentSpeed - flClampedSpeed > 100.f ) )
-	{
-		// Play a flinch to show we impacted something
-		bool bDashing = m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART_DASH );
-		m_pTFPlayer->DoAnimationEvent( PLAYERANIMEVENT_CUSTOM_GESTURE, bDashing ? ACT_KART_IMPACT_BIG : ACT_KART_IMPACT );
-
-		Vector vAim = m_pTFPlayer->GetLocalVelocity();
-		vAim.z = 0;
-		vAim.NormalizeInPlace();
-
-		// Handle hitting skybox (disappear).
-		trace_t pWallTrace;
-		UTIL_TraceLine( m_pTFPlayer->GetAbsOrigin(), m_pTFPlayer->GetAbsOrigin() + vAim * 64, MASK_SOLID, m_pTFPlayer, COLLISION_GROUP_DEBRIS, &pWallTrace );
-
-		// if we collide with a wall that is 90degrees or higher, bump backwards
-		if ( pWallTrace.fraction < 1.0 && !( pWallTrace.surface.flags & SURF_SKY ) && pWallTrace.m_pEnt && !pWallTrace.m_pEnt->IsPlayer() && pWallTrace.plane.normal.z <= 0 )
-		{
-#ifdef GAME_DLL
-			// Bounce off the wall, deflect in the direction of the normal of the surface that we collided with
-			Vector vOld = m_pTFPlayer->GetLocalVelocity();
-			Vector vNew = ( -2.0f * pWallTrace.plane.normal.Dot( vOld ) * pWallTrace.plane.normal + vOld );
-			vNew.NormalizeInPlace();
-			m_pTFPlayer->AddHalloweenKartPushEvent( m_pTFPlayer, NULL, NULL, vNew * vOld.Length() / 2.0f, 0 );
-			if ( bDashing )
-			{
-				// Stop moving
-				m_pTFPlayer->SetAbsVelocity( vec3_origin );
-				m_pTFPlayer->SetCurrentTauntMoveSpeed( 0 );
-				m_pTFPlayer->m_Shared.RemoveCond( TF_COND_HALLOWEEN_KART_DASH );
-			}
-
-			m_pTFPlayer->SetCurrentTauntMoveSpeed( 0.f );
-#endif
-
-#ifdef CLIENT_DLL
-			if ( bDashing )
-			{
-				m_pTFPlayer->EmitSound( "BumperCar.BumpHard" );
-				m_pTFPlayer->ParticleProp()->Create( "kart_impact_sparks", PATTACH_ABSORIGIN, NULL, vAim );
-			}
-			else
-			{
-				m_pTFPlayer->EmitSound( "BumperCar.Bump" );
-				m_pTFPlayer->ParticleProp()->Create( "kart_impact_sparks", PATTACH_ABSORIGIN, NULL, vAim );
-			}
-#endif		
-		}
-	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1745,15 +1448,6 @@ float CTFGameMovement::GetAirSpeedCap( void )
 		}
 #endif
 */
-		if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		{
-			if ( m_pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART_DASH ) )
-			{
-				return tf_halloween_kart_dash_speed.GetFloat();
-			}
-			flCap *= tf_halloween_kart_aircontrol.GetFloat();
-		}
-
 		float flIncreasedAirControl = 1.f;
 		CALL_ATTRIB_HOOK_FLOAT_ON_OTHER( m_pTFPlayer, flIncreasedAirControl, mod_air_control );
 

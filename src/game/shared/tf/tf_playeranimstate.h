@@ -65,16 +65,12 @@ public:
 
 	void	Vehicle_LeanAccel( float flInAccel );
 private:
-	void Taunt_ComputePoseParam_MoveX( CStudioHdr *pStudioHdr );
-	void Taunt_ComputePoseParam_MoveY( CStudioHdr *pStudioHdr );
 	void Vehicle_ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr );
 	void Vehicle_ComputePoseParam_AccelLean( CStudioHdr *pStudioHdr );
 	
 	CTFPlayer   *m_pTFPlayer;
 	bool		m_bInAirWalk;
 	float		m_flHoldDeployedPoseUntilTime;
-	float		m_flTauntMoveX;
-	float		m_flTauntMoveY;
 	float		m_flVehicleLeanVel;
 	float		m_flVehicleLeanPos;
 	Vector		m_vecSmoothedUp;

@@ -545,8 +545,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( SetUseBossHealthBar, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToTaunt, "" )
 	DEFINE_SCRIPTFUNC( IsRegenerating, "" )
-	DEFINE_SCRIPTFUNC( GetCurrentTauntMoveSpeed, "" )
-	DEFINE_SCRIPTFUNC( SetCurrentTauntMoveSpeed, "" )
 	DEFINE_SCRIPTFUNC( IsUsingActionSlot, "" )
 	DEFINE_SCRIPTFUNC( AddCustomAttribute, "Add a custom attribute to the player" )
 	DEFINE_SCRIPTFUNC( RemoveCustomAttribute, "Remove a custom attribute to the player" )
@@ -740,12 +738,10 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayer, DT_TFPlayer )
 	// Data that gets sent to all other players
 	SendPropDataTable( "tfnonlocaldata", 0, &REFERENCE_SEND_TABLE(DT_TFNonLocalPlayerExclusive), SendProxy_SendNonLocalDataTable ),
 
-	SendPropBool( SENDINFO( m_bAllowMoveDuringTaunt ) ),
 	SendPropInt( SENDINFO( m_nForceTauntCam ), 2, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flTauntYaw ), 0, SPROP_NOSCALE ),
 	SendPropInt( SENDINFO( m_nActiveTauntSlot ) ),
 	SendPropInt( SENDINFO( m_iTauntItemDefIndex ) ),
-	SendPropFloat( SENDINFO( m_flCurrentTauntMoveSpeed ) ),
 	SendPropFloat( SENDINFO( m_flVehicleReverseTime ) ),
 
 	SendPropFloat( SENDINFO( m_flMvMLastDamageTime ), 16, SPROP_ROUNDUP ),
@@ -882,12 +878,6 @@ CTFPlayer::CTFPlayer()
 	m_flCommentOnCarrying = 0;
 
 	m_nForceTauntCam = 0;
-	m_bAllowMoveDuringTaunt = false;
-	m_bTauntForceMoveForward = false;
-	m_flTauntForceMoveForwardSpeed = 0.f;
-	m_flTauntMoveAccelerationTime = 0.f;
-	m_flTauntTurnSpeed = 0.f;
-	m_flTauntTurnAccelerationTime = 0.f;
 	m_bTauntMimic = false;
 	m_bIsTauntInitiator = false;
 	m_TauntEconItemView.Invalidate();
@@ -1186,16 +1176,11 @@ void CTFPlayer::TFPlayerThink()
 
 	if( IsTaunting() )
 	{
-		bool bStopTaunt = false;
-		// if I'm not supposed to move during taunt
 		// stop taunting if I lost my ground entity or was moved at all
-		if ( !CanMoveDuringTaunt() )
-		{
-			bStopTaunt |= pGroundEntity == NULL;
+		bool bStopTaunt = pGroundEntity == NULL;
 			
-			if ( m_TauntEconItemView.IsValid() && m_TauntEconItemView.GetStaticData()->GetTauntData()->ShouldStopTauntIfMoved() )
-				bStopTaunt |= m_vecTauntStartPosition.DistToSqr( GetAbsOrigin() ) > 0.1f;
-		}
+		if ( m_TauntEconItemView.IsValid() && m_TauntEconItemView.GetStaticData()->GetTauntData()->ShouldStopTauntIfMoved() )
+			bStopTaunt |= m_vecTauntStartPosition.DistToSqr( GetAbsOrigin() ) > 0.1f;
 
 		if ( !bStopTaunt  )
 		{
@@ -2425,14 +2410,11 @@ void CTFPlayer::PlayerRunCommand( CUserCmd *ucmd, IMoveHelper *moveHelper )
 	}
 	else if ( IsTaunting() || m_Shared.InCond( TF_COND_HALLOWEEN_THRILLER ) )
 	{
-		// For some taunts, it is critical that the player not move once they start
-		if ( !CanMoveDuringTaunt() )
-		{
-			ucmd->forwardmove = 0;
-			ucmd->upmove = 0;
-			ucmd->sidemove = 0;
-			ucmd->viewangles = pl.v_angle;
-		}
+		// For taunts, it is critical that the player not move once they start
+		ucmd->forwardmove = 0;
+		ucmd->upmove = 0;
+		ucmd->sidemove = 0;
+		ucmd->viewangles = pl.v_angle;
 
 		if ( tf_allow_taunt_switch.GetInt() == 0 && ucmd->weaponselect != 0 )
 		{
@@ -4812,15 +4794,7 @@ void CTFPlayer::DoAnimationEvent( PlayerAnimEvent_t event, int nData )
 //-----------------------------------------------------------------------------
 void CTFPlayer::HandleAnimEvent( animevent_t *pEvent )
 {
-	if ( pEvent->event == AE_TAUNT_ENABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = true;
-	}
-	else if ( pEvent->event == AE_TAUNT_DISABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = false;
-	}
-	else if ( pEvent->event == AE_WPN_HIDE )
+	if ( pEvent->event == AE_WPN_HIDE )
 	{
 		// does nothing for now.
 	}
@@ -14047,14 +14021,12 @@ void CTFPlayer::Touch( CBaseEntity *pOther )
 							flForceMult *= tf_halloween_kart_boost_impact_force.GetFloat();
 							// Stop moving
 							SetAbsVelocity( vec3_origin );
-							SetCurrentTauntMoveSpeed( 0 );
 							m_Shared.RemoveCond( TF_COND_HALLOWEEN_KART_DASH );
 							EmitSound( "BumperCar.BumpHard" );
 						}
 						else
 						{
 							SetAbsVelocity( GetAbsVelocity() * tf_halloween_kart_impact_feedback.GetFloat() );
-							SetCurrentTauntMoveSpeed( GetCurrentTauntMoveSpeed() * tf_halloween_kart_impact_feedback.GetFloat() );
 							EmitSound( "BumperCar.Bump" );
 						}
 
@@ -15110,18 +15082,11 @@ void CTFPlayer::StopTaunt( bool bForceRemoveProp /* = true */ )
 		SetFOV( this, m_iPreTauntFOV );
 	}
 
-	m_bAllowMoveDuringTaunt = false;
 	m_flTauntOutroTime = 0.f;
-	m_bTauntForceMoveForward = false;
-	m_flTauntForceMoveForwardSpeed = 0.f;
-	m_flTauntMoveAccelerationTime = 0.f;
-	m_flTauntTurnSpeed = 0.f;
-	m_flTauntTurnAccelerationTime = 0.f;
 	m_bTauntMimic = false;
 	m_bIsTauntInitiator = false;
 	m_TauntEconItemView.Invalidate();
 	m_flNextAllowTauntRemapInputTime = -1.f;
-	m_flCurrentTauntMoveSpeed = 0.f;
 	m_nActiveTauntSlot = LOADOUT_POSITION_INVALID;
 	m_iTauntItemDefIndex = INVALID_ITEM_DEF_INDEX;
 	m_TauntStage = TAUNT_NONE;
