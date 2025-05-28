@@ -547,9 +547,6 @@ class CTFWeaponBase : public CBaseCombatWeapon, public IHasOwner, public IHasGen
 
 	virtual int		GetDropSkinOverride( void ) { return -1; }
 
-	int				GetKillStreak () const { return m_iKillStreak; }
-	void			SetKillStreak ( int value ) { m_iKillStreak = value; };
-
 	float			GetClipScale () const { return m_flClipScale; }
 	void			SetClipScale ( float flScale ) { m_flClipScale = flScale; }
 
@@ -742,7 +739,6 @@ public:
 	CHandle< CTFPlayer > m_hLastDrainVictim;
 	CountdownTimer m_lastDrainVictimTimer;
 
-	int				m_iKillStreak;
 	float			m_flClipScale;
 #endif
 	CNetworkVar( int, m_iConsecutiveShots );

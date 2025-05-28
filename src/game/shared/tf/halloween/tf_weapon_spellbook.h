@@ -72,8 +72,6 @@ private:
 	float	m_iNextRollTime;
 	float	m_flRollTickGap;
 	bool	m_bTickSoundA;
-
-	bool	m_bKillstreakMeterDrawing;
 };
 
 //=============================================================================

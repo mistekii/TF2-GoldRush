@@ -649,52 +649,6 @@ static void GenerateLocalizedFullItemName
 		loc_scpy_safe( szItemName, s_pUnknownItemName );
 	}
 
-	// Check for killstreak attribute
-	enum { kKillStreakLength = 64, };
-	locchar_t szKillStreak[ kKillStreakLength ] = LOCCHAR("");
-	static CSchemaAttributeDefHandle pAttrDef_KillStreak( "killstreak tier" );
-	uint32 nKillStreakValue;
-
-	if ( pEconItem->FindAttribute( pAttrDef_KillStreak, &nKillStreakValue ) && !bIgnoreQuality )
-	{
-		nKillStreakValue = (float&)(nKillStreakValue);
-
-		// if you have the eyeballs you are automatically higher tier
-		static CSchemaAttributeDefHandle pAttrDef_KillStreakEyes( "killstreak effect" );
-		static CSchemaAttributeDefHandle pAttrDef_KillStreakSheen( "killstreak idleeffect" );
-		if ( pEconItem->FindAttribute( pAttrDef_KillStreakEyes ) )
-		{
-			nKillStreakValue = 3;	// professional
-		}
-		else if ( pEconItem->FindAttribute( pAttrDef_KillStreakSheen ) )
-		{
-			nKillStreakValue = 2;	// specialized
-		}
-
-		const locchar_t *pKillStreakLocalizedString = NULL;
-		
-		// All tier-1 killstreaks have idle effect 1
-		if ( nKillStreakValue == 1 )
-		{
-			pKillStreakLocalizedString = pLocalizationProvider->Find( "ItemNameKillStreakv0" );
-		}
-		else if ( nKillStreakValue == 2 )
-		{
-			pKillStreakLocalizedString = pLocalizationProvider->Find( "ItemNameKillStreakv1" );
-		}
-		else // Tier-2's are things above 1
-		{
-			pKillStreakLocalizedString = pLocalizationProvider->Find( "ItemNameKillStreakv2" );
-		}
-
-		if ( pKillStreakLocalizedString )
-		{
-			loc_scpy_safe( szKillStreak, pKillStreakLocalizedString );
-			//  If we're appending some sort of killstreak identifier, dont use the proper name
-			bUseProperName = false;
-		}
-	}
-
 	// Check to see if we have a quality text override attribute.  We can get this when a temporary item
 	// comes in from a crafting recipe that needs to get its name generated, and wants to specify that it 
 	// takes in any quality
@@ -3379,25 +3333,6 @@ void CEconAttributeDescription::InternalConstruct
 			break;
 		}
 
-	case ATTDESCFORM_VALUE_IS_KILLSTREAKEFFECT_INDEX:
-		{
-			CUtlConstString utf8_KeyName( CFmtStr( "#Attrib_KillStreakEffect%i", (int)value_as_float ).Access() );	// this value is stored as a float but interpreted as an int (1.0 -> 1)
-			if ( utf8_KeyName.IsEmpty() )
-				return;
-
-			m_loc_sValue = pLocalizationProvider->Find( utf8_KeyName.Get() );
-			break;
-		}
-
-	case ATTDESCFORM_VALUE_IS_KILLSTREAK_IDLEEFFECT_INDEX:
-		{
-			CUtlConstString utf8_KeyName( CFmtStr( "#Attrib_KillStreakIdleEffect%i", (int)value_as_float ).Access() );	// this value is stored as a float but interpreted as an int (1.0 -> 1)
-			if ( utf8_KeyName.IsEmpty() )
-				return;
-
-			m_loc_sValue = pLocalizationProvider->Find( utf8_KeyName.Get() );
-			break;
-		}
 	// Don't output any value for bitmasks, but let the attribute text display.
 	case ATTDESCFORM_VALUE_IS_OR:
 		break;

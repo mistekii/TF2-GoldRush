@@ -157,7 +157,6 @@ enum EItemCustomizationRemoveType
 	kCustomizationRemove_StrangePart,
 	kCustomizationRemove_StrangeScores,
 	kCustomizationRemove_UpgradeCard,
-	kCustomizationRemove_KillStreak,
 	kCustomizationRemove_GiftedBy,
 };
 
@@ -228,7 +227,6 @@ static RefurbishableProperty g_RemoveableAttributes[] =
 	{ &HasPaint,				&GetCustomDialogToken_PaintName,	"set item tint rgb",	"#RefurbishItem_RemovePaintCombo",			"#RefurbishItem_RemovePaintTitle",			"#RefurbishItem_RemovePaint",			kCustomizationRemove_Paint,				kNoUserData },	// is this item painted?
 	{ &HasCustomAttribute,		NULL,								"custom texture hi",	"#RefurbishItem_RemoveCustomTextureCombo",	"#RefurbishItem_RemoveCustomTextureTitle",	"#RefurbishItem_RemoveCustomTexture",	kCustomizationRemove_CustomTexture,		kNoUserData },	// does this have a custom texture applied?
 	{ &HasCustomAttribute,		NULL,								"makers mark id",		"#RefurbishItem_RemoveMakersMarkCombo",		"#RefurbishItem_RemoveMakersMarkTitle",		"#RefurbishItem_RemoveMakersMark",		kCustomizationRemove_MakersMark,		kNoUserData },	// was this item crafted by a specific dude?
-	{ &HasCustomAttribute,		NULL,								"killstreak tier",		"#RefurbishItem_RemoveKillStreakCombo",		"#RefurbishItem_RemoveKillStreakTitle",		"#RefurbishItem_RemoveKillStreak",		kCustomizationRemove_KillStreak,		kNoUserData },	// Killstreak Effect
 	{ &HasCustomAttribute,		NULL,								"gifter account id",	"#RefurbishItem_RemoveGifterCombo",			"#RefurbishItem_RemoveGifterTitle",			"#RefurbishItem_RemoveGifter",			kCustomizationRemove_GiftedBy,			kNoUserData },	// Gifted by
 
 	//"gifter account id",		// who gifted us this item? (will also remove "event date")
@@ -3119,9 +3117,6 @@ void CTFRemoveItemCustomizationConfirmDialog::OnCommand( const char *command )
 				}
 				break;
 
-			case kCustomizationRemove_KillStreak:
-				SendGCSimpleAttributeRemovalMessage( &m_Item, "killstreak", k_EMsgGCRemoveKillStreak );
-				break;
 			case kCustomizationRemove_GiftedBy:
 				SendGCSimpleAttributeRemovalMessage( &m_Item, "giftedby", k_EMsgGCRemoveGiftedBy );
 				break;

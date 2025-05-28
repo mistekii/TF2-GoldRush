@@ -166,14 +166,6 @@ extern ConVar tf_halloween_kart_boost_duration;
 extern ConVar cl_thirdperson;
 
 
-ConVar tf_sheen_framerate( "tf_sheen_framerate", "25", FCVAR_NONE | FCVAR_HIDDEN, "Set Sheen Frame Rate" );
-
-extern ConVar tf_killstreak_alwayson;
-
-ConVar tf_sheen_alpha_firstperson( "tf_sheen_alpha_firstperson", "0.1", FCVAR_NONE, "Set the Alpha Value for first person sheens" );
-ConVar tf_killstreakeyes_minkills( "tf_killstreakeyes_minkills", "5", FCVAR_DEVELOPMENTONLY, "min kills to get base eyeglow" );
-ConVar tf_killstreakeyes_maxkills( "tf_killstreakeyes_maxkills", "10", FCVAR_DEVELOPMENTONLY, "kills to get the max eye glow effect" );
-
 //ConVar spectate_random_server_basetime( "spectate_random_server_basetime", "240", FCVAR_DEVELOPMENTONLY );
 
 ConVar cl_autorezoom( "cl_autorezoom", "1", FCVAR_USERINFO | FCVAR_ARCHIVE, "When set to 1, sniper rifle will re-zoom after firing a zoomed shot." );
@@ -256,65 +248,6 @@ CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_blue.vmt" )
 CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_red.vmt" )
 CLIENTEFFECT_REGISTER_END()
 
-// *********************************************************************************************************
-// KillStreak Effect Data
-// *********************************************************************************************************
-struct killstreak_params_t
-{
-	killstreak_params_t ( int iShaderIndex, const char *pTexture, bool bHasTeamColor,
-		int sheen_r,  int sheen_g,  int sheen_b,  int sheen_a, 
-		int color1_r, int color1_g, int color1_b, int color1_a, 
-		int color2_r, int color2_g, int color2_b, int color2_a
-		) {
-			m_iShaderIndex = iShaderIndex;
-			m_pTexture = pTexture;
-
-			m_bHasTeamColor = bHasTeamColor;
-
-			m_sheen_r = (float)sheen_r / 255.0f;
-			m_sheen_g = (float)sheen_g / 255.0f;
-			m_sheen_b = (float)sheen_b / 255.0f; 
-			m_sheen_a = (float)sheen_a / 255.0f;
-
-			m_color1_r = (float)color1_r / 255.0f;
-			m_color1_g = (float)color1_g / 255.0f;
-			m_color1_b = (float)color1_b / 255.0f; 
-			m_color1_a = (float)color1_a / 255.0f;
-
-			m_color2_r = (float)color2_r / 255.0f;
-			m_color2_g = (float)color2_g / 255.0f;
-			m_color2_b = (float)color2_b / 255.0f; 
-			m_color2_a = (float)color2_a / 255.0f;
-	}
-
-	int			m_iShaderIndex;
-	bool		m_bHasTeamColor;
-	const char *m_pTexture;
-	float m_sheen_r, m_sheen_g, m_sheen_b, m_sheen_a;
-	float m_color1_r, m_color1_g, m_color1_b, m_color1_a;
-	float m_color2_r, m_color2_g, m_color2_b, m_color2_a;
-};
-
-// *********************************************************************************************************
-// Base Sheen Colors (Team Red)
-static const killstreak_params_t g_KillStreakEffectsBase[] =
-{
-	killstreak_params_t( 0, NULL, false,	0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0 ),	// Empty (Index 0)
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", true,	200, 20,  15,  255, 255, 118, 118, 255, 255, 35,  28,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	242, 172, 10,  255, 255, 237, 138, 255, 255, 213, 65,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	255, 75,  5,   255, 255, 111, 5,   255, 255, 137, 31,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	100, 255, 10,  255, 230, 255, 60,  255, 193, 255, 61,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	40,  255, 70,  255, 103, 255, 121, 255, 165, 255, 193, 255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	105, 20,  255, 255, 105, 20,  255, 255, 185, 145, 255, 255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	255, 30,  255, 255, 255, 120, 255, 255, 255, 176, 217, 255 ),
-};
-// *********************************************************************************************************
-// Optional Team Color
-static const killstreak_params_t g_KillStreakEffectsBlue[] =
-{
-	killstreak_params_t( 0, NULL, false,	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ),	// Empty (Index 0)
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", true, 40, 98, 200, 255, 0, 92, 255, 255, 134, 203, 243, 255 ),
-};
 
 // thirdperson medieval
 static ConVar tf_medieval_thirdperson( "tf_medieval_thirdperson", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE , "Turns on third-person camera in medieval mode." );
@@ -2387,6 +2320,7 @@ C_TFPlayer *GetOwnerFromProxyEntity( void *pEntity )
 
 //-----------------------------------------------------------------------------
 // Purpose: Used to animate the weapon sheen effect for kill streak attr items
+// Gold Rush: Stubbed so that the console doesn't get flooded with weapon vmts trying to use this proxy
 //-----------------------------------------------------------------------------
 class CProxyAnimatedWeaponSheen : public CBaseAnimatedTextureProxy
 {
@@ -2396,327 +2330,7 @@ public:
 
 	bool Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	{
-		bool foundVar = false;
-		m_flNextStartTime = 0;
-		m_flScaleX = -1;
-		m_flScaleY = -1;
-		m_flSheenOffsetX = 0;
-		m_flSheenOffsetY = 0;
-		m_iSheenDir = 0;
-
-		m_pScaleXVar = NULL;
-		m_pScaleYVar = NULL;
-		m_pOffsetXVar = NULL;
-		m_pOffsetYVar = NULL;
-		m_pDirectionVar = NULL;
-		m_pSheenIndexVar = NULL;
-
-		// Get Tint
-		m_pTintVar = pMaterial->FindVar( "$sheenmaptint", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pSheenIndexVar = pMaterial->FindVar( "$sheenindex", &foundVar );
-		if( !foundVar )
-			return false;
-
-		// Material vars for scale and offset
-		// Need to get the material var
-		m_pScaleXVar = pMaterial->FindVar( "$sheenmapmaskscaleX", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pScaleYVar = pMaterial->FindVar( "$sheenmapmaskscaleY", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pOffsetXVar = pMaterial->FindVar( "$sheenmapmaskoffsetX", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pOffsetYVar = pMaterial->FindVar( "$sheenmapmaskoffsetY", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pDirectionVar = pMaterial->FindVar( "$sheenmapmaskdirection", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pSheenVar = pMaterial->FindVar( "$sheenmap", &foundVar );
-		if ( !foundVar )
-			return false;
-		
-		m_pSheenMaskVar = pMaterial->FindVar( "$sheenmapmask", &foundVar );
-		if ( !foundVar )
-			return false;
-
-		return CBaseAnimatedTextureProxy::Init( pMaterial, pKeyValues );
-	}
-
-	void OnBind( void *pEntity )
-	{
-		Assert( m_AnimatedTextureVar );
-		if ( m_AnimatedTextureVar->GetType() != MATERIAL_VAR_TYPE_TEXTURE )
-			return;
-
-		// if no entity, just check the owner
-		if ( !pEntity )
-		{
-			// Might be gunslinger, hard to get this item so 
-			return;
-		}
-
-		static CSchemaAttributeDefHandle pAttr_killstreak( "killstreak idleeffect" );	
-		if ( !pAttr_killstreak )
-			return;
-
-		IClientRenderable *pRend = (IClientRenderable *)pEntity;
-		// Find the weapon and player and see if it has the attribute
-		if ( !pRend )
-			return;
-
-		ITexture *pTexture;
-		pTexture = m_AnimatedTextureVar->GetTextureValue();
-		int numFrames = pTexture->GetNumAnimationFrames();
-
-		if ( numFrames <= 0 )
-		{
-			Assert( !"0 frames in material calling animated texture proxy" );
-			return;
-		}
-
-		C_BaseEntity *pBaseEntity = pRend->GetIClientUnknown()->GetBaseEntity();
-		const CEconItemView *pItem = dynamic_cast< CEconItemView* >( pRend );
-
-		uint32 unAttrValue = 0;
-		uint32 unEffectValue = 0;
-
-		// !TEST!
-
-		// Find the tf player owner
-		bool bIsFirstPerson = false;
-		C_TFPlayer* pTFPlayer = NULL;
-		if ( pItem )	// ItemModelPanels
-		{
-			if ( !pBaseEntity )
-			{
-				pItem->FindAttribute( pAttr_killstreak, &unAttrValue );
-				unEffectValue = (int)((float&)unAttrValue);
-			}
-			else
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBaseEntity, unAttrValue, killstreak_idleeffect );
-			}
-			
-			if ( ( unEffectValue ) && pBaseEntity && pBaseEntity->GetOwnerEntity() )
-			{
-				pTFPlayer = ToTFPlayer( pBaseEntity->GetOwnerEntity() );
-			}
-			else
-			{
-				pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-			}
-		}
-		else	
-		{
-			CTFWeaponBase* pWeapon = dynamic_cast<CTFWeaponBase*>( pBaseEntity );
-			if ( !pWeapon )
-			{
-				for ( int i = 0; i < 1; ++i )
-				{
-					CEconWearable* pWearable = dynamic_cast<CEconWearable*>( pBaseEntity );
-					if ( pWearable )
-					{
-						pItem = pWearable->GetAttributeContainer()->GetItem();
-						pTFPlayer = ToTFPlayer( pWearable->GetOwnerEntity() );
-						break;
-					}
-					C_ViewmodelAttachmentModel *pModel = dynamic_cast<C_ViewmodelAttachmentModel*>( pBaseEntity );
-					if ( pModel )
-					{
-						if ( pModel->GetOuter() )
-						{
-							pItem = pModel->GetOuter()->GetAttributeContainer()->GetItem();
-							pBaseEntity = pBaseEntity->GetOwnerEntity();
-							if ( pItem )
-							{
-								pTFPlayer = ToTFPlayer( pModel->GetOuter()->GetOwnerEntity() );
-							}
-						}
-						break;
-					}
-
-					// not a weapon, is a viewmodel
-					IHasOwner *pHasOwner = dynamic_cast<IHasOwner*>( pBaseEntity );
-					if ( pHasOwner )
-					{
-						// View model owner is player, so get the players active weapon
-						CBaseEntity *pOwner = pHasOwner->GetOwnerViaInterface();
-						pTFPlayer = ToTFPlayer( pOwner );
-						if ( pTFPlayer )
-						{
-							pWeapon = pTFPlayer->GetActiveTFWeapon();
-							if ( pWeapon )
-							{
-								pItem = pWeapon->GetAttributeContainer()->GetItem();
-								pBaseEntity = pWeapon;
-							}
-							bIsFirstPerson = true;
-						}
-					}
-					else if ( pBaseEntity && pBaseEntity->IsPlayer( ) )
-					{
-						pTFPlayer = ToTFPlayer( pBaseEntity );
-						pWeapon = pTFPlayer->GetActiveTFWeapon();
-						if ( pWeapon )
-						{
-							pItem = pWeapon->GetAttributeContainer()->GetItem();
-							pBaseEntity = pWeapon;
-						}
-					}
-				}	// for 
-			}
-			else
-			{
-				pItem = pWeapon->GetAttributeContainer()->GetItem();
-				pBaseEntity = pWeapon;
-				pTFPlayer = ToTFPlayer( pWeapon->GetOwner() );
-			}
-
-			// I have an econ item, does it have the attr
-			if ( ( pBaseEntity && pItem ) || unEffectValue )
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBaseEntity, unAttrValue, killstreak_idleeffect );
-
-				if ( !unEffectValue )
-				{
-					unEffectValue = unAttrValue;
-				}
-				
-				// Use the Spies target if disguised and we're on different teams
-				if ( pTFPlayer && pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTFPlayer->GetTeamNumber() != GetLocalPlayerTeam() )
-				{
-					pTFPlayer = pTFPlayer->m_Shared.GetDisguiseTarget();
-					if ( pTFPlayer && pTFPlayer->m_Shared.GetDisguiseWeapon() )
-					{
-						pItem = pTFPlayer->m_Shared.GetDisguiseWeapon()->GetAttributeContainer()->GetItem();
-						pBaseEntity = pTFPlayer->m_Shared.GetDisguiseWeapon();
-					}
-				}
-			}
-		}
-
-		float flNextStartTime = 0;
-		if ( pTFPlayer )
-		{
-			// if player is taunting, make sure they can start animating
-			if ( pTFPlayer->IsTaunting() && flNextStartTime > gpGlobals->curtime )
-			{
-				pTFPlayer->m_flNextSheenStartTime = gpGlobals->curtime;
-			}
-			flNextStartTime = pTFPlayer->m_flNextSheenStartTime;
-		}
-		else
-		{
-			flNextStartTime = m_flNextStartTime;
-		}
-
-		// !TEST!
-
-		// Not ready, so just exit
-		if ( !pItem || !unEffectValue || flNextStartTime > gpGlobals->curtime || unEffectValue > ARRAYSIZE( g_KillStreakEffectsBase ) - 1 )
-		{
-			RunNoProxy();
-			return;
-		}
-
-		// Negative Value implies it has not been set, set it now
-		if ( m_flScaleX < 0 )
-		{
-			if ( !InitParams( pRend, pBaseEntity ) )
-			{
-				RunNoProxy();
-				return;
-			}
-		}
-
-		// NOTE: Must not use relative time based methods here
-		// because the bind proxy can be called many times per frame.
-		// Prevent multiple Wrap callbacks to be sent for no wrap mode
-		float startTime = pTFPlayer ? pTFPlayer->m_flNextSheenStartTime : 0;
-		float deltaTime = gpGlobals->curtime - startTime;
-		float prevTime = deltaTime - gpGlobals->frametime;
-
-		// Clamp..
-		if (deltaTime < 0.0f)
-			deltaTime = 0.0f;
-		if (prevTime < 0.0f)
-			prevTime = 0.0f;
-
-		// Code Frame rate to be 25
-		float frame = tf_sheen_framerate.GetInt() * deltaTime;	
-		float prevFrame = tf_sheen_framerate.GetInt() * prevTime;
-
-		int intFrame = ((int)frame) % numFrames; 
-		int intPrevFrame = ((int)prevFrame) % numFrames;
-
-		// Report wrap situation...
-		if ( intPrevFrame > intFrame )
-		{
-			// Set frame to zero and set the time for the next
-			intFrame = 0;
-			if ( pTFPlayer )
-			{
-				pTFPlayer->m_flNextSheenStartTime = gpGlobals->curtime + GetTimeBetweenAnims( pTFPlayer );
-			}
-			else
-			{
-				m_flNextStartTime = gpGlobals->curtime + GetTimeBetweenAnims( NULL );
-			}
-		}
-
-		float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		killstreak_params_t sheenParams = GetSheenParams( unEffectValue, pTFPlayer ? pTFPlayer->GetTeamNumber() == TF_TEAM_BLUE : false );
-		color[ 0 ] = sheenParams.m_sheen_r;
-		color[ 1 ] = sheenParams.m_sheen_g;
-		color[ 2 ] = sheenParams.m_sheen_b;
-		color[ 3 ] = sheenParams.m_sheen_a;
-
-
-		if ( bIsFirstPerson )
-		{
-			color[ 3 ] = tf_sheen_alpha_firstperson.GetFloat();
-			m_pTintVar->SetVecValue( color, 4 );
-		}
-		else
-		{
-			m_pTintVar->SetVecValue( color, 4 );
-		}
-		
-		// Set vars
-		m_AnimatedTextureFrameNumVar->SetIntValue( intFrame );
-		m_pScaleXVar->SetFloatValue( m_flScaleX );			// Only need to set once?
-		m_pScaleYVar->SetFloatValue( m_flScaleY );
-		m_pOffsetXVar->SetFloatValue( m_flSheenOffsetX );
-		m_pOffsetYVar->SetFloatValue( m_flSheenOffsetY );
-		m_pDirectionVar->SetIntValue( m_iSheenDir );
-
-		int iShaderIndex = sheenParams.m_iShaderIndex;
-
-		// Australium weapons always use iShaderIndex 1
-		const CEconStyleInfo *pStyle = pItem->GetStaticData()->GetStyleInfo( pItem->GetItemStyle() );
-		if ( pStyle && !pStyle->IsSelectable() )
-		{
-			iShaderIndex = 1;
-		}
-
-		
-		m_pSheenIndexVar->SetIntValue( iShaderIndex );
-
-		if ( ToolsEnabled() )
-		{
-			ToolFramework_RecordMaterialParams( GetMaterial() );
-		}
+		return false;
 	}
 
 	// the last time the animation was run (or will allowed to be run)
@@ -2724,129 +2338,6 @@ public:
 	{
 		return 0;
 	}
-
-	float GetTimeBetweenAnims ( C_TFPlayer* pTFPlayer )
-	{
-		const float MAX_SHEEN_WAIT = 5.0f;
-		const float MAX_KILLS = 5.0f;
-
-
-		if ( !pTFPlayer )
-			return MAX_SHEEN_WAIT;
-
-		if ( pTFPlayer->IsTaunting() )
-			return 0;
-
-		// Set the time between sheens based on kill streak
-		int iStreak = pTFPlayer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-
-		if ( iStreak >= MAX_KILLS )
-			return 0;
-
-		if ( iStreak == 0 )
-			return MAX_SHEEN_WAIT;
-
-		// as player gets more kills, time decreases
-		return ( 1.0f - ( iStreak / MAX_KILLS ) ) * MAX_SHEEN_WAIT;
-	}
-
-	killstreak_params_t GetSheenParams( uint32 unEffectValue, bool bIsTeamBlue )
-	{
-		Assert( unEffectValue > 0 && unEffectValue < ARRAYSIZE( g_KillStreakEffectsBase ) );
-		killstreak_params_t params = g_KillStreakEffectsBase[ unEffectValue ];
-
-		if ( bIsTeamBlue && params.m_bHasTeamColor )
-		{
-			Assert( unEffectValue > 0 && unEffectValue < ARRAYSIZE( g_KillStreakEffectsBlue ) );
-			return g_KillStreakEffectsBlue[ unEffectValue ];
-		}
-		return params;	
-	}
-
-	bool InitParams( IClientRenderable *pRend, C_BaseEntity *pBaseEntity )
-	{
-		// Negative Value implies it has not been set, set it now
-		if ( m_flScaleX < 0 )
-		{
-			Vector vMin, vMax;
-			
-			// Check if the baseEntity is ready
-			if ( pBaseEntity )
-			{
-				CBaseAnimating *pAnimating = dynamic_cast< CBaseAnimating * > ( pBaseEntity );
-				if ( !pAnimating || !pAnimating->GetModelPtr() || pAnimating->GetModelPtr()->GetNumSeq() < pAnimating->GetSequence() )
-				{
-					return false;
-				}
-			}
-
-			pRend->GetRenderBounds( vMin, vMax );
-			m_flScaleX = vMax.x - vMin.x;
-			m_flSheenOffsetX = vMin.x;
-
-			m_flScaleY = vMax.z - vMin.z;
-			m_flSheenOffsetY = vMin.z;
-			m_iSheenDir = 0;
-
-			if ( vMax.y - vMin.y > m_flScaleX )
-			{
-				m_flScaleX = vMax.y - vMin.y;
-				m_flSheenOffsetX = vMin.y;
-
-				m_flScaleY = vMax.x - vMin.x;
-				m_flSheenOffsetY = vMin.x;
-
-				m_iSheenDir = 1;
-			}
-
-			if ( vMax.z - vMin.z > m_flScaleX )
-			{
-				m_flScaleX = vMax.z - vMin.z;
-				m_flSheenOffsetX = vMin.z;
-
-				m_flScaleY = vMax.y - vMin.y;
-				m_flSheenOffsetY = vMin.y;
-
-				m_iSheenDir = 2;
-			}
-		}
-		return true;
-	}
-
-	void Cleanup()
-	{
-		m_pTintVar = NULL;
-		CBaseAnimatedTextureProxy::Cleanup();
-	}
-
-	void RunNoProxy ()
-	{
-		m_pTintVar->SetVecValue( 0, 0, 0 ); 
-		m_AnimatedTextureFrameNumVar->SetIntValue( 0 );
-		m_pSheenIndexVar->SetIntValue( 0 );
-	}
-
-private:
-
-	IMaterialVar *m_pSheenIndexVar;
-	IMaterialVar *m_pTintVar;
-
-	IMaterialVar *m_pSheenVar;			// Overloaded for Weapon Pattern
-	IMaterialVar *m_pSheenMaskVar;		// Weapon Pattern Mask
-
-	IMaterialVar *m_pScaleXVar;
-	IMaterialVar *m_pScaleYVar;
-	IMaterialVar *m_pOffsetXVar;
-	IMaterialVar *m_pOffsetYVar;
-	IMaterialVar *m_pDirectionVar;
-
-	float m_flNextStartTime;		// Used in the rare case of playermodelpanels with no local player
-
-	float m_flScaleX;
-	float m_flScaleY;
-	float m_flSheenOffsetX;
-	float m_flSheenOffsetY;
-	int m_iSheenDir;
 };
 
 EXPOSE_INTERFACE( CProxyAnimatedWeaponSheen, IMaterialProxy, "AnimatedWeaponSheen" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -3616,13 +3107,6 @@ C_TFPlayer::C_TFPlayer() :
 
 	memset( m_pKartParticles, NULL, sizeof( m_pKartParticles ) );
 	memset( m_pKartSounds, NULL, sizeof( m_pKartSounds ) );
-
-	m_pEyeGlowEffect[ 0 ] = NULL;
-	m_pEyeGlowEffect[ 1 ] = NULL;
-	m_pszEyeGlowEffectName[0] = '\0';
-	m_vEyeGlowColor1.Zero();
-	m_vEyeGlowColor2.Zero();
-	m_flNextSheenStartTime = 0;
 	
 	m_pTeleporterEffect = NULL;
 	m_pBurningSound = NULL;
@@ -5123,7 +4607,6 @@ void C_TFPlayer::TurnOnTauntCam( void )
 	
 		::input->CAM_ToThirdPerson();
 		ThirdPersonSwitch( true );
-		UpdateKillStreakEffects( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
 	}
 
 	m_bTauntInterpolating = true;
@@ -5189,7 +4672,6 @@ void C_TFPlayer::TurnOffTauntCam_Finish( void )
 	{
 		::input->CAM_ToFirstPerson();
 		ThirdPersonSwitch( false );
-		UpdateKillStreakEffects( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
 		angles = vec3_angle;
 	}
 
@@ -5592,8 +5074,6 @@ void C_TFPlayer::ClientThink()
 		controller.SoundDestroy( m_pFallingSoundLoop );
 		m_pFallingSoundLoop = NULL;
 	}
-
-	m_Shared.ClientKillStreakBuffThink();
 
 /*
 	if ( m_LeaveServerTimer.HasStarted() && m_LeaveServerTimer.IsElapsed() )
@@ -7390,8 +6870,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 	UpdateDemomanEyeEffect( 0 );
 
-	UpdateKillStreakEffects( 0 );
-
 	m_hHeadGib = NULL;
 	m_hFirstGib = NULL;
 	m_hSpawnedGibs.Purge();
@@ -9028,7 +8506,7 @@ CON_COMMAND_F( spectate_random_server_extend_time, "extend the timer we're spect
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData )
+void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes )
 {
 	Assert( iMaxLenInBytes >= sizeof(sDataString[0]) );
 	// Make sure the output string is always initialized to a null-terminated string,
@@ -9109,15 +8587,6 @@ void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLen
 					}
 				}
 			}
-		}
-
-		// Check for kill streak data
-		if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
-		{
-			bIsKillStreakData = true;
-			wchar_t wszClip[10];
-			V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
-			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
 		}
 	}
 }
@@ -9638,231 +9107,6 @@ const char *C_TFPlayer::GetDemomanEyeEffectName( int iDecapitations )
 		return "eye_powerup_green_lvl_4";
 	}
 }
-
-//-----------------------------------------------------------------------------
-void GetVectorColorForParticleSystem ( int iSystem, bool bIsBlueTeam, bool bUseColor2, Vector &vecColor )
-{
-	if ( iSystem < 0 || iSystem >= ARRAYSIZE( g_KillStreakEffectsBase ) )
-		return;
-
-	killstreak_params_t params = g_KillStreakEffectsBase[iSystem];
-
-	if ( bIsBlueTeam && g_KillStreakEffectsBase[iSystem].m_bHasTeamColor )
-	{
-		Assert( iSystem > 0 && iSystem < ARRAYSIZE( g_KillStreakEffectsBlue ) );
-		params = g_KillStreakEffectsBlue[iSystem];
-	}
-	
-	if ( bUseColor2 )
-	{
-		vecColor = Vector( params.m_color2_r, params.m_color2_g, params.m_color2_b );
-	}
-	else
-	{
-		vecColor = Vector( params.m_color1_r, params.m_color1_g, params.m_color1_b );
-	}
-	return;
-}
-
-//-----------------------------------------------------------------------------
-void C_TFPlayer::UpdateKillStreakEffects( int iCount, bool bKillScored /* = false */ )
-{
-	const int HIGH_GLOW = 20000;
-
-	// Staging only hack to test eye glows on players
-	if ( m_pEyeGlowEffect[0] )
-	{
-		ParticleProp()->StopEmission( m_pEyeGlowEffect[ 0 ] );
-		m_pEyeGlowEffect[ 0 ] = NULL;
-	}
-	if ( m_pEyeGlowEffect[1] )
-	{
-		ParticleProp()->StopEmission( m_pEyeGlowEffect[ 1 ] );
-		m_pEyeGlowEffect[ 1 ] = NULL;
-	}
-
-	CTFWeaponBase *pActiveWeapon = GetActiveTFWeapon();
-	if ( !pActiveWeapon )
-		return;
-
-	// Disguised Spies, Use targets kill streak.  Otherwise nothing
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-		C_TFPlayer *pDisguiseTarget = m_Shared.GetDisguiseTarget();
-		if ( pDisguiseTarget )
-			iCount = pDisguiseTarget->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-		else
-			iCount = 0;
-	}
-
-
-	// Check if they have the appropriate attribute.
-	int iKillStreakEffectIndex = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iKillStreakEffectIndex, killstreak_effect );
-
-	int iKillStreakColorIndex = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iKillStreakColorIndex, killstreak_idleeffect );
-
-	// !TEST!
-
-	// Need a color and eyeeffect to continue, otherwise you only have a sheen at best
-	if ( iKillStreakColorIndex == 0 || iKillStreakEffectIndex == 0 )
-	{
-		// Just in case search weapon wearables for killstreak effects
-		// This only applies for soldier (mantreads) and the demoshields
-		if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_DEMOMAN ) )
-		{
-			// Iterate over all of our wearables
-			for ( int i = 0; i < GetNumWearables(); ++i )
-			{
-				CEconWearable *pWearable = GetWearable( i );
-				if ( pWearable && pWearable->GetAttributeContainer( )->GetItem( )->GetEquippedPositionForClass( GetPlayerClass( )->GetClassIndex( ) ) == LOADOUT_POSITION_SECONDARY )
-				{
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pWearable, iKillStreakEffectIndex, killstreak_effect );
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pWearable, iKillStreakColorIndex, killstreak_idleeffect );
-					break;
-				}
-			}
-		}
-	}
-
-	if ( iKillStreakColorIndex == 0 || iKillStreakEffectIndex == 0 )
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-		m_vEyeGlowColor1.Zero();
-		return;
-	}
-
-	// Play the pop effect on all kills
-	GetVectorColorForParticleSystem( iKillStreakColorIndex, GetTeamNumber() == TF_TEAM_BLUE, false, m_vEyeGlowColor1 );
-	GetVectorColorForParticleSystem( iKillStreakColorIndex, GetTeamNumber() == TF_TEAM_BLUE, true, m_vEyeGlowColor2 );
-
-	// Do not render in first person
-	if ( !pActiveWeapon->IsFirstPersonView() && bKillScored )
-	{
-		int iAttachment = 0;	
-		iAttachment = LookupAttachment( "eyeglow_R" );
-		if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-		{
-			CNewParticleEffect* pEffect = ParticleProp()->Create( "killstreak_t0_lvl1_flash", PATTACH_POINT_FOLLOW, iAttachment );
-			if ( pEffect )
-			{
-				pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-			}
-		}
-
-		if ( GetPlayerClass()->GetClassIndex() != TF_CLASS_DEMOMAN )
-		{
-			iAttachment = LookupAttachment( "eyeglow_L" );
-			if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-			{
-				CNewParticleEffect* pEffect = ParticleProp()->Create( "killstreak_t0_lvl1_flash", PATTACH_POINT_FOLLOW, iAttachment );
-				if ( pEffect )
-				{
-					pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-				}
-			}
-		}
-	}
-	
-	// only render eye glows if they have enough kills
-	if ( iCount < tf_killstreakeyes_minkills.GetInt() || m_Shared.InCond( TF_COND_STEALTHED ) )
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-		return;
-	}
-
-	bool bForceEyeGlow = false;
-
-	int iEyeGlowEffectIndex = iKillStreakEffectIndex;
-	if ( ( iEyeGlowEffectIndex > 0 && iCount > 0 ) || bForceEyeGlow )
-	{
-		// 2,4,6,8 for effects
-		const char* pszEffect = NULL;
-
-		// Verify the system is in the desired range
-
-		// This is the wrong type, value is too large should not exist so just bail
-		if ( iEyeGlowEffectIndex > HIGH_GLOW )
-			return;
-
-		// Hack do not have eyeglows for tier0
-		if ( iEyeGlowEffectIndex == 2001 )
-			return;
-
-		// Should we be using a High_glow
-		if ( iCount >= tf_killstreakeyes_maxkills.GetInt() )
-		{
-			iEyeGlowEffectIndex += HIGH_GLOW;
-		}
-
-		attachedparticlesystem_t *pSystem = GetItemSchema()->GetAttributeControlledParticleSystem( iEyeGlowEffectIndex );
-
-		if ( pSystem )
-		{
-			// Check for TeamColor EyeGlows
-			if ( GetTeamNumber() == TF_TEAM_BLUE && V_stristr( pSystem->pszSystemName, "_teamcolor_red" ))
-			{
-				static char pBlue[256];
-				V_StrSubst( pSystem->pszSystemName, "_teamcolor_red", "_teamcolor_blue", pBlue, 256 );
-				pSystem = GetItemSchema()->FindAttributeControlledParticleSystem( pBlue );
-			}
-			else if ( GetTeamNumber() == TF_TEAM_RED && V_stristr( pSystem->pszSystemName, "_teamcolor_blue" ))
-			{
-				// Guard against accidentally giving out the blue team color (support tool)
-				static char pRed[256];
-				V_StrSubst( pSystem->pszSystemName, "_teamcolor_blue", "_teamcolor_red", pRed, 256 );
-				pSystem = GetItemSchema()->FindAttributeControlledParticleSystem( pRed );
-			}
-		}
-
-		if ( pSystem )
-		{
-			pszEffect = pSystem->pszSystemName;
-		}
-
-		
-		if ( pszEffect )
-		{
-			// Do not render in first person
-			if ( !pActiveWeapon->IsFirstPersonView() )
-			{
-				int iAttachment = 0;	
-				iAttachment = LookupAttachment( "eyeglow_R" );
-				if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-				{
-					CNewParticleEffect* pEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, iAttachment );
-					if ( pEffect )
-					{
-						pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-					}
-					m_pEyeGlowEffect[0] = pEffect;
-				} 
-				
-				// do not put glow on left eye, that is reserved for eyelander
-				if ( GetPlayerClass()->GetClassIndex() != TF_CLASS_DEMOMAN )
-				{
-					iAttachment = LookupAttachment( "eyeglow_L" );
-					if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-					{
-						CNewParticleEffect* pEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, iAttachment );
-						if ( pEffect )
-						{
-							pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-						}
-						m_pEyeGlowEffect[1] = pEffect;
-					}
-				}
-			}
-			V_strcpy_safe( m_pszEyeGlowEffectName, pszEffect );
-		}
-	}
-	else
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-	}
-}
-
 
 //-----------------------------------------------------------------------------
 // Purpose: Check if local player should see spy as disguised body

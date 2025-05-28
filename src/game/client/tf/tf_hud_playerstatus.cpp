@@ -97,7 +97,6 @@ CTFHudPlayerClass::CTFHudPlayerClass( Panel *parent, const char *name ) : Editab
 	m_nDisguiseClass = TF_CLASS_UNDEFINED;
 	m_hDisguiseWeapon = NULL;
 	m_flNextThink = 0.0f;
-	m_nKillStreak = 0;
 
 	ListenForGameEvent( "localplayer_changedisguise" );
 

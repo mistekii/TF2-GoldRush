@@ -719,12 +719,6 @@ void CEconTool_Strangifier::OnClientApplyTool( CEconItemView *pTool, CEconItemVi
 	MakeModalAndBringToFront( pDialog );
 }
 //-----------------------------------------------------------------------------
-void CEconTool_KillStreakifier::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
-{
-	CConfirmApplyStrangifierDialog *pDialog = vgui::SETUP_PANEL( new CConfirmApplyStrangifierDialog( pParent, pTool, pSubject, "ToolKillStreakifierConfirm", "killstreakified_item" ) );
-	MakeModalAndBringToFront( pDialog );
-}
-//-----------------------------------------------------------------------------
 void CEconTool_Unusualifier::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
 {
 	CConfirmApplyStrangifierDialog *pDialog = vgui::SETUP_PANEL( new CConfirmApplyStrangifierDialog( pParent, pTool, pSubject, "ToolUnusualifierConfirm", "unusualified_item", "#ToolUnusualifierInProgress" ) );

@@ -602,8 +602,6 @@ static void ApplyAttribute( const CEconItemAttributeDefinition *pAttributeDef, f
 		}
 		break;
 
-	case ATTDESCFORM_VALUE_IS_KILLSTREAK_IDLEEFFECT_INDEX:
-	case ATTDESCFORM_VALUE_IS_KILLSTREAKEFFECT_INDEX:
 	case ATTDESCFORM_VALUE_IS_FROM_LOOKUP_TABLE:
 		{
 			flValue = flValueModifier;

@@ -311,11 +311,6 @@ bool IEconItemInterface::IsMarketable() const
 		if ( V_strstr( pItemDef->GetDefinitionName(), "Robits " ) )
 			return true;
 
-		// MvM Killstreak Weapons
-		static CSchemaAttributeDefHandle pAttr_killstreak( "killstreak tier" );
-		if ( FindAttribute( pAttr_killstreak ) )
-			return true;
-
 		// Glitch GateHat Replacement Item
 		static CSchemaItemDefHandle pItemDef_GlitchedCircuit( "Glitched Circuit Board" );
 		if ( pItemDef == pItemDef_GlitchedCircuit )

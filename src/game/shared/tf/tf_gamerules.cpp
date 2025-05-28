@@ -9836,14 +9836,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_BurningEnemyKill );
 			}
 
-			// Optional: also track kills where this kill ended someone else's killstreak, where "killstreak" starts when the first
-			// announcement happens. If Mike gets to hard-code constants, I do, too.
-			enum { kFirstKillStreakAnnouncement = 5 };
-			if ( pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) >= kFirstKillStreakAnnouncement )
-			{
-				EconEntity_OnOwnerKillEaterEvent( pAttackerEconWeapon, pTFPlayerScorer, pTFPlayerVictim, kKillEaterEvent_KillstreaksEnded );
-			}
-
 			// Optional: also track kills where the killer and the victim were basically right next to each other. This is hard-coded to
 			// 1.5x default melee swing range.
 			if ( pTFPlayerScorer->IsAlive() && (pTFPlayerScorer->GetAbsOrigin() - pTFPlayerVictim->GetAbsOrigin()).Length() <= 72.0f )
@@ -10987,98 +10979,8 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 		if ( FStrEq( eventName, "player_death" ) )
 		{
 			CTF_GameStats.Event_KillDetail( pScorer, pTFPlayerVictim, pAssister, event, info );
-			event->SetInt( "kill_streak_victim", pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
 			event->SetBool( "rocket_jump", ( pTFPlayerVictim->RocketJumped() == 1 ) );
 			event->SetInt( "crit_type", info.GetCritType() );
-
-			// Kill streak updating
-			if ( pTFPlayerVictim && pScorer && pTFPlayerVictim != pScorer )
-			{
-				// Check if they have the appropriate attribute.
-				int iKillStreak = 0;
-				int iKills = 0;
-				CBaseEntity *pKillStreakTarget = NULL;
-				if ( !pAttribInterface )
-				{
-					// Check if you are a sentry and if so, use the wrench
-					// For Sentries Inflictor can be the sentry (bullets) or the Sentry Rocket
-
-					CObjectSentrygun *pSentry = dynamic_cast<CObjectSentrygun*>( pInflictor );
-					if ( !pSentry && pInflictor )
-					{
-						pSentry = dynamic_cast<CObjectSentrygun*>( pInflictor->GetOwnerEntity() );
-					}
-
-					if ( pSentry )
-					{
-						pKillStreakTarget = dynamic_cast<CTFWeaponBase*>( pScorer->GetEntityForLoadoutSlot( LOADOUT_POSITION_MELEE ) );
-					}
-				}
-				else
-				{
-					pKillStreakTarget = info.GetWeapon();
-				}
-
-				if ( pKillStreakTarget )
-				{
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pKillStreakTarget, iKillStreak, killstreak_tier );
-					// Always track killstreak regardless of the attribute for data collection purposes
-					pScorer->m_Shared.IncrementStreak( CTFPlayerShared::kTFStreak_KillsAll, 1 );
-					if ( iKillStreak )
-					{
-						iKills = pScorer->m_Shared.IncrementStreak( CTFPlayerShared::kTFStreak_Kills, 1 );
-						event->SetInt( "kill_streak_total", iKills );
-
-						int iWepKills = 0;
-						CTFWeaponBase *pWeapon = dynamic_cast<CTFWeaponBase*>( pKillStreakTarget );
-						if ( pWeapon )
-						{
-							iWepKills = pWeapon->GetKillStreak() + 1;
-							pWeapon->SetKillStreak( iWepKills );
-						}
-						else
-						{
-							CTFWearable *pWearable = dynamic_cast<CTFWearable*>( pKillStreakTarget );
-							if ( pWearable )
-							{
-								iWepKills = pWearable->GetKillStreak() + 1;
-								pWearable->SetKillStreak( iWepKills );
-							}
-						}
-
-						event->SetInt( "kill_streak_wep", iWepKills );
-
-						// Track each player's max streak per-round
-						CTF_GameStats.Event_PlayerEarnedKillStreak( pScorer );
-					}
-				}
-
-				if ( pAssister )
-				{
-					// Only allow assists for Mediguns
-					CTFWeaponBase *pAssisterWpn = pAssister->GetActiveTFWeapon();
-					if ( pAssisterWpn && pAssister->IsPlayerClass( TF_CLASS_MEDIC ) )
-					{
-						CWeaponMedigun *pMedigun = dynamic_cast<CWeaponMedigun*>( pAssisterWpn );
-						if ( pMedigun )
-						{
-							iKillStreak = 0;
-							CALL_ATTRIB_HOOK_INT_ON_OTHER( pAssisterWpn, iKillStreak, killstreak_tier );
-							if ( iKillStreak )
-							{
-								iKills = pAssister->m_Shared.IncrementStreak( CTFPlayerShared::kTFStreak_Kills, 1 );
-								event->SetInt( "kill_streak_assist", iKills );
-
-								int iWepKills = pAssisterWpn->GetKillStreak() + 1;
-								pAssisterWpn->SetKillStreak( iWepKills );
-
-								// Track each player's max streak per-round
-								CTF_GameStats.Event_PlayerEarnedKillStreak( pAssister );
-							}
-						}
-					}
-				}
-			}
 		}
 
 		event->SetInt( "death_flags", iDeathFlags );	
@@ -11488,10 +11390,6 @@ void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 		CTFPlayerResource *pResource = dynamic_cast< CTFPlayerResource * >( g_pPlayerResource );
 		if ( !pResource )
 			return;
-
-		// Highest killstreak
-		int nMaxStreakPlayerIndex = 0;
-		int nMaxStreakCount = 0;
 	 
 		// determine the 3 players on winning team who scored the most points this round
 
@@ -11521,18 +11419,6 @@ void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 			playerRoundScore.iRoundScore = iRoundScore;
 			playerRoundScore.iPlayerIndex = iPlayerIndex;
 			playerRoundScore.iTotalScore = iTotalScore;
-
-			// Highest killstreak?
-			PlayerStats_t *pPlayerStats = CTF_GameStats.FindPlayerStats( pTFPlayer );
-			if ( pPlayerStats ) 
-			{
-				int nMax = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_KILLSTREAK_MAX];
-				if ( nMax > nMaxStreakCount )
-				{
-					nMaxStreakCount = nMax;
-					nMaxStreakPlayerIndex = iPlayerIndex;
-				}
-			}
 		}
 
 		// sort the players by round score
@@ -11553,9 +11439,6 @@ void CTFGameRules::SendWinPanelInfo( bool bGameOver )
 			winEvent->SetInt( szPlayerIndexVal, vecPlayerScore[i].iPlayerIndex );
 			winEvent->SetInt( szPlayerScoreVal, vecPlayerScore[i].iRoundScore );				
 		}
-
-		winEvent->SetInt( "killstreak_player_1", nMaxStreakPlayerIndex );
-		winEvent->SetInt( "killstreak_player_1_count", nMaxStreakCount );
 
 #ifdef TF_RAID_MODE
 		if ( !bRoundComplete && ( TEAM_UNASSIGNED != m_iWinningTeam ) && !IsRaidMode() )

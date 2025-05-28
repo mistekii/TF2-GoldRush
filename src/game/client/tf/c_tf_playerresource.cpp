@@ -35,7 +35,6 @@ IMPLEMENT_CLIENTCLASS_DT( C_TF_PlayerResource, DT_TFPlayerResource, CTFPlayerRes
 	RecvPropArray3( RECVINFO_ARRAY( m_iDamageBlocked ), RecvPropInt( RECVINFO( m_iDamageBlocked[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iBonusPoints ), RecvPropInt( RECVINFO( m_iBonusPoints[0] ) ) ),
 	RecvPropArray3( RECVINFO_ARRAY( m_iPlayerLevel ), RecvPropInt( RECVINFO( m_iPlayerLevel[0] ) ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_iStreaks ), RecvPropInt( RECVINFO_ARRAY( m_iStreaks ) ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderRedTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iPartyLeaderBlueTeamIndex ) ),
 	RecvPropInt( RECVINFO( m_iEventTeamStatus ) ),
@@ -109,17 +108,6 @@ int C_TF_PlayerResource::GetArrayValue( int iIndex, int *pArray, int iDefaultVal
 		return iDefaultVal;
 
 	return pArray[iIndex];
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Gets a streak value
-//-----------------------------------------------------------------------------
-int C_TF_PlayerResource::GetStreak( unsigned int iIndex, CTFPlayerShared::ETFStreak streak_type )
-{
-	if ( !IsConnected( iIndex ) && !IsValid( iIndex ) )
-		return 0;
-
-	return m_iStreaks[ iIndex * CTFPlayerShared::kTFStreak_COUNT + streak_type ];
 }
 
 //-----------------------------------------------------------------------------

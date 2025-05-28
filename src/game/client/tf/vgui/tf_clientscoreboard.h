@@ -128,8 +128,6 @@ private:
 	int							m_iImageDominatedDead;
 	int							m_iImageNemesis;
 	int							m_iImageNemesisDead;
-	int							m_iImageStreak;
-	int							m_iImageStreakDead;
 	int							m_iImageDead;
 
 	int							m_iImageDom[SCOREBOARD_DOMINATION_ICONS];
@@ -150,8 +148,6 @@ private:
 	CPanelAnimationVarAliasType( int, m_iSpacerWidth, "spacer", "5", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iNemesisWidth, "nemesis_width", "20", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iMedalWidth, "medal_width", "15", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iKillstreakWidth, "killstreak_width", "20", "proportional_int" );
-	CPanelAnimationVarAliasType( int, m_iKillstreakImageWidth, "killstreak_image_width", "20", "proportional_int" );
 	CPanelAnimationVarAliasType( int, m_iStatusWidth, "status_width", "12", "proportional_int");
 
 	bool						m_bRedScrollBarVisible;

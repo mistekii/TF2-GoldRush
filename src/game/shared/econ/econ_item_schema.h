@@ -683,8 +683,6 @@ enum
 	ATTDESCFORM_VALUE_IS_DATE,					// Printed as a date
 	ATTDESCFORM_VALUE_IS_ACCOUNT_ID,			// Printed as steam user name
 	ATTDESCFORM_VALUE_IS_PARTICLE_INDEX,		// Printed as a particle description
-	ATTDESCFORM_VALUE_IS_KILLSTREAKEFFECT_INDEX,// Printed as killstreak effect description
-	ATTDESCFORM_VALUE_IS_KILLSTREAK_IDLEEFFECT_INDEX,  // Printed as idle effect description
 	ATTDESCFORM_VALUE_IS_ITEM_DEF,				// Printed as item name
 	ATTDESCFORM_VALUE_IS_FROM_LOOKUP_TABLE,		// Printed as a string from a lookup table, specified by the attribute definition name
 };
@@ -1123,15 +1121,14 @@ enum item_capabilities_t
 	ITEM_CAP_CAN_USE_STRANGE_PARTS	= 1 << 14,
 	ITEM_CAP_CAN_CARD_UPGRADE		= 1 << 15,
 	ITEM_CAP_CAN_STRANGIFY			= 1 << 16,
-	ITEM_CAP_CAN_KILLSTREAKIFY		= 1 << 17,
-	ITEM_CAP_CAN_CONSUME			= 1 << 18,
-	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 19,		// IT'S A VERB OKAY
-	ITEM_CAP_HAS_SLOTS				= 1 << 20,
-	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 21,
-	NUM_ITEM_CAPS					= 22,
+	ITEM_CAP_CAN_CONSUME			= 1 << 17,
+	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 18,		// IT'S A VERB OKAY
+	ITEM_CAP_HAS_SLOTS				= 1 << 19,
+	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 20,
+	NUM_ITEM_CAPS					= 21,
 };
 
-enum { ITEM_CAP_DEFAULT		 = ITEM_CAP_CAN_CRAFT_MARK | ITEM_CAP_CAN_BE_RESTORED | ITEM_CAP_CAN_USE_STRANGE_PARTS | ITEM_CAP_CAN_CARD_UPGRADE | ITEM_CAP_CAN_STRANGIFY | ITEM_CAP_CAN_KILLSTREAKIFY | ITEM_CAP_CAN_CONSUME | ITEM_CAP_CAN_GIFT_WRAP };	// what are the default capabilities on an item?
+enum { ITEM_CAP_DEFAULT		 = ITEM_CAP_CAN_CRAFT_MARK | ITEM_CAP_CAN_BE_RESTORED | ITEM_CAP_CAN_USE_STRANGE_PARTS | ITEM_CAP_CAN_CARD_UPGRADE | ITEM_CAP_CAN_STRANGIFY | ITEM_CAP_CAN_CONSUME | ITEM_CAP_CAN_GIFT_WRAP };	// what are the default capabilities on an item?
 enum { ITEM_CAP_TOOL_DEFAULT = ITEM_CAP_NONE };																										// what are the default capabilities of a tool?
 
 struct bundleinfo_t

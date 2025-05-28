@@ -1059,67 +1059,6 @@
 			"drop_sound"			"ui/item_bottle_drop.wav"
 		}
 
-		"killstreakifier_base"
-		{
-			"item_class"	"tool"
-			"tool"
-			{
-				"type"	"killstreakifier"
-				"usage"
-				{
-					"item_desc_tool_target"	"#ItemDescKillStreakify"
-				}
-				"usage_capabilities"
-				{
-					"can_killstreakify" "1"
-				}
-			}
-			"static_attrs"
-			{
-				"tool_target_item_icon_offset" "0.285 0.43 0.35"
-			}
-			"attributes"
-			{
-				"never craftable"
-				{
-					"attribute_class"	"never_craftable"
-					"value"				"1"
-				}
-				"cannot restore"
-				{
-					"attribute_class"	"cannot_restore"
-					"value"				"1"
-				}
-			}
-			"show_in_armory"	"0"
-			"item_name"			"#TF_KillStreakifier_Name"
-			"item_description"	"#TF_KillStreakifier_Desc"
-			"item_type_name"	"#TF_KillStreakifierToolA"
-			"image_inventory"	"backpack/crafting/professional_grease_basic"
-			"image_inventory_size_w" "128"
-			"image_inventory_size_h" "96"
-			"item_quality"		"unique"
-			"min_ilevel"		"5"
-			"max_ilevel"		"5"
-			"mouse_pressed_sound"	"ui/item_bottle_pickup.wav"
-			"drop_sound"			"ui/item_bottle_drop.wav"
-		}
-
-		"killstreakifier_kit_basic"
-		{
-			"prefab" "killstreakifier_base"
-			"item_description"	"#TF_KillStreakifierBasic_Desc"
-			"image_inventory"	"backpack/crafting/professional_grease_basic"
-			"attributes"
-			{
-				"killstreak tier"
-				{
-					"attribute_class"	"killstreak_tier"
-					"value"	"1"
-				}
-			}
-		}
-
 		"dynamic_recipe_base"
 		{
 			"item_class"	"tool"
@@ -1164,15 +1103,6 @@
 			"attributes"
 			{
 			}
-		}
-
-		"mvm_killstreak_recipe_base"
-		{
-			"prefab"				"dynamic_recipe_base"
-			"mouse_pressed_sound"			"ui/item_heavy_gun_pickup.wav"
-			"drop_sound"					"ui/item_heavy_gun_drop.wav"
-			"recipe_partial_complete_sound"	"weapons/sentry_wire_connect.wav"
-			"recipe_complete_sound"			"weapons/drg_wrench_teleport.wav"
 		}
 
 
@@ -7132,10 +7062,6 @@
 					{
 						"can_apply_paintkit"		"1"
 					}
-				}
-				"usage_capabilities"
-				{
-					"can_killstreakify" 	"1"	
 				}
 			}
 			"capabilities"
@@ -18472,26 +18398,6 @@
 			"hidden"	"1"
 			"can_affect_market_name"	"1"
 		}
-		"2013"		
-		{
-			"name"					"killstreak effect"
-			"attribute_class"		"killstreak_effect"
-			"description_string"	"#Attrib_KillStreakEffect"
-			"description_format"	"value_is_killstreakeffect_index"
-			"stored_as_integer"	"0"
-			"effect_type"	"positive"
-			"can_affect_recipe_component_name"	"1"
-		}
-		"2014"		
-		{
-			"name"					"killstreak idleeffect"
-			"attribute_class"		"killstreak_idleeffect"
-			"description_string"	"#Attrib_KillStreakIdleEffect"
-			"description_format"	"value_is_killstreak_idleeffect_index"
-			"stored_as_integer"	"0"
-			"effect_type"	"positive"
-			"can_affect_recipe_component_name"	"1"
-		}
 
 		"2015"
 		{
@@ -18574,16 +18480,6 @@
 			"attribute_class"		"item_name_text_override"
 			"attribute_type"		"string"
 			"hidden"				"1"
-		}
-		"2025"		
-		{
-			"name"					"killstreak tier"
-			"attribute_class"		"killstreak_tier"
-			"can_affect_market_name"	"1"
-			"description_string"	"#Attrib_KillStreakTier"
-			"description_format"	"value_is_additive"
-			"effect_type"	"positive"
-			"stored_as_integer"		"0"
 		}
 		"2026"		
 		{
@@ -21460,74 +21356,6 @@
 		}
 		
 		
-		"killstreak_eyeglows"
-		{
-			"2001"
-			{
-				"system"			"killstreak_eyeglow_1_teamcolor_red"
-			}
-			"22001"
-			{
-				"system"			"killstreak_eyeglow_4_teamcolor_red"
-			}
-			"2002"
-			{
-				"system"			"killstreak_t1_lvl1"
-			}
-			"22002"
-			{
-				"system"			"killstreak_t1_lvl2"
-			}
-			"2003"
-			{
-				"system"			"killstreak_t2_lvl1"
-			}
-			"22003"
-			{
-				"system"			"killstreak_t2_lvl2"
-			}
-			"2004"
-			{
-				"system"			"killstreak_t3_lvl1"
-			}
-			"22004"
-			{
-				"system"			"killstreak_t3_lvl2"
-			}
-			"2005"
-			{
-				"system"			"killstreak_t4_lvl1"
-			}
-			"22005"
-			{
-				"system"			"killstreak_t4_lvl2"
-			}
-			"2006"
-			{
-				"system"			"killstreak_t5_lvl1"
-			}
-			"22006"
-			{
-				"system"			"killstreak_t5_lvl2"
-			}
-			"2007"
-			{
-				"system"			"killstreak_t6_lvl1"
-			}
-			"22007"
-			{
-				"system"			"killstreak_t6_lvl2"
-			}
-			"2008"
-			{
-				"system"			"killstreak_t7_lvl1"
-			}
-			"22008"
-			{
-				"system"			"killstreak_t7_lvl2"
-			}
-		}
-		
 		"taunt_unusual_effects"
 		{
 			"3001"
@@ -23720,10 +23548,6 @@
 		"79"
 		{
 			"type_name"			"KillEaterEvent_BurningPlayerKill"
-		}
-		"80"
-		{
-			"type_name"			"KillEaterEvent_KillstreaksEnded"
 		}
 		"81"
 		{

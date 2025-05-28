@@ -113,8 +113,6 @@ const char *g_AttributeDescriptionFormats[] =
 	"value_is_date",					// ATTDESCFORM_VALUE_IS_DATE
 	"value_is_account_id",				// ATTDESCFORM_VALUE_IS_ACCOUNT_ID
 	"value_is_particle_index",			// ATTDESCFORM_VALUE_IS_PARTICLE_INDEX -> Could change to "string index"
-	"value_is_killstreakeffect_index",	// ATTDESCFORM_VALUE_IS_KILLSTREAKEFFECT_INDEX -> Could change to "string index"
-	"value_is_killstreak_idleeffect_index",  // ATTDESCFORM_VALUE_IS_KILLSTREAK_IDLEEFFECT_INDEX
 	"value_is_item_def",				// ATTDESCFORM_VALUE_IS_ITEM_DEF
 	"value_is_from_lookup_table",		// ATTDESCFORM_VALUE_IS_FROM_LOOKUP_TABLE
 };
@@ -150,7 +148,6 @@ const char *g_Capabilities[] =
 	"strange_parts",			// ITEM_CAP_CAN_USE_STRANGE_PARTS
 	"can_card_upgrade",			// ITEM_CAP_CAN_CARD_UPGRADE
 	"can_strangify",			// ITEM_CAP_CAN_STRANGIFY
-	"can_killstreakify",		// ITEM_CAP_CAN_KILLSTREAKIFY
 	"can_consume",				// ITEM_CAP_CAN_CONSUME_ITEMS
 	"can_spell_page",			// ITEM_CAP_CAN_SPELLBOOK_PAGE
 	"has_slots",				// ITEM_CAP_HAS_SLOTS
@@ -3972,14 +3969,6 @@ IEconTool *CEconItemSchema::CreateEconToolImpl( const char *pszToolType, const c
 			if ( pszUsageRestriction )					return NULL;
 
 			return new CEconTool_Strangifier( pszToolType, pszUseString, unCapabilities, pUsageKV );
-		}
-
-		if ( !V_stricmp( pszToolType, "killstreakifier" ) )
-		{
-			// Error checking -- make sure we aren't setting properties in the schema that we don't support.
-			if ( pszUsageRestriction )					return NULL;
-
-			return new CEconTool_KillStreakifier( pszToolType, pszUseString, unCapabilities, pUsageKV );
 		}
 
 		if( !V_stricmp( pszToolType, "dynamic_recipe" ) )

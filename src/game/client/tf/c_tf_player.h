@@ -284,7 +284,7 @@ public:
 	bool			ShouldAutoRezoom( void ){ return cl_autorezoom.GetBool(); }
 	bool			ShouldAutoReload( void ){ return cl_autoreload.GetBool(); }
 
-	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData );
+	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes );
 
 	void			RemoveDisguise( void );
 	bool			CanDisguise( void );
@@ -472,10 +472,6 @@ public:
 
 	void		UpdateDemomanEyeEffect( int iDecapitations );
 	const char* GetDemomanEyeEffectName( int iDecapitations );
-
-	void	UpdateKillStreakEffects( int iCount, bool bKillScored = false );
-	const char *GetEyeGlowEffect() { return m_pszEyeGlowEffectName; }
-	Vector GetEyeGlowColor( bool bAlternate ) { return bAlternate? m_vEyeGlowColor1 : m_vEyeGlowColor2 ; }
 
 	// Bounty Mode
 	int	 GetExperienceLevel( void ) { return m_nExperienceLevel; }
@@ -716,13 +712,6 @@ public:
 	float				m_flLastResistTime;
 
 	HPARTICLEFFECT m_pSappedPlayerEffect;
-
-	// KillStreak Weapons
-	char m_pszEyeGlowEffectName[MAX_PATH];
-	Vector m_vEyeGlowColor1;
-	Vector m_vEyeGlowColor2;
-	HPARTICLEFFECT m_pEyeGlowEffect[ 2 ];
-	float m_flNextSheenStartTime;
 
 	enum EKartParticles
 	{

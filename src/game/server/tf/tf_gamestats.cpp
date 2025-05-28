@@ -2857,23 +2857,6 @@ void CTFGameStats::Event_PlayerThrowableKill( CTFPlayer *pAttacker )
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Track only their highest - not cumulative
-//-----------------------------------------------------------------------------
-void CTFGameStats::Event_PlayerEarnedKillStreak( CTFPlayer *pAttacker )
-{
-	if ( !pAttacker )
-		return;
-
-	PlayerStats_t &stats = m_aPlayerStats[pAttacker->entindex()];
-	int nCount = pAttacker->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-	int nMax = stats.statsCurrentRound.m_iStat[TFSTAT_KILLSTREAK_MAX];
-	if ( nCount > nMax )
-	{
-		stats.statsCurrentRound.m_iStat[TFSTAT_KILLSTREAK_MAX] = nCount;
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: Halloween!
 //-----------------------------------------------------------------------------
 void CTFGameStats::Event_HalloweenBossEvent( uint8 unBossType, uint16 unBossLevel, uint8 unEventType, uint8 unPlayersInvolved, float fElapsedTime )

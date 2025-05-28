@@ -79,7 +79,6 @@ private:
 	EHANDLE				m_hDisguiseWeapon;
 	int					m_nCloakLevel;
 	int					m_nLoadoutPosition;
-	int					m_nKillStreak;
 };
 
 //-----------------------------------------------------------------------------

@@ -407,7 +407,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 
 	RecvPropInt( RECVINFO( m_nPlayerCondEx2 ) ),
 	RecvPropInt( RECVINFO( m_nPlayerCondEx3 ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_nStreaks ), RecvPropInt( RECVINFO( m_nStreaks[0] ) ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_Low ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_High ) ),
 
@@ -573,7 +572,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropInt( SENDINFO( m_nPlayerCondEx2 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
 
-	SendPropArray3( SENDINFO_ARRAY3( m_nStreaks ), SendPropInt( SENDINFO_ARRAY( m_nStreaks ) ) ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_Low ), -1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_High ), -1, SPROP_UNSIGNED ),
 
@@ -776,8 +774,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_iNextMeleeCrit = 0;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
-	m_iOldKillStreak = 0;
-	m_iOldKillStreakWepSlot = 0;
 
 	m_flNextNoiseMakerTime = 0;
 	m_iSpawnRoomTouchCount = 0;
@@ -865,8 +861,6 @@ void CTFPlayerShared::Init( CTFPlayer *pPlayer )
 	m_iNextMeleeCrit = 0;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
-	m_iOldKillStreak = 0;
-	m_iOldKillStreakWepSlot = 0;
 
 	SetJumping( false );
 	SetAssist( NULL );
@@ -5069,39 +5063,6 @@ void CTFPlayerShared::ClientDemoBuffThink( void )
 		}
 	}
 }
-
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::ClientKillStreakBuffThink( void )
-{
-	int nLoadoutSlot = m_pOuter->GetActiveTFWeapon() ? m_pOuter->GetActiveTFWeapon()->GetAttributeContainer()->GetItem()->GetStaticData()->GetLoadoutSlot( m_pOuter->GetPlayerClass()->GetClassIndex() ) : LOADOUT_POSITION_PRIMARY;
-	int nKillStreak = GetStreak(kTFStreak_Kills);
-	if ( nKillStreak != m_iOldKillStreak || m_iOldKillStreakWepSlot != nLoadoutSlot )
-	{
-		m_pOuter->UpdateKillStreakEffects( nKillStreak, m_iOldKillStreak < nKillStreak );
-		m_iOldKillStreak = nKillStreak;
-		m_iOldKillStreakWepSlot = nLoadoutSlot;
-	}
-	else if ( !m_pOuter->IsAlive() )
-	{
-		m_pOuter->UpdateKillStreakEffects( 0, false );
-	}
-	else
-	{
-		static bool bAlternate = false;
-		Vector vColor = bAlternate ? m_pOuter->m_vEyeGlowColor1 : m_pOuter->m_vEyeGlowColor2;
-
-		if ( m_pOuter->m_pEyeGlowEffect[0] )
-		{
-			m_pOuter->m_pEyeGlowEffect[0]->SetControlPoint( CUSTOM_COLOR_CP1, vColor );
-		}
-		if ( m_pOuter->m_pEyeGlowEffect[1] )
-		{
-			m_pOuter->m_pEyeGlowEffect[1]->SetControlPoint( CUSTOM_COLOR_CP1, vColor );
-		}
-		//
-		bAlternate = !bAlternate;
-	}
-}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -5572,7 +5533,6 @@ void CTFPlayerShared::OnAddStealthed( void )
 	m_pOuter->ParticleProp()->StopParticlesNamed( "balloontoss_drip", true );
 
 	m_pOuter->UpdateSpyStateChange();
-	m_pOuter->UpdateKillStreakEffects( GetStreak( kTFStreak_Kills ) );
 #endif
 
 #ifdef GAME_DLL
@@ -5648,7 +5608,6 @@ void CTFPlayerShared::OnRemoveStealthed( void )
 
 #ifdef CLIENT_DLL
 	m_pOuter->UpdateSpyStateChange();
-	m_pOuter->UpdateKillStreakEffects( GetStreak( kTFStreak_Kills ) );
 #endif
 
 }

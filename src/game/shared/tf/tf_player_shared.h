@@ -244,13 +244,6 @@ public:
 		kBuffSlot_MAX,
 	};
 
-	enum ETFStreak
-	{
-		kTFStreak_Kills				= 0,
-		kTFStreak_KillsAll			= 1,	// Counts all kills not just attr based killstreak.  For Data collection purposes
-		kTFStreak_COUNT				= 2,
-	};
-
 	enum EKartStateFlags
 	{
 		kKartState_Driving			= 1 << 0,
@@ -366,7 +359,6 @@ public:
 	int		GetTeamTeleporterUsed( void ) { return m_nTeamTeleporterUsed; }
 
 	void	ClientDemoBuffThink( void );
-	void	ClientKillStreakBuffThink( void );
 #endif
 
 	int		CalculateObjectCost( CTFPlayer* pBuilder, int iObjectType );
@@ -593,15 +585,6 @@ public:
 
 	void SetDecapitations( int iVal )	{ m_iDecapitations = iVal; }
 	int GetDecapitations( void ) const	{ return m_iDecapitations; }
-
-	void SetStreak( ETFStreak streak_type, int iVal )		{ m_nStreaks.Set( streak_type, iVal ); }
-	int GetStreak( ETFStreak streak_type ) const		{ return m_nStreaks[streak_type]; }
-	int IncrementStreak( ETFStreak streak_type, int iVal )
-	{
-		m_nStreaks.Set( streak_type, m_nStreaks[streak_type] + iVal );
-		return m_nStreaks[streak_type];
-	}
-	void ResetStreaks( void )	{ for ( int streak_type = 0; streak_type < kTFStreak_COUNT; streak_type++ ) { m_nStreaks.Set( streak_type, 0 ); } }
 
 	void SetRevengeCrits( int iVal );
 	int GetRevengeCrits( void ) const { return m_iRevengeCrits; }
@@ -1035,11 +1018,6 @@ private:
 
 	CNetworkVar( int, m_iDecapitations );
 	int m_iOldDecapitations;
-
-	CNetworkArray( int, m_nStreaks, kTFStreak_COUNT );
-
-	int m_iOldKillStreak;
-	int m_iOldKillStreakWepSlot;
 
 	CNetworkVar( int, m_iRevengeCrits );
 

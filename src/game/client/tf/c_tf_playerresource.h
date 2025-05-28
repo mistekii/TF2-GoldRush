@@ -41,7 +41,6 @@ public:
 	int GetDamageBlocked( unsigned int nIndex );
 	int GetBonusPoints( unsigned int nIndex );
 	int	GetPlayerLevel( unsigned int nIndex ) { return GetArrayValue( nIndex, m_iPlayerLevel, 0 ); }
-	int GetStreak( unsigned int nIndex, CTFPlayerShared::ETFStreak streak_type );
 
 	void UpdatePlayerScoreStats( void );
 	void ResetPlayerScoreStats( int playerIndex = -1 );
@@ -94,8 +93,6 @@ private:
 	int		m_iDamageBlocked[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iBonusPoints[MAX_PLAYERS_ARRAY_SAFE];
 	int		m_iPlayerLevel[MAX_PLAYERS_ARRAY_SAFE];
-	// Pseudo multidimensional array [MAX_PLAYERS_ARRAY_SAFE][CTFPlayerShared::kTFStreak_COUNT]
-	int		m_iStreaks[(MAX_PLAYERS_ARRAY_SAFE) * CTFPlayerShared::kTFStreak_COUNT];
 
 	int		m_iPartyLeaderBlueTeamIndex;
 	int		m_iPartyLeaderRedTeamIndex;

@@ -318,7 +318,6 @@ CTFWeaponBase::CTFWeaponBase()
 	m_iHitsInTime = 0;
 	m_iProjectilesFiredInTime = 0;
 	m_iConsecutiveKills = 0;
-	m_iKillStreak = 0;
 	m_flClipScale = 1.f;
 #endif // GAME_DLL
 	m_iConsecutiveShots = 0;

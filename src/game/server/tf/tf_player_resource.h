@@ -60,8 +60,6 @@ protected:
 	CNetworkArray( int, m_iDamageBlocked, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iBonusPoints, MAX_PLAYERS_ARRAY_SAFE );
 	CNetworkArray( int, m_iPlayerLevel, MAX_PLAYERS_ARRAY_SAFE );
-	// Pseudo multidimensional array [MAX_PLAYERS_ARRAY_SAFE][CTFPlayerShared::kTFStreak_COUNT]
-	CNetworkArray( int, m_iStreaks, ( ( MAX_PLAYERS_ARRAY_SAFE ) * CTFPlayerShared::kTFStreak_COUNT ) );
 
 	CNetworkVar( int, m_iPartyLeaderRedTeamIndex );
 	CNetworkVar( int, m_iPartyLeaderBlueTeamIndex );

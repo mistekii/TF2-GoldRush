@@ -10429,24 +10429,6 @@ void CTFPlayer::Event_Killed( const CTakeDamageInfo &info )
 		}
 	}
 
-	// Reset Streaks to zero
-	m_Shared.ResetStreaks();
-	for ( int i = 0; i < WeaponCount(); i++) 
-	{
-		CTFWeaponBase *pWpn = ( CTFWeaponBase *)GetWeapon(i);
-		if ( !pWpn )
-			continue;
-		pWpn->SetKillStreak( 0 );
-	}
-
-	for ( int i = 0; i < GetNumWearables(); ++i )
-	{
-		CTFWearable* pWearable = dynamic_cast<CTFWearable*>( GetWearable(i) );
-		if ( !pWearable )
-			continue;
-		pWearable->SetKillStreak( 0 );
-	}
-
 	// Is the player inside a respawn time override volume?
 	FOR_EACH_VEC( ITriggerPlayerRespawnOverride::AutoList(), i )
 	{
@@ -12013,7 +11995,6 @@ void CTFPlayer::ForceRespawn( void )
 	{
 		m_iLastWeaponSlot = 1;
 		// Tell all the items we have that we've changed class. Some items need to change model.
-		// Also reset KillStreaks
 		for ( int i = 0; i < MAX_WEAPONS; i++ )
 		{
 			CTFWeaponBase *pWeapon = (CTFWeaponBase *)GetWeapon(i);
@@ -12033,24 +12014,6 @@ void CTFPlayer::ForceRespawn( void )
 			}
 			SaveLastWeaponSlot();
 		}
-	}
-
-	// Any Respawns will reset killstreaks
-	m_Shared.ResetStreaks();
-	for ( int i = 0; i < WeaponCount(); i++ )
-	{
-		CTFWeaponBase *pWpn = (CTFWeaponBase *)GetWeapon( i );
-		if ( !pWpn )
-			continue;
-		pWpn->SetKillStreak( 0 );
-	}
-
-	for ( int i = 0; i < GetNumWearables(); ++i )
-	{
-		CTFWearable* pWearable = dynamic_cast<CTFWearable*>( GetWearable( i ) );
-		if ( !pWearable )
-			continue;
-		pWearable->SetKillStreak( 0 );
 	}
 
 	RemoveAllItems( true );

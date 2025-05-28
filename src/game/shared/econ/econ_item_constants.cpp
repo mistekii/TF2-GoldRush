@@ -746,7 +746,7 @@ const char* GetHalloweenOfferingInvalidReason( const IEconItemInterface *pTestIt
 {
 	// Must either be a Cosmetic
 	// Taunt
-	// Allowable Tool (Strange part, Paint, name tag, killstreak).  Not crates, keys
+	// Allowable Tool (Strange part, Paint, name tag).  Not crates, keys
 	// Marketable Weapon ie Strange, Genuine, Vintage, paintkit
 
 	// Cannot be Unusual
@@ -835,8 +835,6 @@ const char* GetHalloweenOfferingInvalidReason( const IEconItemInterface *pTestIt
 		else if ( !V_strcmp( pToolType, "name" ) ) 
 			return NULL;
 		else if ( !V_strcmp( pToolType, "desc" ) ) 
-			return NULL;
-		else if ( !V_strcmp( pToolType, "killstreakifier" ) )
 			return NULL;
 		else if ( !V_strcmp( pToolType, "strangifier" ) )
 			return NULL;

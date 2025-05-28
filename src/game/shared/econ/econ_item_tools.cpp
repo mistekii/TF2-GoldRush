@@ -44,7 +44,6 @@ const unsigned int g_CapabilityApplicationMap[] =
 	ITEM_CAP_CAN_USE_STRANGE_PARTS,							// ITEM_CAP_CAN_USE_STRANGE_PARTS
 	ITEM_CAP_CAN_CARD_UPGRADE,								// ITEM_CAP_CAN_CARD_UPGRADE
 	ITEM_CAP_CAN_STRANGIFY,									// ITEM_CAP_CAN_STRANGIFY
-	ITEM_CAP_CAN_KILLSTREAKIFY,								// ITEM_CAP_CAN_KILLSTREAKIFY
 	ITEM_CAP_CAN_CONSUME,									// ITEM_CAP_CAN_CONSUME
 	ITEM_CAP_CAN_SPELLBOOK_PAGE,							// ITEM_CAP_CAN_SPELLBOOK_PAGE
 	ITEM_CAP_HAS_SLOTS,										// ITEM_CAP_HAS_SLOTS
@@ -1022,21 +1021,6 @@ bool CEconTool_Strangifier::CanApplyTo( const IEconItemInterface *pTool, const I
 }
 
 //-----------------------------------------------------------------------------
-bool CEconTool_KillStreakifier::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	// Make sure the item doesn't already have an effect
-	static CSchemaAttributeDefHandle pAttribDef_KillStreakEffect( "killstreak tier" );
-	float flEffectIndex = 0.0;
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pToolSubject, pAttribDef_KillStreakEffect, &flEffectIndex ) )
-		return false;
-
-	// Default rules
-	return CEconTool_Xifier::CanApplyTo( pTool, pToolSubject );
-}
-
 bool CEconTool_Unusualifier::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
 {
 	Assert( pTool );

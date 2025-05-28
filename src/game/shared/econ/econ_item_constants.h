@@ -217,64 +217,61 @@ enum EItemAction
 	k_EItemActionHalloween_UpdateMerasmusLootLevel_Add				= 200,			// set the level of the merasmus loot
 	k_EItemActionHalloween_UpdateMerasmusLootLevel_Remove			= 201,			
 
-	k_EItemActionRemoveItemKillStreak_Remove = 202,
-	k_EItemActionRemoveItemKillStreak_Add	 = 203,
+	k_EItemActionSupportAddOrModifyAttribute_Remove = 202,
+	k_EItemActionSupportAddOrModifyAttribute_Add	= 203,
 
-	k_EItemActionSupportAddOrModifyAttribute_Remove = 204,
-	k_EItemActionSupportAddOrModifyAttribute_Add	= 205,
+	k_EItemActionSpyVsEngyWar_JoinedWar	= 204,	// Never used on public
 
-	k_EItemActionSpyVsEngyWar_JoinedWar	= 206,	// Never used on public
+	k_EItemAction_QuestDrop							= 205,
 
-	k_EItemAction_QuestDrop							= 207,
+	k_EItemAction_OperationPass_Add					= 206, // Never used on public in TF
 
-	k_EItemAction_OperationPass_Add					= 208, // Never used on public in TF
+	k_EItemActionMarket_Add							= 207,
+	k_EItemActionMarket_Remove						= 208,
 
-	k_EItemActionMarket_Add							= 209,
-	k_EItemActionMarket_Remove						= 210,
+	k_EItemAction_QuestComplete_Reward				= 209,
+	k_EItemAction_QuestComplete_Remove				= 210,
 
-	k_EItemAction_QuestComplete_Reward				= 211,
-	k_EItemAction_QuestComplete_Remove				= 212,
+	k_EItemAction_QuestLoaner_Add					= 211,
+	k_EItemActionStrangeCountTransfer_Add			= 212,
+	k_EItemActionStrangeCountTransfer_Remove		= 213,
 
-	k_EItemAction_QuestLoaner_Add					= 213,
-	k_EItemActionStrangeCountTransfer_Add			= 214,
-	k_EItemActionStrangeCountTransfer_Remove		= 215,
+	k_EItemActionCraftCollectionUpgrade_Add			= 214,
+	k_EItemActionCraftCollectionUpgrade_Remove		= 215,
 
-	k_EItemActionCraftCollectionUpgrade_Add			= 216,
-	k_EItemActionCraftCollectionUpgrade_Remove		= 217,
+	k_EItemActionCraftHalloweenOffering_Add			= 216,
+	k_EItemActionCraftHalloweenOffering_Remove		= 217,
 
-	k_EItemActionCraftHalloweenOffering_Add			= 218,
-	k_EItemActionCraftHalloweenOffering_Remove		= 219,
+	k_EItemActionRemoveItemGiftedBy_Remove			= 218,
+	k_EItemActionRemoveItemGiftedBy_Add				= 219,
 
-	k_EItemActionRemoveItemGiftedBy_Remove			= 220,
-	k_EItemActionRemoveItemGiftedBy_Add				= 221,
+	k_EItemActionAddParticleVerticalAttr_Remove		= 220,
+	k_EItemActionAddParticleVerticalAttr_Add		= 221,
 
-	k_EItemActionAddParticleVerticalAttr_Remove		= 222,
-	k_EItemActionAddParticleVerticalAttr_Add		= 223,
+	k_EItemActionAddParticleUseHeadOriginAttr_Remove = 222,
+	k_EItemActionAddParticleUseHeadOriginAttr_Add	= 223,
 
-	k_EItemActionAddParticleUseHeadOriginAttr_Remove = 224,
-	k_EItemActionAddParticleUseHeadOriginAttr_Add	= 225,
+	k_EItemActionRemoveItemDynamicAttr_Add			= 224,
+	k_EItemActionRemoveItemDynamicAttr_Remove		= 225,
 
-	k_EItemActionRemoveItemDynamicAttr_Add			= 226,
-	k_EItemActionRemoveItemDynamicAttr_Remove		= 227,
+	k_EItemActionCraftStatClockTradeUp_Add			= 226,
+	k_EItemActionCraftStatClockTradeUp_Remove		= 227,
 
-	k_EItemActionCraftStatClockTradeUp_Add			= 228,
-	k_EItemActionCraftStatClockTradeUp_Remove		= 229,
+	k_EItemActionViralCompetitiveBetaPass_Drop		= 228,
 
-	k_EItemActionViralCompetitiveBetaPass_Drop		= 230,
+	k_EItemActionSupportDeleteAttribute_Remove		= 229,
+	k_EItemActionSupportDeleteAttribute_Add			= 230,
 
-	k_EItemActionSupportDeleteAttribute_Remove		= 231,
-	k_EItemActionSupportDeleteAttribute_Add			= 232,
+	k_EItemActionCYOABloodMoneyPurchase				= 231,
 
-	k_EItemActionCYOABloodMoneyPurchase				= 233,
-
-	k_EItemActionPaintKitConsume_Remove				= 234,
-	k_EItemActionPaintKitConsume_Add				= 235,
-	k_EItemActionDeletedAccountTerminated			= 236,
+	k_EItemActionPaintKitConsume_Remove				= 232,
+	k_EItemActionPaintKitConsume_Add				= 233,
+	k_EItemActionDeletedAccountTerminated			= 234,
 
 	// The "OneOffRefund" asset api, for setting up specific/manual refund offers that may also restore related items to
 	// the user's inventory (e.g. the key/crate used to obtain something)
-	k_EItemActionOneOffRefund_Add					= 237,
-	k_EItemActionOneOffRefund_Remove				= 238,
+	k_EItemActionOneOffRefund_Add					= 235,
+	k_EItemActionOneOffRefund_Remove				= 236,
 
 	// Adding a new action?
 	// Be sure to:
@@ -633,60 +630,59 @@ enum kill_eater_event_t
 	kKillEaterEvent_InvisibleSpiesKilled,					// (part) we killed an invisible spy
 	kKillEaterEvent_MedicsWithFullUberKilled,				// (part) we killed a fully ubered medic
 	kKillEaterEvent_KillWhileLowHealth,						// (part) we killed someone while we had <10% max health
-	kKillEaterEvent_HalloweenKill,							// (part) we killed someone during the Halloween holiday
+	kKillEaterEvent_HalloweenKill,				// = 40			// (part) we killed someone during the Halloween holiday
 	kKillEaterEvent_DefenderKill,							// (part) we killed someone carrying the intel, pushing the cart, or capping a point
 	kKillEaterEvent_UnderwaterKill,							// (part) we killed someone who was completely submerged
 	kKillEaterEvent_KillWhileUbercharged,					// (part) we killed someone while we were invulnerable
-	kKillEaterEvent_FoodEaten,					// = 50		// We ate our food
+	kKillEaterEvent_FoodEaten,					    		// We ate our food
 	kKillEaterEvent_BannersDeployed,						// We deployed a banner buff
 	kKillEaterEvent_NEGATIVE_SniperShotsMissed,				// (part) we shot our sniper rifle and didnt hit anything
 	kKillEaterEvent_NEGATIVE_UbersDropped,					// (part) we died with a full ubercharge
 	kKillEaterEvent_NEGATIVE_DeathsWhileCarryingBuilding,	// (part) we died while carrying a building
 	kKillEaterEvent_NEGATIVE_DeathsFromCratering,			// (part) we died from cratering
-	kKillEaterEvent_NEGATIVE_DeathsFromEnvironment,			// (part) we died from environmental damage
+	kKillEaterEvent_NEGATIVE_DeathsFromEnvironment, // = 50	// (part) we died from environmental damage
 	kKillEaterEvent_NEGATIVE_Deaths,						// (part) we died :(
 	kKillEaterEvent_TimeCloaked,							// Time we are cloaked
 	kKillEaterEvent_HealingProvided,						// Health Provided to Allies
-	kKillEaterEvent_TeleportsProvided,			// = 60		// Teleports Provided to Allies
+	kKillEaterEvent_TeleportsProvided,			    		// Teleports Provided to Allies
 	kKillEaterEvent_LongDistanceKill,						// (part) we dealt the killing blow (while alive) from far away
 	kKillEaterEvent_UniqueEvent__KilledAccountWithItem,					// (part) (unique event) how many individual accounts have we killed?
 	kKillEaterEvent_PointsScored,						// How many score points we've accumulated
 	kKillEaterEvent_DoubleDonks,						// Double-Donks scored with the loose cannon
 	kKillEaterEvent_TeammatesWhipped,					// Whipped Teammates with the Disciplinary Action
-	kKillEaterEvent_VictoryTimeKill,					// Kills while in Victory / Bonus Time
+	kKillEaterEvent_VictoryTimeKill,			// = 60 // Kills while in Victory / Bonus Time
 	kKillEaterEvent_TauntKill,					// Taunt Kills
 	kKillEaterEvent_PlayersWearingUnusualKill,	// (part) we killed someone wearing an unusual hat (!)
 	kKillEaterEvent_BurningEnemyKill,			// (part) we killed someone who was on fire up until they died
-	kKillEaterEvent_KillstreaksEnded,			// = 80 // (part) we killed someone who was on a killstreak
 	kKillEaterEvent_KillcamTaunts,				// (cosmetic part) we appeared wearing this item in the killcam taunting
 	kKillEaterEvent_DamageDealt,				// (part) we have dealt this much damage to people
 	kKillEaterEvent_FiresSurvived,				// (cosmetic part) we were lit on fire wearing this item and then the fire went out and we were still alive
 	kKillEaterEvent_AllyHealingDone,			// (part) we have healed this much (directly, so doesn't count Mad Milk, etc. because we lose the item pointer at some point); also ignores self heal (ie., Concheror buff)
 	kKillEaterEvent_PointBlankKills,			// (part) we killed someone while standing right next to them
 	kKillEaterEvent_PlayerKillsByManualControlOfSentry,	// Kills from wrangled a sentry
-	kKillEaterEvent_CosmeticKills,				// (cosmetic part) kills
+	kKillEaterEvent_CosmeticKills,				// = 70 (cosmetic part) kills
 	kKillEaterEvent_FullHealthKills,			// (part) Kills while at fullhealth
 	kKillEaterEvent_TauntingPlayerKills,		// (part) Taunting Player Kills
-	kKillEaterEvent_Halloween_OverworldKills, // = 90
+	kKillEaterEvent_Halloween_OverworldKills,
 	kKillEaterEvent_Halloween_UnderworldKills,
 	kKillEaterEvent_Halloween_MinigamesWon,
 	kKillEaterEvent_NonCritKills,				// part kills that are not crit or mini crit
 	kKillEaterEvent_PlayersHit,					// part
 	kKillEaterEvent_CosmeticAssists,			// Cosmetic part
 	kKillEaterEvent_CosmeticOperationContractsCompleted, // Operation Stat Tracker
-	kKillEaterEvent_CosmeticOperationKills, // Operation Stat Tracker
+	kKillEaterEvent_CosmeticOperationKills, // = 80 // Operation Stat Tracker
 	kKillEaterEvent_CosmeticOperationContractsPoints,
 	kKillEaterEvent_CosmeticOperationBonusPoints,
-	kKillEaterEvent_TauntsPerformed, // = 100	// Strange Taunts
+	kKillEaterEvent_TauntsPerformed,    	// Strange Taunts
 	kKillEaterEvent_InvasionKills,				// Kills During Invasion Event.  Locked after Operation
 	kKillEaterEvent_InvasionKillsOnMap01,
 	kKillEaterEvent_InvasionKillsOnMap02,
 	kKillEaterEvent_InvasionKillsOnMap03,
 	kKillEaterEvent_InvasionKillsOnMap04,
 	kKillEaterEvent_HalloweenSouls,				// Halloween
-	kKillEaterEvent_HalloweenContractsCompleted,
+	kKillEaterEvent_HalloweenContractsCompleted, // = 90
 	kKillEaterEvent_HalloweenOfferings,
-	kKillEaterEvent_ContractPointsEarned, // = 110
+	kKillEaterEvent_ContractPointsEarned,
 	kKillEaterEvent_ContractPointsContributedToFriends,
 
 	// NEW ENTRIES MUST BE ADDED AT THE BOTTOM

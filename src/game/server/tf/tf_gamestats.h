@@ -85,7 +85,6 @@ public:
 	void Event_PlayerLoadoutChanged( CTFPlayer *pPlayer, bool bForceReport );
 	void Event_PlayerThrowableHit( CTFPlayer *pPlayer );
 	void Event_PlayerThrowableKill( CTFPlayer *pPlayer );
-	void Event_PlayerEarnedKillStreak( CTFPlayer *pPlayer );
 
 	void Event_HalloweenBossEvent( uint8 unBossType, uint16 unBossLevel, uint8 unEventType, uint8 unPlayersInvolved, float fElapsedTime );
 
