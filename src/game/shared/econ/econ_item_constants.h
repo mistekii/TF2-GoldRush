@@ -225,59 +225,56 @@ enum EItemAction
 
 	k_EItemActionSpyVsEngyWar_JoinedWar	= 206,	// Never used on public
 
-	k_EItemAction_UpdateDuckBadgeLevel_Add			= 207,
-	k_EItemAction_UpdateDuckBadgeLevel_Remove		= 208,
+	k_EItemAction_QuestDrop							= 207,
 
-	k_EItemAction_QuestDrop							= 209,
+	k_EItemAction_OperationPass_Add					= 208, // Never used on public in TF
 
-	k_EItemAction_OperationPass_Add					= 210, // Never used on public in TF
+	k_EItemActionMarket_Add							= 209,
+	k_EItemActionMarket_Remove						= 210,
 
-	k_EItemActionMarket_Add							= 211,
-	k_EItemActionMarket_Remove						= 212,
+	k_EItemAction_QuestComplete_Reward				= 211,
+	k_EItemAction_QuestComplete_Remove				= 212,
 
-	k_EItemAction_QuestComplete_Reward				= 213,
-	k_EItemAction_QuestComplete_Remove				= 214,
+	k_EItemAction_QuestLoaner_Add					= 213,
+	k_EItemActionStrangeCountTransfer_Add			= 214,
+	k_EItemActionStrangeCountTransfer_Remove		= 215,
 
-	k_EItemAction_QuestLoaner_Add					= 215,
-	k_EItemActionStrangeCountTransfer_Add			= 216,
-	k_EItemActionStrangeCountTransfer_Remove		= 217,
+	k_EItemActionCraftCollectionUpgrade_Add			= 216,
+	k_EItemActionCraftCollectionUpgrade_Remove		= 217,
 
-	k_EItemActionCraftCollectionUpgrade_Add			= 218,
-	k_EItemActionCraftCollectionUpgrade_Remove		= 219,
+	k_EItemActionCraftHalloweenOffering_Add			= 218,
+	k_EItemActionCraftHalloweenOffering_Remove		= 219,
 
-	k_EItemActionCraftHalloweenOffering_Add			= 220,
-	k_EItemActionCraftHalloweenOffering_Remove		= 221,
+	k_EItemActionRemoveItemGiftedBy_Remove			= 220,
+	k_EItemActionRemoveItemGiftedBy_Add				= 221,
 
-	k_EItemActionRemoveItemGiftedBy_Remove			= 222,
-	k_EItemActionRemoveItemGiftedBy_Add				= 223,
+	k_EItemActionAddParticleVerticalAttr_Remove		= 222,
+	k_EItemActionAddParticleVerticalAttr_Add		= 223,
 
-	k_EItemActionAddParticleVerticalAttr_Remove		= 224,
-	k_EItemActionAddParticleVerticalAttr_Add		= 225,
+	k_EItemActionAddParticleUseHeadOriginAttr_Remove = 224,
+	k_EItemActionAddParticleUseHeadOriginAttr_Add	= 225,
 
-	k_EItemActionAddParticleUseHeadOriginAttr_Remove = 226,
-	k_EItemActionAddParticleUseHeadOriginAttr_Add	= 227,
+	k_EItemActionRemoveItemDynamicAttr_Add			= 226,
+	k_EItemActionRemoveItemDynamicAttr_Remove		= 227,
 
-	k_EItemActionRemoveItemDynamicAttr_Add			= 228,
-	k_EItemActionRemoveItemDynamicAttr_Remove		= 229,
+	k_EItemActionCraftStatClockTradeUp_Add			= 228,
+	k_EItemActionCraftStatClockTradeUp_Remove		= 229,
 
-	k_EItemActionCraftStatClockTradeUp_Add			= 230,
-	k_EItemActionCraftStatClockTradeUp_Remove		= 231,
+	k_EItemActionViralCompetitiveBetaPass_Drop		= 230,
 
-	k_EItemActionViralCompetitiveBetaPass_Drop		= 232,
+	k_EItemActionSupportDeleteAttribute_Remove		= 231,
+	k_EItemActionSupportDeleteAttribute_Add			= 232,
 
-	k_EItemActionSupportDeleteAttribute_Remove		= 233,
-	k_EItemActionSupportDeleteAttribute_Add			= 234,
+	k_EItemActionCYOABloodMoneyPurchase				= 233,
 
-	k_EItemActionCYOABloodMoneyPurchase				= 235,
-
-	k_EItemActionPaintKitConsume_Remove				= 236,
-	k_EItemActionPaintKitConsume_Add				= 237,
-	k_EItemActionDeletedAccountTerminated			= 238,
+	k_EItemActionPaintKitConsume_Remove				= 234,
+	k_EItemActionPaintKitConsume_Add				= 235,
+	k_EItemActionDeletedAccountTerminated			= 236,
 
 	// The "OneOffRefund" asset api, for setting up specific/manual refund offers that may also restore related items to
 	// the user's inventory (e.g. the key/crate used to obtain something)
-	k_EItemActionOneOffRefund_Add					= 239,
-	k_EItemActionOneOffRefund_Remove				= 240,
+	k_EItemActionOneOffRefund_Add					= 237,
+	k_EItemActionOneOffRefund_Remove				= 238,
 
 	// Adding a new action?
 	// Be sure to:
@@ -935,7 +932,6 @@ enum EHoliday
 	kHoliday_Halloween,
 	kHoliday_Christmas,
 	kHoliday_CommunityUpdate,
-	kHoliday_EOTL,
 	kHoliday_Valentines,
 	kHoliday_MeetThePyro,
 	kHoliday_FullMoon,

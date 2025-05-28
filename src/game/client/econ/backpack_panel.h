@@ -84,7 +84,6 @@ public:
 	MESSAGE_FUNC( DoEditSlot, "Context_EditSlot" );
 	MESSAGE_FUNC( DoRefurbishItem, "Context_RefurbishItem" );
 	MESSAGE_FUNC( DoGetItemFromStore, "Context_GetItemFromStore" );
-	MESSAGE_FUNC( DoOpenDuckLeaderboards, "Context_OpenDuckLeaderboards" );
 	MESSAGE_FUNC( DoInspectModel, "Context_InspectModel" );
 	MESSAGE_FUNC( DoPreviewPaintkitsOnItem, "Context_PreviewPaintkitsOnItem" );
 	MESSAGE_FUNC( DoPreviewItemsWithPaintkit, "Context_PreviewItemsWithPaintkit" );

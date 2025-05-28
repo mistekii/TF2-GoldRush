@@ -318,24 +318,6 @@ void CEconItemDescription::YieldingCacheDescriptionData( const CLocalizationProv
 	// New users helped.
 	YieldingFillOutAccountTypeCache( unAccountID, CTFPlayerInfo::k_nTypeID );
 
-#ifdef CLIENT_DLL
-	// Duck LeaderBoards
-	{
-		static CSchemaAttributeDefHandle pAttrDef_DisplayDuckLeaderboard( "display duck leaderboard" );
-		if ( pEconItem->FindAttribute( pAttrDef_DisplayDuckLeaderboard ) )
-		{
-			CUtlVector< AccountID_t > accountIds;
-			Leaderboards_GetDuckLeaderboardSteamIDs( accountIds );
-
-			FOR_EACH_VEC( accountIds, i )
-			{
-				// Look up the persona names for each account referenced in the leaderboard
-				YieldingFillOutAccountPersonaName( pLocalizationProvider, accountIds[i] );
-			}
-		}
-	}
-#endif // CLIENT_DLL
-
 
 #endif // PROJECT_TF
 }
@@ -805,24 +787,6 @@ static void GenerateLocalizedFullItemName
 	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || unQuality == AE_PAINTKITWEAPON || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
 								 ? "ItemNameNormalOrUniqueQualityFormat" 
 								 : "ItemNameQualityFormat";
-
-	// TODO : Make Generic
-	// Journal Leveling
-	uint32 unDuckBadgeLevel;
-	static CSchemaAttributeDefHandle pAttrDef_DuckBadgeLevel( "duck rating" );
-	enum { kDuckBadgeLength = 64, };
-	locchar_t szDuckBadge[kDuckBadgeLength] = LOCCHAR("");
-	{	//if ( pItem && FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItem, pAttr_DuckLevelBadge, &iDuckBadgeLevel ) )
-		if ( pAttrDef_DuckBadgeLevel && FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pEconItem, pAttrDef_DuckBadgeLevel, &unDuckBadgeLevel ) && unDuckBadgeLevel != 0 )
-		{
-			const CItemLevelingDefinition *pLevelDef = GetItemSchema()->GetItemLevelForScore( "Journal_DuckBadge", unDuckBadgeLevel );
-			if ( pLevelDef )
-			{
-				loc_scpy_safe( szDuckBadge, pLocalizationProvider->Find( pLevelDef->GetNameLocalizationKey() ) );
-				loc_scat_safe( szDuckBadge, LOCCHAR(" ") );
-			}
-		}
-	}
 
 	enum { kLocalizedCrateSeriesLength = 128, };
 	locchar_t szLocalizedCrateSeries[ kLocalizedCrateSeriesLength ] = LOCCHAR("");

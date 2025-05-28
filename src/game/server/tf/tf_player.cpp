@@ -937,7 +937,6 @@ CTFPlayer::CTFPlayer()
 	m_flHalloweenKartPushEventTime = 0.f;
 	m_bCheckKartCollision = false;
 	m_flHHHKartAttackTime = 0.f;
-	m_flNextBonusDucksVOAllowedTime = 0.f;
 
 	m_flGhostLastHitByKartTime = 0.f;
 
@@ -2027,16 +2026,6 @@ void CTFPlayer::AddHalloweenKartPushEvent( CTFPlayer *pOther, CBaseEntity *pInfl
 		uint32 nNumToSpawn = ( iDamage / 5 ) + 1;
 		nNumToSpawn = RemapValClamped( nNumPlayers, 8, 16, nNumToSpawn, 1 );
 
-		if ( gpGlobals->curtime > m_flNextBonusDucksVOAllowedTime )
-		{
-			// Tell this user to play a "Bonus Ducks!" line. 
-			CSingleUserRecipientFilter filter( pOther );
-			UserMessageBegin( filter, "BonusDucks" );
-				WRITE_BYTE( entindex() );
-				WRITE_BYTE( false );
-			MessageEnd();
-		}
-
 		while( nNumToSpawn-- )
 		{
 			CHalloweenPickup *pPickup = dynamic_cast< CHalloweenPickup * >( CreateEntityByName( "tf_halloween_pickup" ) );
@@ -2126,7 +2115,6 @@ void CTFPlayer::PrecacheKart()
 	PrecacheScriptSound( "BumperCar.SpeedBoostStop" );
 	PrecacheScriptSound( "BumperCar.Jump" );
 	PrecacheScriptSound( "BumperCar.JumpLand" );
-	PrecacheScriptSound( "sf14.Merasmus.DuckHunt.BonusDucks" );
 
 	PrecacheParticleSystem( "kartimpacttrail" );
 	PrecacheParticleSystem( "kart_dust_trail_red" );
@@ -14341,15 +14329,6 @@ void CTFPlayer::DoNoiseMaker( void )
 	}
 
 	float flDelay = 1.0f;
-
-	// Duck Badge Cooldown is based on badge level.  Noisemaker is more like an easter egg
-	CSchemaAttributeDefHandle pAttr_DuckLevelBadge( "duck badge level" );
-	uint32 iDuckBadgeLevel = 0;
-
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItem, pAttr_DuckLevelBadge, &iDuckBadgeLevel ) )
-	{
-		flDelay = 5.0f;
-	}
 	
 	// Throttle the usage rate to sound duration plus some dead time.
 	m_Shared.SetNextNoiseMakerTime( gpGlobals->curtime + flSoundLength + flDelay );

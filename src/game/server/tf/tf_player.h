@@ -1323,7 +1323,6 @@ private:
 	float				m_flHalloweenKartPushEventTime;
 	bool				m_bCheckKartCollision;
 	EHANDLE				m_hKartBombHeadTarget;
-	float				m_flNextBonusDucksVOAllowedTime;
 
 	CNetworkVar( int,	m_iKartHealth );
 

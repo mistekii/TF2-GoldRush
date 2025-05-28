@@ -660,13 +660,6 @@ void CTeamControlPoint::InternalSetOwner( int iCapTeam, bool bMakeSound, int iNu
 
 			CBaseMultiplayerPlayer *pPlayer = ToBaseMultiplayerPlayer( UTIL_PlayerByIndex( playerIndex ) );
 			PlayerCapped( pPlayer );
-
-#ifdef TF_DLL
-			if ( TFGameRules() && TFGameRules()->IsHolidayActive( kHoliday_EOTL ) )
-			{
-				TFGameRules()->DropBonusDuck( pPlayer->GetAbsOrigin(), ToTFPlayer( pPlayer ), NULL, NULL, false, true );
-			}
-#endif
 		}
 
 		// Remap team to get first game team = 1

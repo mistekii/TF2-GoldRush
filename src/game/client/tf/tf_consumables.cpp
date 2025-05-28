@@ -580,11 +580,6 @@ void CEconTool_TFEventEnableHalloween::OnClientUseConsumable( CEconItemView *pIt
 }
 
 //-----------------------------------------------------------------------------
-void CEconTool_DuckToken::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
-{
-	ClientConsumableTool_Generic( pItem, pParent );
-}
-//-----------------------------------------------------------------------------
 void CEconTool_GrantOperationPass::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
 {
 	Assert( pItem );

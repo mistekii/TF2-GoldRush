@@ -154,7 +154,6 @@ const char *g_Capabilities[] =
 	"can_consume",				// ITEM_CAP_CAN_CONSUME_ITEMS
 	"can_spell_page",			// ITEM_CAP_CAN_SPELLBOOK_PAGE
 	"has_slots",				// ITEM_CAP_HAS_SLOTS
-	"duck_upgradable",			// ITEM_CAP_DUCK_UPGRADABLE
 	"can_unusualify",			// ITEM_CAP_CAN_UNUSUALIFY
 };
 COMPILE_TIME_ASSERT( ARRAYSIZE(g_Capabilities) == NUM_ITEM_CAPS );
@@ -4005,15 +4004,6 @@ IEconTool *CEconItemSchema::CreateEconToolImpl( const char *pszToolType, const c
 			if ( pszUsageRestriction )					return NULL;
 
 			return new CEconTool_ClassTransmogrifier( pszToolType, pszUseString, unCapabilities, pUsageKV );
-		}
-
-		if ( !V_stricmp( pszToolType, "duck_token" ) )
-		{
-			// Error checking -- make sure we aren't setting properties in the schema that we don't support.
-			if ( pszUsageRestriction )					return NULL;
-			if ( pUsageKV )								return NULL;
-
-			return new CEconTool_DuckToken( pszToolType, unCapabilities );
 		}
 
 		if ( !V_stricmp( pszToolType, "grant_operation_pass" ) )

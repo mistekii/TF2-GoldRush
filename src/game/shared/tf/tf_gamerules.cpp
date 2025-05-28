@@ -126,7 +126,6 @@
 
 #include "econ_holidays.h"
 #include "rtime.h"
-#include "tf_duckleaderboard.h"
 
 #include "tier3/tier3.h"
 // memdbgon must be the last include file in a .cpp file!!!
@@ -582,7 +581,6 @@ ConVar tf_halloween_zombie_mob_spawn_count( "tf_halloween_zombie_mob_spawn_count
 ConVar tf_halloween_allow_truce_during_boss_event( "tf_halloween_allow_truce_during_boss_event", "0", FCVAR_NOTIFY, "Determines if RED and BLU can damage each other while fighting Monoculus or Merasmus on non-Valve maps." );
 
 ConVar tf_player_spell_drop_on_death_rate( "tf_player_spell_drop_on_death_rate", "0", FCVAR_REPLICATED );
-ConVar tf_player_drop_bonus_ducks( "tf_player_drop_bonus_ducks", "-1", FCVAR_REPLICATED, "-1 Default (Holiday-based)\n0 - Force off\n1 - Force on" );
 
 ConVar tf_allow_player_name_change( "tf_allow_player_name_change", "1", FCVAR_NOTIFY, "Allow player name changes." );
 
@@ -590,8 +588,6 @@ ConVar tf_weapon_criticals_distance_falloff( "tf_weapon_criticals_distance_fallo
 ConVar tf_weapon_minicrits_distance_falloff( "tf_weapon_minicrits_distance_falloff", "0", FCVAR_CHEAT, "Mini-crit weapon damage will take distance into account." );
 
 ConVar mp_spectators_restricted( "mp_spectators_restricted", "0", FCVAR_NONE, "Prevent players on game teams from joining team spectator if it would unbalance the teams." );
-
-ConVar tf_test_special_ducks( "tf_test_special_ducks", "1", FCVAR_DEVELOPMENTONLY );
 
 ConVar tf_mm_abandoned_players_per_team_max( "tf_mm_abandoned_players_per_team_max", "1", FCVAR_DEVELOPMENTONLY );
 #endif // GAME_DLL
@@ -770,7 +766,6 @@ static bool BIsCvarIndicatingHolidayIsActive( int iCvarValue, /*EHoliday*/ int e
 	case kHoliday_HalloweenOrFullMoon:				return iCvarValue == kHoliday_Halloween || iCvarValue == kHoliday_FullMoon || iCvarValue == kHoliday_HalloweenOrFullMoon || iCvarValue == kHoliday_HalloweenOrFullMoonOrValentines;
 	case kHoliday_HalloweenOrFullMoonOrValentines:	return iCvarValue == kHoliday_Halloween || iCvarValue == kHoliday_FullMoon || iCvarValue == kHoliday_Valentines || iCvarValue == kHoliday_HalloweenOrFullMoon || iCvarValue == kHoliday_HalloweenOrFullMoonOrValentines;
 	case kHoliday_AprilFools:						return iCvarValue == kHoliday_AprilFools;
-	case kHoliday_EOTL:								return iCvarValue == kHoliday_EOTL;
 	case kHoliday_CommunityUpdate:					return iCvarValue == kHoliday_CommunityUpdate;
 	case kHoliday_Summer:							return iCvarValue == kHoliday_Summer;
 	}
@@ -963,20 +958,6 @@ static ConCommand randommap( "randommap", cc_RandomMap, "Changelevel to a random
 #endif	// GAME_DLL
 
 #ifdef GAME_DLL
-static bool PlayerHasDuckStreaks( CTFPlayer *pPlayer )
-{
-	CEconItemView *pActionItem = pPlayer->GetEquippedItemForLoadoutSlot( LOADOUT_POSITION_ACTION );
-	if ( !pActionItem )
-		return false;
-
-	// Duck Badge Cooldown is based on badge level.  Noisemaker is more like an easter egg
-	static CSchemaAttributeDefHandle pAttr_DuckStreaks( "duckstreaks active" );
-	uint32 iDuckStreaksActive = 0;
-
-	// Don't care about the level, just if the attribute is found
-	return FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pActionItem, pAttr_DuckStreaks, &iDuckStreaksActive ) && iDuckStreaksActive > 0;
-}
-
 void ValidateCapturesPerRound( IConVar *pConVar, const char *oldValue, float flOldValue )
 {
 	ConVarRef var( pConVar );
@@ -4179,25 +4160,6 @@ void CTFGameRules::SetupOnRoundStart( void )
 		pLocations->Element( iLocation ).m_qAngles = pLocation->GetAbsAngles();
 
 		UTIL_Remove( pLocation );
-	}
-
-	// swap our train model for the EOTL holiday
-	if ( IsHolidayActive( kHoliday_EOTL ) )
-	{
-		for ( int i = 0; i < IPhysicsPropAutoList::AutoList().Count(); i++ )
-		{
-			CPhysicsProp *pPhysicsProp = static_cast<CPhysicsProp*>( IPhysicsPropAutoList::AutoList()[i] );
-			const char *pszTemp = pPhysicsProp->GetModelName().ToCStr();
-
-			if ( FStrEq( pszTemp, "models/props_trainyard/bomb_cart.mdl" ) )
-			{
-				pPhysicsProp->SetModel( "models/props_trainyard/bomb_eotl_blue.mdl" );
-			}
-			else if ( FStrEq( pszTemp, "models/props_trainyard/bomb_cart_red.mdl" ) )
-			{
-				pPhysicsProp->SetModel( "models/props_trainyard/bomb_eotl_red.mdl" );
-			}
-		}
 	}
 
 	m_flMatchSummaryTeleportTime = -1.f;
@@ -9456,270 +9418,6 @@ void CTFGameRules::DropSpellPickup( const Vector& vPosition, int nTier /*= 0*/ )
 }
 
 //-----------------------------------------------------------------------------
-bool CTFGameRules::ShouldDropBonusDuck( void )
-{
-	if ( tf_player_drop_bonus_ducks.GetInt() < 0 )
-	{
-		return IsHolidayActive( kHoliday_EOTL );
-	}
-	else if ( tf_player_drop_bonus_ducks.GetInt() > 0 )
-	{
-		return true;
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool CTFGameRules::ShouldDropBonusDuckFromPlayer( CTFPlayer *pTFScorer, CTFPlayer *pTFVictim )
-{
-	if ( !pTFScorer || !pTFVictim )
-		return false;
-
-	// Only drop if bot is not involved
-	if ( pTFScorer->IsBot() || pTFVictim->IsBot() || pTFScorer == pTFVictim )
-		return false;
-
-	return ShouldDropBonusDuck();
-}
-
-//-----------------------------------------------------------------------------
-int CTFGameRules::GetDuckSkinForClass( int nTeam, int nClass ) const
-{
-	int nSkin = 0;
-	if ( nTeam >= FIRST_GAME_TEAM )
-	{
-		bool bRed = ( nTeam == TF_TEAM_RED );
-
-		switch ( nClass )
-		{
-		case TF_CLASS_SCOUT:
-			nSkin = bRed ? 3 : 12;
-			break;
-		case TF_CLASS_SNIPER:
-			nSkin = bRed ? 4 : 13;
-			break;
-		case TF_CLASS_SOLDIER:
-			nSkin = bRed ? 5 : 14;
-			break;
-		case TF_CLASS_DEMOMAN:
-			nSkin = bRed ? 6 : 15;
-			break;
-		case TF_CLASS_MEDIC:
-			nSkin = bRed ? 7 : 16;
-			break;
-		case TF_CLASS_HEAVYWEAPONS:
-			nSkin = bRed ? 8 : 17;
-			break;
-		case TF_CLASS_PYRO:
-			nSkin = bRed ? 9 : 18;
-			break;
-		case TF_CLASS_SPY:
-			nSkin = bRed ? 10 : 19;
-			break;
-		case TF_CLASS_ENGINEER:
-			nSkin = bRed ? 11 : 20;
-			break;
-		default:
-			nSkin = bRed ? 1 : 2;
-			break;
-		}
-	}
-
-	return nSkin;
-}
-
-//-----------------------------------------------------------------------------
-//
-ConVar tf_duck_edict_limit( "tf_duck_edict_limit", "1900", FCVAR_REPLICATED, "Maximum number of edicts allowed before spawning a duck" );
-ConVar tf_duck_edict_warning( "tf_duck_edict_warning", "1800", FCVAR_REPLICATED, "Maximum number of edicts allowed before slowing duck spawn rate" );
-void CTFGameRules::DropBonusDuck( const Vector& vPosition, CTFPlayer *pTFCreator /*=NULL*/, CTFPlayer *pAssister /*=NULL*/, CTFPlayer *pTFVictim /*=NULL*/, bool bCrit /*=false*/, bool bObjective /*=false*/) const
-{
-	if ( gEntList.NumberOfEdicts() > tf_duck_edict_limit.GetInt() )
-	{
-		Warning( "Warning: High level of Edicts, Not spawning Ducks \n" );
-		return;
-	}
-
-	static CSchemaAttributeDefHandle pAttr_DuckLevelBadge( "duck badge level" );
-
-	// Find Badge and increase number of ducks based on badge level (1 duck per 5 levels)
-	// Look through equipped items, if one is a duck badge use its level
-	int iDuckFlags = 0;
- 	if ( pTFCreator == NULL || bObjective )
-	{
-		iDuckFlags |= EDuckFlags::DUCK_FLAG_OBJECTIVE;
-	}
-	uint32 iDuckBadgeLevel = 0;
-
-	if ( pTFCreator )
-	{
-		for ( int i = 0; i < pTFCreator->GetNumWearables(); ++i )
-		{
-			CTFWearable* pWearable = dynamic_cast<CTFWearable*>( pTFCreator->GetWearable( i ) );
-			if ( !pWearable )
-				continue;
-
-			//if ( pWearable->GetAttributeContainer() && pWearable->GetAttributeContainer()->GetItem() )
-			{
-				//CEconItemView *pItem = pWearable->GetAttributeContainer()->GetItem();
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pWearable, iDuckBadgeLevel, duck_badge_level );
-				//if ( pItem && FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pItem, pAttr_DuckLevelBadge, &iDuckBadgeLevel ) )
-				{
-					iDuckBadgeLevel++;
-				}
-			}			
-		}
-	}
-	// Badges only go to max of 5 now instead of 10 so just doubling the output value
-	int iDuckPower = Min( (int)iDuckBadgeLevel * 2, 11 );
-	float flBias = RemapValClamped( (float)iDuckPower, 0.0f, 10.0f, 0.2f, 0.5f);
-	float flBiasScale = 3.0f;
-	int iMinimum = 0;
-	bool bSpecial = false;
-
-	// Drop a few bonus ducks, extra ducks for Crits!
-	//tf_duck_droprate_bias
-	int iDuckCount = (int)( Bias( RandomFloat( 0, 1 ), flBias ) * ( flBiasScale + iDuckPower ) ) + iMinimum;
-	iDuckCount = Max( iDuckCount, (int)iDuckBadgeLevel );	// min ducks for a badge
-
-	if ( bCrit )
-	{
-		iDuckCount += RandomInt( 1, 2 );
-	}
-
-	if ( pTFCreator && ( iDuckBadgeLevel > 0 ) )
-	{
-		if ( RandomInt( 0, 600 ) <= iDuckPower )
-		{
-			// MEGA BONUS DUCKS
-			iDuckCount += iDuckPower;
-			bSpecial = true;
-		}
-	}
-
-	if ( iDuckCount > 0 )
-	{
-		// Max of 50 ducks, which is a lot of ducks
-		iDuckCount = Min( 50, iDuckCount );
-
-		// High edict count, slow generation
-		if ( gEntList.NumberOfEdicts() > tf_duck_edict_warning.GetInt() )
-		{
-			Warning( "Warning: High level of Edicts, Not spawning as many ducks\n" );
-			iDuckCount /= 2;
-		}
-
-		int iCreatorId = pTFCreator ? pTFCreator->entindex() : -1;
-		int iAssisterId = pAssister ? pAssister->entindex() : -1;
-
-		int iVictimId = -1;
-		int iDuckTeam = TEAM_UNASSIGNED;
-		if ( pTFVictim )
-		{
-			iVictimId = pTFVictim->entindex();
-			iDuckTeam = pTFVictim->GetTeamNumber();
-		}
-
-		for ( int i = 0; i < iDuckCount; ++i )
-		{
-			Vector vecOrigin = vPosition + Vector( 0, 0, 50 );
-			CBonusDuckPickup *pDuckPickup = assert_cast<CBonusDuckPickup*>( CBaseEntity::CreateNoSpawn( "tf_bonus_duck_pickup", vecOrigin, vec3_angle, NULL ) );
-			if ( pDuckPickup )
-			{
-				DispatchSpawn( pDuckPickup );
-
-				Vector vecImpulse = RandomVector( -0.5f, 0.5f );
-				vecImpulse.z = 1.f;
-				VectorNormalize( vecImpulse );
-
-				Vector vecVelocity = vecImpulse * RandomFloat( 350.0f, 450.0f );
-				pDuckPickup->DropSingleInstance( vecVelocity, NULL, 1.0f );
-				pDuckPickup->SetCreatorId( iCreatorId );
-				pDuckPickup->SetVictimId( iVictimId );
-				pDuckPickup->SetAssisterId( iAssisterId );
-				pDuckPickup->ChangeTeam( iDuckTeam );
-				pDuckPickup->SetDuckFlag( iDuckFlags );
-				// random chance to have a special duck appear
-				// Bonus duck implies atleast 1 Saxton
-				if ( bSpecial || ( RandomInt( 1, 100 ) <= tf_test_special_ducks.GetInt() ) )
-				{
-					bSpecial = false;
-					pDuckPickup->m_nSkin = 21; // Quackston Hale
-					pDuckPickup->SetSpecial();
-
-					CSingleUserRecipientFilter filter( pTFCreator );
-					UserMessageBegin( filter, "BonusDucks" );
-					WRITE_BYTE( iCreatorId );
-					WRITE_BYTE( true );
-					MessageEnd();
-				}
-				else
-				{
-					if ( iDuckPower > 0 )
-					{
-						pDuckPickup->m_nSkin = GetDuckSkinForClass( iDuckTeam, ( pTFVictim && pTFVictim->GetPlayerClass() ) ? pTFVictim->GetPlayerClass()->GetClassIndex() : -1 );
-					}
-					else
-					{
-						// Scorer without a badge only make normal ducks
-						pDuckPickup->m_nSkin = iDuckTeam == TF_TEAM_RED ? 1 : 2;
-					}
-					pDuckPickup->SetModelScale( 0.7f );
-				}
-			}
-		}
-
-		// Update duckstreak count on player and assister if they have badges
-		if ( pTFCreator && PlayerHasDuckStreaks( pTFCreator ) )
-		{
-			pTFCreator->m_Shared.IncrementStreak( CTFPlayerShared::kTFStreak_Ducks, iDuckCount );
-		}
-		if ( pAssister && PlayerHasDuckStreaks( pAssister ) )
-		{
-			pAssister->m_Shared.IncrementStreak( CTFPlayerShared::kTFStreak_Ducks, iDuckCount );
-		}
-
-		// Duck UserMessage
-		if ( pTFCreator && pTFVictim && !TFGameRules()->HaveCheatsBeenEnabledDuringLevel() )
-		{
-			if ( IsHolidayActive( kHoliday_EOTL ) )
-			{
-				// Send a Message to Creator
-				{
-					// IsCreated, ID of Creator, ID of Victim, Count, IsGolden
-					CSingleUserRecipientFilter userfilter( pTFCreator );
-					UserMessageBegin( userfilter, "EOTLDuckEvent" );
-					WRITE_BYTE( true );
-					WRITE_BYTE( iCreatorId );
-					WRITE_BYTE( iVictimId );
-					WRITE_BYTE( 0 );
-					WRITE_BYTE( iDuckTeam );
-					WRITE_BYTE( iDuckCount );
-					WRITE_BYTE( iDuckFlags );
-					MessageEnd();
-				}
-
-				// To assister
-				if ( pAssister )
-				{
-					// IsCreated, ID of Creator, ID of Victim, Count, IsGolden
-					CSingleUserRecipientFilter userfilter( pAssister );
-					UserMessageBegin( userfilter, "EOTLDuckEvent" );
-					WRITE_BYTE( true );
-					WRITE_BYTE( pAssister->entindex() );
-					WRITE_BYTE( iVictimId );
-					WRITE_BYTE( 0 );
-					WRITE_BYTE( iDuckTeam );
-					WRITE_BYTE( iDuckCount );
-					WRITE_BYTE( iDuckFlags );
-					MessageEnd();
-				}
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
 static kill_eater_event_t g_eClassKillEvents[] =
@@ -9869,16 +9567,6 @@ void CTFGameRules::PlayerKilled( CBasePlayer *pVictim, const CTakeDamageInfo &in
 		if ( ShouldDropSpellPickup() )
 		{
 			DropSpellPickup( pVictim->GetAbsOrigin() );
-		}
-
-		CTFPlayer *pTFScorer = ToTFPlayer( pScorer );
-		CTFPlayer *pTFVictim = ToTFPlayer( pVictim );
-		if ( pTFScorer && pTFVictim )
-		{
-			if ( ShouldDropBonusDuckFromPlayer( pTFScorer, pTFVictim ) )
-			{
-				DropBonusDuck( pTFVictim->GetAbsOrigin(), pTFScorer, pAssister, pTFVictim, ( info.GetDamageType() & DMG_CRITICAL ) != 0 );
-			}
 		}
 	}
 
@@ -11306,11 +10994,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			// Kill streak updating
 			if ( pTFPlayerVictim && pScorer && pTFPlayerVictim != pScorer )
 			{
-				// Propagate duckstreaks
-				event->SetInt( "duck_streak_victim", pTFPlayerVictim->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Ducks ) );
-				event->SetInt( "duck_streak_total", pScorer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Ducks ) );
-				event->SetInt( "ducks_streaked", pScorer->m_Shared.GetLastDuckStreakIncrement() );
-
 				// Check if they have the appropriate attribute.
 				int iKillStreak = 0;
 				int iKills = 0;
@@ -11372,8 +11055,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 
 				if ( pAssister )
 				{
-					event->SetInt( "duck_streak_assist", pAssister->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Ducks ) );
-
 					// Only allow assists for Mediguns
 					CTFWeaponBase *pAssisterWpn = pAssister->GetActiveTFWeapon();
 					if ( pAssisterWpn && pAssister->IsPlayerClass( TF_CLASS_MEDIC ) )

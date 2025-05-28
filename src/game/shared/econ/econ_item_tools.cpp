@@ -48,7 +48,6 @@ const unsigned int g_CapabilityApplicationMap[] =
 	ITEM_CAP_CAN_CONSUME,									// ITEM_CAP_CAN_CONSUME
 	ITEM_CAP_CAN_SPELLBOOK_PAGE,							// ITEM_CAP_CAN_SPELLBOOK_PAGE
 	ITEM_CAP_HAS_SLOTS,										// ITEM_CAP_HAS_SLOTS
-	ITEM_CAP_DUCK_UPGRADABLE,								// ITEM_CAP_DUCK_UPGRADABLE
 	ITEM_CAP_CAN_UNUSUALIFY,								// ITEM_CAP_CAN_UNUSUALIFY
 };
 
@@ -1186,24 +1185,6 @@ bool CEconTool_ClassTransmogrifier::CanApplyTo( const IEconItemInterface *pTool,
 			return false;
 	}
 
-	return IEconTool::CanApplyTo( pTool, pToolSubject );
-}
-
-//-----------------------------------------------------------------------------
-bool CEconTool_DuckToken::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	static CSchemaAttributeDefHandle pAttrDef_DuckBadgeLevel( "duck badge level" );
-	uint32 unOldBadgeLevel = 0;
-	if ( !FindAttribute( pToolSubject, pAttrDef_DuckBadgeLevel, &unOldBadgeLevel ) )
-		return false;
-
-	if ( unOldBadgeLevel >= 5 )
-		return false;
-
-	// Default rules
 	return IEconTool::CanApplyTo( pTool, pToolSubject );
 }
 

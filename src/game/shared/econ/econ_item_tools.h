@@ -703,21 +703,6 @@ public:
 };
 
 //---------------------------------------------------------------------------------------
-class CEconTool_DuckToken: public IEconTool
-{
-public:
-	CEconTool_DuckToken( const char *pszTypeName, item_capabilities_t unCapabilities ) : IEconTool( pszTypeName, NULL, NULL, unCapabilities ) { }
-
-	virtual bool CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const;
-
-#ifdef CLIENT_DLL
-	virtual void OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const;
-	virtual void OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const;
-#endif // CLIENT_DLL
-
-};
-
-//---------------------------------------------------------------------------------------
 class CEconTool_GrantOperationPass : public IEconTool
 {
 public:

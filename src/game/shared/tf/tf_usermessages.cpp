@@ -103,8 +103,6 @@ void RegisterUserMessages()
 	usermessages->Register( "PlayerTauntSoundLoopEnd", -1 );
 
 	usermessages->Register( "ForcePlayerViewAngles", -1 );
-	usermessages->Register( "BonusDucks", 2 );	// ent index, ignoretimer
-	usermessages->Register( "EOTLDuckEvent", 7 ); // IsCreated (vs IsPickedUp), ID of Creator, ID of Victim, ID of Toucher, iDuckTeam, Count, IsGolden
 
 	usermessages->Register( "SdkRequestEquipment", -1 );
 

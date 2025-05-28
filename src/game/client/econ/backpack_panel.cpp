@@ -35,7 +35,6 @@
 #include "character_info_panel.h"
 #include "trading_start_dialog.h"
 #include "vgui_controls/MenuItem.h"
-#include "tf_duckleaderboard.h"
 #include "tf_item_inventory.h"
 #include "store/store_panel.h"
 #include "strange_count_transfer_panel.h"
@@ -1906,7 +1905,6 @@ void CBackpackPanel::OpenContextMenu()
 
 		const CEconItemView *pItem = vecSelectedItems.Head();
 		const CTFItemDefinition *pItemDef = pItem->GetStaticData();
-		static CSchemaItemDefHandle DuckBadgeItemDef( "Duck Badge" );
 		static CSchemaItemDefHandle StrangeCountTransferItemDef( "Strange Count Transfer Tool" );
 
 		// Tools of any kind can't be used if they are in escrow.
@@ -1983,20 +1981,6 @@ void CBackpackPanel::OpenContextMenu()
 			if ( pItem->FindAttribute( pAttrDef_Slot ) )
 			{	
 				contextMenuBuilder.AddMenuItem( "#EditSlots", new KeyValues( "Context_EditSlot" ), "primaryaction" );
-			}
-		}
-		else if ( DuckBadgeItemDef == pItem->GetItemDefinition() )
-		{
-			contextMenuBuilder.AddMenuItem( "#Duck_ViewLeaderboards", new KeyValues( "Context_OpenDuckLeaderboards" ), "primaryaction" );
-
-			if ( CanInventoryItemsApplyTo( pItem ) )
-			{
-				contextMenuBuilder.AddMenuItem( "#UseDuckToken", new KeyValues( "Context_ApplyByItem" ), "primaryaction" );
-			}
-			
-			if ( GetDecodedByItemDefIndex( pItem ) )
-			{
-				contextMenuBuilder.AddMenuItem( "#GetDuckToken", new KeyValues( "Context_GetItemFromStore" ), "primaryaction" );
 			}
 		}
 
@@ -3622,16 +3606,6 @@ void CBackpackPanel::DoGetItemFromStore()
 
 		EconUI()->GetStorePanel()->AddToCartAndCheckoutImmediately( pDefIndex->GetDefinitionIndex() );
 	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Open End of the Line duck leaderboards
-//-----------------------------------------------------------------------------
-void CBackpackPanel::DoOpenDuckLeaderboards()
-{
-	CCharacterInfoPanel* pCharInfo = dynamic_cast< CCharacterInfoPanel* >( EconUI() );
-	CDucksLeaderboardManager *pDuckLeaderboards = vgui::SETUP_PANEL( new CDucksLeaderboardManager( pCharInfo, "DucksLeaderboardPanel" ) );
-	pDuckLeaderboards->SetVisible( true );
 }
 
 //-----------------------------------------------------------------------------

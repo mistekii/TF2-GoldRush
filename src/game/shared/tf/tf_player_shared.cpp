@@ -4351,8 +4351,6 @@ void CTFPlayerShared::OnAddHalloweenKart( void )
 		m_pOuter->Weapon_Switch( pMeleeWeapon );
 	}
 
-	m_pOuter->m_flNextBonusDucksVOAllowedTime = gpGlobals->curtime + 17.f; // The longest Merasmus line + 1 second
-
 	// Force client to update all view angles (including kart and taunt yaw)
 	m_pOuter->ForcePlayerViewAngles( m_pOuter->GetAbsAngles() );
 #else

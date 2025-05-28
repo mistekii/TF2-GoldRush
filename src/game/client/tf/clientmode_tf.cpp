@@ -2288,27 +2288,6 @@ USER_MESSAGE( ForcePlayerViewAngles )
 	}
 }
 
-ConVar tf_halloween_bonus_ducks_cooldown( "tf_halloween_bonus_ducks_cooldown", "20", FCVAR_ARCHIVE );
-USER_MESSAGE( BonusDucks )
-{
-	static float sflNextBonusDucks = 0.f;
-
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	int iIgnoreTimer = (int)msg.ReadByte();
-
-	if ( Plat_FloatTime() < sflNextBonusDucks && !iIgnoreTimer )
-		return;
-
-	sflNextBonusDucks = Plat_FloatTime() + tf_halloween_bonus_ducks_cooldown.GetFloat();
-
-	
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		pPlayer->EmitSound( "sf14.Merasmus.DuckHunt.BonusDucks" );
-	}
-}
-
 USER_MESSAGE( BuiltObject )
 {
 	int nObjType = (int)msg.ReadByte();
