@@ -1484,56 +1484,6 @@ GC_REG_JOB( GCSDK::CGCClient, CGCCraftResponse, "CGCCraftResponse", k_EMsgGCCraf
 
 
 //-----------------------------------------------------------------------------
-// Purpose: GC Msg handler to receive the Golden Wrench broadcast message
-//-----------------------------------------------------------------------------
-class CGCGoldenWrenchBroadcast : public GCSDK::CGCClientJob
-{
-public:
-	CGCGoldenWrenchBroadcast( GCSDK::CGCClient *pClient ) : GCSDK::CGCClientJob( pClient ) {}
-
-	virtual bool BYieldingRunGCJob( GCSDK::IMsgNetPacket *pNetPacket )
-	{
-		GCSDK::CProtoBufMsg<CMsgTFGoldenWrenchBroadcast> msg( pNetPacket );
-
-		// @todo Tom Bui: should we display this in some other manner?  This gets covered up by the crafting panel.
-		CHudNotificationPanel *pNotifyPanel = GET_HUDELEMENT( CHudNotificationPanel );
-		if ( pNotifyPanel )
-		{
-			bool bDeleted = msg.Body().deleted();
-			wchar_t szPlayerName[ MAX_PLAYER_NAME_LENGTH ];
-			UTIL_GetFilteredPlayerNameAsWChar( CSteamID(), msg.Body().user_name().c_str(), szPlayerName );
-			wchar_t szWrenchNumber[16]=L"";
-			_snwprintf( szWrenchNumber, ARRAYSIZE( szWrenchNumber ), L"%i", msg.Body().wrench_number() );
-			wchar_t szNotification[1024]=L"";
-			g_pVGuiLocalize->ConstructString_safe( szNotification, 
-											  g_pVGuiLocalize->Find( bDeleted ? "#TF_HUD_Event_GoldenWrench_D": "#TF_HUD_Event_GoldenWrench_C" ), 
-											  2, szPlayerName, szWrenchNumber );
-			pNotifyPanel->SetupNotifyCustom( szNotification, HUD_NOTIFY_GOLDEN_WRENCH, 10.0f );
-
-			// echo to chat
-			CBaseHudChat *pHUDChat = (CBaseHudChat *)GET_HUDELEMENT( CHudChat );
-			if ( pHUDChat )
-			{
-				char szAnsi[1024];
-				g_pVGuiLocalize->ConvertUnicodeToANSI( szNotification, szAnsi, sizeof(szAnsi) );
-
-				pHUDChat->Printf( CHAT_FILTER_NONE, "%s", szAnsi );
-			}
-
-			// play a sound
-			vgui::surface()->PlaySound( bDeleted ? "vo/announcer_failure.mp3" : "vo/announcer_success.mp3" );
-		}
-
-		//Msg("RECEIVED CGCCraftResponse: %d\n", msg.Body().m_eResponse );
-		return true;
-	}
-
-};
-
-GC_REG_JOB( GCSDK::CGCClient, CGCGoldenWrenchBroadcast, "CGCGoldenWrenchBroadcast", k_EMsgGCGoldenWrenchBroadcast, GCSDK::k_EServerTypeGCClient );
-
-
-//-----------------------------------------------------------------------------
 // Purpose: GC Msg handler to receive the Saxxy broadcast message
 //-----------------------------------------------------------------------------
 class CGSaxxyBroadcast : public GCSDK::CGCClientJob
