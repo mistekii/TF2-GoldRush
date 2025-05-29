@@ -3100,13 +3100,6 @@
 						"skin_blu"	"1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/workshop/weapons/c_models/c_blackbox/c_blackbox_gold"
-					}
 				}
 			}
 			"mouse_pressed_sound"	"ui/item_heavy_gun_pickup.wav"
@@ -3855,13 +3848,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_claymore/c_claymore_gold"
 					}
 				}
 			}
@@ -6267,13 +6253,6 @@
 						"skin_blu"	"1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_smg/c_smg_gold"
-					}
 				}
 			}
 			"static_attrs"
@@ -6542,13 +6521,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/workshop/weapons/c_models/c_tomislav/c_tomislav_gold"
 					}
 				}
 			}
@@ -7482,30 +7454,6 @@
 			"name"	"The Kritzkrieg"
 			"prefab"	"weapon_kritzkrieg"
 			"first_sale_date"	"2010/09/29"
-			"tags"
-			{
-				"can_be_festivized"		"1"
-			}
-			"visuals_red"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
-			"visuals_blu"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"36"
 		{
@@ -7560,13 +7508,6 @@
 						"skin_blu" "1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_leechgun/c_leechgun_gold"
-					}
 				}
 			}
 			"attributes"
@@ -7591,20 +7532,6 @@
 			"first_sale_date"	"2010/09/29"
 			"prefab"	"valve weapon_ubersaw"
 			"particle_suffix"	"ubersaw"
-			"tags"
-			{
-				"can_be_festivized"		"1"
-			}
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_ubersaw/c_ubersaw_festivizer.mdl"
-					}
-				}
-			}
 			"xifier_class_remap"	"ubersaw"
 		}
 		"38"
@@ -7625,13 +7552,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_axtinguisher/c_axtinguisher_pyro_gold"
 					}
 				}
 			}
@@ -7722,7 +7642,6 @@
 				"can_deal_critical_damage"	"1"
 				"can_deal_mvm_penetration_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Minigun"
@@ -7777,13 +7696,6 @@
 			}
 			"visuals"
 			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_minigun/c_minigun_festivizer.mdl"
-					}
-				}
 				"sound_reload"	"Weapon_Minifun.Reload"
 				"sound_empty"	"Weapon_Minifun.ClipEmpty"
 				"sound_double_shot"	"Weapon_Minifun.Fire"
@@ -7896,7 +7808,6 @@
 				"can_deal_posthumous_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
 				"can_deal_taunt_damage" "1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Bat"
@@ -7922,13 +7833,6 @@
 					{
 						"skin_red"		"0"
 						"skin_blu"		"1"
-					}
-				}
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_wooden_bat/c_wooden_bat_festivizer.mdl"
 					}
 				}
 			}
@@ -7975,13 +7879,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_double_barrel_gold"
 					}
 				}
 			}
@@ -8518,13 +8415,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_ambassador/c_ambassador_gold"
 					}
 				}
 			}
@@ -9919,7 +9809,6 @@
 				"can_be_equipped_by_soldier_or_demo"	"1"
 				"can_deal_critical_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_PipebombLauncher"
@@ -9937,16 +9826,6 @@
 			"attach_to_hands"	"1"
 			"inspect_panel_dist" "50"
 			"model_player"	"models/weapons/c_models/c_scottish_resistance/c_scottish_resistance.mdl"
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_scottish_resistance/c_scottish_resistance_festivizer.mdl"
-					}
-				}
-			}
 			"used_by_classes"
 			{
 				"demoman"	"1"
@@ -10378,13 +10257,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_frontierjustice/c_frontierjustice_gold"
 					}
 				}
 			}
@@ -12146,16 +12018,6 @@
 			"effect_type"	"neutral"
 			"stored_as_integer"	"0"
 		}
-		"145"
-		{
-			"name"	"taunt is highfive"
-			"attribute_class"	"enable_misc2_highfive"
-			"description_string"	"#Attrib_DamageDone_Negative"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"neutral"
-			"stored_as_integer"	"0"
-		}
 		"146"
 		{
 			"name"	"damage applies to sappers"
@@ -12195,16 +12057,6 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 			"armory_desc"	"on_hit bleed"
-			"stored_as_integer"	"0"
-		}
-		"150"
-		{
-			"name"	"turn to gold"
-			"attribute_class"	"set_turn_to_gold"
-			"description_string"	"#Attrib_TurnToGold"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
 			"stored_as_integer"	"0"
 		}
 		"151"
@@ -13301,16 +13153,6 @@
 			"hidden"	"1"
 			"effect_type"	"neutral"
 			"stored_as_integer"	"0"
-		}
-		"262"
-		{
-			"name"	"saxxy award category"
-			"attribute_class"	"saxxy_award_category"
-			"description_string"	"#Attrib_SaxxyAward"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
 		}
 		"263"
 		{
@@ -16245,14 +16087,6 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 		}
-		"646"
-		{
-			"name"	"taunt turn speed"
-			"attribute_class"	"taunt_turn_speed"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
 		"647"
 		{
 			"name"	"sniper fires tracer HIDDEN"
@@ -16363,30 +16197,6 @@
 			"hidden"	"0"
 			"effect_type"	"negative"
 		}
-		"687"
-		{
-			"name" 		"taunt turn acceleration time"
-			"attribute_class"	"taunt_turn_acceleration_time"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
-		"688"
-		{
-			"name" 		"taunt move acceleration time"
-			"attribute_class"	"taunt_move_acceleration"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
-		"689"
-		{
-			"name" 		"taunt move speed"
-			"attribute_class"	"taunt_move_speed"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
 		"690"
 		{
 			"name" "shuffle crate item def min"
@@ -16476,45 +16286,6 @@
 			"effect_type"	"negative"
 			"stored_as_integer"	"0"
 		}
-		"700"
-		{
-			"name"	"display duck leaderboard"
-			"attribute_class"	"display_duck_leaderboard"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"701"
-		{
-			"name"	"duck rating"
-			"attribute_class"	"duck_rating"
-			"description_string"	"#Attrib_duck_rating"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"702"
-		{
-			"name"	"duck badge level"
-			"attribute_class"	"duck_badge_level"
-			"description_string"	"#Attrib_duck_badge_level"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"703"
-		{
-			"name"	"tag__eotlearlysupport"
-			"attribute_class"	"tag__eotlearlysupport"
-			"description_string"	"#Attrib_eotl_early_supporter"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
 		"704"
 		{
 			"name"	"unlimited quantity hidden"
@@ -16523,16 +16294,6 @@
 			"hidden"	"1"
 			"effect_type"	"positive"
 			"stored_as_integer"	"0"
-		}
-		"705"
-		{
-			"name"	"duckstreaks active"
-			"attribute_class"	"duckstreaks_active"
-			"description_string"	"#Attrib_duckstreaks"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
 		}
 		"708"
 		{
@@ -18202,16 +17963,6 @@
 			"name"		"quest loaner id hi"
 			"hidden"	"1"
 			"stored_as_integer"	"1"
-		}
-		"2053"
-		{
-			"name"	"is_festivized"
-			"attribute_class"	"is_festivized"
-			"description_string"	"#Attrib_IsFestivized"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"unusual"	
-			"can_affect_market_name"	"1"
 		}
 		"2054"
 		{
@@ -21744,7 +21495,6 @@
 			"can_customize_texture"		"#TF_Armory_Item_CanCustomizeTexture"
 			"strangepart"				"#TF_Armory_Item_StrangePart"
 			"tournamentmedal"			"#TF_Armory_Item_TournamentMedal"
-			"duckbadge"					"#TF_Armory_Item_DuckBadge"
 		}
 	}
 	"item_levels"
@@ -22527,93 +22277,6 @@
 			"20"
 			{
 				"score"		"25000"
-			}
-		}
-		"Journal_DuckBadge"
-		{
-			"0"
-			{
-				"score"		"1"
-			}                 
-			"1"               
-			{                 
-				"score"		"2"
-			}                 
-			"2"               
-			{                 
-				"score"		"3"
-			}                 
-			"3"               
-			{                 
-				"score"		"4"
-			}                 
-			"4"               
-			{                 
-				"score"		"5"
-			}                 
-			"5"               
-			{                 
-				"score"		"6"
-			}                 
-			"6"               
-			{                 
-				"score"		"7"
-			}                 
-			"7"               
-			{                 
-				"score"		"8"
-			}                 
-			"8"               
-			{                 
-				"score"		"9"
-			}                 
-			"9"               
-			{                 
-				"score"		"10"
-			}                 
-			"10"              
-			{                 
-				"score"		"11"
-			}                 
-			"11"              
-			{                 
-				"score"		"12"
-			}                 
-			"12"              
-			{                 
-				"score"		"13"
-			}                 
-			"13"              
-			{                 
-				"score"		"14"
-			}                 
-			"14"              
-			{                 
-				"score"		"15"
-			}                 
-			"15"              
-			{                 
-				"score"		"16"
-			}                 
-			"16"              
-			{                 
-				"score"		"17"
-			}                 
-			"17"              
-			{                 
-				"score"		"18"
-			}                 
-			"18"              
-			{                 
-				"score"		"19"
-			}                 
-			"19"              
-			{                 
-				"score"		"20"
-			}                 
-			"20"              
-			{                 
-				"score"		"21"
 			}
 		}
 		"KillEater_OperationContractRank"
