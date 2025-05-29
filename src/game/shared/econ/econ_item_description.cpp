@@ -557,7 +557,6 @@ static void GenerateLocalizedFullItemName
 		return;
 	}
 
-	bool bIgnoreWear = false;
 	bool bIgnoreQuality = false;
 	bool bHasCustomName = false;
 
@@ -673,10 +672,6 @@ static void GenerateLocalizedFullItemName
 			}
 		}
 	}
-
-	const char* pszQualityFormat = ( !attrQualityTextOverride.has_value() && ( unQuality == AE_NORMAL || unQuality == AE_UNIQUE || bIgnoreQuality ) && unQuality != AE_SELFMADE ) 
-								 ? "ItemNameNormalOrUniqueQualityFormat" 
-								 : "ItemNameQualityFormat";
 
 	enum { kLocalizedCrateSeriesLength = 128, };
 	locchar_t szLocalizedCrateSeries[ kLocalizedCrateSeriesLength ] = LOCCHAR("");

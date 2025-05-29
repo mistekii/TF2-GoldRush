@@ -249,7 +249,6 @@ void CObjectSapper::OnGoActive( void )
 	CBaseEntity *pEntity = m_hBuiltOnEntity.Get();
 
 	m_flSelfDestructTime = 0;
-	CTFPlayer *pBuilder = ToTFPlayer( GetBuilder() );
 
 	if ( pEntity )
 	{

@@ -3570,7 +3570,6 @@ void CBackpackPanel::OpenInspectModelPanelAndCopyItem( CEconItemView *pItemView 
 	EconUI()->OpenEconUI( ECONUI_BACKPACK );
 
 	// Figure out which preview to show
-	float flInspect = 0;
 	for ( int iClass = TF_FIRST_NORMAL_CLASS; iClass < TF_LAST_NORMAL_CLASS; ++iClass )
 	{
 		if ( pItemView->GetStaticData()->CanBeUsedByClass( iClass ) )

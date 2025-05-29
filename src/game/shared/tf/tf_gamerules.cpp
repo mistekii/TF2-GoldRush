@@ -10973,8 +10973,6 @@ void CTFGameRules::DeathNotice( CBasePlayer *pVictim, const CTakeDamageInfo &inf
 			iDeathFlags |= TF_DEATH_PURGATORY;
 		}
 
-		IHasAttributes *pAttribInterface = GetAttribInterface( info.GetWeapon() );
-
 		// We call this directly since we need more information than provided in the event alone.
 		if ( FStrEq( eventName, "player_death" ) )
 		{
@@ -17307,7 +17305,6 @@ int CTFGameRules::GetTeamAssignmentOverride( CTFPlayer *pTFPlayer, int iDesiredT
 	CSteamID steamID;
 	pTFPlayer->GetSteamID( &steamID );
 	CMatchInfo *pMatch = GTFGCClientSystem()->GetLiveMatch();
-	int nMatchPlayers = pMatch ? pMatch->GetNumActiveMatchPlayers() : 0;
 	CMatchInfo::PlayerMatchData_t *pMatchPlayer = ( pMatch && steamID.IsValid() ) ? pMatch->GetMatchDataForPlayer( steamID ) : NULL;
 
 	if ( pMatch )

@@ -4258,9 +4258,6 @@ Action< CTFBot > *CTFBot::OpportunisticallyUseWeaponAbilities( void )
 		if ( !weapon )
 			continue;
 
-		int iMaxHealth = this->GetPlayerClass()->GetMaxHealth();
-		int iCurHealth = this->GetHealth();
-
 		// if I have some kind of buff banner - use it!
 		if ( weapon->GetWeaponID() == TF_WEAPON_BUFF_ITEM )
 		{

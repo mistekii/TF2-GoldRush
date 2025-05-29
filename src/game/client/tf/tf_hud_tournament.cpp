@@ -768,8 +768,6 @@ void CHudTournament::RecalculatePlayerPanels( void )
 	if ( !pPlayer || !g_TF_PR )
 		return;
 
-	int iLocalTeam = g_TF_PR->GetTeam( pPlayer->entindex() );
-
 	int iPanel = 0;
 	for ( int i = 1; i <= MAX_PLAYERS; i++ )
 	{

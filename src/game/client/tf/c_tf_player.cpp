@@ -809,8 +809,6 @@ void C_TFRagdoll::CreateTFRagdoll()
 		breakParams.impactEnergyScale = 1.0f;
 		pPlayer->DropPartyHat( breakParams, m_vecRagdollVelocity.GetForModify() );
 	}
-
-	const char *materialOverrideFilename = NULL;
 }
 
 float C_TFRagdoll::FrameAdvance( float flInterval )

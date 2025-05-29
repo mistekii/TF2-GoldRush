@@ -76,8 +76,6 @@ ActionResult< CTFBot > CTFBotDeliverFlag::Update( CTFBot *me, float interval )
 		CTFBotPathCost cost( me, FASTEST_ROUTE );
 		m_path.Compute( me, zone->WorldSpaceCenter(), cost );
 
-		float flOldTravelDistance = m_flTotalTravelDistance;
-
 		m_flTotalTravelDistance = NavAreaTravelDistance( me->GetLastKnownArea(), TheNavMesh->GetNavArea( zone->WorldSpaceCenter() ), cost );
 
 		m_repathTimer.Start( RandomFloat( 1.0f, 2.0f ) );

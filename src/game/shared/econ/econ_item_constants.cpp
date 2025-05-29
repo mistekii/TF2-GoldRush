@@ -640,8 +640,6 @@ const char* GetCollectionCraftingInvalidReason( const IEconItemInterface *pTestI
 		return "#TF_CollectionCrafting_NoCollection";
 	}
 
-	const CEconItemDefinition* pEffectiveItemDef = pTestItem->GetItemDefinition();
-
 	// Make sure this item is a part of the collection it claims to be in
 	{
 		item_definition_index_t nThisDefIndex = pTestItem->GetItemDefIndex();

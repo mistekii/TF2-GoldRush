@@ -867,9 +867,6 @@ void CEmbeddedItemModelPanel::Paint( void )
 		m_bRenderToTexture = false;
 	}
 
-	// make sure the weapon skin is ready before we render the model
-	bool bDrawWeaponWithSkin = bIsLoadingWeaponSkin && m_pCachedWeaponIcon == NULL && m_pItem->GetWeaponSkinBase();
-
 	m_pItem->SetWeaponSkinBaseCreateFlags( TEX_COMPOSITE_CREATE_FLAGS_NO_COMPRESSION | TEX_COMPOSITE_CREATE_FLAGS_NO_MIPMAPS );
 
 	BaseClass::Paint();
