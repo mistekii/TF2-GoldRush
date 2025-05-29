@@ -1129,14 +1129,7 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 
 					if ( iClass >= TF_FIRST_NORMAL_CLASS && iClass <= TF_LAST_NORMAL_CLASS )
 					{
-						if ( bAlive )
-						{
-							pKeyValues->SetString("class", g_aPlayerClassNames[iClass]);
-						}
-						else
-						{
-							pKeyValues->SetString("class", "");
-						}
+						pKeyValues->SetString("class", g_aPlayerClassNames[iClass]);
 					}
 					else
 					{
