@@ -8333,6 +8333,16 @@
 					"attribute_class"	"mult_cloak_meter_regen_rate"
 					"value"	"1.5"
 				}
+				"NoCloakWhenCloaked"
+				{
+					"attribute_class"	"NoCloakWhenCloaked"
+					"value"	"1"
+				}
+				"ReducedCloakFromAmmo"
+				{
+					"attribute_class"	"ReducedCloakFromAmmo"
+					"value"	"0.65"
+				}
 				"kill eater score type"
 				{
 					"attribute_class"	"kill_eater_score_type"
