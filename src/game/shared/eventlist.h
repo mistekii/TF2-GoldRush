@@ -85,9 +85,6 @@ typedef enum
 
 	AE_WPN_PLAYWPNSOUND,	// Play a weapon sound from the weapon script file
 
-	AE_TAUNT_ENABLE_MOVE,
-	AE_TAUNT_DISABLE_MOVE,
-
 	AE_CL_REMOVE_PARTICLE_EFFECT,
 
 	AE_TAUNT_ADD_ATTRIBUTE, // Used to add attribute via taunt animation

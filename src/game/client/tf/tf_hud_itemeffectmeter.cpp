@@ -316,9 +316,6 @@ void CHudItemEffectMeter::CreateHudElementsForClass( C_TFPlayer* pPlayer, CUtlVe
 	// ALL CLASS
 	DECLARE_ITEM_EFFECT_METER( CTFThrowable, TF_WEAPON_THROWABLE, true, "resource/UI/HudItemEffectMeter_Action.res" );
 
-	// Kill Streak
-	DECLARE_ITEM_EFFECT_METER( CTFWeaponBase, TF_WEAPON_NONE, false, "resource/UI/HudItemEffectMeter_KillStreak.res" );
-
 	DECLARE_ITEM_EFFECT_METER( CTFSpellBook, TF_WEAPON_SPELLBOOK, true, "resource/UI/HudItemEffectMeter_KartCharge.res" );
 	/*hNewMeter = new CHudItemEffectMeter_HalloweenSouls( pszElementName, pPlayer );
 	if ( hNewMeter )
@@ -674,48 +671,6 @@ bool CHudItemEffectMeter_Weapon<T>::ShouldDraw( )
 // Specializations for meters that do unique things follow...
 //-----------------------------------------------------------------------------
 
-
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFWeaponBase>::IsEnabled( void )
-{
-	C_TFPlayer *pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-	if ( pTFPlayer )
-	{
-		int iKillStreak = 0;
-		CALL_ATTRIB_HOOK_INT_ON_OTHER( pTFPlayer, iKillStreak, killstreak_tier );
-		return iKillStreak != 0;
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-template <>
-int CHudItemEffectMeter_Weapon<CTFWeaponBase>::GetCount( void )
-{
-	C_TFPlayer *pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-	if ( pTFPlayer )
-	{
-		return pTFPlayer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-	}
-	return 0;
-}
-
-//-----------------------------------------------------------------------------
-template <>
-const char*	CHudItemEffectMeter_Weapon<CTFWeaponBase>::GetLabelText( void )
-{
-	return "TF_KillStreak";
-}
-
-//-----------------------------------------------------------------------------
-template <>
-bool CHudItemEffectMeter_Weapon<CTFWeaponBase>::IsKillstreakMeter( void )
-{
-	return true;
-}
 
 //-----------------------------------------------------------------------------
 // Purpose: Specialization for the sword (to differentiate it from other sword-type weapons)

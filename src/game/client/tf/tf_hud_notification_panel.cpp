@@ -460,10 +460,6 @@ const char *CHudNotificationPanel::GetNotificationByType( int iType, float& flDu
 		pszResult = "resource/UI/notifications/notify_special.res";
 		break;
 
-	case HUD_NOTIFY_GOLDEN_WRENCH:
-		pszResult = "resource/UI/notifications/notify_golden_wrench.res";
-		break;
-
 	case HUD_NOTIFY_HOW_TO_CONTROL_GHOST:
 		pszResult = "resource/UI/notifications/notify_how_to_control_ghost.res";
 		flDuration = 10.f;

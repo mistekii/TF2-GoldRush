@@ -246,11 +246,6 @@ void CEconTool_DuelingMinigame::OnClientUseConsumable( CEconItemView *pItem, vgu
 }
 
 //-----------------------------------------------------------------------------
-void CEconTool_DuckToken::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
-{
-	Assert( !"CEconTool_DuckToken::OnClientUseConsumable() is unimplemented!" );
-}
-//-----------------------------------------------------------------------------
 void CEconTool_GrantOperationPass::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
 {
 	Assert( !"CEconTool_GrantOperationPass::OnClientUseConsumable() is unimplemented!" );

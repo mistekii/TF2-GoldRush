@@ -195,14 +195,6 @@ void CCaptureZone::Capture( CBaseEntity *pOther )
 
 					gameeventmanager->FireEvent( event );
 				}
-
-				if ( TFGameRules() )
-				{
-					if ( TFGameRules()->IsHolidayActive( kHoliday_EOTL ) )
-					{
-						TFGameRules()->DropBonusDuck( pPlayer->GetAbsOrigin(), pPlayer, NULL, NULL, false, true );
-					}
-				}
 			}
 		}
 	}

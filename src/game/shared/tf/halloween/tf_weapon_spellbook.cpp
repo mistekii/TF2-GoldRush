@@ -295,8 +295,6 @@ CHudSpellMenu::CHudSpellMenu( const char *pElementName ) : CHudElement( pElement
 	m_flRollTickGap = 0.05f;
 	m_bTickSoundA = false;
 
-	m_bKillstreakMeterDrawing = false;
-
 	m_pSpellIcon = new vgui::ImagePanel( this, "SpellIcon" );
 	m_pKeyBinding = new CExLabel( this, "ActionText", "" );
 
@@ -312,14 +310,6 @@ void CHudSpellMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 	BaseClass::ApplySchemeSettings( pScheme );
 
 	KeyValues *pConditions = NULL;
-	if ( m_bKillstreakMeterDrawing )
-	{
-		pConditions = new KeyValues( "conditions" );
-		if ( pConditions )
-		{
-			AddSubKeyNamed( pConditions, "if_killstreak_visible" );
-		}
-	}
 
 	// load control settings...
 	LoadControlSettings( "resource/UI/HudSpellSelection.res", NULL, NULL, pConditions );
@@ -335,27 +325,6 @@ void CHudSpellMenu::ApplySchemeSettings( vgui::IScheme *pScheme )
 //=============================================================================
 void CHudSpellMenu::OnTick( void )
 {
-	bool bKillstreakMeterDrawing = false;
-	CHudItemEffectMeter *pMeter = NULL;
-	for ( int i = 0; i < IHudItemEffectMeterAutoList::AutoList().Count(); ++i )
-	{
-		pMeter = static_cast<CHudItemEffectMeter*>( IHudItemEffectMeterAutoList::AutoList()[i] );
-		if ( pMeter->IsKillstreakMeter() ) // we found the killstreak meter
-		{
-			if ( pMeter->IsEnabled() )
-			{
-				bKillstreakMeterDrawing = true;
-			}
-			break;
-		}
-	}
-
-	if ( m_bKillstreakMeterDrawing != bKillstreakMeterDrawing )
-	{
-		m_bKillstreakMeterDrawing = bKillstreakMeterDrawing;
-		InvalidateLayout( false, true );
-	}
-
 	vgui::ivgui()->RemoveTickSignal( GetVPanel() );
 }
 

@@ -50,9 +50,6 @@ public:
 	virtual int			CalculateVisibleClassFor( CBaseCombatCharacter *pPlayer );
 	virtual int			UpdateTransmitState();
 	virtual	int			ShouldTransmit( const CCheckTransmitInfo *pInfo );
-
-	int					GetKillStreak ( )			{ return m_iKillStreak; }
-	void				SetKillStreak ( int value ) { m_iKillStreak = value; };
 #endif
 
 #if defined( CLIENT_DLL )
@@ -80,10 +77,6 @@ private:
 	CNetworkHandle( CBaseEntity, m_hWeaponAssociatedWith );
 
 	CUtlVector< const char* >	m_HiddenBodyGroups;
-
-#ifdef GAME_DLL
-	int				m_iKillStreak;
-#endif // GAME_DLL
 
 #if defined( CLIENT_DLL )
 	enum eParticleSystemVisibility

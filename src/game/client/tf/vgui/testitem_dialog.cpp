@@ -107,7 +107,6 @@ CTestItemDialog::CTestItemDialog( vgui::Panel *parent, testitem_itemtypes_t iIte
 	// Load our scheme right away so we have all our pieces ready
 	MakeReadyForUse();
 
-	SetupPaintColorComboBox();
 	SetupUnusualEffectComboBox();
 
 	// Pull the data out of the existing KVs
@@ -569,50 +568,6 @@ void CTestItemDialog::SetupItemComboBox( vgui::ComboBox *pComboBox )
 	pComboBox->SetItemEnabled( 0, false );
 	pComboBox->SilentActivateItemByRow( 0 );
 	pComboBox->GetMenu()->SetBgColor( Color(0,0,0,255) );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTestItemDialog::SetupPaintColorComboBox( void )
-{
-	m_pPaintColorComboBox->RemoveAll();
-
-	KeyValues *pKeyValues = new KeyValues( "data" );
-	pKeyValues->SetInt( "paintcan_index", 0 );
-	m_pPaintColorComboBox->AddItem( "#IT_PaintNone", pKeyValues );
-
-	// Now loop through all our paints and add them to the list
-	const CEconItemSchema::SortedItemDefinitionMap_t& mapItemDefs = ItemSystem()->GetItemSchema()->GetSortedItemDefinitionMap();
-	FOR_EACH_MAP( mapItemDefs, i )
-	{
-		const CEconItemDefinition *pDef = mapItemDefs[i];
-
-		const CEconTool_PaintCan *pEconToolPaintCan = pDef->GetTypedEconTool<CEconTool_PaintCan>();
-		if ( !pEconToolPaintCan )
-			continue;
-
-		pKeyValues->SetInt( "paintcan_index", pDef->GetDefinitionIndex() );
-		m_pPaintColorComboBox->AddItem( g_pVGuiLocalize->Find( pDef->GetItemBaseName() ), pKeyValues );
-
-		// Make sure it has valid colors (to skip the store version of the paint can)
-		KeyValues *pAttribs = pDef->GetDefinitionKey( "attributes" );
-		if ( !pAttribs )
-			continue;
-
-		KeyValues *pRGBAttrib = pAttribs->FindKey( "set_item_tint_rgb" );
-		if ( !pRGBAttrib )
-			continue;
-
-		int iModifiedRGB = pRGBAttrib->GetInt( "value", -1 );
-		if ( iModifiedRGB != -1 )
-		{
-			m_pPaintColorComboBox->AddItem( g_pVGuiLocalize->Find( pDef->GetItemBaseName() ), pKeyValues );
-		}
-	}
-
-	m_pPaintColorComboBox->SilentActivateItemByRow( 0 );
-	m_pPaintColorComboBox->GetMenu()->SetBgColor( Color(0,0,0,255) );
 }
 
 //-----------------------------------------------------------------------------

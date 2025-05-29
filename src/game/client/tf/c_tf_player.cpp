@@ -99,7 +99,6 @@
 #include "debugoverlay_shared.h"
 #include "tf_hud_chat.h"
 #include <vgui_controls/AnimationController.h>
-#include "econ_paintkit.h"
 #include "soundstartparams.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
 
@@ -165,14 +164,6 @@ extern ConVar tf_halloween_kart_boost_duration;
 
 extern ConVar cl_thirdperson;
 
-
-ConVar tf_sheen_framerate( "tf_sheen_framerate", "25", FCVAR_NONE | FCVAR_HIDDEN, "Set Sheen Frame Rate" );
-
-extern ConVar tf_killstreak_alwayson;
-
-ConVar tf_sheen_alpha_firstperson( "tf_sheen_alpha_firstperson", "0.1", FCVAR_NONE, "Set the Alpha Value for first person sheens" );
-ConVar tf_killstreakeyes_minkills( "tf_killstreakeyes_minkills", "5", FCVAR_DEVELOPMENTONLY, "min kills to get base eyeglow" );
-ConVar tf_killstreakeyes_maxkills( "tf_killstreakeyes_maxkills", "10", FCVAR_DEVELOPMENTONLY, "kills to get the max eye glow effect" );
 
 //ConVar spectate_random_server_basetime( "spectate_random_server_basetime", "240", FCVAR_DEVELOPMENTONLY );
 
@@ -256,65 +247,6 @@ CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_blue.vmt" )
 CLIENTEFFECT_MATERIAL( "models/effects/invulnfx_red.vmt" )
 CLIENTEFFECT_REGISTER_END()
 
-// *********************************************************************************************************
-// KillStreak Effect Data
-// *********************************************************************************************************
-struct killstreak_params_t
-{
-	killstreak_params_t ( int iShaderIndex, const char *pTexture, bool bHasTeamColor,
-		int sheen_r,  int sheen_g,  int sheen_b,  int sheen_a, 
-		int color1_r, int color1_g, int color1_b, int color1_a, 
-		int color2_r, int color2_g, int color2_b, int color2_a
-		) {
-			m_iShaderIndex = iShaderIndex;
-			m_pTexture = pTexture;
-
-			m_bHasTeamColor = bHasTeamColor;
-
-			m_sheen_r = (float)sheen_r / 255.0f;
-			m_sheen_g = (float)sheen_g / 255.0f;
-			m_sheen_b = (float)sheen_b / 255.0f; 
-			m_sheen_a = (float)sheen_a / 255.0f;
-
-			m_color1_r = (float)color1_r / 255.0f;
-			m_color1_g = (float)color1_g / 255.0f;
-			m_color1_b = (float)color1_b / 255.0f; 
-			m_color1_a = (float)color1_a / 255.0f;
-
-			m_color2_r = (float)color2_r / 255.0f;
-			m_color2_g = (float)color2_g / 255.0f;
-			m_color2_b = (float)color2_b / 255.0f; 
-			m_color2_a = (float)color2_a / 255.0f;
-	}
-
-	int			m_iShaderIndex;
-	bool		m_bHasTeamColor;
-	const char *m_pTexture;
-	float m_sheen_r, m_sheen_g, m_sheen_b, m_sheen_a;
-	float m_color1_r, m_color1_g, m_color1_b, m_color1_a;
-	float m_color2_r, m_color2_g, m_color2_b, m_color2_a;
-};
-
-// *********************************************************************************************************
-// Base Sheen Colors (Team Red)
-static const killstreak_params_t g_KillStreakEffectsBase[] =
-{
-	killstreak_params_t( 0, NULL, false,	0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0 ),	// Empty (Index 0)
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", true,	200, 20,  15,  255, 255, 118, 118, 255, 255, 35,  28,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	242, 172, 10,  255, 255, 237, 138, 255, 255, 213, 65,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	255, 75,  5,   255, 255, 111, 5,   255, 255, 137, 31,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	100, 255, 10,  255, 230, 255, 60,  255, 193, 255, 61,  255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	40,  255, 70,  255, 103, 255, 121, 255, 165, 255, 193, 255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	105, 20,  255, 255, 105, 20,  255, 255, 185, 145, 255, 255 ),
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", false,	255, 30,  255, 255, 255, 120, 255, 255, 255, 176, 217, 255 ),
-};
-// *********************************************************************************************************
-// Optional Team Color
-static const killstreak_params_t g_KillStreakEffectsBlue[] =
-{
-	killstreak_params_t( 0, NULL, false,	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ),	// Empty (Index 0)
-	killstreak_params_t( 0, "Effects/AnimatedSheen/animatedsheen0", true, 40, 98, 200, 255, 0, 92, 255, 255, 134, 203, 243, 255 ),
-};
 
 // thirdperson medieval
 static ConVar tf_medieval_thirdperson( "tf_medieval_thirdperson", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE , "Turns on third-person camera in medieval mode." );
@@ -2387,6 +2319,7 @@ C_TFPlayer *GetOwnerFromProxyEntity( void *pEntity )
 
 //-----------------------------------------------------------------------------
 // Purpose: Used to animate the weapon sheen effect for kill streak attr items
+// Gold Rush: Stubbed so that the console doesn't get flooded with weapon vmts trying to use this proxy
 //-----------------------------------------------------------------------------
 class CProxyAnimatedWeaponSheen : public CBaseAnimatedTextureProxy
 {
@@ -2396,327 +2329,7 @@ public:
 
 	bool Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 	{
-		bool foundVar = false;
-		m_flNextStartTime = 0;
-		m_flScaleX = -1;
-		m_flScaleY = -1;
-		m_flSheenOffsetX = 0;
-		m_flSheenOffsetY = 0;
-		m_iSheenDir = 0;
-
-		m_pScaleXVar = NULL;
-		m_pScaleYVar = NULL;
-		m_pOffsetXVar = NULL;
-		m_pOffsetYVar = NULL;
-		m_pDirectionVar = NULL;
-		m_pSheenIndexVar = NULL;
-
-		// Get Tint
-		m_pTintVar = pMaterial->FindVar( "$sheenmaptint", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pSheenIndexVar = pMaterial->FindVar( "$sheenindex", &foundVar );
-		if( !foundVar )
-			return false;
-
-		// Material vars for scale and offset
-		// Need to get the material var
-		m_pScaleXVar = pMaterial->FindVar( "$sheenmapmaskscaleX", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pScaleYVar = pMaterial->FindVar( "$sheenmapmaskscaleY", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pOffsetXVar = pMaterial->FindVar( "$sheenmapmaskoffsetX", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pOffsetYVar = pMaterial->FindVar( "$sheenmapmaskoffsetY", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pDirectionVar = pMaterial->FindVar( "$sheenmapmaskdirection", &foundVar );
-		if( !foundVar )
-			return false;
-
-		m_pSheenVar = pMaterial->FindVar( "$sheenmap", &foundVar );
-		if ( !foundVar )
-			return false;
-		
-		m_pSheenMaskVar = pMaterial->FindVar( "$sheenmapmask", &foundVar );
-		if ( !foundVar )
-			return false;
-
-		return CBaseAnimatedTextureProxy::Init( pMaterial, pKeyValues );
-	}
-
-	void OnBind( void *pEntity )
-	{
-		Assert( m_AnimatedTextureVar );
-		if ( m_AnimatedTextureVar->GetType() != MATERIAL_VAR_TYPE_TEXTURE )
-			return;
-
-		// if no entity, just check the owner
-		if ( !pEntity )
-		{
-			// Might be gunslinger, hard to get this item so 
-			return;
-		}
-
-		static CSchemaAttributeDefHandle pAttr_killstreak( "killstreak idleeffect" );	
-		if ( !pAttr_killstreak )
-			return;
-
-		IClientRenderable *pRend = (IClientRenderable *)pEntity;
-		// Find the weapon and player and see if it has the attribute
-		if ( !pRend )
-			return;
-
-		ITexture *pTexture;
-		pTexture = m_AnimatedTextureVar->GetTextureValue();
-		int numFrames = pTexture->GetNumAnimationFrames();
-
-		if ( numFrames <= 0 )
-		{
-			Assert( !"0 frames in material calling animated texture proxy" );
-			return;
-		}
-
-		C_BaseEntity *pBaseEntity = pRend->GetIClientUnknown()->GetBaseEntity();
-		const CEconItemView *pItem = dynamic_cast< CEconItemView* >( pRend );
-
-		uint32 unAttrValue = 0;
-		uint32 unEffectValue = 0;
-
-		// !TEST!
-
-		// Find the tf player owner
-		bool bIsFirstPerson = false;
-		C_TFPlayer* pTFPlayer = NULL;
-		if ( pItem )	// ItemModelPanels
-		{
-			if ( !pBaseEntity )
-			{
-				pItem->FindAttribute( pAttr_killstreak, &unAttrValue );
-				unEffectValue = (int)((float&)unAttrValue);
-			}
-			else
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBaseEntity, unAttrValue, killstreak_idleeffect );
-			}
-			
-			if ( ( unEffectValue ) && pBaseEntity && pBaseEntity->GetOwnerEntity() )
-			{
-				pTFPlayer = ToTFPlayer( pBaseEntity->GetOwnerEntity() );
-			}
-			else
-			{
-				pTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-			}
-		}
-		else	
-		{
-			CTFWeaponBase* pWeapon = dynamic_cast<CTFWeaponBase*>( pBaseEntity );
-			if ( !pWeapon )
-			{
-				for ( int i = 0; i < 1; ++i )
-				{
-					CEconWearable* pWearable = dynamic_cast<CEconWearable*>( pBaseEntity );
-					if ( pWearable )
-					{
-						pItem = pWearable->GetAttributeContainer()->GetItem();
-						pTFPlayer = ToTFPlayer( pWearable->GetOwnerEntity() );
-						break;
-					}
-					C_ViewmodelAttachmentModel *pModel = dynamic_cast<C_ViewmodelAttachmentModel*>( pBaseEntity );
-					if ( pModel )
-					{
-						if ( pModel->GetOuter() )
-						{
-							pItem = pModel->GetOuter()->GetAttributeContainer()->GetItem();
-							pBaseEntity = pBaseEntity->GetOwnerEntity();
-							if ( pItem )
-							{
-								pTFPlayer = ToTFPlayer( pModel->GetOuter()->GetOwnerEntity() );
-							}
-						}
-						break;
-					}
-
-					// not a weapon, is a viewmodel
-					IHasOwner *pHasOwner = dynamic_cast<IHasOwner*>( pBaseEntity );
-					if ( pHasOwner )
-					{
-						// View model owner is player, so get the players active weapon
-						CBaseEntity *pOwner = pHasOwner->GetOwnerViaInterface();
-						pTFPlayer = ToTFPlayer( pOwner );
-						if ( pTFPlayer )
-						{
-							pWeapon = pTFPlayer->GetActiveTFWeapon();
-							if ( pWeapon )
-							{
-								pItem = pWeapon->GetAttributeContainer()->GetItem();
-								pBaseEntity = pWeapon;
-							}
-							bIsFirstPerson = true;
-						}
-					}
-					else if ( pBaseEntity && pBaseEntity->IsPlayer( ) )
-					{
-						pTFPlayer = ToTFPlayer( pBaseEntity );
-						pWeapon = pTFPlayer->GetActiveTFWeapon();
-						if ( pWeapon )
-						{
-							pItem = pWeapon->GetAttributeContainer()->GetItem();
-							pBaseEntity = pWeapon;
-						}
-					}
-				}	// for 
-			}
-			else
-			{
-				pItem = pWeapon->GetAttributeContainer()->GetItem();
-				pBaseEntity = pWeapon;
-				pTFPlayer = ToTFPlayer( pWeapon->GetOwner() );
-			}
-
-			// I have an econ item, does it have the attr
-			if ( ( pBaseEntity && pItem ) || unEffectValue )
-			{
-				CALL_ATTRIB_HOOK_INT_ON_OTHER( pBaseEntity, unAttrValue, killstreak_idleeffect );
-
-				if ( !unEffectValue )
-				{
-					unEffectValue = unAttrValue;
-				}
-				
-				// Use the Spies target if disguised and we're on different teams
-				if ( pTFPlayer && pTFPlayer->m_Shared.InCond( TF_COND_DISGUISED ) && pTFPlayer->GetTeamNumber() != GetLocalPlayerTeam() )
-				{
-					pTFPlayer = pTFPlayer->m_Shared.GetDisguiseTarget();
-					if ( pTFPlayer && pTFPlayer->m_Shared.GetDisguiseWeapon() )
-					{
-						pItem = pTFPlayer->m_Shared.GetDisguiseWeapon()->GetAttributeContainer()->GetItem();
-						pBaseEntity = pTFPlayer->m_Shared.GetDisguiseWeapon();
-					}
-				}
-			}
-		}
-
-		float flNextStartTime = 0;
-		if ( pTFPlayer )
-		{
-			// if player is taunting, make sure they can start animating
-			if ( pTFPlayer->IsTaunting() && flNextStartTime > gpGlobals->curtime )
-			{
-				pTFPlayer->m_flNextSheenStartTime = gpGlobals->curtime;
-			}
-			flNextStartTime = pTFPlayer->m_flNextSheenStartTime;
-		}
-		else
-		{
-			flNextStartTime = m_flNextStartTime;
-		}
-
-		// !TEST!
-
-		// Not ready, so just exit
-		if ( !pItem || !unEffectValue || flNextStartTime > gpGlobals->curtime || unEffectValue > ARRAYSIZE( g_KillStreakEffectsBase ) - 1 )
-		{
-			RunNoProxy();
-			return;
-		}
-
-		// Negative Value implies it has not been set, set it now
-		if ( m_flScaleX < 0 )
-		{
-			if ( !InitParams( pRend, pBaseEntity ) )
-			{
-				RunNoProxy();
-				return;
-			}
-		}
-
-		// NOTE: Must not use relative time based methods here
-		// because the bind proxy can be called many times per frame.
-		// Prevent multiple Wrap callbacks to be sent for no wrap mode
-		float startTime = pTFPlayer ? pTFPlayer->m_flNextSheenStartTime : 0;
-		float deltaTime = gpGlobals->curtime - startTime;
-		float prevTime = deltaTime - gpGlobals->frametime;
-
-		// Clamp..
-		if (deltaTime < 0.0f)
-			deltaTime = 0.0f;
-		if (prevTime < 0.0f)
-			prevTime = 0.0f;
-
-		// Code Frame rate to be 25
-		float frame = tf_sheen_framerate.GetInt() * deltaTime;	
-		float prevFrame = tf_sheen_framerate.GetInt() * prevTime;
-
-		int intFrame = ((int)frame) % numFrames; 
-		int intPrevFrame = ((int)prevFrame) % numFrames;
-
-		// Report wrap situation...
-		if ( intPrevFrame > intFrame )
-		{
-			// Set frame to zero and set the time for the next
-			intFrame = 0;
-			if ( pTFPlayer )
-			{
-				pTFPlayer->m_flNextSheenStartTime = gpGlobals->curtime + GetTimeBetweenAnims( pTFPlayer );
-			}
-			else
-			{
-				m_flNextStartTime = gpGlobals->curtime + GetTimeBetweenAnims( NULL );
-			}
-		}
-
-		float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-		killstreak_params_t sheenParams = GetSheenParams( unEffectValue, pTFPlayer ? pTFPlayer->GetTeamNumber() == TF_TEAM_BLUE : false );
-		color[ 0 ] = sheenParams.m_sheen_r;
-		color[ 1 ] = sheenParams.m_sheen_g;
-		color[ 2 ] = sheenParams.m_sheen_b;
-		color[ 3 ] = sheenParams.m_sheen_a;
-
-
-		if ( bIsFirstPerson )
-		{
-			color[ 3 ] = tf_sheen_alpha_firstperson.GetFloat();
-			m_pTintVar->SetVecValue( color, 4 );
-		}
-		else
-		{
-			m_pTintVar->SetVecValue( color, 4 );
-		}
-		
-		// Set vars
-		m_AnimatedTextureFrameNumVar->SetIntValue( intFrame );
-		m_pScaleXVar->SetFloatValue( m_flScaleX );			// Only need to set once?
-		m_pScaleYVar->SetFloatValue( m_flScaleY );
-		m_pOffsetXVar->SetFloatValue( m_flSheenOffsetX );
-		m_pOffsetYVar->SetFloatValue( m_flSheenOffsetY );
-		m_pDirectionVar->SetIntValue( m_iSheenDir );
-
-		int iShaderIndex = sheenParams.m_iShaderIndex;
-
-		// Australium weapons always use iShaderIndex 1
-		const CEconStyleInfo *pStyle = pItem->GetStaticData()->GetStyleInfo( pItem->GetItemStyle() );
-		if ( pStyle && !pStyle->IsSelectable() )
-		{
-			iShaderIndex = 1;
-		}
-
-		
-		m_pSheenIndexVar->SetIntValue( iShaderIndex );
-
-		if ( ToolsEnabled() )
-		{
-			ToolFramework_RecordMaterialParams( GetMaterial() );
-		}
+		return false;
 	}
 
 	// the last time the animation was run (or will allowed to be run)
@@ -2724,129 +2337,6 @@ public:
 	{
 		return 0;
 	}
-
-	float GetTimeBetweenAnims ( C_TFPlayer* pTFPlayer )
-	{
-		const float MAX_SHEEN_WAIT = 5.0f;
-		const float MAX_KILLS = 5.0f;
-
-
-		if ( !pTFPlayer )
-			return MAX_SHEEN_WAIT;
-
-		if ( pTFPlayer->IsTaunting() )
-			return 0;
-
-		// Set the time between sheens based on kill streak
-		int iStreak = pTFPlayer->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-
-		if ( iStreak >= MAX_KILLS )
-			return 0;
-
-		if ( iStreak == 0 )
-			return MAX_SHEEN_WAIT;
-
-		// as player gets more kills, time decreases
-		return ( 1.0f - ( iStreak / MAX_KILLS ) ) * MAX_SHEEN_WAIT;
-	}
-
-	killstreak_params_t GetSheenParams( uint32 unEffectValue, bool bIsTeamBlue )
-	{
-		Assert( unEffectValue > 0 && unEffectValue < ARRAYSIZE( g_KillStreakEffectsBase ) );
-		killstreak_params_t params = g_KillStreakEffectsBase[ unEffectValue ];
-
-		if ( bIsTeamBlue && params.m_bHasTeamColor )
-		{
-			Assert( unEffectValue > 0 && unEffectValue < ARRAYSIZE( g_KillStreakEffectsBlue ) );
-			return g_KillStreakEffectsBlue[ unEffectValue ];
-		}
-		return params;	
-	}
-
-	bool InitParams( IClientRenderable *pRend, C_BaseEntity *pBaseEntity )
-	{
-		// Negative Value implies it has not been set, set it now
-		if ( m_flScaleX < 0 )
-		{
-			Vector vMin, vMax;
-			
-			// Check if the baseEntity is ready
-			if ( pBaseEntity )
-			{
-				CBaseAnimating *pAnimating = dynamic_cast< CBaseAnimating * > ( pBaseEntity );
-				if ( !pAnimating || !pAnimating->GetModelPtr() || pAnimating->GetModelPtr()->GetNumSeq() < pAnimating->GetSequence() )
-				{
-					return false;
-				}
-			}
-
-			pRend->GetRenderBounds( vMin, vMax );
-			m_flScaleX = vMax.x - vMin.x;
-			m_flSheenOffsetX = vMin.x;
-
-			m_flScaleY = vMax.z - vMin.z;
-			m_flSheenOffsetY = vMin.z;
-			m_iSheenDir = 0;
-
-			if ( vMax.y - vMin.y > m_flScaleX )
-			{
-				m_flScaleX = vMax.y - vMin.y;
-				m_flSheenOffsetX = vMin.y;
-
-				m_flScaleY = vMax.x - vMin.x;
-				m_flSheenOffsetY = vMin.x;
-
-				m_iSheenDir = 1;
-			}
-
-			if ( vMax.z - vMin.z > m_flScaleX )
-			{
-				m_flScaleX = vMax.z - vMin.z;
-				m_flSheenOffsetX = vMin.z;
-
-				m_flScaleY = vMax.y - vMin.y;
-				m_flSheenOffsetY = vMin.y;
-
-				m_iSheenDir = 2;
-			}
-		}
-		return true;
-	}
-
-	void Cleanup()
-	{
-		m_pTintVar = NULL;
-		CBaseAnimatedTextureProxy::Cleanup();
-	}
-
-	void RunNoProxy ()
-	{
-		m_pTintVar->SetVecValue( 0, 0, 0 ); 
-		m_AnimatedTextureFrameNumVar->SetIntValue( 0 );
-		m_pSheenIndexVar->SetIntValue( 0 );
-	}
-
-private:
-
-	IMaterialVar *m_pSheenIndexVar;
-	IMaterialVar *m_pTintVar;
-
-	IMaterialVar *m_pSheenVar;			// Overloaded for Weapon Pattern
-	IMaterialVar *m_pSheenMaskVar;		// Weapon Pattern Mask
-
-	IMaterialVar *m_pScaleXVar;
-	IMaterialVar *m_pScaleYVar;
-	IMaterialVar *m_pOffsetXVar;
-	IMaterialVar *m_pOffsetYVar;
-	IMaterialVar *m_pDirectionVar;
-
-	float m_flNextStartTime;		// Used in the rare case of playermodelpanels with no local player
-
-	float m_flScaleX;
-	float m_flScaleY;
-	float m_flSheenOffsetX;
-	float m_flSheenOffsetY;
-	int m_iSheenDir;
 };
 
 EXPOSE_INTERFACE( CProxyAnimatedWeaponSheen, IMaterialProxy, "AnimatedWeaponSheen" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -2855,170 +2345,46 @@ EXPOSE_INTERFACE( CProxyAnimatedWeaponSheen, IMaterialProxy, "AnimatedWeaponShee
 
 //-----------------------------------------------------------------------------
 // StatTrakIllum proxy
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CStatTrakIllumProxy : public CResultProxy
 {
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-private:
-	CFloatInput	m_flMinVal;
-	CFloatInput	m_flMaxVal;
 };
 
 
 bool CStatTrakIllumProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flMinVal.Init( pMaterial, pKeyValues, "minVal", 0.5 ) )
-		return false;
-
-	if ( !m_flMaxVal.Init( pMaterial, pKeyValues, "maxVal", 1 ) )
-		return false;
-
-	return true;
+	return false;
 }
 
-void CStatTrakIllumProxy::OnBind( void *pC_BaseEntity )
+void CStatTrakIllumProxy::OnBind(void* pC_BaseEntity)
 {
-
-	if ( !pC_BaseEntity )
-		return;
-
-	C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	if ( pEntity )
-	{
-		// StatTrak modules are children of their accompanying viewmodels
-		C_BaseViewModel *pViewModel = dynamic_cast<C_BaseViewModel*>( pEntity->GetMoveParent() );
-		if ( pViewModel )
-		{
-			//SetFloatResult( Lerp( pViewModel->GetStatTrakGlowMultiplier(), m_flMinVal.GetFloat(), m_flMaxVal.GetFloat() ) );
-			SetFloatResult( 0.75f );
-			return;
-		}
-	}
-
 }
 
 EXPOSE_INTERFACE( CStatTrakIllumProxy, IMaterialProxy, "StatTrakIllum" IMATERIAL_PROXY_INTERFACE_VERSION );
 //-----------------------------------------------------------------------------
 // StatTrak 'kill odometer' support: given a numerical value expressed as a string, pick a texture frame to represent a given digit
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CStatTrakDigitProxy : public CResultProxy
 {
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-	virtual bool HelperOnBindGetStatTrakScore( void *pC_BaseEntity, int *piScore );
-
-private:
-	CFloatInput	m_flDisplayDigit; // the particular digit we want to display
-	CFloatInput	m_flTrimZeros;
 };
 
 
 bool CStatTrakDigitProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flDisplayDigit.Init( pMaterial, pKeyValues, "displayDigit", 0 ) )
-		return false;
-
-	if ( !m_flTrimZeros.Init( pMaterial, pKeyValues, "trimZeros", 0 ) )
-		return false;
-
-	return true;
-}
-
-bool CStatTrakDigitProxy::HelperOnBindGetStatTrakScore( void *pC_BaseEntity, int *piScore )
-{
-	if ( !pC_BaseEntity )
-		return false;
-
-	if ( !piScore )
-		return false;
-
-	bool bReturnValue = false;
-	uint32 unScore = 0;
-	C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	if ( pEntity )
-	{
-		// StatTrak modules are children of their accompanying viewmodels
-		C_ViewmodelAttachmentModel *pViewModel = dynamic_cast<C_ViewmodelAttachmentModel*>( pEntity->GetMoveParent() );
-		if ( pViewModel )
-		{
-			//C_TFPlayer *pPlayer = ToTFPlayer( pViewModel->GetOwnerEntity() );
-			//if ( pPlayer )
-			CTFWeaponBase *pWeap = dynamic_cast<CTFWeaponBase*>( pViewModel->GetOwnerEntity() );
-			if ( pWeap )
-			{
-				
-				// Use the strange prefix if the weapon has one.
-				if ( pWeap->GetAttributeContainer()->GetItem()->FindAttribute( GetKillEaterAttr_Score( 0 ), &unScore ) )
-				{
-					*piScore = unScore;
-					bReturnValue = true;
-				}
-			}
-		}
-	}
-	else
-	{
-		// No Base entity, may be a straight econ item view (item model panel)
-		IClientRenderable *pRend = (IClientRenderable *)pC_BaseEntity;
-		if ( pRend )
-		{
-			const CEconItemView *pItem = dynamic_cast< CEconItemView* >( pRend );
-			if ( pItem && pItem->FindAttribute( GetKillEaterAttr_Score( 0 ), &unScore ) )
-			{
-				*piScore = unScore;
-				bReturnValue = true;
-			}
-		}
-	}
-	return bReturnValue;
+	return false;
 }
 
 
 void CStatTrakDigitProxy::OnBind( void *pC_BaseEntity )
 {
-	int nKillEaterAltScore = 0;
-
-	bool bHasScoreToDisplay = HelperOnBindGetStatTrakScore( pC_BaseEntity, &nKillEaterAltScore );
-	if ( !bHasScoreToDisplay )
-	{	// Error?
-		//SetFloatResult( (int)fmod( gpGlobals->curtime, 10.0f ) );
-		SetFloatResult( 0 );
-		return;
-	}
-
-
-	int iDesiredDigit = (int)m_flDisplayDigit.GetFloat();
-
-	// trim preceding zeros
-	if ( m_flTrimZeros.GetFloat() > 0 )
-	{
-		if ( pow( 10.0f, iDesiredDigit ) > nKillEaterAltScore )
-		{
-			SetFloatResult( 10.0f ); //assumed blank frame
-			return;
-		}
-	}
-
-	// get the [0-9] value of the digit we want
-	int iDigitCount = MIN( iDesiredDigit, 10 );
-	for ( int i = 0; i < iDigitCount; i++ )
-	{
-		nKillEaterAltScore /= 10;
-	}
-	nKillEaterAltScore %= 10;
-
-	SetFloatResult( nKillEaterAltScore );
 }
 
 EXPOSE_INTERFACE( CStatTrakDigitProxy, IMaterialProxy, "StatTrakDigit" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -3031,93 +2397,16 @@ class CStatTrakIconProxy : public CResultProxy
 public:
 	virtual bool Init( IMaterial *pMaterial, KeyValues *pKeyValues );
 	virtual void OnBind( void *pC_BaseEntity );
-
-private:
-	//CFloatInput	m_flMinVal;
-
 };
 
 
 bool CStatTrakIconProxy::Init( IMaterial *pMaterial, KeyValues *pKeyValues )
 {
-	/*if ( !CResultProxy::Init( pMaterial, pKeyValues ) )
-		return false;
-
-	if ( !m_flMinVal.Init( pMaterial, pKeyValues, "minVal", 0.5 ) )
-		return false;
-
-	if ( !m_flMaxVal.Init( pMaterial, pKeyValues, "maxVal", 1 ) )
-		return false;*/
-
-	return CResultProxy::Init( pMaterial, pKeyValues );
+	return false;
 }
-
-ConVar tf_stattrak_icon_offset_x( "tf_stattrak_icon_offset_x", "0", FCVAR_DEVELOPMENTONLY );
-ConVar tf_stattrak_icon_offset_y( "tf_stattrak_icon_offset_y", "0", FCVAR_DEVELOPMENTONLY );
-ConVar tf_stattrak_icon_scale( "tf_stattrak_icon_scale", "1.0", FCVAR_DEVELOPMENTONLY );
 
 void CStatTrakIconProxy::OnBind( void *pC_BaseEntity )
 {
-	// Find the StatTracker Type and Lookup the offset, for now hacks!
-	//if ( !pC_BaseEntity )
-	//	return;
-
-	//C_BaseEntity *pEntity = BindArgToEntity( pC_BaseEntity );
-	//if ( pEntity )
-	//{
-	//	// StatTrak modules are children of their accompanying viewmodels
-	//	C_BaseViewModel *pViewModel = dynamic_cast<C_BaseViewModel*>( pEntity->GetMoveParent() );
-	//	if ( pViewModel )
-	//	{
-	//		//SetFloatResult( Lerp( pViewModel->GetStatTrakGlowMultiplier(), m_flMinVal.GetFloat(), m_flMaxVal.GetFloat() ) );
-	//		SetFloatResult( 0.75f );
-	//		return;
-	//	}
-	//}
-
-
-	Vector2D center( 0.5, 0.5 );
-	Vector2D translation( 0, 0 );
-
-	VMatrix mat, temp;
-	mat.Identity();
-	//if ( m_pCenterVar )
-	//{
-	//	m_pCenterVar->GetVecValue( center.Base(), 2 );
-	//}
-	//MatrixBuildTranslation( mat, -center.x, -center.y, 0.0f );
-
-	//if ( m_pScaleVar )
-	//{
-	//	Vector2D scale;
-	//	m_pScaleVar->GetVecValue( scale.Base(), 2 );
-	//	MatrixBuildScale( temp, scale.x, scale.y, 1.0f );
-	//	MatrixMultiply( temp, mat, mat );
-	//}
-
-	//if ( m_pRotateVar )
-	//{
-	//	float angle = m_pRotateVar->GetFloatValue();
-	//	MatrixBuildRotateZ( temp, angle );
-	//	MatrixMultiply( temp, mat, mat );
-	//}
-	//MatrixBuildTranslation( temp, center.x, center.y, 0.0f );
-	//MatrixMultiply( temp, mat, mat );
-
-	//if ( m_pTranslateVar )
-	{
-		//m_pTranslateVar->GetVecValue( translation.Base(), 2 );
-		MatrixBuildTranslation( temp, tf_stattrak_icon_offset_x.GetFloat(), tf_stattrak_icon_offset_y.GetFloat(), 0.0f );
-		MatrixMultiply( temp, mat, mat );
-	}
-
-	m_pResult->SetMatrixValue( mat );
-
-	if ( ToolsEnabled() )
-	{
-		ToolFramework_RecordMaterialParams( GetMaterial() );
-	}
-
 }
 
 EXPOSE_INTERFACE( CStatTrakIconProxy, IMaterialProxy, "StatTrakIcon" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -3145,302 +2434,18 @@ struct TextureVarSetter
 
 //-----------------------------------------------------------------------------
 // Purpose: Used for weapon skins.
+// Gold Rush: Ditto
 //-----------------------------------------------------------------------------
 class CWeaponSkinProxy : public IMaterialProxy
 {
 public:
-	CWeaponSkinProxy( void )
-	: m_pMaterial( NULL )
-	, m_pBaseTextureVar( NULL )
-	, m_pBaseTextureOrig( NULL )
-	, m_nGeneration( CRTime::RTime32TimeCur() )
-	{
-	}
-
-	~CWeaponSkinProxy()
-	{
-		SafeRelease( &m_pBaseTextureOrig );
-	}
-
-	inline ITexture* GetWeaponSkinBaseLowRes( bool bPlayerIsLocalPlayer, itemid_t nID, int iTeam ) const
-	{
-		if ( !bPlayerIsLocalPlayer )
-			return NULL;
-		
-		CPlayerInventory *pLocalInv = TFInventoryManager()->GetLocalInventory();
-		if ( !pLocalInv )
-			return NULL;
-
-		return pLocalInv->GetWeaponSkinBaseLowRes( nID, iTeam );
-	}
-
-	inline bool TestAndSetBaseTexture()
-	{
-		if ( m_pBaseTextureOrig )
-		{
-			return true;
-		}
-
-		Assert( m_pBaseTextureVar != NULL );
-
-		// If the material is in the process of being async loaded, the var won't be a 
-		// texture yet, it'll be a string. 
-		if ( !m_pBaseTextureVar->IsTexture() )
-			return false;
-
-		ITexture* baseTexture = m_pBaseTextureVar->GetTextureValue();
-		Assert( baseTexture != NULL );
-		SafeAssign( &m_pBaseTextureOrig, baseTexture );
-		return true;
-	}
-
 	virtual bool Init( IMaterial *pMaterial, KeyValues* pKeyValues )
 	{
-		// We don't support DX8
-		ConVarRef mat_dxlevel( "mat_dxlevel" );
-		if ( mat_dxlevel.GetInt() < 90 )
-			return false;
-
-		Assert( pMaterial );
-		m_pMaterial = pMaterial;
-
-		bool bFound = false;
-		m_pBaseTextureVar = m_pMaterial->FindVar( "$basetexture", &bFound );
-		if ( !bFound ) 
-			return false;
-
-		// If we are doing load on demand, this might not be ready yet. 
-		// If not, then don't set it so the OnBind code knows not to rely on it.
-		// We don't actually care if the code succeeds here.
-		TestAndSetBaseTexture();
-	
-		return true;
-
+		return false;
 	}
 
-	virtual void OnBind( void *pC_BaseEntity )
+	virtual void OnBind(void* pC_BaseEntity)
 	{
-		tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
-
-		// If the base texture isn't ready yet, we cannot composite. So just bail out. Not even sure what 
-		// we could feasibly do in this case to workaround this, we don't have a texture to use yet.
-		if ( !TestAndSetBaseTexture() )
-			return;
-
-		Assert( m_pBaseTextureVar );
-
-		// This will set the texture when it goes out of scope. We can override with other textures along the way.
-		// This handles the return cases gracefully.
-		TextureVarSetter setter( m_pBaseTextureVar, m_pBaseTextureOrig );
-
-
-		CEconItemView *pItem = GetEconItemViewFromProxyEntity( pC_BaseEntity );
-		if ( !pItem )
-			return;
-
-		C_TFPlayer *pOwner = GetOwnerFromProxyEntity( pC_BaseEntity );
-		int desiredW = m_pBaseTextureOrig->GetActualWidth();
-		int desiredH = m_pBaseTextureOrig->GetActualHeight();
-		const bool cbPlayerIsLocalPlayer = C_TFPlayer::GetLocalTFPlayer() && pOwner == C_TFPlayer::GetLocalTFPlayer();
-
-		// Doing material overrides from the econ definitions can cause the same 
-		// item to be referred to from multiple materials. The code treats the 
-		// override material as the controller material. 
-		const IMaterial* pMaterialOverride = pItem->GetMaterialOverride( pItem->GetTeamNumber() );
-		const bool cbIsControllingMaterial = pMaterialOverride == NULL || pMaterialOverride == m_pMaterial;
-
-		// if we're not using high res, check if we should down res
-		// We may force low res for some composites. 
-		if ( pItem->ShouldWeaponSkinUseLowRes() || ( !pItem->ShouldWeaponSkinUseHighRes() && !cbPlayerIsLocalPlayer ) )
-		{
-			const int cDropMips = 2;
-			desiredW = Max( 1, desiredW >> cDropMips );
-			desiredH = Max( 1, desiredH >> cDropMips );
-		}
-
-		// If the object's generation isn't equal to when we told it, we need to regenerate it.
-		if ( cbIsControllingMaterial && ( pItem->GetWeaponSkinGeneration() != m_nGeneration || pItem->GetWeaponSkinGenerationTeam() != pItem->GetTeamNumber() ) )
-		{
-			// Skip this so we dont see a pop in staging
-			{
-				pItem->SetWeaponSkinBase( NULL );
-				pItem->SetWeaponSkinBaseCompositor( NULL );
-			}
-		}
-
-		ITexture* pWeaponSkinBase = pItem->GetWeaponSkinBase();
-
-		// If we have already completed the composite and stored it (or if there was an error)
-		// indicate that here.
-		if ( pWeaponSkinBase )
-		{
-			{
-				setter.SetTexture( pWeaponSkinBase );
-				// If the texture is the correct res already, we're done!
-				if ( desiredW == pWeaponSkinBase->GetActualWidth() && desiredH == pWeaponSkinBase->GetActualHeight() )
-					return;
-			}
-		}
-
-		// If we're doing material overrides, we may get in twice--but the non-controlling material should
-		// bail out now.
-		if ( !cbIsControllingMaterial )
-			return;
-
-		ITextureCompositor* pWeaponSkinBaseCompositor = pItem->GetWeaponSkinBaseCompositor();
-
-		bool bUseLowRes = false;
-
-		if ( pWeaponSkinBaseCompositor )
-		{
-			ECompositeResolveStatus status = pWeaponSkinBaseCompositor->GetResolveStatus();
-
-			bool cleanupCompositor = false;
-
-			switch ( status )
-			{
-			case ECRS_Idle: 
-				Assert( !"Unexpected state, shouldn't be idle here." );
-				break;
-
-			case ECRS_Scheduled:
-				// This is fine, this happens when multiple views ask for the same composite on the 
-				// same frame. For example, a Model Panel and the world view. 
-				bUseLowRes = true;
-				break;
-
-			case ECRS_PendingTextureLoads:
-				// Totally fine, try again later.
-				bUseLowRes = true;
-				break;
-
-			case ECRS_PendingComposites:
-				// Totally fine, try again later.
-				bUseLowRes = true;
-				break;
-
-			case ECRS_Error:
-				// Had an error, just show the current base texture forever. 
-				// Is this a reasonable error handler? Seems like it is, though maybe
-				// we want to show the error texture for at least dev mode.
-				Assert( !"Error while compositing, should figure out wtf.");
-				pItem->SetWeaponSkinBase( m_pBaseTextureOrig );
-				cleanupCompositor = true;
-				break;
-
-			case ECRS_Complete:
-				// Success! Use the new texture for all time. Or whatever.
-				pWeaponSkinBase = pWeaponSkinBaseCompositor->GetResultTexture();
-				pItem->SetWeaponSkinBase( pWeaponSkinBase );
-				setter.SetTexture( pWeaponSkinBase );
-				cleanupCompositor = true;
-				break;
-
-			default:
-				Assert( !"Unexpected return value from ITextureCompositor::GetResolveStatus" );
-				break;
-			};
-
-			if ( cleanupCompositor )
-			{
-				pItem->SetWeaponSkinBaseCompositor( NULL );
-				pWeaponSkinBaseCompositor = NULL;
-			}
-
-			if ( bUseLowRes )
-			{
-				ITexture* pTex = GetWeaponSkinBaseLowRes( cbPlayerIsLocalPlayer, pItem->GetItemID(), pItem->GetTeamNumber() );
-				if ( pTex )
-					setter.SetTexture( pTex );
-			}
-
-			return;
-		}
-
-		// Start the composite. 
-		KeyValues* rootKV = NULL;
-		float flWear = 0;
-		if ( !GetPaintKitWear( pItem, flWear ) )
-		{
-			return;
-		}
-		int nWear = EconWear_ToIntCategory( flWear );
-
-		uint32 unPaintKitDefIndex = uint32(-1);
-		if ( !GetPaintKitDefIndex( pItem, &unPaintKitDefIndex ) )
-		{
-			return;
-		}
-
-
-		const GameItemDefinition_t* tfItemDef = pItem->GetItemDefinition();
-		if ( tfItemDef )
-		{
-			const CPaintKitDefinition* pDef = assert_cast< const CPaintKitDefinition* >( GetProtoScriptObjDefManager()->GetDefinition( ProtoDefID_t( DEF_TYPE_PAINTKIT_DEFINITION, unPaintKitDefIndex ) ) );
-			if ( pDef )
-			{
-				rootKV = pDef->GetItemPaintKitDefinitionKV( tfItemDef->GetRemappedItemDefIndex(), nWear );
-			}
-		}
-
-		uint32 nCompositeFlags = 0;
-
-		if ( rootKV )
-		{
-			uint64 seed = pItem->GetOriginalID();
-			static CSchemaAttributeDefHandle pAttr_CustomPaintKitSeedLo( "custom_paintkit_seed_lo" );
-			static CSchemaAttributeDefHandle pAttr_CustomPaintKitSeedHi( "custom_paintkit_seed_hi" );
-
-			uint32 unLowVal, unHighVal;
-			const bool bHasLowVal = pItem->FindAttribute( pAttr_CustomPaintKitSeedLo, &unLowVal ),
-					   bHasHighVal = pItem->FindAttribute( pAttr_CustomPaintKitSeedHi, &unHighVal );
-
-			// We should have both, or neither.  We should never have just one
-			Assert( bHasLowVal == bHasHighVal );
-
-			// override the seed if we have custom attr
-			if ( bHasLowVal && bHasHighVal )
-			{
-				seed = ((uint64)unHighVal << 32) | (uint64)unLowVal;
-			}
-
-
-			Assert( pItem->GetTeamNumber() != TEAM_UNASSIGNED );
-			int teamNum = pItem->GetTeamNumber() != TEAM_UNASSIGNED ? pItem->GetTeamNumber() : TF_TEAM_RED;
-
-			char finalItemName[_MAX_PATH];
-			V_sprintf_safe( finalItemName, "%d_%d_wear_%02d", pItem->GetItemDefIndex(), unPaintKitDefIndex, nWear );
-
-			SafeAssign( &pWeaponSkinBaseCompositor, materials->NewTextureCompositor( desiredW, desiredH, finalItemName, teamNum, seed, rootKV, nCompositeFlags ) );
-			if ( pWeaponSkinBaseCompositor )
-			{
-				pWeaponSkinBaseCompositor->ScheduleResolve();
-				pItem->SetWeaponSkinGeneration( m_nGeneration );
-				pItem->SetWeaponSkinGenerationTeam( teamNum );
-
-				if ( pWeaponSkinBaseCompositor->GetResolveStatus() != ECRS_Complete )
-				{
-					// Normal case
-					pItem->SetWeaponSkinBaseCompositor( pWeaponSkinBaseCompositor );
-
-					// Try to sub out the low res, if it's ready.
-					ITexture* pTex = GetWeaponSkinBaseLowRes( cbPlayerIsLocalPlayer, pItem->GetItemID(), pItem->GetTeamNumber() );
-					if ( pTex )
-						setter.SetTexture( pTex );
-				}
-				else 
-				{
-					// Had a cache hit, so add the texture here.
-					pWeaponSkinBase = pWeaponSkinBaseCompositor->GetResultTexture();
-					pItem->SetWeaponSkinBase( pWeaponSkinBase );
-					setter.SetTexture( pWeaponSkinBase );
-				}
-
-				SafeRelease( pWeaponSkinBaseCompositor );
-				return;
-			} 
-		}
-
 	}
 
 	virtual void Release() { delete this; }
@@ -3448,13 +2453,6 @@ public:
 
 private:
 	IMaterial			*m_pMaterial;
-
-	IMaterialVar		*m_pBaseTextureVar;
-	ITexture			*m_pBaseTextureOrig;
-
-	RTime32				m_nGeneration;
-
-	bool				m_bForceUpdate;
 };
 
 EXPOSE_INTERFACE( CWeaponSkinProxy, IMaterialProxy, "WeaponSkin" IMATERIAL_PROXY_INTERFACE_VERSION );
@@ -3537,14 +2535,10 @@ IMPLEMENT_CLIENTCLASS_DT( C_TFPlayer, DT_TFPlayer, CTFPlayer )
 	RecvPropDataTable( "tflocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFLocalPlayerExclusive) ),
 	RecvPropDataTable( "tfnonlocaldata", 0, 0, &REFERENCE_RECV_TABLE(DT_TFNonLocalPlayerExclusive) ),
 
-	RecvPropBool( RECVINFO( m_bAllowMoveDuringTaunt ) ),
-	RecvPropBool( RECVINFO( m_bIsReadyToHighFive ) ),
-	RecvPropEHandle( RECVINFO( m_hHighFivePartner ) ),
 	RecvPropInt( RECVINFO( m_nForceTauntCam ) ),
 	RecvPropFloat( RECVINFO( m_flTauntYaw ) ),
 	RecvPropInt( RECVINFO( m_nActiveTauntSlot ) ),
 	RecvPropInt( RECVINFO( m_iTauntItemDefIndex ) ),
-	RecvPropFloat( RECVINFO( m_flCurrentTauntMoveSpeed ) ),
 	RecvPropFloat( RECVINFO( m_flVehicleReverseTime ) ),
 
 	RecvPropFloat( RECVINFO( m_flMvMLastDamageTime ) ),
@@ -3592,7 +2586,6 @@ BEGIN_PREDICTION_DATA( C_TFPlayer )
 	DEFINE_PRED_FIELD( m_nMuzzleFlashParity, FIELD_CHARACTER, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE  ),
 	DEFINE_PRED_FIELD( m_hOffHandWeapon, FIELD_EHANDLE, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flTauntYaw, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
-	DEFINE_PRED_FIELD( m_flCurrentTauntMoveSpeed, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flVehicleReverseTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_flHelpmeButtonPressTime, FIELD_FLOAT, FTYPEDESC_INSENDTABLE ),
 END_PREDICTION_DATA()
@@ -3616,13 +2609,6 @@ C_TFPlayer::C_TFPlayer() :
 
 	memset( m_pKartParticles, NULL, sizeof( m_pKartParticles ) );
 	memset( m_pKartSounds, NULL, sizeof( m_pKartSounds ) );
-
-	m_pEyeGlowEffect[ 0 ] = NULL;
-	m_pEyeGlowEffect[ 1 ] = NULL;
-	m_pszEyeGlowEffectName[0] = '\0';
-	m_vEyeGlowColor1.Zero();
-	m_vEyeGlowColor2.Zero();
-	m_flNextSheenStartTime = 0;
 	
 	m_pTeleporterEffect = NULL;
 	m_pBurningSound = NULL;
@@ -3636,7 +2622,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_flBurnEffectStartTime = 0;
 	m_pDisguisingEffect = NULL;
 	m_pSaveMeEffect = NULL;
-	m_pTauntWithMeEffect = NULL;
 	m_hOldObserverTarget = NULL;
 	m_iOldObserverMode = OBS_MODE_NONE;
 	m_pStunnedEffect = NULL;
@@ -3661,7 +2646,6 @@ C_TFPlayer::C_TFPlayer() :
 	m_bWasTaunting = false;
 	m_angTauntPredViewAngles.Init();
 	m_angTauntEngViewAngles.Init();
-	m_pTauntSoundLoop = NULL;
 
 	m_flWaterImpactTime = 0.0f;
 //	m_rtSpottedInPVSTime = 0;
@@ -3769,8 +2753,6 @@ C_TFPlayer::~C_TFPlayer()
 		controller.SoundDestroy( m_pFallingSoundLoop );
 		m_pFallingSoundLoop = NULL;
 	}
-
-	StopTauntSoundLoop();
 
 	if ( IsLocalPlayer() )
 	{
@@ -3979,18 +2961,6 @@ void C_TFPlayer::UpdateClientSideAnimation()
 	else
 	{
 		m_PlayerAnimState->Update( m_angEyeAngles[YAW], m_angEyeAngles[PITCH] );
-	}
-
-	// StatTrak Module Test
-	// Update ViewModels
-	// We only update the view model for the local player.
-	//if ( IsLocalPlayer() )
-	{
-		CTFWeaponBase *pWeapon = GetActiveTFWeapon();
-		if ( pWeapon )
-		{
-			pWeapon->UpdateAllViewmodelAddons();
-		}
 	}
 
 	BaseClass::UpdateClientSideAnimation();
@@ -4599,28 +3569,6 @@ void C_TFPlayer::UpdateKartSounds()
 		controller.SoundDestroy( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] );
 		m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] = NULL;
 	}
-
-	if ( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ] )
-	{
-		float flTargetPitch = RemapValClamped( GetCurrentTauntMoveSpeed(), 0.f, tf_halloween_kart_dash_speed.GetFloat(), tf_halloween_kart_sound_slow_pitch.GetFloat(), tf_halloween_kart_sound_fast_pitch.GetFloat() );
-		controller.SoundChangePitch( m_pKartSounds[ KART_SOUND_ENGINE_LOOP ], flTargetPitch, 0.1f );
-	}
-
-	// Uncomment this (if) when we have a tire screech sound
-	//if ( ( m_iKartState & CTFPlayerShared::kKartState_Driving ) && GetCurrentTauntMoveSpeed() < 300.f )
-	//{
-	//	if ( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] == NULL )
-	//	{
-	//		CBroadcastRecipientFilter filter;
-	//		m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] = controller.SoundCreate( filter, entindex(), "BumperCar.GoLoop" );
-	//		controller.Play( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ], 1.f, 80.f );
-	//	}
-	//}
-	//else if ( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] )
-	//{
-	//	controller.SoundDestroy( m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] );
-	//	m_pKartSounds[ KART_SOUND_BURNOUT_LOOP ] = NULL;
-	//}
 }
 
 //-----------------------------------------------------------------------------
@@ -5123,7 +4071,6 @@ void C_TFPlayer::TurnOnTauntCam( void )
 	
 		::input->CAM_ToThirdPerson();
 		ThirdPersonSwitch( true );
-		UpdateKillStreakEffects( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
 	}
 
 	m_bTauntInterpolating = true;
@@ -5189,7 +4136,6 @@ void C_TFPlayer::TurnOffTauntCam_Finish( void )
 	{
 		::input->CAM_ToFirstPerson();
 		ThirdPersonSwitch( false );
-		UpdateKillStreakEffects( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
 		angles = vec3_angle;
 	}
 
@@ -5236,7 +4182,6 @@ void C_TFPlayer::HandleTaunting( void )
 				m_Shared.InCond( TF_COND_TAUNTING ) ||
 				m_Shared.IsControlStunned() ||
 				m_Shared.IsLoser() ||
-				m_bIsReadyToHighFive ||
 				m_nForceTauntCam ||
 				m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) ||
 				m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) ||
@@ -5261,7 +4206,7 @@ void C_TFPlayer::HandleTaunting( void )
 	if (	( !IsAlive() && m_nForceTauntCam < 2 ) || 
 			(
 				m_bWasTaunting && !m_Shared.InCond( TF_COND_TAUNTING ) && !m_Shared.IsControlStunned() && 
-				!m_Shared.InCond( TF_COND_PHASE ) && !m_Shared.IsLoser() && !m_bIsReadyToHighFive &&
+				!m_Shared.InCond( TF_COND_PHASE ) && !m_Shared.IsLoser() &&
 				!m_nForceTauntCam && !m_Shared.InCond( TF_COND_HALLOWEEN_BOMB_HEAD ) &&
 				!m_Shared.InCond( TF_COND_HALLOWEEN_THRILLER ) &&
 				!m_Shared.InCond( TF_COND_HALLOWEEN_GIANT ) &&
@@ -5337,35 +4282,6 @@ void C_TFPlayer::TauntCamInterpolation()
 			else
 				TurnOnTauntCam_Finish();
 		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::PlayTauntSoundLoop( const char *pszSoundLoopName )
-{
-	if ( pszSoundLoopName && *pszSoundLoopName )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		CPASAttenuationFilter filter( this );
-		m_pTauntSoundLoop = controller.SoundCreate( filter, entindex(), pszSoundLoopName );
-		controller.Play( m_pTauntSoundLoop, 1.0, 100 );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::StopTauntSoundLoop()
-{
-	if ( m_pTauntSoundLoop )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundDestroy( m_pTauntSoundLoop );
-		m_pTauntSoundLoop = NULL;
 	}
 }
 
@@ -5542,15 +4458,6 @@ void C_TFPlayer::ClientThink()
 		StopSaveMeEffect( true );
 	}
 
-	if ( ShouldTauntHintIconBeVisible() )
-	{
-		CreateTauntWithMeEffect();
-	}
-	else
-	{
-		StopTauntWithMeEffect();
-	}
-
 	if ( IsLocalPlayer() )
 	{
 		g_ItemEffectMeterManager.Update( this );
@@ -5592,8 +4499,6 @@ void C_TFPlayer::ClientThink()
 		controller.SoundDestroy( m_pFallingSoundLoop );
 		m_pFallingSoundLoop = NULL;
 	}
-
-	m_Shared.ClientKillStreakBuffThink();
 
 /*
 	if ( m_LeaveServerTimer.HasStarted() && m_LeaveServerTimer.IsElapsed() )
@@ -5654,7 +4559,6 @@ void C_TFPlayer::Touch( CBaseEntity *pOther )
 			{
 				// Stop moving
 				SetAbsVelocity( vec3_origin );
-				SetCurrentTauntMoveSpeed( 0 );
 				m_Shared.RemoveCond( TF_COND_HALLOWEEN_KART_DASH );
 			}
 		}
@@ -6081,47 +4985,11 @@ bool C_TFPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 		int nCurrentButtons = pCmd->buttons;
 		pCmd->buttons = 0;
 
-		if ( !CanMoveDuringTaunt() )
-		{
-			pCmd->forwardmove = 0.0f;
-			pCmd->sidemove = 0.0f;
-			pCmd->upmove = 0.0f;
+		pCmd->forwardmove = 0.0f;
+		pCmd->sidemove = 0.0f;
+		pCmd->upmove = 0.0f;
 
-			VectorCopy( angMoveAngle, pCmd->viewangles );
-		}
-		else
-		{
-			float flSign = pCmd->sidemove != 0.f ? 1.f : -1.f;
-			float flMaxTurnSpeed = m_flTauntTurnSpeed;
-			if ( m_flTauntTurnAccelerationTime > 0.f )
-			{
-				flTauntTurnSpeed = clamp( flTauntTurnSpeed + flSign * ( flInputSampleTime / m_flTauntTurnAccelerationTime ) * flMaxTurnSpeed, 0.f, flMaxTurnSpeed );
-			}
-			else
-			{
-				flTauntTurnSpeed = flMaxTurnSpeed;
-			}
-			
-			float flSmoothTurnSpeed = 0.f;
-			if ( flMaxTurnSpeed > 0.f )
-			{
-				flSmoothTurnSpeed = SimpleSpline( flTauntTurnSpeed / flMaxTurnSpeed ) * flMaxTurnSpeed;
-			}
-
-			// only let these button through
-			if ( pCmd->sidemove < 0 )
-			{
-				angMoveAngle += QAngle( 0.f, flSmoothTurnSpeed * flInputSampleTime, 0.f );
-			}
-			else if( pCmd->sidemove > 0 )
-			{
-				angMoveAngle += QAngle( 0.f, -flSmoothTurnSpeed * flInputSampleTime, 0.f );
-			}
-			pCmd->buttons = nCurrentButtons & ( IN_MOVELEFT | IN_MOVERIGHT | IN_FORWARD | IN_BACK );
-			pCmd->sidemove = 0.0f;
-
-			VectorCopy( angMoveAngle, pCmd->viewangles );
-		}
+		VectorCopy( angMoveAngle, pCmd->viewangles );
 
 		// allow remap taunt keys to go through
 		CTFTauntInfo *pTaunt = m_TauntEconItemView.GetStaticData()->GetTauntData();
@@ -6147,8 +5015,7 @@ bool C_TFPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 
 	BaseClass::CreateMove( flInputSampleTime, pCmd );
 
-	// Don't avoid players if in the middle of a high five. This prevents high-fivers from becoming separated.
-	if ( !bInTaunt || ( !m_bIsReadyToHighFive && !CTFPlayerSharedUtils::ConceptIsPartnerTaunt( m_Shared.m_iTauntConcept ) ) )
+	if ( !bInTaunt )
 	{
 		AvoidPlayers( pCmd );
 	}
@@ -7390,8 +6257,6 @@ void C_TFPlayer::ClientPlayerRespawn( void )
 
 	UpdateDemomanEyeEffect( 0 );
 
-	UpdateKillStreakEffects( 0 );
-
 	m_hHeadGib = NULL;
 	m_hFirstGib = NULL;
 	m_hSpawnedGibs.Purge();
@@ -7516,54 +6381,6 @@ void C_TFPlayer::StopSaveMeEffect( bool bForceRemoveInstantly /*= false*/ )
 	}
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::CreateTauntWithMeEffect()
-{
-	C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalPlayer || this == pLocalPlayer )
-		return;
-
-	if ( TFGameRules() && TFGameRules()->ShowMatchSummary() )
-		return;
-
-	if ( !m_pTauntWithMeEffect )
-	{
-		const char *pszImageName;
-		const char *pszParticleName;
-		if ( GetTeamNumber() != pLocalPlayer->GetTeamNumber() )
-		{
-			pszImageName = "../Effects/speech_taunt";
-			pszParticleName = "speech_taunt_all";
-		}
-		else if ( GetTeamNumber() == TF_TEAM_RED )
-		{
-			pszImageName = "../Effects/speech_taunt_red";
-			pszParticleName = "speech_taunt_red";
-		}
-		else
-		{
-			pszImageName = "../Effects/speech_taunt_blue";
-			pszParticleName = "speech_taunt_blue";
-		}
-		m_pTauntWithMeEffect = ParticleProp()->Create( pszParticleName, PATTACH_POINT_FOLLOW, "head" );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void C_TFPlayer::StopTauntWithMeEffect()
-{
-	if ( m_pTauntWithMeEffect )
-	{
-		ParticleProp()->StopEmissionAndDestroyImmediately( m_pTauntWithMeEffect );		
-		m_pTauntWithMeEffect = NULL;
-	}
-}
 
 
 //-----------------------------------------------------------------------------
@@ -8472,14 +7289,6 @@ void C_TFPlayer::FireEvent( const Vector& origin, const QAngle& angles, int even
 			pWpn->GetAppropriateWorldOrViewModel()->FireEvent( origin, angles, AE_CL_BODYGROUP_SET_VALUE, options );
 		}
 	}
-	else if ( event == AE_TAUNT_ENABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = true;
-	}
-	else if ( event == AE_TAUNT_DISABLE_MOVE )
-	{
-		m_bAllowMoveDuringTaunt = false;
-	}
 	else if ( event == AE_CL_EXCLUDE_PLAYER_SOUND )
 	{
 		if ( !IsLocalPlayer() )
@@ -9028,7 +7837,7 @@ CON_COMMAND_F( spectate_random_server_extend_time, "extend the timer we're spect
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
-void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData )
+void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes )
 {
 	Assert( iMaxLenInBytes >= sizeof(sDataString[0]) );
 	// Make sure the output string is always initialized to a null-terminated string,
@@ -9109,15 +7918,6 @@ void C_TFPlayer::GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLen
 					}
 				}
 			}
-		}
-
-		// Check for kill streak data
-		if ( m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) > 0 )
-		{
-			bIsKillStreakData = true;
-			wchar_t wszClip[10];
-			V_snwprintf( wszClip, ARRAYSIZE(wszClip) - 1, L"%d", m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills ) );
-			g_pVGuiLocalize->ConstructString( sDataString, iMaxLenInBytes, g_pVGuiLocalize->Find( "#TF_playerid_ammo" ), 1, wszClip );
 		}
 	}
 }
@@ -9640,231 +8440,6 @@ const char *C_TFPlayer::GetDemomanEyeEffectName( int iDecapitations )
 }
 
 //-----------------------------------------------------------------------------
-void GetVectorColorForParticleSystem ( int iSystem, bool bIsBlueTeam, bool bUseColor2, Vector &vecColor )
-{
-	if ( iSystem < 0 || iSystem >= ARRAYSIZE( g_KillStreakEffectsBase ) )
-		return;
-
-	killstreak_params_t params = g_KillStreakEffectsBase[iSystem];
-
-	if ( bIsBlueTeam && g_KillStreakEffectsBase[iSystem].m_bHasTeamColor )
-	{
-		Assert( iSystem > 0 && iSystem < ARRAYSIZE( g_KillStreakEffectsBlue ) );
-		params = g_KillStreakEffectsBlue[iSystem];
-	}
-	
-	if ( bUseColor2 )
-	{
-		vecColor = Vector( params.m_color2_r, params.m_color2_g, params.m_color2_b );
-	}
-	else
-	{
-		vecColor = Vector( params.m_color1_r, params.m_color1_g, params.m_color1_b );
-	}
-	return;
-}
-
-//-----------------------------------------------------------------------------
-void C_TFPlayer::UpdateKillStreakEffects( int iCount, bool bKillScored /* = false */ )
-{
-	const int HIGH_GLOW = 20000;
-
-	// Staging only hack to test eye glows on players
-	if ( m_pEyeGlowEffect[0] )
-	{
-		ParticleProp()->StopEmission( m_pEyeGlowEffect[ 0 ] );
-		m_pEyeGlowEffect[ 0 ] = NULL;
-	}
-	if ( m_pEyeGlowEffect[1] )
-	{
-		ParticleProp()->StopEmission( m_pEyeGlowEffect[ 1 ] );
-		m_pEyeGlowEffect[ 1 ] = NULL;
-	}
-
-	CTFWeaponBase *pActiveWeapon = GetActiveTFWeapon();
-	if ( !pActiveWeapon )
-		return;
-
-	// Disguised Spies, Use targets kill streak.  Otherwise nothing
-	if ( m_Shared.InCond( TF_COND_DISGUISED ) )
-	{
-		C_TFPlayer *pDisguiseTarget = m_Shared.GetDisguiseTarget();
-		if ( pDisguiseTarget )
-			iCount = pDisguiseTarget->m_Shared.GetStreak( CTFPlayerShared::kTFStreak_Kills );
-		else
-			iCount = 0;
-	}
-
-
-	// Check if they have the appropriate attribute.
-	int iKillStreakEffectIndex = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iKillStreakEffectIndex, killstreak_effect );
-
-	int iKillStreakColorIndex = 0;
-	CALL_ATTRIB_HOOK_INT_ON_OTHER( pActiveWeapon, iKillStreakColorIndex, killstreak_idleeffect );
-
-	// !TEST!
-
-	// Need a color and eyeeffect to continue, otherwise you only have a sheen at best
-	if ( iKillStreakColorIndex == 0 || iKillStreakEffectIndex == 0 )
-	{
-		// Just in case search weapon wearables for killstreak effects
-		// This only applies for soldier (mantreads) and the demoshields
-		if ( IsPlayerClass( TF_CLASS_SOLDIER ) || IsPlayerClass( TF_CLASS_DEMOMAN ) )
-		{
-			// Iterate over all of our wearables
-			for ( int i = 0; i < GetNumWearables(); ++i )
-			{
-				CEconWearable *pWearable = GetWearable( i );
-				if ( pWearable && pWearable->GetAttributeContainer( )->GetItem( )->GetEquippedPositionForClass( GetPlayerClass( )->GetClassIndex( ) ) == LOADOUT_POSITION_SECONDARY )
-				{
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pWearable, iKillStreakEffectIndex, killstreak_effect );
-					CALL_ATTRIB_HOOK_INT_ON_OTHER( pWearable, iKillStreakColorIndex, killstreak_idleeffect );
-					break;
-				}
-			}
-		}
-	}
-
-	if ( iKillStreakColorIndex == 0 || iKillStreakEffectIndex == 0 )
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-		m_vEyeGlowColor1.Zero();
-		return;
-	}
-
-	// Play the pop effect on all kills
-	GetVectorColorForParticleSystem( iKillStreakColorIndex, GetTeamNumber() == TF_TEAM_BLUE, false, m_vEyeGlowColor1 );
-	GetVectorColorForParticleSystem( iKillStreakColorIndex, GetTeamNumber() == TF_TEAM_BLUE, true, m_vEyeGlowColor2 );
-
-	// Do not render in first person
-	if ( !pActiveWeapon->IsFirstPersonView() && bKillScored )
-	{
-		int iAttachment = 0;	
-		iAttachment = LookupAttachment( "eyeglow_R" );
-		if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-		{
-			CNewParticleEffect* pEffect = ParticleProp()->Create( "killstreak_t0_lvl1_flash", PATTACH_POINT_FOLLOW, iAttachment );
-			if ( pEffect )
-			{
-				pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-			}
-		}
-
-		if ( GetPlayerClass()->GetClassIndex() != TF_CLASS_DEMOMAN )
-		{
-			iAttachment = LookupAttachment( "eyeglow_L" );
-			if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-			{
-				CNewParticleEffect* pEffect = ParticleProp()->Create( "killstreak_t0_lvl1_flash", PATTACH_POINT_FOLLOW, iAttachment );
-				if ( pEffect )
-				{
-					pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-				}
-			}
-		}
-	}
-	
-	// only render eye glows if they have enough kills
-	if ( iCount < tf_killstreakeyes_minkills.GetInt() || m_Shared.InCond( TF_COND_STEALTHED ) )
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-		return;
-	}
-
-	bool bForceEyeGlow = false;
-
-	int iEyeGlowEffectIndex = iKillStreakEffectIndex;
-	if ( ( iEyeGlowEffectIndex > 0 && iCount > 0 ) || bForceEyeGlow )
-	{
-		// 2,4,6,8 for effects
-		const char* pszEffect = NULL;
-
-		// Verify the system is in the desired range
-
-		// This is the wrong type, value is too large should not exist so just bail
-		if ( iEyeGlowEffectIndex > HIGH_GLOW )
-			return;
-
-		// Hack do not have eyeglows for tier0
-		if ( iEyeGlowEffectIndex == 2001 )
-			return;
-
-		// Should we be using a High_glow
-		if ( iCount >= tf_killstreakeyes_maxkills.GetInt() )
-		{
-			iEyeGlowEffectIndex += HIGH_GLOW;
-		}
-
-		attachedparticlesystem_t *pSystem = GetItemSchema()->GetAttributeControlledParticleSystem( iEyeGlowEffectIndex );
-
-		if ( pSystem )
-		{
-			// Check for TeamColor EyeGlows
-			if ( GetTeamNumber() == TF_TEAM_BLUE && V_stristr( pSystem->pszSystemName, "_teamcolor_red" ))
-			{
-				static char pBlue[256];
-				V_StrSubst( pSystem->pszSystemName, "_teamcolor_red", "_teamcolor_blue", pBlue, 256 );
-				pSystem = GetItemSchema()->FindAttributeControlledParticleSystem( pBlue );
-			}
-			else if ( GetTeamNumber() == TF_TEAM_RED && V_stristr( pSystem->pszSystemName, "_teamcolor_blue" ))
-			{
-				// Guard against accidentally giving out the blue team color (support tool)
-				static char pRed[256];
-				V_StrSubst( pSystem->pszSystemName, "_teamcolor_blue", "_teamcolor_red", pRed, 256 );
-				pSystem = GetItemSchema()->FindAttributeControlledParticleSystem( pRed );
-			}
-		}
-
-		if ( pSystem )
-		{
-			pszEffect = pSystem->pszSystemName;
-		}
-
-		
-		if ( pszEffect )
-		{
-			// Do not render in first person
-			if ( !pActiveWeapon->IsFirstPersonView() )
-			{
-				int iAttachment = 0;	
-				iAttachment = LookupAttachment( "eyeglow_R" );
-				if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-				{
-					CNewParticleEffect* pEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, iAttachment );
-					if ( pEffect )
-					{
-						pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-					}
-					m_pEyeGlowEffect[0] = pEffect;
-				} 
-				
-				// do not put glow on left eye, that is reserved for eyelander
-				if ( GetPlayerClass()->GetClassIndex() != TF_CLASS_DEMOMAN )
-				{
-					iAttachment = LookupAttachment( "eyeglow_L" );
-					if ( iAttachment != INVALID_PARTICLE_ATTACHMENT )
-					{
-						CNewParticleEffect* pEffect = ParticleProp()->Create( pszEffect, PATTACH_POINT_FOLLOW, iAttachment );
-						if ( pEffect )
-						{
-							pEffect->SetControlPoint( CUSTOM_COLOR_CP1, m_vEyeGlowColor1 );
-						}
-						m_pEyeGlowEffect[1] = pEffect;
-					}
-				}
-			}
-			V_strcpy_safe( m_pszEyeGlowEffectName, pszEffect );
-		}
-	}
-	else
-	{
-		m_pszEyeGlowEffectName[0] = '\0';
-	}
-}
-
-
-//-----------------------------------------------------------------------------
 // Purpose: Check if local player should see spy as disguised body
 //-----------------------------------------------------------------------------
 bool C_TFPlayer::ShouldDrawSpyAsDisguised()
@@ -9917,25 +8492,6 @@ const Vector& C_TFPlayer::GetRenderOrigin( void )
 	}
 
 	return BaseClass::GetRenderOrigin();
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-ConVar tf_taunt_hint_max_distance( "tf_taunt_hint_max_distance", "256", FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT );
-bool C_TFPlayer::ShouldTauntHintIconBeVisible() const
-{
-	C_TFPlayer *pLocalTFPlayer = C_TFPlayer::GetLocalTFPlayer();
-	if ( !pLocalTFPlayer || pLocalTFPlayer == this || pLocalTFPlayer->IsTaunting() )
-		return false;
-
-	if ( IsTaunting() && IsReadyToTauntWithPartner() )
-	{
-		return GetAbsOrigin().DistToSqr( pLocalTFPlayer->GetAbsOrigin() ) <  Square( tf_taunt_hint_max_distance.GetFloat() );
-	}
-	
-	return false;
 }
 
 

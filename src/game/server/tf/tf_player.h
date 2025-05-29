@@ -696,22 +696,12 @@ private:
 
 // Taunts
 public:
-	bool				IsReadyToTauntWithPartner( void ) const { return m_bIsReadyToHighFive; }
-	CTFPlayer *			GetTauntPartner( void )		{ return m_hHighFivePartner; }
 	float				GetTauntYaw( void )				{ return m_flTauntYaw; }
 	float				GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void				SetTauntYaw( float flTauntYaw );
-	CTFPlayer *			FindPartnerTauntInitiator( void );
-	void				AcceptTauntWithPartner( CTFPlayer *initiator );
-	void				MimicTauntFromPartner( CTFPlayer *initiator );
 	bool				CanMoveDuringTaunt();
 	bool				ShouldStopTaunting();
 	bool				IsTauntInitiator() const { return m_bIsTauntInitiator; }
-	bool				IsTauntForceMovingForward() const { return m_bTauntForceMoveForward; }
-	float				GetTauntMoveAcceleration() const { return m_flTauntMoveAccelerationTime; }
-	float				GetTauntMoveSpeed() const { return m_flTauntForceMoveForwardSpeed; }
-	float				GetTauntTurnAccelerationTime() const { return m_flTauntTurnAccelerationTime; }
-	virtual int			GetAllowedTauntPartnerTeam() const;
 	CEconItemView		*GetTauntEconItemView() { return m_TauntEconItemView.IsValid() ? &m_TauntEconItemView : NULL; }
 
 	int					GetTauntConcept( CEconItemDefinition *pItemDef );
@@ -723,11 +713,8 @@ public:
 	bool				IsTaunting( void ) const { return m_Shared.InCond( TF_COND_TAUNTING ); }
 	void				DoTauntAttack( void );
 	bool				IsAllowedToTaunt( void );
-	bool				FindOpenTauntPartnerPosition( const CEconItemView *pEconItemView, Vector &position, float *flTolerance );
-	bool				IsAllowedToInitiateTauntWithPartner( const CEconItemView *pEconItemView, char *pszErrorMessage = NULL, int cubErrorMessage = 0 );
 	void				CancelTaunt( void );
 	void				StopTaunt( bool bForceRemoveProp = true );
-	void				EndLongTaunt();
 	float				GetTauntRemoveTime( void ) const { return m_flTauntRemoveTime; }
 	bool				IsAllowedToRemoveTaunt() const { return m_bAllowedToRemoveTaunt; }
 	void				HandleTauntCommand( int iTauntSlot = 0 );
@@ -741,9 +728,6 @@ public:
 	void				SetRPSResult( int iRPSResult ) { m_iTauntRPSResult = iRPSResult; }
 
 	void				HandleWeaponSlotAfterTaunt();
-
-	float				GetCurrentTauntMoveSpeed() const { return m_flCurrentTauntMoveSpeed; }
-	void				SetCurrentTauntMoveSpeed( float flSpeed ) { m_flCurrentTauntMoveSpeed = flSpeed; }
 
 	float				GetVehicleReverseTime() const { return m_flVehicleReverseTime; }
 	void				SetVehicleReverseTime( float flTime ) { m_flVehicleReverseTime = flTime; }
@@ -836,28 +820,14 @@ public:
 	void ScriptStunPlayer( float flTime, float flReductionAmount, int iStunFlags = TF_STUN_MOVEMENT, HSCRIPT hAttacker = NULL );
 
 private:
-	void				GetReadyToTauntWithPartner( void );
-	void				CancelTauntWithPartner( void );
-	void				StopTauntSoundLoop();
-	float				PlayTauntOutroScene();
 	float				PlayTauntRemapInputScene();
 	void				ParseSharedTauntDataFromEconItemView( const CEconItemView *pEconItemView );
 
-	CNetworkVar( bool, m_bAllowMoveDuringTaunt );
-	CNetworkVar( bool, m_bIsReadyToHighFive );
-	CNetworkHandle( CTFPlayer, m_hHighFivePartner );
 	CNetworkVar( int, m_nForceTauntCam );
 	CNetworkVar( float, m_flTauntYaw );
 	CNetworkVar( int, m_nActiveTauntSlot );
 	CNetworkVar( item_definition_index_t, m_iTauntItemDefIndex );
-	CNetworkVar( float, m_flCurrentTauntMoveSpeed );
 	CNetworkVar( float, m_flVehicleReverseTime );
-
-	bool				m_bTauntForceMoveForward;
-	float				m_flTauntForceMoveForwardSpeed;
-	float				m_flTauntMoveAccelerationTime;
-	float				m_flTauntTurnSpeed;
-	float				m_flTauntTurnAccelerationTime;
 
 	float				m_flPrevTauntYaw;
 	EHANDLE				m_hTauntScene;
@@ -867,8 +837,6 @@ private:
 	bool				m_bIsTauntInitiator;
 	float				m_flTauntSoundTime;
 	CUtlString			m_strTauntSoundName;
-	float				m_flTauntSoundLoopTime;
-	CUtlString			m_strTauntSoundLoopName;
 	CEconItemView		m_TauntEconItemView;
 
 	enum TauntStage_t
@@ -1323,7 +1291,6 @@ private:
 	float				m_flHalloweenKartPushEventTime;
 	bool				m_bCheckKartCollision;
 	EHANDLE				m_hKartBombHeadTarget;
-	float				m_flNextBonusDucksVOAllowedTime;
 
 	CNetworkVar( int,	m_iKartHealth );
 

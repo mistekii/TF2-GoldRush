@@ -157,8 +157,6 @@ CTFClientScoreBoardDialog::CTFClientScoreBoardDialog( IViewPort *pViewPort ) : C
 	m_iImageDominatedDead = 0;
 	m_iImageNemesis = 0;
 	m_iImageNemesisDead = 0;
-	m_iImageStreak = 0;
-	m_iImageStreakDead = 0;
 	m_iTextureCamera = -1;
 	m_iImageDead = 0;
 
@@ -220,8 +218,6 @@ void CTFClientScoreBoardDialog::ApplySchemeSettings( vgui::IScheme *pScheme )
 		m_iImageDominatedDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_dominated_d", true ) );
 		m_iImageNemesis = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis", true ) );
 		m_iImageNemesisDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/leaderboard_nemesis_d", true ) );
-		m_iImageStreak = m_pImageList->AddImage( scheme()->GetImage( "../hud/scoreboard_streak", true ) );
-		m_iImageStreakDead = m_pImageList->AddImage( scheme()->GetImage( "../hud/scoreboard_streak_d", true ) );
 		m_iImageDead = m_pImageList->AddImage(scheme()->GetImage("../hud/leaderboard_dead", true));
 
 		for(int i = 1 ; i < SCOREBOARD_DOMINATION_ICONS ; i++)
@@ -774,7 +770,7 @@ void CTFClientScoreBoardDialog::InitPlayerList( SectionedListPanel *pPlayerList 
 	}
 	
 	// the player avatar is always a fixed size, so as we change resolutions we need to vary the size of the name column to adjust the total width of all the columns
-	m_nExtraSpace = pPlayerList->GetWide() - m_iAvatarWidth - m_iSpacerWidth - m_iNameWidth - m_iKillstreakWidth - m_iKillstreakImageWidth - m_iNemesisWidth - m_iNemesisWidth - m_iScoreWidth - m_iClassWidth - m_iPingWidth - m_iSpacerWidth - m_iDeathWidth - ( 2 * SectionedListPanel::COLUMN_DATA_INDENT ); // the SectionedListPanel will indent the columns on either end by SectionedListPanel::COLUMN_DATA_INDENT 
+	m_nExtraSpace = pPlayerList->GetWide() - m_iAvatarWidth - m_iSpacerWidth - m_iNameWidth - m_iNemesisWidth - m_iNemesisWidth - m_iScoreWidth - m_iClassWidth - m_iPingWidth - m_iSpacerWidth - m_iDeathWidth - ( 2 * SectionedListPanel::COLUMN_DATA_INDENT ); // the SectionedListPanel will indent the columns on either end by SectionedListPanel::COLUMN_DATA_INDENT 
 
 	pPlayerList->AddColumnToSection(0, "name", "#TF_Scoreboard_Name", 0, m_iNameWidth);
 	pPlayerList->AddColumnToSection(0, "status", "", SectionedListPanel::COLUMN_IMAGE | SectionedListPanel::COLUMN_CENTER, m_iStatusWidth);
@@ -1073,21 +1069,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 
 			C_TFPlayer *pTFPlayer = ToTFPlayer( UTIL_PlayerByIndex( playerIndex ) );
 
-			if ( pTFPlayer && pTFPlayer->GetActiveTFWeapon() )
-			{
-				int nCount = g_TF_PR->GetStreak( playerIndex, CTFPlayerShared::kTFStreak_Kills );
-				if ( nCount )
-				{
-					pKeyValues->SetInt( "killstreak_image", bAlive ? m_iImageStreak : m_iImageStreakDead );
-					pKeyValues->SetInt( "killstreak", nCount );
-				}
-				else
-				{
-					pKeyValues->SetInt( "killstreak_image", 0 );
-					pKeyValues->SetString( "killstreak", "" );
-				}
-			}
-
 			pKeyValues->SetInt("status", g_TF_PR->IsAlive(playerIndex) ? 0 : m_iImageDead);
 
 			// check for bots first, so malicious server operators can't fake a ping and stuff their server with bots that look like players
@@ -1183,8 +1164,6 @@ void CTFClientScoreBoardDialog::UpdatePlayerList()
 				pKeyValues->SetInt( "dominating", m_iImageDom[1] );
 				pKeyValues->SetInt( "score", 9999 );
 				pKeyValues->SetInt( "connected", 2 );
-				pKeyValues->SetInt( "killstreak_image", bAlive ? m_iImageStreak : m_iImageStreakDead );
-				pKeyValues->SetInt( "killstreak", 100 );
 				pKeyValues->SetInt( "nemesis", bAlive ? m_iImageNemesis : m_iImageNemesisDead );
 			}
 

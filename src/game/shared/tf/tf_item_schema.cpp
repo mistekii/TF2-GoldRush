@@ -12,7 +12,6 @@
 #include "tf_item_tools.h"
 #include "in_buttons.h"
 #include "econ_holidays.h"
-#include "econ_paintkit.h"
 
 	#include "econ_item_system.h"
 	#include "engine/IEngineSound.h"
@@ -700,7 +699,6 @@ CTFTauntInfo::CTFTauntInfo()
 	m_flTauntSeparationForwardDistance = 0;
 	m_flTauntSeparationRightDistance = 0;
 	m_flMinTauntTime = 2.f;
-	m_bIsPartnerTaunt = false;
 	m_bStopTauntIfMoved = false;
 
 	m_nFOV = 0;
@@ -786,23 +784,6 @@ bool CTFTauntInfo::BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErro
 			if ( !InitPerClassStringVectorArray( pSubKey, m_vecOutroScenes, pVecErrors ) ) 
 				return false;
 		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntInitiatorScenes, pVecErrors ) ) 
-				return false;
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntReceiverScenes, pVecErrors ) )
-				return false;
-		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_initiator_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntInitiatorScenes, pVecErrors ) )
-				return false;
-		}
-		else if ( !V_strcmp( pszKeyName, "custom_partner_taunt_receiver_per_class" ) )
-		{
-			if ( !InitPerClassStringVectorArray( pSubKey, m_vecPartnerTauntReceiverScenes, pVecErrors ) )
-				return false;
-		}
 		else if ( !V_strcmp( pszKeyName, "custom_taunt_input_remap" ) )
 		{
 			if ( !InitTauntInputRemap( pSubKey, m_vecTauntInputRemap, pVecErrors ) )
@@ -840,10 +821,6 @@ bool CTFTauntInfo::BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErro
 		else if ( !V_strcmp( pszKeyName, "min_taunt_time" ) )
 		{
 			m_flMinTauntTime = pSubKey->GetFloat();
-		}
-		else if ( !V_strcmp( pszKeyName, "is_partner_taunt" ) )
-		{
-			m_bIsPartnerTaunt = pSubKey->GetBool();
 		}
 		else if ( !V_strcmp( pszKeyName, "stop_taunt_if_moved" ) )
 		{
@@ -883,7 +860,6 @@ bool CTFTauntInfo::BInitFromKV( KeyValues *pKV, CUtlVector<CUtlString> *pVecErro
 //-----------------------------------------------------------------------------
 void CTFItemDefinition::InternalInitialize()
 {
-	m_bValidPaintkitsGenerated = false;
 	m_eEquipType = EQUIP_TYPE_INVALID;
 	m_iDefaultLoadoutSlot = LOADOUT_POSITION_INVALID;
 	m_iAnimationSlot = -1;
@@ -1312,29 +1288,6 @@ bool CTFItemDefinition::IsContentStreamable() const
     }
 	return item_enable_content_streaming.GetBool()
 		&& CEconItemDefinition::IsContentStreamable();
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: Lazy-populate m_vecValidPaintkitDefs with all of the paintkits that
-//			can be applied to this item def.
-//-----------------------------------------------------------------------------
-const CUtlVector< uint32 >& CTFItemDefinition::GetValidPaintkits() const
-{
-	if ( !m_bValidPaintkitsGenerated )
-	{
-		m_bValidPaintkitsGenerated = true;
-		auto& mapDefs = GetProtoScriptObjDefManager()->GetDefinitionMapForType( DEF_TYPE_PAINTKIT_DEFINITION );
-		FOR_EACH_MAP_FAST( mapDefs, i )
-		{
-			const CPaintKitDefinition* pDef = (const CPaintKitDefinition*)mapDefs[ i ];
-			if ( pDef->CanApplyToItem( GetDefinitionIndex() ) )
-			{
-				m_vecValidPaintkitDefs.AddToTail( pDef->GetDefIndex() );
-			}
-		}
-	}
-
-	return m_vecValidPaintkitDefs;
 }
 
 //-----------------------------------------------------------------------------

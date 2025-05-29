@@ -135,7 +135,6 @@ protected:
 	CPanelAnimationVar( Color, m_clrIcon, "IconColor", "255 80 0 255" );
 	CPanelAnimationVar( Color, m_clrBaseBGColor, "BaseBackgroundColor", "46 43 42 220" );
 	CPanelAnimationVar( Color, m_clrLocalBGColor, "LocalBackgroundColor", "245 229 196 200" );
-	CPanelAnimationVar( Color, m_clrKillStreakBg, "KillStreakBackgroundColor", "224 223 219 200" );
 
 	CUtlVector<DeathNoticeItem> m_DeathNotices;
 

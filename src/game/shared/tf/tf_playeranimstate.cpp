@@ -98,8 +98,6 @@ void CTFPlayerAnimState::InitTF( CTFPlayer *pPlayer )
 	m_pTFPlayer = pPlayer;
 	m_bInAirWalk = false;
 	m_flHoldDeployedPoseUntilTime = 0.0f;
-	m_flTauntMoveX = 0.f;
-	m_flTauntMoveY = 0.f;
 	m_vecSmoothedUp = Vector( 0.f, 0.f, 1.f );
 	m_flVehicleLeanVel = 0.f;
 	m_flVehicleLeanPos = 0.f;
@@ -379,9 +377,7 @@ void CTFPlayerAnimState::Update( float eyeYaw, float eyePitch )
 	// Compute the player sequences.
 	ComputeSequences( pStudioHdr );
 
-	CTFPlayer *pTauntPartner = pTFPlayer->GetTauntPartner();
-
-	Vector vPositionToFace = ( pTauntPartner ? pTauntPartner->GetAbsOrigin() : vec3_origin );
+	Vector vPositionToFace = vec3_origin;
 	bool bInTaunt = pTFPlayer->m_Shared.InCond( TF_COND_TAUNTING );
 	bool bInKart = pTFPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART );
 	bool bIsImmobilized = bInTaunt || pTFPlayer->m_Shared.IsControlStunned();
@@ -429,9 +425,6 @@ void CTFPlayerAnimState::Update( float eyeYaw, float eyePitch )
 			// TODO: Fix this after Halloween 2014.
 			m_bForceAimYaw = true;
 			m_flEyeYaw = pTFPlayer->GetTauntYaw();
-
-			Taunt_ComputePoseParam_MoveX( pStudioHdr );
-			Taunt_ComputePoseParam_MoveY( pStudioHdr );
 		}
 		else if ( bInKart )
 		{
@@ -669,100 +662,10 @@ void CTFPlayerAnimState::ComputePoseParam_AimYaw( CStudioHdr *pStudioHdr )
 	BaseClass::ComputePoseParam_AimYaw( pStudioHdr );
 }
 
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerAnimState::Taunt_ComputePoseParam_MoveX( CStudioHdr *pStudioHdr )
-{
-	CTFPlayer *pTFPlayer = GetTFPlayer();
-	if ( pTFPlayer->IsTaunting() && pTFPlayer->CanMoveDuringTaunt() )
-	{
-		int iMove = 0;
-		iMove += pTFPlayer->m_nButtons & IN_FORWARD ? 1 : 0;
-		iMove += pTFPlayer->m_nButtons & IN_BACK ? -1 : 0;
-
-		float fl_move_x = 1.f;
-		if ( pTFPlayer->GetTauntMoveAcceleration() > 0.f )
-		{
-			fl_move_x = Sign( iMove ) * ( gpGlobals->frametime / pTFPlayer->GetTauntMoveAcceleration() );
-		}
-
-		// turning?
-		if ( iMove != 0.f )
-		{
-			m_flTauntMoveX = clamp( m_flTauntMoveX + fl_move_x, -1.f, 1.f );
-		}
-		else if ( m_flTauntMoveX != 0.f )
-		{
-			// smooth the value back to 0
-			if ( m_flTauntMoveX < 0.f )
-			{
-				m_flTauntMoveX = clamp( m_flTauntMoveX + fabs( fl_move_x ), -1.f, 0.f );
-			}
-			if ( m_flTauntMoveX > 0.f )
-			{
-				m_flTauntMoveX = clamp( m_flTauntMoveX - fabs( fl_move_x ), 0.f, 1.f );
-			}
-		}
-	}
-	else
-	{
-		m_flTauntMoveX = 0.f;
-	}
-
-	pTFPlayer->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveX, Sign( m_flTauntMoveX ) * SimpleSpline( fabs( m_flTauntMoveX ) ) );
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayerAnimState::Taunt_ComputePoseParam_MoveY( CStudioHdr *pStudioHdr )
-{
-	CTFPlayer *pTFPlayer = GetTFPlayer();
-	if ( pTFPlayer->IsTaunting() && pTFPlayer->CanMoveDuringTaunt() )
-	{
-		float flTauntYawDiff = pTFPlayer->GetTauntYaw() - pTFPlayer->GetPrevTauntYaw();
-		float fl_move_y = 1.f;
-		if ( pTFPlayer->GetTauntTurnAccelerationTime() > 0.f )
-		{
-			fl_move_y = Sign( flTauntYawDiff ) * ( gpGlobals->frametime / pTFPlayer->GetTauntTurnAccelerationTime() );
-		}
-
-		// turning?
-		if ( flTauntYawDiff != 0.f )
-		{
-			m_flTauntMoveY = clamp( m_flTauntMoveY + fl_move_y, -1.f, 1.f );
-		}
-		else if ( m_flTauntMoveY != 0.f )
-		{
-			// smooth the value back to 0
-			if ( m_flTauntMoveY < 0.f )
-			{
-				m_flTauntMoveY = clamp( m_flTauntMoveY + fabs( fl_move_y ), -1.f, 0.f );
-			}
-			if ( m_flTauntMoveY > 0.f )
-			{
-				m_flTauntMoveY = clamp( m_flTauntMoveY - fabs( fl_move_y ), 0.f, 1.f );
-			}
-		}
-	}
-	else
-	{
-		m_flTauntMoveY = 0.f;
-	}
-	pTFPlayer->SetPoseParameter( pStudioHdr, m_PoseParameterData.m_iMoveY, Sign( m_flTauntMoveY ) * SimpleSpline( fabs( m_flTauntMoveY ) ) );
-}
-
 extern ConVar tf_halloween_kart_slow_turn_accel_speed;
 void CTFPlayerAnimState::Vehicle_ComputePoseParam_MoveYaw( CStudioHdr *pStudioHdr )
 {
 	float flValue = -m_pTFPlayer->m_Shared.GetVehicleTurnPoseAmount() / tf_halloween_kart_slow_turn_accel_speed.GetFloat();
-	if ( m_pTFPlayer->GetTauntMoveSpeed() < 0.f )
-	{
-		flValue = -flValue;
-	}
 
 	flValue *= 0.5f;
 

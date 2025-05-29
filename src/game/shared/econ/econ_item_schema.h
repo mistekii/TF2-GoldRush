@@ -683,8 +683,6 @@ enum
 	ATTDESCFORM_VALUE_IS_DATE,					// Printed as a date
 	ATTDESCFORM_VALUE_IS_ACCOUNT_ID,			// Printed as steam user name
 	ATTDESCFORM_VALUE_IS_PARTICLE_INDEX,		// Printed as a particle description
-	ATTDESCFORM_VALUE_IS_KILLSTREAKEFFECT_INDEX,// Printed as killstreak effect description
-	ATTDESCFORM_VALUE_IS_KILLSTREAK_IDLEEFFECT_INDEX,  // Printed as idle effect description
 	ATTDESCFORM_VALUE_IS_ITEM_DEF,				// Printed as item name
 	ATTDESCFORM_VALUE_IS_FROM_LOOKUP_TABLE,		// Printed as a string from a lookup table, specified by the attribute definition name
 };
@@ -796,7 +794,7 @@ private:
 
 	// If this is true the attribute is counted as "instance" data for purposes of asset class in the Steam Economy. Non-instance
 	// properties are considered things that can differentiate items at a fundamental level (ie., definition index, quality); instance
-	// properties are more things like additional customizations -- score for strange items, paint color, etc.
+	// properties are more things like additional customizations -- score for strange items, etc.
 	bool		m_bInstanceData;
 	EAssetClassAttrExportRule_t	m_eAssetClassAttrExportRule;			// if this is true the attribute will not be exported for asset class
 	uint32		m_unAssetClassBucket;									// if this is set then attribute value is bucketed when exported for asset class
@@ -1082,7 +1080,6 @@ struct perteamvisuals_t
 	int			iSkin;
 	bool		bUsePerClassBodygroups;
 	CUtlVector<attachedmodel_t>	m_AttachedModels;
-	CUtlVector<attachedmodel_t>	m_AttachedModelsFestive;	// Attr controlled Festive Attachments
 	CUtlVector<attachedparticlesystem_t> m_AttachedParticles;
 	CUtlVector<animation_on_wearable_t> m_Animations;
 	CUtlVector<activity_on_wearable_t> m_Activities;
@@ -1107,33 +1104,29 @@ struct perteamvisuals_t
 enum item_capabilities_t
 {
 	ITEM_CAP_NONE					= 0,
-	ITEM_CAP_PAINTABLE				= 1 << 0,
-	ITEM_CAP_NAMEABLE				= 1 << 1,
-	ITEM_CAP_DECODABLE				= 1 << 2,
-	ITEM_CAP_CAN_BE_CRAFTED_IF_PURCHASED = 1 << 3,		// was ITEM_CAP_CAN_MOD_SOCKET
-	ITEM_CAP_CAN_CUSTOMIZE_TEXTURE	= 1 << 4,
-	ITEM_CAP_USABLE					= 1 << 5,
-	ITEM_CAP_USABLE_GC				= 1 << 6,
-	ITEM_CAP_CAN_GIFT_WRAP			= 1 << 7,
-	ITEM_CAP_USABLE_OUT_OF_GAME		= 1 << 8,
-	ITEM_CAP_CAN_COLLECT			= 1 << 9,
-	ITEM_CAP_CAN_CRAFT_COUNT		= 1 << 10,
-	ITEM_CAP_CAN_CRAFT_MARK			= 1 << 11,
-	ITEM_CAP_PAINTABLE_TEAM_COLORS	= 1 << 12,
-	ITEM_CAP_CAN_BE_RESTORED		= 1 << 13,		// can users remove properties (paint, nametag, etc.) from this item via the in-game UI?
-	ITEM_CAP_CAN_USE_STRANGE_PARTS	= 1 << 14,
-	ITEM_CAP_CAN_CARD_UPGRADE		= 1 << 15,
-	ITEM_CAP_CAN_STRANGIFY			= 1 << 16,
-	ITEM_CAP_CAN_KILLSTREAKIFY		= 1 << 17,
-	ITEM_CAP_CAN_CONSUME			= 1 << 18,
-	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 19,		// IT'S A VERB OKAY
-	ITEM_CAP_HAS_SLOTS				= 1 << 20,
-	ITEM_CAP_DUCK_UPGRADABLE		= 1 << 21,
-	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 22,
-	NUM_ITEM_CAPS					= 23,
+	ITEM_CAP_NAMEABLE				= 1 << 0,
+	ITEM_CAP_DECODABLE				= 1 << 1,
+	ITEM_CAP_CAN_BE_CRAFTED_IF_PURCHASED = 1 << 2,		// was ITEM_CAP_CAN_MOD_SOCKET
+	ITEM_CAP_CAN_CUSTOMIZE_TEXTURE	= 1 << 3,
+	ITEM_CAP_USABLE					= 1 << 4,
+	ITEM_CAP_USABLE_GC				= 1 << 5,
+	ITEM_CAP_CAN_GIFT_WRAP			= 1 << 6,
+	ITEM_CAP_USABLE_OUT_OF_GAME		= 1 << 7,
+	ITEM_CAP_CAN_COLLECT			= 1 << 8,
+	ITEM_CAP_CAN_CRAFT_COUNT		= 1 << 9,
+	ITEM_CAP_CAN_CRAFT_MARK			= 1 << 10,
+	ITEM_CAP_CAN_BE_RESTORED		= 1 << 11,		// can users remove properties (nametag, etc.) from this item via the in-game UI?
+	ITEM_CAP_CAN_USE_STRANGE_PARTS	= 1 << 12,
+	ITEM_CAP_CAN_CARD_UPGRADE		= 1 << 13,
+	ITEM_CAP_CAN_STRANGIFY			= 1 << 14,
+	ITEM_CAP_CAN_CONSUME			= 1 << 15,
+	ITEM_CAP_CAN_SPELLBOOK_PAGE		= 1 << 16,		// IT'S A VERB OKAY
+	ITEM_CAP_HAS_SLOTS				= 1 << 17,
+	ITEM_CAP_CAN_UNUSUALIFY			= 1 << 18,
+	NUM_ITEM_CAPS					= 19,
 };
 
-enum { ITEM_CAP_DEFAULT		 = ITEM_CAP_CAN_CRAFT_MARK | ITEM_CAP_CAN_BE_RESTORED | ITEM_CAP_CAN_USE_STRANGE_PARTS | ITEM_CAP_CAN_CARD_UPGRADE | ITEM_CAP_CAN_STRANGIFY | ITEM_CAP_CAN_KILLSTREAKIFY | ITEM_CAP_CAN_CONSUME | ITEM_CAP_CAN_GIFT_WRAP };	// what are the default capabilities on an item?
+enum { ITEM_CAP_DEFAULT		 = ITEM_CAP_CAN_CRAFT_MARK | ITEM_CAP_CAN_BE_RESTORED | ITEM_CAP_CAN_USE_STRANGE_PARTS | ITEM_CAP_CAN_CARD_UPGRADE | ITEM_CAP_CAN_STRANGIFY | ITEM_CAP_CAN_CONSUME | ITEM_CAP_CAN_GIFT_WRAP };	// what are the default capabilities on an item?
 enum { ITEM_CAP_TOOL_DEFAULT = ITEM_CAP_NONE };																										// what are the default capabilities of a tool?
 
 struct bundleinfo_t
@@ -1206,8 +1199,7 @@ public:
 	}
 
 	// When the client attempts to apply a tool to a specific other item in their inventory, this function
-	// will be called. This is called from the UI is response to things like putting paint on an item,
-	// using a key to unlock a crate, etc.
+	// will be called. This is called from the UI is response to things like using a key to unlock a crate, etc.
 	virtual void OnClientApplyTool( class C_EconItemView *pTool, class C_EconItemView *pSubject, vgui::Panel *pParent ) const
 	{
 		Assert( !"IEconTool::OnClientApplyTool(): unimplemented call!" );
@@ -1295,7 +1287,6 @@ public:
 	int			GetArmoryRemap( void ) const		{ return m_iArmoryRemap; }
 	int			GetStoreRemap( void ) const			{ return m_iStoreRemap; }
 	item_definition_index_t GetSetItemRemap() const { return m_unSetItemRemapDefIndex; }		// what def index do we consider ourself for purposes of determining "is an item equipped that satisfies this set slot?" (ie., Festive Huntsman -> Huntsman); default is to point to itself
-	const char *GetXifierRemapClass() const			{ return m_pszXifierRemapClass; }
 	const char	*GetBaseFunctionalItemName() const	{ return m_pszBaseFunctionalItemName; }
 	const char *GetParticleSuffix() const			{ return m_pszParticleSuffix; }
 
@@ -1379,9 +1370,6 @@ public:
 	// Attached models
 	int						GetNumAttachedModels( int iTeam ) const;
 	attachedmodel_t			*GetAttachedModelData( int iTeam, int iIdx ) const;
-
-	int						GetNumAttachedModelsFestivized( int iTeam ) const;
-	attachedmodel_t			*GetAttachedModelDataFestivized( int iTeam, int iIdx ) const;
 
 	// Attached particle systems
 	int						GetNumAttachedParticles( int iTeam ) const;
@@ -1609,9 +1597,6 @@ private:
 	// Contains information on how to describe items with this attribute in the Armory
 	const char		*m_pszArmoryDesc;
 
-	// Temporary(?) solution to allow xifiers to work on botkiller and festive variants of weapons
-	const char		*m_pszXifierRemapClass;
-
 	// Base item name -- used for grouping weapon functionality
 	const char		*m_pszBaseFunctionalItemName;
 
@@ -1751,38 +1736,6 @@ inline attachedmodel_t *CEconItemDefinition::GetAttachedModelData( int iTeam, in
 		return NULL;
 
 	return &pVisuals->m_AttachedModels[iIdx];
-#else
-	return NULL;
-#endif
-}
-//-----------------------------------------------------------------------------
-inline int CEconItemDefinition::GetNumAttachedModelsFestivized( int iTeam ) const
-{
-#ifndef CSTRIKE_DLL
-	iTeam = GetBestVisualTeamData( iTeam );
-	perteamvisuals_t *pVisuals = GetPerTeamVisual(iTeam);
-	if ( iTeam < 0 || iTeam >= TEAM_VISUAL_SECTIONS || !pVisuals )
-		return 0;
-	return pVisuals->m_AttachedModelsFestive.Count();
-#else
-	return 0;
-#endif
-}
-//-----------------------------------------------------------------------------
-inline attachedmodel_t *CEconItemDefinition::GetAttachedModelDataFestivized( int iTeam, int iIdx ) const
-{
-#ifndef CSTRIKE_DLL
-	iTeam = GetBestVisualTeamData( iTeam );
-	perteamvisuals_t *pVisuals = GetPerTeamVisual(iTeam);
-	Assert( pVisuals );
-	if ( iTeam < 0 || iTeam >= TEAM_VISUAL_SECTIONS || !pVisuals )
-		return NULL;
-
-	Assert( iIdx < pVisuals->m_AttachedModelsFestive.Count() );
-	if ( iIdx >= pVisuals->m_AttachedModelsFestive.Count() )
-		return NULL;
-
-	return &pVisuals->m_AttachedModelsFestive[iIdx];
 #else
 	return NULL;
 #endif
@@ -2638,10 +2591,6 @@ public:
 	typedef CUtlDict<CEconOperationDefinition*> OperationDefinitionMap_t;
 	const OperationDefinitionMap_t &GetOperationDefinitions() const { return m_dictOperationDefinitions; }
 	const CEconOperationDefinition* GetOperationByName( const char* pszName ) const;
-
-	typedef CUtlMap< uint32, const CEconItemDefinition* > PaintKitItemDefinitionMap_t;
-	const CEconItemDefinition *GetPaintKitItemDefinition( uint32 unPaintKitDefIndex ) const;
-	const CEconItemCollectionDefinition *GetPaintKitCollectionFromItem( const IEconItemInterface *pItem, uint32 *pUnPaintKitDefIndex = NULL ) const;
 	
 
 #if defined(CLIENT_DLL) || defined(GAME_DLL)
@@ -2910,9 +2859,6 @@ private:
 	// List of all the tool items, is a sublist of mapItems
 	ToolsItemDefinitionMap_t							m_mapToolsItems;
 
-	// List of all paintkit tool item definitions
-	PaintKitItemDefinitionMap_t							m_mapPaintKitTools;
-
 	// List of all base items, is a sublist of mapItems
 	BaseItemDefinitionMap_t								m_mapBaseItems;
 
@@ -3170,7 +3116,6 @@ private:
 void MergeDefinitionPrefab( KeyValues *pKVWriteItem, KeyValues *pKVSourceItem );
 bool IsUnusualAttribute( const CEconItemAttributeDefinition *pAttrDef );
 bool ItemHasUnusualAttribute( const IEconItemInterface *pItem, const CEconItemAttributeDefinition **pUnusualAttribute = NULL, uint32 *pUnAttributeValue = NULL );
-bool IsPaintKitTool( const CEconItemDefinition *pItemDef );
 bool CheckValveSignature(const void *data, uint32 nDataSize, const void *signature, uint32 nSignatureSize);
 bool TF_CheckSignature(const char* fileName, const char *pathID, CUtlBuffer& bufRawData);
 

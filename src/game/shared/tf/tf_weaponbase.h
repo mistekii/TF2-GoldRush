@@ -92,13 +92,6 @@ enum EWeaponStrangeType_t
 	STRANGE_IS_STRANGE = 1,
 };
 
-enum EWeaponStatTrakModuleType_t
-{
-	MODULE_UNKNOWN = -1,
-	MODULE_NONE = 0,
-	MODULE_FOUND = 1,
-};
-
 #ifdef CLIENT_DLL
 float CalcViewModelBobHelper( CBasePlayer *player, BobState_t *pBobState );
 void AddViewModelBobHelper( Vector &origin, QAngle &angles, BobState_t *pBobState );
@@ -547,9 +540,6 @@ class CTFWeaponBase : public CBaseCombatWeapon, public IHasOwner, public IHasGen
 
 	virtual int		GetDropSkinOverride( void ) { return -1; }
 
-	int				GetKillStreak () const { return m_iKillStreak; }
-	void			SetKillStreak ( int value ) { m_iKillStreak = value; };
-
 	float			GetClipScale () const { return m_flClipScale; }
 	void			SetClipScale ( float flScale ) { m_flClipScale = flScale; }
 
@@ -632,18 +622,7 @@ class CTFWeaponBase : public CBaseCombatWeapon, public IHasOwner, public IHasGen
 	virtual bool	CanPickupOtherWeapon() const { return true; }
 
 	EWeaponStrangeType_t	GetStrangeType();
-	bool					BHasStatTrakModule();
 #ifdef CLIENT_DLL
-	// StatTrak View Model Test
-	void					UpdateAllViewmodelAddons( void );
-
-	void					AddStatTrakModel( CEconItemView *pItem, int nStatTrakType, AccountID_t holderAcctId );
-	void					RemoveViewmodelStatTrak( void );
-	void					RemoveWorldmodelStatTrak( void );
-
-	CHandle< CTFWeaponAttachmentModel > m_viewmodelStatTrakAddon;
-	CHandle< CTFWeaponAttachmentModel > m_worldmodelStatTrakAddon;
-
 	virtual const Vector&	GetViewmodelOffset() OVERRIDE;
 #endif
 
@@ -690,7 +669,6 @@ protected:
 	bool			m_bCurrentAttackIsDuringDemoCharge;
 
 	EWeaponStrangeType_t			m_eStrangeType;
-	EWeaponStatTrakModuleType_t		m_eStatTrakModuleType;
 
 	CNetworkVar(	bool,	m_bLowered );
 
@@ -742,7 +720,6 @@ public:
 	CHandle< CTFPlayer > m_hLastDrainVictim;
 	CountdownTimer m_lastDrainVictimTimer;
 
-	int				m_iKillStreak;
 	float			m_flClipScale;
 #endif
 	CNetworkVar( int, m_iConsecutiveShots );

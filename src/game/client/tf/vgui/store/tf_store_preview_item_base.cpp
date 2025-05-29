@@ -198,46 +198,6 @@ void CTFStorePreviewItemPanelBase::PerformLayout( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-static bool IsAnythingPaintable( const CUtlVector<CEconItemView*>& vecItems )
-{
-	FOR_EACH_VEC( vecItems, i )
-	{
-		if ( vecItems[i]->GetStaticData()->GetCapabilities() & ITEM_CAP_PAINTABLE )
-			return true;
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-static void UpdatePaintColorsForTeam( CTFPlayerModelPanel *pPlayerModelPanel, uint32 unRGB0, uint32 unRGB1 )
-{
-	Assert( pPlayerModelPanel );
-
-	static CSchemaAttributeDefHandle pAttrDef_ItemTintRGB( "set item tint RGB" );
-
-	if ( !pAttrDef_ItemTintRGB )
-		return;
-
-	const CUtlVector<CEconItemView*> &items = pPlayerModelPanel->GetCarriedItems();
-	if ( !IsAnythingPaintable( items ) )
-		return;
-	
-	for ( int i=0; i<items.Count(); ++i )
-	{
-		if ( items[i]->GetStaticData()->GetCapabilities() & ITEM_CAP_PAINTABLE )
-		{
-			items[i]->GetAttributeList()->SetRuntimeAttributeValue( pAttrDef_ItemTintRGB, pPlayerModelPanel->GetTeam() == TF_TEAM_RED ? unRGB0 : unRGB1 );
-			items[i]->InvalidateColor();
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFStorePreviewItemPanelBase::OnCommand( const char *command )
 {
 	if ( !Q_strnicmp( command, "team_toggle", 11 ) )
@@ -246,12 +206,6 @@ void CTFStorePreviewItemPanelBase::OnCommand( const char *command )
 		{
 			m_pPlayerModelPanel->SetTeam( m_pPlayerModelPanel->GetTeam() == TF_TEAM_RED ? TF_TEAM_BLUE : TF_TEAM_RED );
 		}
-
-		// Also toggle team paint color if necessary.
-		if ( m_unPaintRGB0 != m_unPaintRGB1 )
-		{
-			UpdatePaintColorsForTeam( m_pPlayerModelPanel, m_unPaintRGB0, m_unPaintRGB1 );
-		}
 	}
 	else if ( !Q_strnicmp( command, "zoom_toggle", 11 ) )
 	{
@@ -259,10 +213,6 @@ void CTFStorePreviewItemPanelBase::OnCommand( const char *command )
 		{
 			m_pPlayerModelPanel->ToggleZoom();
 		}
-	}
-	else if ( !Q_strnicmp( command, "paint_toggle", 12 ) )
-	{
-		CyclePaint();
 	}
 	else if ( !Q_strnicmp( command, "set_red", 7 ) )
 	{
@@ -298,11 +248,6 @@ void CTFStorePreviewItemPanelBase::OnCommand( const char *command )
 	{
 		CycleStyle();
 		return;
-	}
-	else if ( V_strncasecmp( command, "SetPaint", V_strlen( "SetPaint" ) ) == 0 )
-	{
-		item_definition_index_t iItemDef = V_atoi( &command[ V_strlen( "SetPaint" ) ] );
-		SetPaint( iItemDef );
 	}
 	else if ( V_strncasecmp( command, "SetStyle", V_strlen( "SetStyle" ) ) == 0 )
 	{
@@ -582,11 +527,6 @@ void CTFStorePreviewItemPanelBase::UpdateModelPanel()
 		}
 
 		UpdatePlayerModelButtons();
-
-		// Fix a problem where changing the class would change the preview mesh but wouldn't
-		// update the paint. This is a hack and won't work if we have multi-class styles or
-		// just about anything else.
-		CyclePaint( false );
 	}
 }
 
@@ -684,8 +624,6 @@ void CTFStorePreviewItemPanelBase::UpdateCustomizeMenu( void )
 			pCustomPanel->SetZPos( -100 );
 			pCustomPanel->SetTall( nHeight );
 			pCustomPanel->SetWide( nHeight );
-			pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( (unPaintRGB0 & 0xFF0000) >> 16, 0, 255 ), clamp( (unPaintRGB0 & 0xFF00) >> 8, 0, 255 ), clamp( (unPaintRGB0 & 0xFF), 0, 255 ), 255 ) );
-			pCustomPanel->m_colPaintColors.AddToTail( Color( clamp( (unPaintRGB1 & 0xFF0000) >> 16, 0, 255 ), clamp( (unPaintRGB1 & 0xFF00) >> 8, 0, 255 ), clamp( (unPaintRGB1 & 0xFF), 0, 255 ), 255 ) );
 		}
 	}
 	
@@ -774,13 +712,8 @@ void CTFStorePreviewItemPanelBase::UpdateOptionsButton( void )
 
 	bool bVisible = false;
 
-	// Is the selected item paintable
-	if ( pItemData->GetCapabilities() & ITEM_CAP_PAINTABLE )
-	{
-		bVisible = true;
-	}
 	// has multiple styles?
-	else if ( pItemData->GetNumSelectableStyles() > 1 )
+	if ( pItemData->GetNumSelectableStyles() > 1 )
 	{
 		bVisible = true;
 	}
@@ -946,78 +879,6 @@ void CTFStorePreviewItemPanelBase::CycleStyle( void )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-void CTFStorePreviewItemPanelBase::SetPaint( item_definition_index_t iItemDef )
-{
-	if ( !m_pPlayerModelPanel )
-		return;
-
-	if ( !IsAnythingPaintable( m_pPlayerModelPanel->GetCarriedItems() ) )
-		return;
-
-	static CSchemaAttributeDefHandle pAttribDef_Paint( "set item tint RGB" );
-	static CSchemaAttributeDefHandle pAttribDef_Paint2( "set item tint RGB 2" );
-
-	// Find the next paint color.
-	const CEconItemSchema::SortedItemDefinitionMap_t &mapDefs = GetItemSchema()->GetSortedItemDefinitionMap();
-
-	m_unPaintRGB0 = 0;
-	m_unPaintRGB1 = 0;
-
-	if ( iItemDef != INVALID_ITEM_DEF_INDEX )
-	{
-		int iteratorName = mapDefs.FirstInorder();
-		while ( iteratorName != mapDefs.InvalidIndex() )
-		{
-			// Find the next sub
-			int iIndex = mapDefs[iteratorName]->GetDefinitionIndex();
-			if ( iIndex == iItemDef )
-			{
-				// Is this definition something that has paint attributes on it?
-				const CEconItemDefinition *pData = mapDefs[iteratorName];
-
-				float fRGB = 0.0f;
-				if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pData, pAttribDef_Paint, &fRGB ) && fRGB != 0.0f )
-				{
-					m_unPaintRGB0 = fRGB;
-
-					// We may or may not have a secondary paint color as well. If we don't, we just use the primary
-					// paint color to fill both slots.
-					if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pData, pAttribDef_Paint2, &fRGB ) )
-					{
-						m_unPaintRGB1 = fRGB;
-					}
-					else
-					{
-						m_unPaintRGB1 = m_unPaintRGB0;
-					}
-
-					m_unPaintDef = pData->GetDefinitionIndex();
-					SetCycleLabelText( m_pPaintNameLabel, pData->GetItemBaseName() );
-				}
-				else
-				{
-					Warning( "CTFStorePreviewItemPanelBase::SetPaint iItemDef[%d] is not paint item", iItemDef );
-				}
-
-				break;
-			}
-
-			iteratorName = mapDefs.NextInorder( iteratorName );
-		}
-	}
-
-	if ( m_unPaintRGB0 == 0 )
-	{
-		m_unPaintDef = 0;
-		SetCycleLabelText( m_pPaintNameLabel, "#Store_NoPaint" );
-	}
-
-	UpdatePaintColorsForTeam( m_pPlayerModelPanel, m_unPaintRGB0, m_unPaintRGB1 );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 void CTFStorePreviewItemPanelBase::SetStyle( style_index_t unStyle )
 {
 	if ( !m_pPlayerModelPanel )
@@ -1109,78 +970,4 @@ const CUtlVector< int >	*CTFStorePreviewItemPanelBase::GetUnusualList() const
 	}
 
 	return NULL;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFStorePreviewItemPanelBase::CyclePaint( bool bActuallyCycle )
-{
-	if ( !m_pPlayerModelPanel )
-		return;
-
-	if ( !IsAnythingPaintable( m_pPlayerModelPanel->GetCarriedItems() ) )
-		return;
-	
-	static CSchemaAttributeDefHandle pAttribDef_Paint( "set item tint RGB" );
-	static CSchemaAttributeDefHandle pAttribDef_Paint2( "set item tint RGB 2" );
-
-	// Find the next paint color.
-	const CEconItemSchema::SortedItemDefinitionMap_t &mapDefs = GetItemSchema()->GetSortedItemDefinitionMap();
-	
-	m_unPaintRGB0 = 0;
-	m_unPaintRGB1 = 0;
-	
-	if ( bActuallyCycle || m_unPaintDef > 0 )
-	{
-		int iteratorName = mapDefs.FirstInorder();
-		while ( iteratorName != mapDefs.InvalidIndex() )
-		{
-			// Find the next sub
-			int iIndex = mapDefs[iteratorName]->GetDefinitionIndex();
-			if ( bActuallyCycle ? iIndex > m_unPaintDef : iIndex >= m_unPaintDef )
-			{
-				// Is this definition something that has paint attributes on it?
-				const CEconItemDefinition *pData = mapDefs[iteratorName];
-
-				float fRGB = 0.0f;
-				if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pData, pAttribDef_Paint, &fRGB ) && fRGB != 0.0f )
-				{
-					if ( V_strstr( pData->GetItemBaseName(), "Halloween" ) )
-					{
-						iteratorName = mapDefs.NextInorder( iteratorName );
-						continue;
-					}
-
-					m_unPaintRGB0 = fRGB;
-
-					// We may or may not have a secondary paint color as well. If we don't, we just use the primary
-					// paint color to fill both slots.
-					if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pData, pAttribDef_Paint2, &fRGB ) )
-					{
-						m_unPaintRGB1 = fRGB;
-					}
-					else
-					{
-						m_unPaintRGB1 = m_unPaintRGB0;
-					}
-
-					m_unPaintDef = pData->GetDefinitionIndex();
-					SetCycleLabelText( m_pPaintNameLabel, pData->GetItemBaseName() );
-					break;
-				}
-			}
-
-			iteratorName = mapDefs.NextInorder( iteratorName );
-		}
-	}
-
-	if ( m_unPaintRGB0 == 0 )
-	{
-		m_unPaintDef = 0;
-		SetCycleLabelText( m_pPaintNameLabel, "#Store_NoPaint" );
-	}
-
-	UpdatePaintColorsForTeam( m_pPlayerModelPanel, m_unPaintRGB0, m_unPaintRGB1 );
 }

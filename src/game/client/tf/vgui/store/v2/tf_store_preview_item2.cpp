@@ -1270,7 +1270,6 @@ void CTFStorePreviewItemPanel2::OnNavButtonSelected( KeyValues *pData )
 		return;
 
 	m_pPlayerModelPanel->SetTeam( iTeam );
-	CyclePaint( false );
 
 	C_CTFGameStats::ImmediateWriteInterfaceEvent( "team_switch(store_preview_item_panel)", iTeam == TF_TEAM_RED ? "red" : "blu" );
 }

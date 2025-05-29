@@ -35,7 +35,6 @@ IMPLEMENT_SERVERCLASS_ST( CTFPlayerResource, DT_TFPlayerResource )
 	SendPropArray3( SENDINFO_ARRAY3( m_iDamageBlocked ), SendPropInt( SENDINFO_ARRAY( m_iDamageBlocked ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iBonusPoints ), SendPropInt( SENDINFO_ARRAY( m_iBonusPoints ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropArray3( SENDINFO_ARRAY3( m_iPlayerLevel ), SendPropInt( SENDINFO_ARRAY( m_iPlayerLevel ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
-	SendPropArray3( SENDINFO_ARRAY3( m_iStreaks ), SendPropInt( SENDINFO_ARRAY( m_iStreaks ), -1, SPROP_UNSIGNED | SPROP_VARINT ) ),
 	SendPropInt( SENDINFO( m_iPartyLeaderRedTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_iPartyLeaderBlueTeamIndex ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
 	SendPropInt( SENDINFO( m_iEventTeamStatus ), -1, SPROP_UNSIGNED | SPROP_VARINT ),
@@ -253,11 +252,6 @@ void CTFPlayerResource::UpdateConnectedPlayer( int iIndex, CBasePlayer *pPlayer 
 	m_flNextRespawnTime.Set( iIndex, flRespawnTime );
 
 	m_flConnectTime.Set( iIndex, pTFPlayer->GetConnectionTime() );
-
-	for ( int streak_type = 0; streak_type < CTFPlayerShared::kTFStreak_COUNT; streak_type++ )
-	{
-		m_iStreaks.Set( iIndex * CTFPlayerShared::kTFStreak_COUNT + streak_type, pTFPlayer->m_Shared.GetStreak( (CTFPlayerShared::ETFStreak)streak_type ) );
-	}
 
 	CSteamID steamID;
 	pTFPlayer->GetSteamID( &steamID );

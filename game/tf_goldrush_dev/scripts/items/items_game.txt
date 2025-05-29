@@ -73,10 +73,6 @@
 		{
 			"value" 	"14"
 		}
-		"paintkitweapon"
-		{
-			"value" 	"15"
-		}
 	}
 	"colors"
 	{
@@ -538,10 +534,6 @@
 		{
 			"prefab"				"promo hat"
 			"craft_material_type"	""
-			"capabilities"
-			{
-				"paintable"			"1"
-			}
 			"visuals"
 			{
 				"player_bodygroups"
@@ -642,74 +634,6 @@
 			{
 				"is commodity"			"1"
 			}
-		}
-
-		"paint_can"
-		{
-			"item_class"	"tool"
-			"craft_class"	"tool"
-			"craft_material_type"	"tool"
-			"tool"
-			{
-				"type"	"paint_can"
-				"usage_capabilities"
-				{
-					"paintable" "1"
-				}
-			}
-			"armory_desc"		"paintcan"
-			"armory_remap"		"Paint Can"
-			"item_type_name"	"#TF_T"
-			"item_description"	"#TF_Tool_PaintCan_Desc"
-			"image_inventory"	"backpack/player/items/crafting/paintcan"
-			"image_inventory_overlay"	"backpack/player/items/crafting/paintcan_paintcolor"
-			"image_inventory_size_w"	"128"
-			"image_inventory_size_h"	"82"
-			"item_quality"		"unique"
-			"min_ilevel"	"5"
-			"max_ilevel"	"5"
-			"static_attrs"
-			{
-				"is commodity"			"1"
-				"cannot restore"		"1"
-			}
-			"mouse_pressed_sound"	"ui/item_paint_can_pickup.wav"
-			"drop_sound"		"ui/item_paint_can_pickup.wav"
-		}
-
-		"paint_can_team_color"
-		{
-			"item_class"	"tool"
-			"craft_class"	"tool"
-			"craft_material_type"	"tool"
-			"tool"
-			{
-				"type"	"paint_can"
-				"usage_capabilities"
-				{
-					"paintable_team_colors" "1"
-				}
-			}
-			"armory_desc"		"paintcan"
-			"armory_remap"		"Paint Can"
-			"item_type_name"	"#TF_T"
-			"item_description"	"#TF_Tool_PaintCan_TeamColor_Desc"
-			"image_inventory"	"backpack/player/items/crafting/teampaint"
-			"image_inventory_overlay"	"backpack/player/items/crafting/teampaint_blu_mask"
-			"image_inventory_overlay2"	"backpack/player/items/crafting/teampaint_red_mask"
-			"image_inventory_size_w"	"128"
-			"image_inventory_size_h"	"96"
-			"item_quality"		"unique"
-			"min_ilevel"	"5"
-			"max_ilevel"	"5"
-			"static_attrs"
-			{
-				"always tradable"		"1"
-				"is commodity"			"1"
-				"cannot restore"		"1"
-			}
-			"mouse_pressed_sound"	"ui/item_paint_can_pickup.wav"
-			"drop_sound"		"ui/item_paint_can_pickup.wav"
 		}
 
 		"tool_nametag"
@@ -1059,67 +983,6 @@
 			"drop_sound"			"ui/item_bottle_drop.wav"
 		}
 
-		"killstreakifier_base"
-		{
-			"item_class"	"tool"
-			"tool"
-			{
-				"type"	"killstreakifier"
-				"usage"
-				{
-					"item_desc_tool_target"	"#ItemDescKillStreakify"
-				}
-				"usage_capabilities"
-				{
-					"can_killstreakify" "1"
-				}
-			}
-			"static_attrs"
-			{
-				"tool_target_item_icon_offset" "0.285 0.43 0.35"
-			}
-			"attributes"
-			{
-				"never craftable"
-				{
-					"attribute_class"	"never_craftable"
-					"value"				"1"
-				}
-				"cannot restore"
-				{
-					"attribute_class"	"cannot_restore"
-					"value"				"1"
-				}
-			}
-			"show_in_armory"	"0"
-			"item_name"			"#TF_KillStreakifier_Name"
-			"item_description"	"#TF_KillStreakifier_Desc"
-			"item_type_name"	"#TF_KillStreakifierToolA"
-			"image_inventory"	"backpack/crafting/professional_grease_basic"
-			"image_inventory_size_w" "128"
-			"image_inventory_size_h" "96"
-			"item_quality"		"unique"
-			"min_ilevel"		"5"
-			"max_ilevel"		"5"
-			"mouse_pressed_sound"	"ui/item_bottle_pickup.wav"
-			"drop_sound"			"ui/item_bottle_drop.wav"
-		}
-
-		"killstreakifier_kit_basic"
-		{
-			"prefab" "killstreakifier_base"
-			"item_description"	"#TF_KillStreakifierBasic_Desc"
-			"image_inventory"	"backpack/crafting/professional_grease_basic"
-			"attributes"
-			{
-				"killstreak tier"
-				{
-					"attribute_class"	"killstreak_tier"
-					"value"	"1"
-				}
-			}
-		}
-
 		"dynamic_recipe_base"
 		{
 			"item_class"	"tool"
@@ -1164,15 +1027,6 @@
 			"attributes"
 			{
 			}
-		}
-
-		"mvm_killstreak_recipe_base"
-		{
-			"prefab"				"dynamic_recipe_base"
-			"mouse_pressed_sound"			"ui/item_heavy_gun_pickup.wav"
-			"drop_sound"					"ui/item_heavy_gun_drop.wav"
-			"recipe_partial_complete_sound"	"weapons/sentry_wire_connect.wav"
-			"recipe_complete_sound"			"weapons/drg_wrench_teleport.wav"
 		}
 
 
@@ -1325,7 +1179,6 @@
 			{
 				"cosmetic_and_weapon_case_strange_quality_chance"			"1"
 				"case_additional_drop_taunt_unusualifier"					"1"
-				"case_additional_drop_paint_cans"							"1"
 				"case_additional_drop_common_tools"							"1"
 				"case_additional_drop_strange_transfer_tool"				"1"
 				"case_additional_drop_mvm_ticket"							"1"
@@ -1379,32 +1232,6 @@
 			{
 				"weapon_case_unusual_weapon_chance"							"1"
 				"wear_level_normal_distribution"							"1"
-			}
-		}
-
-		"base_paintkit_keylesscase"
-		{
-			"prefab"		"base_keylesscase"
-			"model_player"		"models/items/paintkit_tool.mdl"
-			"image_inventory"	"backpack/items/paintkit_tool"
-			"item_type_name"			""
-			"loot_list_rare_item_footer"	""
-			"static_attrs"
-			{
-				"hide crate series number"		"1"
-				"random drop line item footer desc"			""
-				"force center wrap"			"1"
-			}
-			"lootlist_job_templates"
-			{
-				"wear_level_normal_distribution"							"1"
-				"cosmetic_and_weapon_case_strange_quality_chance"			"0"
-				"case_additional_drop_taunt_unusualifier"					"0"
-				"case_additional_drop_paint_cans"							"0"
-				"case_additional_drop_common_tools"							"0"
-				"case_additional_drop_strange_transfer_tool"				"0"
-				"case_additional_drop_mvm_ticket"							"0"
-				"case_additional_drop_strange_parts"						"0"
 			}
 		}
 
@@ -2218,7 +2045,6 @@
 			"capabilities"
 			{
 				"nameable"			"1"
-				"paintable"			"1"
 				"can_craft_count"	"1"
 				"can_craft_if_purchased"	"1"
 			}
@@ -2264,7 +2090,6 @@
 			"capabilities"
 			{
 				"nameable"			"1"
-				"paintable"			"1"
 				"can_craft_count"	"1"
 				"can_craft_if_purchased"	"1"
 			}
@@ -2445,7 +2270,6 @@
 			"capabilities"
 			{
 				"can_craft_count"		"1"
-				"paintable"		"1"
 			}
 			"model_player"		"models/workshop/player/items/pyro/bak_fear_monger/bak_fear_monger.mdl"
 			"used_by_classes"
@@ -2552,7 +2376,6 @@
 			"capabilities"
 			{
 				"can_craft_count"		"1"
-				"paintable"		"1"
 			}
 			"model_player"		"models/workshop/player/items/pyro/bak_firefly/bak_firefly.mdl"
 			"used_by_classes"
@@ -3276,13 +3099,6 @@
 						"skin_red"	"0"
 						"skin_blu"	"1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/workshop/weapons/c_models/c_blackbox/c_blackbox_gold"
 					}
 				}
 			}
@@ -4032,13 +3848,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_claymore/c_claymore_gold"
 					}
 				}
 			}
@@ -6444,13 +6253,6 @@
 						"skin_blu"	"1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_smg/c_smg_gold"
-					}
 				}
 			}
 			"static_attrs"
@@ -6719,13 +6521,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/workshop/weapons/c_models/c_tomislav/c_tomislav_gold"
 					}
 				}
 			}
@@ -7106,327 +6901,6 @@
 			"mouse_pressed_sound"	"ui/item_metal_weapon_pickup.wav"
 			"drop_sound"		"ui/item_metal_weapon_drop.wav"
 			"particle_suffix"		"wrench"
-		}
-
-		"paintkit_base"
-		{
-			"static_attrs"
-			{
-				"weapon_uses_stattrak_module"		"models/weapons/c_models/stattrack.mdl"
-				"weapon_allow_inspect"				"1"
-			}
-		}
-
-		"paintkit_tool"
-		{
-			"prefab"	"paintkit_base"
-			"enabled"		"1"
-			"item_class"	"tool"
-			"inspect_panel_dist" "85"
-			"tool"
-			{
-				"type"	"paintkit"
-				"usage"
-				{
-					"required_tags"
-					{
-						"can_apply_paintkit"		"1"
-					}
-				}
-				"usage_capabilities"
-				{
-					"can_killstreakify" 	"1"	
-				}
-			}
-			"capabilities"
-			{
-				"usable_gc"				"1"
-				"usable_out_of_game"	"1"
-			}
-			"static_attrs"
-			{
-				"cannot restore"			"1"
-				"is marketable"				"1"
-				"texture_wear_default"		"0"
-				"weapon_stattrak_module_scale"			"2"
-			}
-			"show_in_armory"	"0"
-			"propername"	"1"
-			"item_name"			"#TF_PaintKitTool"
-			"item_description"	"#TF_PaintKitTool_desc"
-			"item_type_name"	"#TF_PaintKitTool"
-			"model_player"		"models/items/paintkit_tool.mdl"
-			"image_inventory"	"backpack/items/paintkit_tool"
-			"item_quality"		"paintkitweapon"
-			"min_ilevel"		"99"
-			"max_ilevel"		"99"
-			"mouse_pressed_sound"	"ui/item_light_gun_pickup.wav"
-			"drop_sound"		"ui/item_soda_can_drop.wav"
-			"particle_suffix"		"paintkit"
-			"remapped_item_def_index"	"Paintkit"
-		}
-
-
-		"paintkit_weapon"
-		{
-			"prefab"	"paintkit_base"
-			"craft_class"			""				
-			"craft_material_type"			""				
-			"item_series"	"card_type_v2"
-			"item_quality"	"paintkitweapon"
-			"min_ilevel"		"1"
-			"max_ilevel"		"1"
-			"enabled"			"1"
-			"tags"
-			{
-				"can_be_festivized"		"1"
-				"can_apply_paintkit"	"1"
-			}
-			"static_attrs"
-			{
-				"is marketable"							"1"
-				"texture_wear_default"					"0.6"
-			}
-			"attributes"
-			{
-			}
-		}
-
-		"paintkit_weapon_ambassador"
-		{
-			"prefab"	"paintkit_weapon weapon_ambassador"
-			"xifier_class_remap"	"ambassador"
-		}
-		
-		"paintkit_weapon_amputator"
-		{
-			"prefab"	"paintkit_weapon weapon_amputator"
-			"xifier_class_remap"	"amputator"
-		}
-
-		"paintkit_weapon_back_scratcher"
-		{
-			"prefab"	"paintkit_weapon weapon_back_scratcher"
-			"xifier_class_remap"	"back_scratcher"
-		}
-
-		"paintkit_weapon_battleaxe"
-		{
-			"prefab"	"paintkit_weapon weapon_battleaxe"
-			"xifier_class_remap"	"battleaxe"
-		}
-
-		"paintkit_weapon_bazaar_sniper"
-		{
-			"prefab"	"paintkit_weapon weapon_bazaar_sniper"
-			"xifier_class_remap"	"bazaar_sniper"
-		}
-
-		"paintkit_weapon_blackbox"
-		{
-			"prefab"	"paintkit_weapon weapon_blackbox"
-			"xifier_class_remap"	"blackbox"
-		}
-
-		"paintkit_weapon_claidheamohmor"
-		{
-			"prefab"	"paintkit_weapon weapon_claidheamohmor"
-			"xifier_class_remap"	"claidheamohmor"
-		}
-
-		"paintkit_weapon_demo_sultan_sword"
-		{
-			"prefab"	"paintkit_weapon weapon_demo_sultan_sword"
-			"xifier_class_remap"	"demo_sultan_sword"
-		}
-
-		"paintkit_weapon_degreaser"
-		{
-			"prefab"	"paintkit_weapon weapon_degreaser"
-			"xifier_class_remap"	"degreaser"
-		}
-
-		"paintkit_weapon_detonator"
-		{
-			"prefab"	"paintkit_weapon weapon_detonator"
-			"xifier_class_remap"	"detonator"
-		}
-
-		"paintkit_weapon_flamethrower"
-		{
-			"prefab"	"paintkit_weapon weapon_flamethrower"
-			"xifier_class_remap"	"flamethrower"
-			"visuals"
-			{
-				"attached_models"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_flamethrower/c_flamethrower_pilotlight.mdl"
-					}
-				}
-			}
-		}
-
-		"paintkit_weapon_gatling_gun"
-		{
-			"prefab"	"paintkit_weapon weapon_gatling_gun"
-			"xifier_class_remap"	"gatling_gun"
-		}
-
-		"paintkit_weapon_grenadelauncher"
-		{
-			"prefab"	"paintkit_weapon weapon_grenade_launcher"
-			"xifier_class_remap"	"grenade_launcher"
-		}
-
-		"paintkit_weapon_jag"
-		{
-			"prefab"	"paintkit_weapon weapon_jag"
-			"xifier_class_remap"	"jag"
-		}
-
-		"paintkit_weapon_knife"
-		{
-			"prefab"	"paintkit_weapon weapon_knife"
-			"xifier_class_remap"	"knife"
-		}
-
-		"paintkit_weapon_lochnload"
-		{
-			"prefab"	"paintkit_weapon weapon_lochnload"
-			"xifier_class_remap"	"lochnload"
-		}
-
-		"paintkit_weapon_medigun"
-		{
-			"prefab"	"paintkit_weapon weapon_medigun"
-			"xifier_class_remap"	"medigun"
-		}
-
-		"paintkit_weapon_minigun"
-		{
-			"prefab"	"paintkit_weapon weapon_minigun"
-			"xifier_class_remap"	"minigun"
-		}
-
-		"paintkit_weapon_pistol"
-		{
-			"prefab"	"paintkit_weapon weapon_pistol"
-			"xifier_class_remap"	"weapon_pistol"
-			"visuals"
-			{
-				"styles"
-				{
-					"0"
-					{
-						"skin_red"		"0"
-						"skin_blu"		"1"
-					}
-				}
-			}
-		}
-
-		"paintkit_weapon_powerjack"
-		{
-			"prefab"	"paintkit_weapon weapon_powerjack"
-			"xifier_class_remap"	"powerjack"
-		}
-
-		"paintkit_weapon_quadball"
-		{
-			"prefab"	"paintkit_weapon weapon_quadball"
-			"xifier_class_remap"	"quadball"
-		}
-
-		"paintkit_weapon_reserve_shooter"
-		{
-			"prefab"	"paintkit_weapon weapon_reserve_shooter"
-			"xifier_class_remap"	"reserve_shooter"
-		}
-
-		"paintkit_weapon_revolver"
-		{
-			"prefab"	"paintkit_weapon weapon_revolver"
-			"xifier_class_remap"	"weapon_revolver"
-		}
-
-		"paintkit_weapon_rocketlauncher"
-		{
-			"prefab"	"paintkit_weapon weapon_rocketlauncher"
-			"xifier_class_remap"	"rocket_launcher"
-		}
-
-		"paintkit_weapon_russian_riot"
-		{
-			"prefab"	"paintkit_weapon weapon_russian_riot"
-			"xifier_class_remap"	"russian_riot"
-		}
-
-		"paintkit_weapon_scattergun"
-		{
-			"prefab"	"paintkit_weapon weapon_scattergun"
-			"xifier_class_remap"	"scattergun"
-		}
-
-		"paintkit_weapon_scimitar"
-		{
-			"prefab"	"paintkit_weapon weapon_scimitar"
-			"xifier_class_remap"	"scimitar"
-		}
-
-		"paintkit_weapon_shotgun"
-		{
-			"prefab"	"paintkit_weapon weapon_shotgun_multiclass"
-			"xifier_class_remap"	"weapon_shotgun"
-		}
-
-		"paintkit_weapon_smg"
-		{
-			"prefab"	"paintkit_weapon weapon_smg"
-			"xifier_class_remap"	"weapon_smg"
-		}
-
-		"paintkit_weapon_sniperrifle"
-		{
-			"prefab"	"paintkit_weapon weapon_sniperrifle"
-			"xifier_class_remap"	"sniper_rifle"
-		}
-
-		"paintkit_weapon_stickybomb_launcher"
-		{
-			"prefab"	"paintkit_weapon weapon_stickybomb_launcher"
-			"xifier_class_remap"	"stickybomb_launcher"
-		}
-
-		"paintkit_weapon_tomislav"
-		{
-			"prefab"	"paintkit_weapon weapon_tomislav"
-			"xifier_class_remap"	"tomislav"
-		}
-
-		"paintkit_weapon_trenchgun"
-		{
-			"prefab"	"paintkit_weapon weapon_trenchgun"
-			"xifier_class_remap"	"trenchgun"
-		}
-
-		"paintkit_weapon_ubersaw"
-		{
-			"prefab"	"paintkit_weapon weapon_ubersaw"
-			"xifier_class_remap"	"ubersaw"
-		}
-
-		"paintkit_weapon_winger_pistol"
-		{
-			"prefab"	"paintkit_weapon weapon_winger_pistol"
-			"xifier_class_remap"	"winger_pistol"
-		}
-
-		"paintkit_weapon_wrench"
-		{
-			"prefab"	"paintkit_weapon weapon_wrench"
-			"xifier_class_remap"	"wrench"
 		}
 
 
@@ -7980,30 +7454,6 @@
 			"name"	"The Kritzkrieg"
 			"prefab"	"weapon_kritzkrieg"
 			"first_sale_date"	"2010/09/29"
-			"tags"
-			{
-				"can_be_festivized"		"1"
-			}
-			"visuals_red"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
-			"visuals_blu"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_overhealer/c_overhealer_festivizer.mdl"
-					}
-				}
-			}
 		}
 		"36"
 		{
@@ -8058,13 +7508,6 @@
 						"skin_blu" "1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_leechgun/c_leechgun_gold"
-					}
 				}
 			}
 			"attributes"
@@ -8087,22 +7530,8 @@
 		{
 			"name"	"The Ubersaw"
 			"first_sale_date"	"2010/09/29"
-			"prefab"	"valve weapon_ubersaw paintkit_base"
+			"prefab"	"valve weapon_ubersaw"
 			"particle_suffix"	"ubersaw"
-			"tags"
-			{
-				"can_be_festivized"		"1"
-			}
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_ubersaw/c_ubersaw_festivizer.mdl"
-					}
-				}
-			}
 			"xifier_class_remap"	"ubersaw"
 		}
 		"38"
@@ -8123,13 +7552,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_axtinguisher/c_axtinguisher_pyro_gold"
 					}
 				}
 			}
@@ -8220,7 +7642,6 @@
 				"can_deal_critical_damage"	"1"
 				"can_deal_mvm_penetration_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Minigun"
@@ -8275,13 +7696,6 @@
 			}
 			"visuals"
 			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_minigun/c_minigun_festivizer.mdl"
-					}
-				}
 				"sound_reload"	"Weapon_Minifun.Reload"
 				"sound_empty"	"Weapon_Minifun.ClipEmpty"
 				"sound_double_shot"	"Weapon_Minifun.Fire"
@@ -8394,7 +7808,6 @@
 				"can_deal_posthumous_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
 				"can_deal_taunt_damage" "1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_Bat"
@@ -8420,13 +7833,6 @@
 					{
 						"skin_red"		"0"
 						"skin_blu"		"1"
-					}
-				}
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_wooden_bat/c_wooden_bat_festivizer.mdl"
 					}
 				}
 			}
@@ -8474,13 +7880,6 @@
 						"skin_blu" "1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_double_barrel_gold"
-					}
 				}
 			}
 		}
@@ -8500,10 +7899,6 @@
 			"first_sale_date"	"2010/09/29"
 			"prefab"	"valve hat"
 			"craft_class"	""
-			"capabilities"
-			{
-				"paintable"		"1"
-			}
 			"item_name"	"#TF_Demo_Hat_1"
 			"item_description"	"#TF_Demo_Hat_1_Desc"
 			"item_type_name"		"#TF_Wearable_Hair"
@@ -8551,7 +7946,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -8589,7 +7983,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -8626,7 +8019,6 @@
 			"craft_material_type"	"hat"
 			"capabilities"
 			{
-				"paintable"		"1"
 				"nameable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
@@ -8665,7 +8057,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -8736,7 +8127,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -8774,7 +8164,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -8804,10 +8193,6 @@
 			"prefab"	"valve hat"
 			"craft_class"	""
 			"first_sale_date"	"2010/09/29"
-			"capabilities"
-			{
-				"paintable"		"1"
-			}
 			"item_name"	"#TF_Spy_Hat_1"
 			"item_description"	"#TF_Spy_Hat_1_Desc"
 			"image_inventory"	"backpack/player/items/spy/spy_hat"
@@ -9031,13 +8416,6 @@
 						"skin_blu" "1"
 						"selectable"	"0"
 					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_ambassador/c_ambassador_gold"
-					}
 				}
 			}
 			"xifier_class_remap"	"ambassador"
@@ -9054,7 +8432,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9095,7 +8472,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9131,7 +8507,6 @@
 			"first_sale_date"	"2010/09/29"
 			"capabilities"
 			{
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"item_name"	"#TF_Heavy_Ushanka_Hat"
@@ -9156,7 +8531,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9230,7 +8604,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9271,7 +8644,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9304,7 +8676,6 @@
 			"craft_material_type"	"hat"
 			"capabilities"
 			{
-				"paintable"		"1"
 				"nameable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
@@ -9339,7 +8710,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9373,7 +8743,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9440,7 +8809,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9474,7 +8842,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9516,7 +8883,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9558,7 +8924,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9632,7 +8997,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -9771,7 +9135,6 @@
 			"item_class"	"tf_wearable"
 			"capabilities"
 			{
-				"paintable"		"1"
 				"nameable"		"1"
 			}
 			"loadondemand" "1"
@@ -9953,7 +9316,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 				"can_craft_if_purchased"	"1"
 			}
 			"show_in_armory"	"1"
@@ -10221,7 +9583,6 @@
 			"capabilities"
 			{
 				"nameable"		"1"
-				"paintable"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Wearable_L4DHat"
@@ -10448,7 +9809,6 @@
 				"can_be_equipped_by_soldier_or_demo"	"1"
 				"can_deal_critical_damage"	"1"
 				"can_deal_long_distance_damage"	"1"
-				"can_be_festivized"		"1"
 			}
 			"show_in_armory"	"1"
 			"item_type_name"	"#TF_Weapon_PipebombLauncher"
@@ -10466,16 +9826,6 @@
 			"attach_to_hands"	"1"
 			"inspect_panel_dist" "50"
 			"model_player"	"models/weapons/c_models/c_scottish_resistance/c_scottish_resistance.mdl"
-			"visuals"
-			{
-				"attached_models_festive"
-				{
-					"0"
-					{
-						"model"	"models/weapons/c_models/c_scottish_resistance/c_scottish_resistance_festivizer.mdl"
-					}
-				}
-			}
 			"used_by_classes"
 			{
 				"demoman"	"1"
@@ -10907,13 +10257,6 @@
 						"skin_red" "0"
 						"skin_blu" "1"
 						"selectable"	"0"
-					}
-					"1"
-					{
-						"skin_red"	"2"
-						"skin_blu"	"3"
-						"selectable"	"0"
-						"image_inventory"	"backpack/weapons/c_models/c_frontierjustice/c_frontierjustice_gold"
 					}
 				}
 			}
@@ -12675,16 +12018,6 @@
 			"effect_type"	"neutral"
 			"stored_as_integer"	"0"
 		}
-		"145"
-		{
-			"name"	"taunt is highfive"
-			"attribute_class"	"enable_misc2_highfive"
-			"description_string"	"#Attrib_DamageDone_Negative"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"neutral"
-			"stored_as_integer"	"0"
-		}
 		"146"
 		{
 			"name"	"damage applies to sappers"
@@ -12724,16 +12057,6 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 			"armory_desc"	"on_hit bleed"
-			"stored_as_integer"	"0"
-		}
-		"150"
-		{
-			"name"	"turn to gold"
-			"attribute_class"	"set_turn_to_gold"
-			"description_string"	"#Attrib_TurnToGold"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
 			"stored_as_integer"	"0"
 		}
 		"151"
@@ -13830,16 +13153,6 @@
 			"hidden"	"1"
 			"effect_type"	"neutral"
 			"stored_as_integer"	"0"
-		}
-		"262"
-		{
-			"name"	"saxxy award category"
-			"attribute_class"	"saxxy_award_category"
-			"description_string"	"#Attrib_SaxxyAward"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
 		}
 		"263"
 		{
@@ -16774,14 +16087,6 @@
 			"hidden"	"0"
 			"effect_type"	"positive"
 		}
-		"646"
-		{
-			"name"	"taunt turn speed"
-			"attribute_class"	"taunt_turn_speed"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
 		"647"
 		{
 			"name"	"sniper fires tracer HIDDEN"
@@ -16892,30 +16197,6 @@
 			"hidden"	"0"
 			"effect_type"	"negative"
 		}
-		"687"
-		{
-			"name" 		"taunt turn acceleration time"
-			"attribute_class"	"taunt_turn_acceleration_time"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
-		"688"
-		{
-			"name" 		"taunt move acceleration time"
-			"attribute_class"	"taunt_move_acceleration"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
-		"689"
-		{
-			"name" 		"taunt move speed"
-			"attribute_class"	"taunt_move_speed"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-		}
 		"690"
 		{
 			"name" "shuffle crate item def min"
@@ -17005,45 +16286,6 @@
 			"effect_type"	"negative"
 			"stored_as_integer"	"0"
 		}
-		"700"
-		{
-			"name"	"display duck leaderboard"
-			"attribute_class"	"display_duck_leaderboard"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"701"
-		{
-			"name"	"duck rating"
-			"attribute_class"	"duck_rating"
-			"description_string"	"#Attrib_duck_rating"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"702"
-		{
-			"name"	"duck badge level"
-			"attribute_class"	"duck_badge_level"
-			"description_string"	"#Attrib_duck_badge_level"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
-		"703"
-		{
-			"name"	"tag__eotlearlysupport"
-			"attribute_class"	"tag__eotlearlysupport"
-			"description_string"	"#Attrib_eotl_early_supporter"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
-		}
 		"704"
 		{
 			"name"	"unlimited quantity hidden"
@@ -17052,16 +16294,6 @@
 			"hidden"	"1"
 			"effect_type"	"positive"
 			"stored_as_integer"	"0"
-		}
-		"705"
-		{
-			"name"	"duckstreaks active"
-			"attribute_class"	"duckstreaks_active"
-			"description_string"	"#Attrib_duckstreaks"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"positive"
-			"stored_as_integer"	"1"
 		}
 		"708"
 		{
@@ -17315,15 +16547,6 @@
 			"attribute_class"		"hide_crate_series_number"
 			"hidden"				"1"
 			"stored_as_integer"	"1"
-		}
-		"745"
-		{
-			"name"					"has team color paintkit"
-			"attribute_class"		"has_team_color_paintkit"
-			"description_string"	"#Attrib_HasTeamColorPaintkit"
-			"description_format"	"value_is_additive"
-			"effect_type"			"neutral"
-			"stored_as_integer"		"1"
 		}
 		"746"
 		{
@@ -17955,15 +17178,6 @@
 			"effect_type"	"neutral"
 			"stored_as_integer"	"0"
 		}
-		"834"
-		{
-			"name"	"paintkit_proto_def_index"
-			"attribute_class"		"paintkit_proto_def_index"
-			"description_format"	"value_is_additive"
-			"effect_type"	"neutral"
-			"stored_as_integer"	"1"
-			"can_affect_market_name"	"1"
-		}
 		"835"
 		{
 			"name"	"taunt_attr_player_invis_percent"
@@ -18181,22 +17395,6 @@
 			"description_format"	"value_is_additive"
 			"hidden"				"1"
 			"stored_as_integer"	"0"
-		}
-		"866"
-		{
-			"name"	"custom_paintkit_seed_lo"
-			"attribute_class"	"custom_paintkit_seed_lo"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"stored_as_integer"	"1"
-		}
-		"867"
-		{
-			"name"	"custom_paintkit_seed_hi"
-			"attribute_class"	"custom_paintkit_seed_hi"
-			"description_format"	"value_is_additive"
-			"hidden"	"1"
-			"stored_as_integer"	"1"
 		}
 		"868"
 		{
@@ -18519,26 +17717,6 @@
 			"hidden"	"1"
 			"can_affect_market_name"	"1"
 		}
-		"2013"		
-		{
-			"name"					"killstreak effect"
-			"attribute_class"		"killstreak_effect"
-			"description_string"	"#Attrib_KillStreakEffect"
-			"description_format"	"value_is_killstreakeffect_index"
-			"stored_as_integer"	"0"
-			"effect_type"	"positive"
-			"can_affect_recipe_component_name"	"1"
-		}
-		"2014"		
-		{
-			"name"					"killstreak idleeffect"
-			"attribute_class"		"killstreak_idleeffect"
-			"description_string"	"#Attrib_KillStreakIdleEffect"
-			"description_format"	"value_is_killstreak_idleeffect_index"
-			"stored_as_integer"	"0"
-			"effect_type"	"positive"
-			"can_affect_recipe_component_name"	"1"
-		}
 
 		"2015"
 		{
@@ -18621,16 +17799,6 @@
 			"attribute_class"		"item_name_text_override"
 			"attribute_type"		"string"
 			"hidden"				"1"
-		}
-		"2025"		
-		{
-			"name"					"killstreak tier"
-			"attribute_class"		"killstreak_tier"
-			"can_affect_market_name"	"1"
-			"description_string"	"#Attrib_KillStreakTier"
-			"description_format"	"value_is_additive"
-			"effect_type"	"positive"
-			"stored_as_integer"		"0"
 		}
 		"2026"		
 		{
@@ -18795,16 +17963,6 @@
 			"name"		"quest loaner id hi"
 			"hidden"	"1"
 			"stored_as_integer"	"1"
-		}
-		"2053"
-		{
-			"name"	"is_festivized"
-			"attribute_class"	"is_festivized"
-			"description_string"	"#Attrib_IsFestivized"
-			"description_format"	"value_is_additive"
-			"hidden"	"0"
-			"effect_type"	"unusual"	
-			"can_affect_market_name"	"1"
 		}
 		"2054"
 		{
@@ -21507,74 +20665,6 @@
 		}
 		
 		
-		"killstreak_eyeglows"
-		{
-			"2001"
-			{
-				"system"			"killstreak_eyeglow_1_teamcolor_red"
-			}
-			"22001"
-			{
-				"system"			"killstreak_eyeglow_4_teamcolor_red"
-			}
-			"2002"
-			{
-				"system"			"killstreak_t1_lvl1"
-			}
-			"22002"
-			{
-				"system"			"killstreak_t1_lvl2"
-			}
-			"2003"
-			{
-				"system"			"killstreak_t2_lvl1"
-			}
-			"22003"
-			{
-				"system"			"killstreak_t2_lvl2"
-			}
-			"2004"
-			{
-				"system"			"killstreak_t3_lvl1"
-			}
-			"22004"
-			{
-				"system"			"killstreak_t3_lvl2"
-			}
-			"2005"
-			{
-				"system"			"killstreak_t4_lvl1"
-			}
-			"22005"
-			{
-				"system"			"killstreak_t4_lvl2"
-			}
-			"2006"
-			{
-				"system"			"killstreak_t5_lvl1"
-			}
-			"22006"
-			{
-				"system"			"killstreak_t5_lvl2"
-			}
-			"2007"
-			{
-				"system"			"killstreak_t6_lvl1"
-			}
-			"22007"
-			{
-				"system"			"killstreak_t6_lvl2"
-			}
-			"2008"
-			{
-				"system"			"killstreak_t7_lvl1"
-			}
-			"22008"
-			{
-				"system"			"killstreak_t7_lvl2"
-			}
-		}
-		
 		"taunt_unusual_effects"
 		{
 			"3001"
@@ -22386,7 +21476,6 @@
 			"desctag"					"#TF_Armory_Item_DescTag"
 			"decaltooltag"				"#TF_Armory_Item_DecalToolTag"
 			"weddingring"				"#TF_Armory_Item_WeddingRing"
-			"paintcan"					"#TF_Armory_Item_PaintCan"
 			"action"					"#TF_Armory_Item_Action"
 			"tauntenabler"				"#TF_Armory_Item_Type_TauntEnabler"
 			"gift_1"					"#TF_Armory_Item_Gift1"
@@ -22406,7 +21495,6 @@
 			"can_customize_texture"		"#TF_Armory_Item_CanCustomizeTexture"
 			"strangepart"				"#TF_Armory_Item_StrangePart"
 			"tournamentmedal"			"#TF_Armory_Item_TournamentMedal"
-			"duckbadge"					"#TF_Armory_Item_DuckBadge"
 		}
 	}
 	"item_levels"
@@ -23191,93 +22279,6 @@
 				"score"		"25000"
 			}
 		}
-		"Journal_DuckBadge"
-		{
-			"0"
-			{
-				"score"		"1"
-			}                 
-			"1"               
-			{                 
-				"score"		"2"
-			}                 
-			"2"               
-			{                 
-				"score"		"3"
-			}                 
-			"3"               
-			{                 
-				"score"		"4"
-			}                 
-			"4"               
-			{                 
-				"score"		"5"
-			}                 
-			"5"               
-			{                 
-				"score"		"6"
-			}                 
-			"6"               
-			{                 
-				"score"		"7"
-			}                 
-			"7"               
-			{                 
-				"score"		"8"
-			}                 
-			"8"               
-			{                 
-				"score"		"9"
-			}                 
-			"9"               
-			{                 
-				"score"		"10"
-			}                 
-			"10"              
-			{                 
-				"score"		"11"
-			}                 
-			"11"              
-			{                 
-				"score"		"12"
-			}                 
-			"12"              
-			{                 
-				"score"		"13"
-			}                 
-			"13"              
-			{                 
-				"score"		"14"
-			}                 
-			"14"              
-			{                 
-				"score"		"15"
-			}                 
-			"15"              
-			{                 
-				"score"		"16"
-			}                 
-			"16"              
-			{                 
-				"score"		"17"
-			}                 
-			"17"              
-			{                 
-				"score"		"18"
-			}                 
-			"18"              
-			{                 
-				"score"		"19"
-			}                 
-			"19"              
-			{                 
-				"score"		"20"
-			}                 
-			"20"              
-			{                 
-				"score"		"21"
-			}
-		}
 		"KillEater_OperationContractRank"
 		{
 			"0"
@@ -23767,10 +22768,6 @@
 		"79"
 		{
 			"type_name"			"KillEaterEvent_BurningPlayerKill"
-		}
-		"80"
-		{
-			"type_name"			"KillEaterEvent_KillstreaksEnded"
 		}
 		"81"
 		{

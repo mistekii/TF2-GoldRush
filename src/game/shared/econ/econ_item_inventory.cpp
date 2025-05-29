@@ -1277,9 +1277,7 @@ void CInventoryManager::PersonaName_Store( uint32 unAccountID, const char *pPers
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-CPlayerInventory::CPlayerInventory( void )
-	: m_mapItemDefsToItems( DefLessFunc( item_definition_index_t ) )
-	, m_mapPaintkitsToItems( DefLessFunc( uint32 ) )
+CPlayerInventory::CPlayerInventory( void ): m_mapItemDefsToItems( DefLessFunc( item_definition_index_t ) )
 {
 	m_bGotItemsFromSteam = false;
 	m_iPendingRequests = 0;
@@ -1386,17 +1384,6 @@ const CCopyableUtlVector< itemid_t >& CPlayerInventory::GetItemsWithDefindex( it
 	return m_mapItemDefsToItems[ idx ];
 }
 
-const CCopyableUtlVector< itemid_t >& CPlayerInventory::GetItemsWithPaintkitDefindex( uint32 nDefindex )
-{
-	auto idx = m_mapPaintkitsToItems.Find( nDefindex );
-	if ( idx == m_mapPaintkitsToItems.InvalidIndex() )
-	{
-		idx = m_mapPaintkitsToItems.Insert( nDefindex );
-	}
-
-	return m_mapPaintkitsToItems[ idx ];
-}
-
 
 void	CPlayerInventory::Clear()
 {
@@ -1487,13 +1474,6 @@ bool CPlayerInventory::AddEconItem( CEconItem * pItem, bool bUpdateAckFile, bool
 
 	// Update map of item defs to items
 	AddToMapVec( m_mapItemDefsToItems, &m_aInventoryItems[iIdx], newItem.GetItemDefIndex() );
-
-	// Update map of paintkits to items
-	uint32 nPaintkitDefindex = 0;
-	if ( GetPaintKitDefIndex( &newItem, &nPaintkitDefindex ) )
-	{
-		AddToMapVec( m_mapPaintkitsToItems, &m_aInventoryItems[iIdx], nPaintkitDefindex );
-	}
 
 	if ( bCheckForNewItems && InventoryManager()->GetLocalInventory() == this )
 	{
@@ -2030,13 +2010,6 @@ void CPlayerInventory::RemoveItem( itemid_t iItemID )
 
 		// Update map of item defs to items
 		RemoveItemFromVecMap( m_mapItemDefsToItems, pItem, pItem->GetItemDefIndex() );
-		
-		// Update map of paintkits to items
-		uint32 nPaintkitDefindex = 0;
-		if ( GetPaintKitDefIndex( pItem, &nPaintkitDefindex ) )
-		{
-			RemoveItemFromVecMap( m_mapPaintkitsToItems, pItem, nPaintkitDefindex );
-		}
 
 
 		m_aInventoryItems.Remove(iIndex);

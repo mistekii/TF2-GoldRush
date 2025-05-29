@@ -44,8 +44,6 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include <tier0/memdbgon.h>
 
-ConVar tf_warpaint_explanation_viewed( "tf_warpaint_explanation_viewed", 0, FCVAR_ARCHIVE );
-
 //-----------------------------------------------------------------------------
 // Wrapped Gift Declarations
 
@@ -542,14 +540,6 @@ void CEconTool_ItemEaterRecharger::OnClientUseConsumable( CEconItemView *pItem, 
 }
 
 //-----------------------------------------------------------------------------
-// Purpose: Implementation of the local response for someone who used (tried to redeem) a collection
-//-----------------------------------------------------------------------------
-void CEconTool_PaintCan::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
-{
-	ClientConsumableTool_Generic( pItem, pParent );
-}
-
-//-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------
 void CEconTool_Gift::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
@@ -579,11 +569,6 @@ void CEconTool_TFEventEnableHalloween::OnClientUseConsumable( CEconItemView *pIt
 	GCClientSystem()->BSendMessage( msg );
 }
 
-//-----------------------------------------------------------------------------
-void CEconTool_DuckToken::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
-{
-	ClientConsumableTool_Generic( pItem, pParent );
-}
 //-----------------------------------------------------------------------------
 void CEconTool_GrantOperationPass::OnClientUseConsumable( CEconItemView *pItem, vgui::Panel *pParent ) const
 {
@@ -701,14 +686,6 @@ public:
 		, m_nSourceItemID( pItem->GetID() )
 	{
 		TFModalStack()->PushModal( this );
-
-		m_pIspectionPanel = new CTFItemInspectionPanel( this, "InspectionPanel" );
-		m_pIspectionPanel->SetOptions( false, true, true );
-
-		if ( !tf_warpaint_explanation_viewed.GetBool() )
-		{
-			tf_warpaint_explanation_viewed.SetValue( true );
-		}
 	}
 
 	virtual ~CTFPainkitConsumeDialog()
@@ -721,10 +698,7 @@ public:
 		LoadControlSettings( "Resource/UI/econ/PaintkitConsumeDialog.res" );
 		m_pWorkingLogoPanel = FindControl< CTFLogoPanel >( "WorkingLogo", true );
 		m_pSuccessLogoPanel = FindControl< CTFLogoPanel >( "SuccessLogo", true );
-		m_pIspectionPanel->InvalidateLayout( true, true );
 		BaseClass::ApplySchemeSettings( pScheme );
-
-		m_pIspectionPanel->SetItemCopy( m_pItem, true );
 	}
 
 	virtual void OnCommand( const char* pszCommand ) OVERRIDE
@@ -818,32 +792,9 @@ public:
 		g_pClientMode->GetViewportAnimationController()->RunAnimationCommand( m_pSuccessLogoPanel, "radius", 30, 0.05f, 0.2f, vgui::AnimationController::INTERPOLATOR_DEACCEL, 0.75f, false, false );
 	}
 
-	virtual void SOCreated( const CSteamID & steamIDOwner, const GCSDK::CSharedObject *pObject, GCSDK::ESOCacheEvent eEvent ) OVERRIDE
-	{
-		if ( eEvent != GCSDK::eSOCacheEvent_Incremental)
-			return;
-
-		if ( pObject->GetTypeID() != CEconItem::k_nTypeID )
-			return;
-
-		const CEconItem* pItem = assert_cast< const CEconItem* >( pObject );
-		unacknowledged_item_inventory_positions_t reason = GetUnacknowledgedReason( pItem->GetInventoryToken() );
-		if ( reason != UNACK_ITEM_PAINTKIT )
-			return;
-
-		PlaySoundEntry( "UI.WarPaintApplyStop" );
-
-		// This is what we were waiting for
-		g_pClientMode->GetViewportAnimationController()->RunAnimationCommand( m_pWorkingLogoPanel, "velocity", 1000, 0.0f, 2.f, vgui::AnimationController::INTERPOLATOR_BIAS, 0.01f, true, false );
-		PostMessage( this, new KeyValues( "ShowSuccess" ), 3.f );
-		PostMessage( this, new KeyValues( "AckItems" ), 6.f );
-		m_bSuccess = true;
-	}
-
 
 private:
 
-	CTFItemInspectionPanel* m_pIspectionPanel;
 	C_EconItemView* m_pItem;
 	uint64 m_nSourceItemID;
 	uint32 m_nSelectedItem;
@@ -861,11 +812,6 @@ void PaintkitConfirmCallback( bool bConfirmed, void *pContext )
 	}
 }
 
-//-----------------------------------------------------------------------------
-void CEconTool_PaintKit::OnClientUseConsumable( class C_EconItemView *pItem, vgui::Panel *pParent ) const
-{
-	new CTFPainkitConsumeDialog( pItem );
-}
 //-----------------------------------------------------------------------------
 // Purpose:
 //-----------------------------------------------------------------------------

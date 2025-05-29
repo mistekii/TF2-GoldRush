@@ -728,9 +728,6 @@ const char* CEconItem::FindIconURL( bool bLarge ) const
 {
 	const char* pszSize = bLarge ? "l" : "s";
 
-	static CSchemaAttributeDefHandle pAttrDef_IsFestivized( "is_festivized" );
-	bool bIsFestivized = pAttrDef_IsFestivized ? FindAttribute( pAttrDef_IsFestivized ) : false;
-
 	const CEconItemDefinition *pDef = GetItemDefinition();
 
 	// Go through and figure out all the different decorations on
@@ -738,37 +735,11 @@ const char* CEconItem::FindIconURL( bool bLarge ) const
 	// NOTE:  These are not currently composable, so they return out when
 	//		  a match is found.  Once items are more composable, we'll want
 	//		  to keep adding all the components together to get the fully
-	//		  composed icon (ie. add the strange token, and the festive token, etc.)
-	uint32 unPaintKitDefIndex;
-	if ( GetPaintKitDefIndex( this, &unPaintKitDefIndex ) )
-	{
-		float flWear = 0;
-		GetPaintKitWear( this, flWear );
-		int iWearIndex = EconWear_ToIntCategory( flWear );
-		const char* pszFmtStr = bIsFestivized ? "paintkit%d_item%d_wear%d_festive" : "paintkit%d_item%d_wear%d";
-
-		// do we have a remap? use that instead
-		if ( pDef->GetDefinitionIndex() != pDef->GetRemappedItemDefIndex() )
-		{
-			pDef = GetItemSchema()->GetItemDefinition( pDef->GetRemappedItemDefIndex() );
-		}
-
-		const char* pszValue = pDef->GetIconURL( CFmtStr( pszFmtStr, unPaintKitDefIndex, pDef->GetRemappedItemDefIndex(), iWearIndex ) );
-		if ( pszValue )
-			return pszValue;
-	}
-
+	//		  composed icon (ie. add the strange token, etc.)
 	const CEconStyleInfo *pStyle = pDef->GetStyleInfo( GetStyle() );
 	if ( pStyle )
 	{
 		const char* pszValue = pDef->GetIconURL( CFmtStr( "%ss%d", pszSize, GetStyle() ) );
-		if ( pszValue )
-			return pszValue;
-	}
-
-	if ( bIsFestivized )
-	{
-		const char* pszValue = pDef->GetIconURL( CFmtStr( "%sf", pszSize ) );
 		if ( pszValue )
 			return pszValue;
 	}

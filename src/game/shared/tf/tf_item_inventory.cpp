@@ -1680,16 +1680,6 @@ void CTFPlayerInventory::ItemHasBeenUpdated( CEconItemView *pItem, bool bUpdateA
 		if ( bThisClassLoadoutChanged )
 		{
 			m_bLoadoutChanged[iClass] = true;
-
-#ifdef CLIENT_DLL
-			// if we can inspect this item, it has unique skin.
-			// draw it once per team to tell the system to generate unique skin
-			if ( bLocalInv && GetPaintKitDefIndex( pItem ) )
-			{
-				SkinRequest_t req = { TF_TEAM_RED, pItem->GetItemID(), MDLHANDLE_INVALID };
-				m_vecWeaponSkinRequestList.AddToTail( req );
-			}
-#endif // CLIENT_DLL
 		}
 	}
 

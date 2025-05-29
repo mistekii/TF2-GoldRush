@@ -95,8 +95,6 @@ public:
 	// Override this to update some field on the panel when state changes
 	virtual int			GetState( void )			{ return -1; }
 
-	virtual bool		IsKillstreakMeter( void ) { return false; }
-
 	virtual void		SetLabelText( const char *pszText = NULL );
 
 	virtual bool		ShouldAutoAdjustPosition() const { return true; }
@@ -149,7 +147,6 @@ public:
 
 	virtual bool		ShouldDraw( void );
 	virtual bool		ShowPercentSymbol( void )	{ return false; }
-	virtual bool		IsKillstreakMeter( void )	{ return false; }
 
 	virtual bool		ShouldAutoAdjustPosition() const OVERRIDE { return true; }
 

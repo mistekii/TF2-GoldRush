@@ -324,8 +324,6 @@ static COrHoliday			g_Holiday_HalloweenOrFullMoonOrValentines	( "halloween_or_fu
 
 static CDateBasedHolidayNoSpecificYear	g_Holiday_AprilFools	( "april_fools",	"03-31", "04-02" );
 
-static CDateBasedHoliday	g_Holiday_EndOfTheLine				( "eotl_launch",	"2014-12-03", "2015-01-05" );
-
 static CDateBasedHoliday	g_Holiday_CommunityUpdate			( "community_update", "2015-09-01", "2015-11-05" );
 
 // only setup for 2024 right now...need to figure out how we want future events to run and maybe remove the year
@@ -339,7 +337,6 @@ static IIsHolidayActive *s_HolidayChecks[] =
 	&g_Holiday_Halloween,							// kHoliday_Halloween
 	&g_Holiday_Christmas,							// kHoliday_Christmas
 	&g_Holiday_CommunityUpdate,						// kHoliday_CommunityUpdate
-	&g_Holiday_EndOfTheLine,						// kHoliday_EOTL
 	&g_Holiday_ValentinesDay,						// kHoliday_Valentines
 	&g_Holiday_MeetThePyro,							// kHoliday_MeetThePyro
 	&g_Holiday_FullMoon,							// kHoliday_FullMoon

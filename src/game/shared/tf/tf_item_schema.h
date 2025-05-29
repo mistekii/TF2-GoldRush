@@ -61,20 +61,6 @@ public:
 		Assert( iSceneIndex >= 0 && iSceneIndex < GetOutroSceneCount( iClass ) );
 		return m_vecOutroScenes[iClass][iSceneIndex];
 	}
-
-	int GetPartnerTauntInitiatorSceneCount( int iClass ) const { Assert( iClass >= 0 && iClass < LOADOUT_COUNT ); return m_vecPartnerTauntInitiatorScenes[iClass].Count(); }
-	const char *GetPartnerTauntInitiatorScene( int iClass, int iSceneIndex ) const
-	{
-		Assert( iSceneIndex >= 0 && iSceneIndex < GetPartnerTauntInitiatorSceneCount( iClass ) );
-		return m_vecPartnerTauntInitiatorScenes[iClass][iSceneIndex];
-	}
-
-	int GetPartnerTauntReceiverSceneCount( int iClass ) const { Assert( iClass >= 0 && iClass < LOADOUT_COUNT ); return m_vecPartnerTauntReceiverScenes[iClass].Count(); }
-	const char *GetPartnerTauntReceiverScene( int iClass, int iSceneIndex ) const
-	{
-		Assert( iSceneIndex >= 0 && iSceneIndex < GetPartnerTauntReceiverSceneCount( iClass ) );
-		return m_vecPartnerTauntReceiverScenes[iClass][iSceneIndex];
-	}
 	
 	const char *GetProp( int iClass ) const { Assert( iClass >= 0 && iClass < LOADOUT_COUNT ); return m_pszProp[iClass]; }
 	const char *GetPropIntroScene( int iClass ) const { Assert( iClass >= 0 && iClass < LOADOUT_COUNT ); return m_pszPropIntroScene[iClass]; }
@@ -84,7 +70,6 @@ public:
 	float		GetTauntSeparationRightDistance() const { return m_flTauntSeparationRightDistance; }
 	float		GetMinTauntTime() const { return m_flMinTauntTime; }
 
-	bool		IsPartnerTaunt() const { return m_bIsPartnerTaunt; }
 	bool		ShouldStopTauntIfMoved() const { return m_bStopTauntIfMoved; }
 
 	int			GetFOV() const { return m_nFOV; }
@@ -121,8 +106,6 @@ private:
 
 	CUtlVector< const char* >	m_vecIntroScenes[LOADOUT_COUNT];
 	CUtlVector< const char* >	m_vecOutroScenes[LOADOUT_COUNT];
-	CUtlVector< const char* >	m_vecPartnerTauntInitiatorScenes[LOADOUT_COUNT];
-	CUtlVector< const char* >	m_vecPartnerTauntReceiverScenes[LOADOUT_COUNT];
 	CUtlVector< TauntInputRemap_t >	m_vecTauntInputRemap;
 	CUtlVector< TauntInputRemap_t >	m_vecTauntPropInputRemap;
 	const char		*m_pszProp[LOADOUT_COUNT];
@@ -132,7 +115,6 @@ private:
 	float			m_flTauntSeparationForwardDistance;
 	float			m_flTauntSeparationRightDistance;
 	float			m_flMinTauntTime;
-	bool			m_bIsPartnerTaunt;
 	bool			m_bStopTauntIfMoved;
 
 	int				m_nFOV;
@@ -209,7 +191,6 @@ public:
 	bool		IsContentStreamable() const;
 	const char* GetAdTextToken() const { return m_pszAdText; }
 	const char* GetAdResFile() const { return m_pszAdResFile; }
-	const CUtlVector< uint32 >& GetValidPaintkits() const;
 
 	CTFTauntInfo *GetTauntData() const { return m_pTauntData; }
 
@@ -242,9 +223,6 @@ private:
 	int				m_iLoadoutSlots[LOADOUT_COUNT];		// Slot that each class places the item into.
 	EEquipType_t	m_eEquipType;
 	bool			m_bChanceRestricted = false;
-
-	mutable CUtlVector< uint32 > m_vecValidPaintkitDefs;
-	mutable bool m_bValidPaintkitsGenerated;
 
 #ifdef CLIENT_DLL
 	bool			m_bHasDetailedIcon;

@@ -30,7 +30,6 @@
 #define DISPENSE_CONTEXT		"DispenseContext"
 
 ConVar tf_cart_spell_drop_rate( "tf_cart_spell_drop_rate", "4" );
-ConVar tf_cart_duck_drop_rate( "tf_cart_duck_drop_rate", "10", FCVAR_DEVELOPMENTONLY );
 ConVar tf_cart_soul_drop_rate( "tf_cart_soul_drop_rate", "10", FCVAR_DEVELOPMENTONLY );
 
 //-----------------------------------------------------------------------------
@@ -677,28 +676,16 @@ void CObjectDispenser::DispenseThink( void )
 		{
 			m_spellTimer.Start( tf_cart_spell_drop_rate.GetFloat() );
 		}
-
-		if ( !m_duckTimer.HasStarted() )
-		{
-			m_duckTimer.Start( tf_cart_duck_drop_rate.GetFloat() );
-		}
 	}
 	else
 	{
 		m_spellTimer.Invalidate();
-		m_duckTimer.Invalidate();
 	}
 
 	if ( m_spellTimer.HasStarted() && m_spellTimer.IsElapsed() )
 	{
 		m_spellTimer.Start( tf_cart_spell_drop_rate.GetFloat() );
 		DropSpellPickup();
-	}
-
-	if ( m_duckTimer.HasStarted() && m_duckTimer.IsElapsed() )
-	{
-		m_duckTimer.Start( tf_cart_duck_drop_rate.GetFloat() );
-		DropDuckPickup();
 	}
 
 	SetContextThink( &CObjectDispenser::DispenseThink, gpGlobals->curtime + 0.1, DISPENSE_CONTEXT );
@@ -1053,14 +1040,6 @@ void CObjectCartDispenser::DropSpellPickup()
 	if ( TFGameRules()->IsHalloweenScenario( CTFGameRules::HALLOWEEN_SCENARIO_HIGHTOWER ) )
 	{
 		TFGameRules()->DropSpellPickup( GetAbsOrigin() );
-	}
-}
-
-void CObjectCartDispenser::DropDuckPickup()
-{
-	if ( TFGameRules()->IsHolidayActive( kHoliday_EOTL ) && TFGameRules()->ShouldDropBonusDuck() )
-	{
-		TFGameRules()->DropBonusDuck( GetAbsOrigin() );
 	}
 }
 

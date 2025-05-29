@@ -315,8 +315,6 @@ public:
 
 	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
 	{
-		LoadControlSettings( "Resource/UI/econ/ConfirmApplyDuckTokenDialog.res" ); // fix me
-
 		BaseClass::ApplySchemeSettings( pScheme );
 	}
 
@@ -721,18 +719,6 @@ void CEconTool_Strangifier::OnClientApplyTool( CEconItemView *pTool, CEconItemVi
 	MakeModalAndBringToFront( pDialog );
 }
 //-----------------------------------------------------------------------------
-void CEconTool_KillStreakifier::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
-{
-	CConfirmApplyStrangifierDialog *pDialog = vgui::SETUP_PANEL( new CConfirmApplyStrangifierDialog( pParent, pTool, pSubject, "ToolKillStreakifierConfirm", "killstreakified_item" ) );
-	MakeModalAndBringToFront( pDialog );
-}
-//-----------------------------------------------------------------------------
-void CEconTool_Festivizer::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
-{
-	CConfirmApplyStrangifierDialog *pDialog = vgui::SETUP_PANEL( new CConfirmApplyStrangifierDialog( pParent, pTool, pSubject, "ToolFestivizerConfirm", "festivized_item", "#ToolFestivizerInProgress" ) );
-	MakeModalAndBringToFront( pDialog );
-}
-//-----------------------------------------------------------------------------
 void CEconTool_Unusualifier::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
 {
 	CConfirmApplyStrangifierDialog *pDialog = vgui::SETUP_PANEL( new CConfirmApplyStrangifierDialog( pParent, pTool, pSubject, "ToolUnusualifierConfirm", "unusualified_item", "#ToolUnusualifierInProgress" ) );
@@ -937,47 +923,6 @@ public:
 void CEconTool_TFSpellbookPage::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
 {
 	CConfirmSpellbookPageApplicationDialog *pDialog = vgui::SETUP_PANEL( new CConfirmSpellbookPageApplicationDialog( pParent, pTool, pSubject ) );
-	MakeModalAndBringToFront( pDialog );
-}
-
-//-----------------------------------------------------------------------------
-class CConfirmDuckTokenApplicationDialog : public CBaseToolUsageDialog
-{
-	DECLARE_CLASS_SIMPLE( CConfirmDuckTokenApplicationDialog, CBaseToolUsageDialog );
-
-public:
-	CConfirmDuckTokenApplicationDialog( vgui::Panel *pParent, CEconItemView *pTool, CEconItemView *pToolSubject )
-		: CBaseToolUsageDialog( pParent, "ConfirmApplyDuckTokenDialog", pTool, pToolSubject )
-	{
-		//
-	}
-
-	virtual void ApplySchemeSettings( vgui::IScheme *pScheme )
-	{
-		LoadControlSettings( "Resource/UI/econ/ConfirmApplyDuckTokenDialog.res" );
-
-		BaseClass::ApplySchemeSettings( pScheme );
-	}
-
-	virtual void Apply( void )
-	{
-		GCSDK::CProtoBufMsg<CMsgApplyToolToItem> msg( k_EMsgGCApplyDuckToken );
-
-		msg.Body().set_tool_item_id( m_pToolModelPanel->GetItem()->GetItemID() );
-		msg.Body().set_subject_item_id( m_pSubjectModelPanel->GetItem()->GetItemID() );
-
-		EconUI()->Gamestats_ItemTransaction( IE_ITEM_USED_TOOL, m_pToolModelPanel->GetItem(), "applied_ducktoken", m_pToolModelPanel->GetItem()->GetItemDefIndex() );
-
-		GCClientSystem()->BSendMessage( msg );
-	}
-};
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CEconTool_DuckToken::OnClientApplyTool( CEconItemView *pTool, CEconItemView *pSubject, vgui::Panel *pParent ) const
-{
-	CConfirmDuckTokenApplicationDialog *pDialog = vgui::SETUP_PANEL( new CConfirmDuckTokenApplicationDialog( pParent, pTool, pSubject ) );
 	MakeModalAndBringToFront( pDialog );
 }
 

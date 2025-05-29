@@ -712,7 +712,6 @@ const char *g_szSpecialDamageNames[] =
 	"TF_DMG_CUSTOM_SHOTGUN_REVENGE_CRIT",
 	"TF_DMG_CUSTOM_TAUNTATK_ENGINEER_GUITAR_SMASH",
 	"TF_DMG_CUSTOM_BLEEDING",
-	"TF_DMG_CUSTOM_GOLD_WRENCH",
 	"TF_DMG_CUSTOM_CARRIED_BUILDING",
 	"TF_DMG_CUSTOM_TRIGGER_HURT",
 	"TF_DMG_CUSTOM_DECAPITATION_BOSS",
@@ -834,16 +833,12 @@ static const char* taunt_attack_name[] =
 	"TAUNTATK_SPY_FENCING_SLASH_A",
 	"TAUNTATK_SPY_FENCING_SLASH_B",
 	"TAUNTATK_SPY_FENCING_STAB",
-	"TAUNTATK_RPS_KILL",
 	"TAUNTATK_SNIPER_ARROW_STAB_IMPALE",
 	"TAUNTATK_SNIPER_ARROW_STAB_KILL",
 	"TAUNTATK_SOLDIER_GRENADE_KILL",
 	"TAUNTATK_DEMOMAN_BARBARIAN_SWING",
 	"TAUNTATK_MEDIC_UBERSLICE_IMPALE",
 	"TAUNTATK_MEDIC_UBERSLICE_KILL",
-	"TAUNTATK_FLIP_LAND_PARTICLE",
-	"TAUNTATK_RPS_PARTICLE",
-	"TAUNTATK_HIGHFIVE_PARTICLE",
 	"TAUNTATK_ENGINEER_GUITAR_SMASH",
 	"TAUNTATK_SOLDIER_GRENADE_KILL_WORMSIGN",
 	"TAUNTATK_SHOW_ITEM",
@@ -1480,21 +1475,6 @@ wpntranslation_class_weapons_t pszWpnEntTranslationList[] =
 			"",							// TF_CLASS_PYRO,
 			"",							// TF_CLASS_SPY,
 			"",							// TF_CLASS_ENGINEER,		
-		}
-	},
-	{
-		"saxxy",
-		{
-			"",							// TF_CLASS_UNDEFINED = 0,
-			"tf_weapon_bat",			// TF_CLASS_SCOUT,
-			"tf_weapon_club",			// TF_CLASS_SNIPER,
-			"tf_weapon_shovel",			// TF_CLASS_SOLDIER,
-			"tf_weapon_bottle",			// TF_CLASS_DEMOMAN,
-			"tf_weapon_bonesaw",		// TF_CLASS_MEDIC,
-			"tf_weapon_fireaxe",		// TF_CLASS_HEAVYWEAPONS,		HWG uses a fireaxe because he doesn't have a default melee weapon of his own; also I am a terrible person
-			"tf_weapon_fireaxe",		// TF_CLASS_PYRO,
-			"tf_weapon_knife",			// TF_CLASS_SPY,
-			"tf_weapon_wrench",			// TF_CLASS_ENGINEER,		
 		}
 	},
 	{

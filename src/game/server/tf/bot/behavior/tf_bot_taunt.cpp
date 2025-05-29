@@ -27,12 +27,6 @@ ActionResult< CTFBot > CTFBotTaunt::Update( CTFBot *me, float interval )
 	{
 		if ( m_didTaunt )
 		{
-			// Stop taunting after a while
-			if ( m_tauntEndTimer.IsElapsed() && me->m_Shared.GetTauntIndex() == TAUNT_LONG )
-			{
-				me->EndLongTaunt();
-			}
-
 			if ( me->m_Shared.InCond( TF_COND_TAUNTING ) == false )
 			{
 				return Done( "Taunt finished" );

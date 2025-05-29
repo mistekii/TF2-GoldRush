@@ -221,8 +221,6 @@ public:
 	void CreateSaveMeEffect( MedicCallerType nType = CALLER_TYPE_NORMAL );
 	void StopSaveMeEffect( bool bForceRemoveInstantly = false );
 
-	void CreateTauntWithMeEffect();
-	void StopTauntWithMeEffect();
 
 	void CreateKart();
 	void RemoveKart();
@@ -284,7 +282,7 @@ public:
 	bool			ShouldAutoRezoom( void ){ return cl_autorezoom.GetBool(); }
 	bool			ShouldAutoReload( void ){ return cl_autoreload.GetBool(); }
 
-	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes, bool &bIsKillStreakData );
+	void			GetTargetIDDataString( bool bIsDisguised, OUT_Z_BYTECAP(iMaxLenInBytes) wchar_t *sDataString, int iMaxLenInBytes );
 
 	void			RemoveDisguise( void );
 	bool			CanDisguise( void );
@@ -390,7 +388,6 @@ public:
 	int		GetMaxAmmo( int iAmmoIndex, int iClassIndex = -1 );
 
 	//-----------------------------------------------------------------------------------------------------
-	bool ShouldTauntHintIconBeVisible() const;
 	virtual bool IsHealthBarVisible( void ) const OVERRIDE;
 
 	bool	CanStartPhase( void );
@@ -412,22 +409,11 @@ public:
 	void			SetBodygroupsDirty( void );
 	void			RecalcBodygroupsIfDirty( void );
 
-	bool			CanMoveDuringTaunt();
 	bool			ShouldStopTaunting();
-	bool			IsTauntForceMovingForward() const { return m_bTauntForceMoveForward; }
-	float			GetTauntMoveAcceleration() const { return m_flTauntMoveAccelerationTime; }
-	float			GetTauntMoveSpeed() const { return m_flTauntForceMoveForwardSpeed; }
-	float			GetTauntTurnAccelerationTime() const { return m_flTauntTurnAccelerationTime; }
-	bool			IsReadyToTauntWithPartner( void ) const { return m_bIsReadyToHighFive; }
-	CTFPlayer *		GetTauntPartner( void )		{ return m_hHighFivePartner; }
 	float			GetTauntYaw( void )				{ return m_flTauntYaw; }
 	float			GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void			SetTauntYaw( float flTauntYaw );
 	int				GetActiveTauntSlot() const { return m_nActiveTauntSlot; }
-	void			PlayTauntSoundLoop( const char *pszSoundLoopName );
-	void			StopTauntSoundLoop();
-	float			GetCurrentTauntMoveSpeed() const { return m_flCurrentTauntMoveSpeed; }
-	void			SetCurrentTauntMoveSpeed( float flSpeed ) { m_flCurrentTauntMoveSpeed = flSpeed; }
 	float			GetVehicleReverseTime() const { return m_flVehicleReverseTime; }
 	void			SetVehicleReverseTime( float flTime ) { m_flVehicleReverseTime = flTime; }
 
@@ -472,10 +458,6 @@ public:
 
 	void		UpdateDemomanEyeEffect( int iDecapitations );
 	const char* GetDemomanEyeEffectName( int iDecapitations );
-
-	void	UpdateKillStreakEffects( int iCount, bool bKillScored = false );
-	const char *GetEyeGlowEffect() { return m_pszEyeGlowEffectName; }
-	Vector GetEyeGlowColor( bool bAlternate ) { return bAlternate? m_vEyeGlowColor1 : m_vEyeGlowColor2 ; }
 
 	// Bounty Mode
 	int	 GetExperienceLevel( void ) { return m_nExperienceLevel; }
@@ -526,8 +508,6 @@ private:
 	QAngle				m_angTauntPredViewAngles;
 	QAngle				m_angTauntEngViewAngles;
 
-	CSoundPatch			*m_pTauntSoundLoop;
-
 	C_TFPlayerClass		m_PlayerClass;
 
 	// ID Target
@@ -573,7 +553,6 @@ private:
 
 	// Medic callout particle effect
 	CNewParticleEffect	*m_pSaveMeEffect;
-	CNewParticleEffect	*m_pTauntWithMeEffect;
 
 	bool m_bUpdateObjectHudState;
 	bool	m_bBodygroupsDirty;
@@ -644,14 +623,6 @@ private:
 
 	QAngle			m_angEyeAngles;
 
-	bool			m_bAllowMoveDuringTaunt;
-	bool			m_bTauntForceMoveForward;
-	float			m_flTauntForceMoveForwardSpeed;
-	float			m_flTauntMoveAccelerationTime;
-	float			m_flTauntTurnSpeed;
-	float			m_flTauntTurnAccelerationTime;
-	bool			m_bIsReadyToHighFive;
-	CNetworkHandle( C_TFPlayer, m_hHighFivePartner );
 	int				m_nForceTauntCam;
 	float			m_flTauntYaw;
 	float			m_flPrevTauntYaw;
@@ -659,7 +630,6 @@ private:
 	int				m_nPrevTauntSlot;
 	item_definition_index_t	m_iTauntItemDefIndex;
 	item_definition_index_t m_iPrevTauntItemDefIndex;
-	float			m_flCurrentTauntMoveSpeed;
 	float			m_flVehicleReverseTime;
 
 	int				m_nTauntSequence;
@@ -716,13 +686,6 @@ public:
 	float				m_flLastResistTime;
 
 	HPARTICLEFFECT m_pSappedPlayerEffect;
-
-	// KillStreak Weapons
-	char m_pszEyeGlowEffectName[MAX_PATH];
-	Vector m_vEyeGlowColor1;
-	Vector m_vEyeGlowColor2;
-	HPARTICLEFFECT m_pEyeGlowEffect[ 2 ];
-	float m_flNextSheenStartTime;
 
 	enum EKartParticles
 	{

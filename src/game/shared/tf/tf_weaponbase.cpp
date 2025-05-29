@@ -318,7 +318,6 @@ CTFWeaponBase::CTFWeaponBase()
 	m_iHitsInTime = 0;
 	m_iProjectilesFiredInTime = 0;
 	m_iConsecutiveKills = 0;
-	m_iKillStreak = 0;
 	m_flClipScale = 1.f;
 #endif // GAME_DLL
 	m_iConsecutiveShots = 0;
@@ -338,15 +337,10 @@ CTFWeaponBase::CTFWeaponBase()
 
 	m_flLastPrimaryAttackTime = 0.f;
 	m_eStrangeType = STRANGE_UNKNOWN;
-	m_eStatTrakModuleType = MODULE_UNKNOWN;
 }
 
 CTFWeaponBase::~CTFWeaponBase()
 {
-#ifdef CLIENT_DLL
-	RemoveWorldmodelStatTrak();
-	RemoveViewmodelStatTrak();
-#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -991,17 +985,6 @@ void CTFWeaponBase::UpdateExtraWearablesVisibility()
 	if ( m_hExtraWearableViewModel.Get() )
 	{
 		m_hExtraWearableViewModel->UpdateVisibility();
-	}
-
-	if ( m_viewmodelStatTrakAddon.Get() )
-	{
-		m_viewmodelStatTrakAddon->UpdateVisibility();
-	}
-
-	if ( m_worldmodelStatTrakAddon.Get() )
-	{
-		m_worldmodelStatTrakAddon->UpdateVisibility();
-		m_worldmodelStatTrakAddon->CreateShadow();
 	}
 }
 #endif // GAME_DLL
@@ -3131,7 +3114,7 @@ int CTFWeaponBase::GetWorldModelIndex( void )
 		bool bReplaceModel = true;
 		const char* pszCustomTauntProp = NULL;
 
-		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && ( pPlayer->m_Shared.GetTauntIndex() == TAUNT_MISC_ITEM || pPlayer->m_Shared.GetTauntIndex() == TAUNT_LONG ) )
+		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && pPlayer->m_Shared.GetTauntIndex() == TAUNT_MISC_ITEM )
 		{
 			int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
 
@@ -6021,194 +6004,7 @@ EWeaponStrangeType_t CTFWeaponBase::GetStrangeType()
 
 	return m_eStrangeType;
 }
-
-bool CTFWeaponBase::BHasStatTrakModule()
-{
-	if ( m_eStatTrakModuleType == MODULE_UNKNOWN )
-	{
-		CEconItemView *pItem = GetAttributeContainer()->GetItem();
-		if ( !pItem )
-			return false;
-
-		EWeaponStrangeType_t eStrangeType = GetStrangeType();
-		if ( eStrangeType != STRANGE_IS_STRANGE)
-		{
-			m_eStatTrakModuleType = MODULE_NONE;
-			return false;
-		}
-
-		// Does it have a module
-		if ( GetStattrak( pItem ) )
-		{
-			m_eStatTrakModuleType = MODULE_FOUND;
-			return true;
-		}
-	}
-
-	if ( m_eStatTrakModuleType != MODULE_FOUND )
-		return false;
-
-	return true;
-
-}
 #ifdef CLIENT_DLL
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::UpdateAllViewmodelAddons( void )
-{
-	C_TFPlayer *pPlayer = ToTFPlayer( GetOwner() );
-
-	// Remove any view model add ons if we're spectating.
-	if ( !pPlayer )
-	{
-		RemoveViewmodelStatTrak();
-		return;
-	}
-
-	// econ-related addons follow, so bail out if we can't get at the econitemview
-	CEconItemView *pItem = GetAttributeContainer()->GetItem();
-	if ( !pItem )
-	{
-		RemoveViewmodelStatTrak();
-		return;
-	}
-
-	if ( GetStrangeType() > -1 )
-	{
-		CSteamID HolderSteamID;
-		pPlayer->GetSteamID( &HolderSteamID );
-		AddStatTrakModel( pItem, m_eStrangeType, HolderSteamID.GetAccountID() );
-	}
-	else
-	{
-		RemoveViewmodelStatTrak();
-	}
-}
-
-// StatTrak Module Testing
-void CTFWeaponBase::AddStatTrakModel( CEconItemView *pItem, int nStatTrakType, AccountID_t holderAcctId )
-{
-	// Already has module, just early out
-	if ( m_viewmodelStatTrakAddon && m_viewmodelStatTrakAddon.Get() && m_viewmodelStatTrakAddon->GetMoveParent() )
-	{
-		return;
-	}
-
-	// Something is missing, remove and return
-	if ( !pItem )
-	{
-		RemoveViewmodelStatTrak();
-		RemoveWorldmodelStatTrak();
-		return;
-	}
-	
-	if ( GetStrangeType() != STRANGE_IS_STRANGE )
-	{
-		RemoveViewmodelStatTrak();
-		RemoveWorldmodelStatTrak();
-		return;
-	}
-
-	if ( !BHasStatTrakModule() )
-	{
-		RemoveViewmodelStatTrak();
-		RemoveWorldmodelStatTrak();
-		return;
-	}
-
-	// Get Module Data
-	CAttribute_String attrModule;
-	if ( !GetStattrak( pItem, &attrModule ) )
-	{
-		RemoveViewmodelStatTrak();
-		RemoveWorldmodelStatTrak();
-		return;
-	}
-
-	float flScale = 1.0f;
-	CALL_ATTRIB_HOOK_FLOAT( flScale, weapon_stattrak_module_scale );
-
-	// Skin
-	int nSkin = pItem->GetTeamNumber() - TF_TEAM_RED;
-	if ( pItem->GetAccountID() != holderAcctId )
-	{
-		nSkin += 2;	// sad skin
-	}
-
-	// View Model / third person
-	if ( GetViewmodelAttachment() )
-	{
-		// Already has a module, early out
-		if ( !( m_viewmodelStatTrakAddon && m_viewmodelStatTrakAddon.Get() && m_viewmodelStatTrakAddon->GetMoveParent() ) )
-		{
-			RemoveViewmodelStatTrak();
-		
-			CTFWeaponAttachmentModel *pStatTrakEnt = new class CTFWeaponAttachmentModel;
-			if ( pStatTrakEnt )
-			{
-				pStatTrakEnt->InitializeAsClientEntity( attrModule.value().c_str(), RENDER_GROUP_VIEW_MODEL_OPAQUE );
-				
-				pStatTrakEnt->Init( GetViewmodelAttachment(), this, true );
-				pStatTrakEnt->m_nSkin = nSkin;
-				m_viewmodelStatTrakAddon = pStatTrakEnt;
-				
-				if ( cl_flipviewmodels.GetBool() )
-				{
-					pStatTrakEnt->SetBodygroup( 1, 1 ); // use a special mirror-image stattrak module that appears correct for lefties
-					flScale *= -1.0f;					// flip scale
-				}
-
-				pStatTrakEnt->SetModelScale( flScale );
-				//RemoveEffects( EF_NODRAW );
-			}
-		}
-	}
-
-	// World Model
-	if ( !(m_worldmodelStatTrakAddon && m_worldmodelStatTrakAddon.Get() && m_worldmodelStatTrakAddon->GetMoveParent() ) )
-	{
-		RemoveWorldmodelStatTrak();
-
-		CTFWeaponAttachmentModel *pStatTrakEnt = new class CTFWeaponAttachmentModel;
-		if ( pStatTrakEnt )
-		{
-			pStatTrakEnt->InitializeAsClientEntity( attrModule.value().c_str(), RENDER_GROUP_OPAQUE_ENTITY );
-			pStatTrakEnt->SetModelScale( flScale );
-			pStatTrakEnt->Init( this, this, false );
-			pStatTrakEnt->m_nSkin = nSkin;
-			m_worldmodelStatTrakAddon = pStatTrakEnt;
-			
-			
-			//	//if ( !cl_flipviewmodels.GetBool() )
-			//	//{
-			//	//	pStatTrakEnt->SetBodygroup( 0, 1 ); // use a special mirror-image stattrak module that appears correct for lefties
-			//	//}
-
-			//RemoveEffects( EF_NODRAW );
-		}
-	}
-	
-}
-
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::RemoveViewmodelStatTrak( void )
-{
-	if ( m_viewmodelStatTrakAddon.Get() )
-	{
-		m_viewmodelStatTrakAddon->Remove();
-		m_viewmodelStatTrakAddon = NULL;
-	}
-}
-
-//-----------------------------------------------------------------------------
-void CTFWeaponBase::RemoveWorldmodelStatTrak( void )
-{
-	if ( m_worldmodelStatTrakAddon )
-	{
-		m_worldmodelStatTrakAddon->Remove();
-		m_worldmodelStatTrakAddon = NULL;
-	}
-}
-
 //-----------------------------------------------------------------------------
 const Vector& CTFWeaponBase::GetViewmodelOffset()
 {

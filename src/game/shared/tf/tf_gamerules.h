@@ -896,10 +896,6 @@ public:
 
 	bool ShouldDropSpellPickup();
 	void DropSpellPickup( const Vector& vPosition, int nTier = 0 ) const;
-	
-	bool ShouldDropBonusDuck( void );
-	bool ShouldDropBonusDuckFromPlayer( CTFPlayer *pScorer, CTFPlayer *pVictim );
-	void DropBonusDuck( const Vector& vPosition, CTFPlayer *pScorer = NULL, CTFPlayer *pAssistor = NULL, CTFPlayer *pVictim = NULL, bool bCrit = false, bool bObjective = false ) const;
 
 	void MatchSummaryStart( void );
 	void MatchSummaryEnd( void );
@@ -910,7 +906,6 @@ private:
 	void ChooseNextMapVoteOptions();
 
 	int DefaultFOV( void ) { return 75; }
-	int GetDuckSkinForClass( int nTeam, int nClass ) const;
 	void MatchSummaryTeleport();
 
 	void StopWatchShouldBeTimedWin_Calculate( void );

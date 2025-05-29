@@ -171,8 +171,6 @@ ConVar tf_feign_death_speed_duration( "tf_feign_death_speed_duration", "3.0", FC
 
 ConVar tf_allow_taunt_switch( "tf_allow_taunt_switch", "0", FCVAR_REPLICATED, "0 - players are not allowed to switch weapons while taunting, 1 - players can switch weapons at the start of a taunt (old bug behavior), 2 - players can switch weapons at any time during a taunt." );
 
-ConVar tf_allow_all_team_partner_taunt( "tf_allow_all_team_partner_taunt", "1", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY );
-
 // AFTERBURN
 const float tf_afterburn_max_duration = 10.f;
 const float tf_afterburn_duration_ratio_second_degree = 0.4f;
@@ -407,7 +405,6 @@ BEGIN_RECV_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 
 	RecvPropInt( RECVINFO( m_nPlayerCondEx2 ) ),
 	RecvPropInt( RECVINFO( m_nPlayerCondEx3 ) ),
-	RecvPropArray3( RECVINFO_ARRAY( m_nStreaks ), RecvPropInt( RECVINFO( m_nStreaks[0] ) ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_Low ) ),
 	RecvPropInt( RECVINFO( m_unTauntSourceItemID_High ) ),
 
@@ -573,7 +570,6 @@ BEGIN_SEND_TABLE_NOBASE( CTFPlayerShared, DT_TFPlayerShared )
 	SendPropInt( SENDINFO( m_nPlayerCondEx2 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_nPlayerCondEx3 ), -1, SPROP_VARINT | SPROP_UNSIGNED ),
 
-	SendPropArray3( SENDINFO_ARRAY3( m_nStreaks ), SendPropInt( SENDINFO_ARRAY( m_nStreaks ) ) ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_Low ), -1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_unTauntSourceItemID_High ), -1, SPROP_UNSIGNED ),
 
@@ -776,8 +772,6 @@ CTFPlayerShared::CTFPlayerShared()
 	m_iNextMeleeCrit = 0;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
-	m_iOldKillStreak = 0;
-	m_iOldKillStreakWepSlot = 0;
 
 	m_flNextNoiseMakerTime = 0;
 	m_iSpawnRoomTouchCount = 0;
@@ -865,8 +859,6 @@ void CTFPlayerShared::Init( CTFPlayer *pPlayer )
 	m_iNextMeleeCrit = 0;
 
 	m_iDecapitations = m_iOldDecapitations = 0;
-	m_iOldKillStreak = 0;
-	m_iOldKillStreakWepSlot = 0;
 
 	SetJumping( false );
 	SetAssist( NULL );
@@ -4351,8 +4343,6 @@ void CTFPlayerShared::OnAddHalloweenKart( void )
 		m_pOuter->Weapon_Switch( pMeleeWeapon );
 	}
 
-	m_pOuter->m_flNextBonusDucksVOAllowedTime = gpGlobals->curtime + 17.f; // The longest Merasmus line + 1 second
-
 	// Force client to update all view angles (including kart and taunt yaw)
 	m_pOuter->ForcePlayerViewAngles( m_pOuter->GetAbsAngles() );
 #else
@@ -5071,39 +5061,6 @@ void CTFPlayerShared::ClientDemoBuffThink( void )
 		}
 	}
 }
-
-//-----------------------------------------------------------------------------
-void CTFPlayerShared::ClientKillStreakBuffThink( void )
-{
-	int nLoadoutSlot = m_pOuter->GetActiveTFWeapon() ? m_pOuter->GetActiveTFWeapon()->GetAttributeContainer()->GetItem()->GetStaticData()->GetLoadoutSlot( m_pOuter->GetPlayerClass()->GetClassIndex() ) : LOADOUT_POSITION_PRIMARY;
-	int nKillStreak = GetStreak(kTFStreak_Kills);
-	if ( nKillStreak != m_iOldKillStreak || m_iOldKillStreakWepSlot != nLoadoutSlot )
-	{
-		m_pOuter->UpdateKillStreakEffects( nKillStreak, m_iOldKillStreak < nKillStreak );
-		m_iOldKillStreak = nKillStreak;
-		m_iOldKillStreakWepSlot = nLoadoutSlot;
-	}
-	else if ( !m_pOuter->IsAlive() )
-	{
-		m_pOuter->UpdateKillStreakEffects( 0, false );
-	}
-	else
-	{
-		static bool bAlternate = false;
-		Vector vColor = bAlternate ? m_pOuter->m_vEyeGlowColor1 : m_pOuter->m_vEyeGlowColor2;
-
-		if ( m_pOuter->m_pEyeGlowEffect[0] )
-		{
-			m_pOuter->m_pEyeGlowEffect[0]->SetControlPoint( CUSTOM_COLOR_CP1, vColor );
-		}
-		if ( m_pOuter->m_pEyeGlowEffect[1] )
-		{
-			m_pOuter->m_pEyeGlowEffect[1]->SetControlPoint( CUSTOM_COLOR_CP1, vColor );
-		}
-		//
-		bAlternate = !bAlternate;
-	}
-}
 #endif
 
 //-----------------------------------------------------------------------------
@@ -5574,7 +5531,6 @@ void CTFPlayerShared::OnAddStealthed( void )
 	m_pOuter->ParticleProp()->StopParticlesNamed( "balloontoss_drip", true );
 
 	m_pOuter->UpdateSpyStateChange();
-	m_pOuter->UpdateKillStreakEffects( GetStreak( kTFStreak_Kills ) );
 #endif
 
 #ifdef GAME_DLL
@@ -5650,7 +5606,6 @@ void CTFPlayerShared::OnRemoveStealthed( void )
 
 #ifdef CLIENT_DLL
 	m_pOuter->UpdateSpyStateChange();
-	m_pOuter->UpdateKillStreakEffects( GetStreak( kTFStreak_Kills ) );
 #endif
 
 }
@@ -5777,7 +5732,6 @@ void CTFPlayerShared::OnRemoveDisguised( void )
 
 	// They may have called for medic and created a visible medic bubble
 	m_pOuter->StopSaveMeEffect( true );
-	m_pOuter->StopTauntWithMeEffect();
 
 	UpdateCritBoostEffect( kCritBoost_ForceRefresh );
 	m_pOuter->UpdateSpyStateChange();
@@ -10744,49 +10698,6 @@ void CTFPlayer::GetActiveSets( CUtlVector<const CEconItemSetDefinition *> *pItem
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-bool CTFPlayer::CanMoveDuringTaunt()
-{
-
-	if ( TFGameRules() && TFGameRules()->IsCompetitiveMode() )
-	{
-		if ( ( TFGameRules()->GetRoundRestartTime() > -1.f ) && ( (int)( TFGameRules()->GetRoundRestartTime() - gpGlobals->curtime ) <= mp_tournament_readymode_countdown.GetInt() ) )
-			return false;
-
-		if ( TFGameRules()->PlayersAreOnMatchSummaryStage() )
-			return false;
-	}
-
-	if ( m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		return true;
-
-	if ( m_Shared.InCond( TF_COND_TAUNTING ) || m_Shared.InCond( TF_COND_HALLOWEEN_THRILLER ) )
-	{
-#ifdef GAME_DLL
-		if ( tf_allow_sliding_taunt.GetBool() )
-		{
-			return true;
-		}
-#endif // GAME_DLL
-
-
-		if ( m_bAllowMoveDuringTaunt )
-		{
-			return true;
-		}
-
-		if ( IsReadyToTauntWithPartner() || CTFPlayerSharedUtils::ConceptIsPartnerTaunt( m_Shared.m_iTauntConcept ) )
-		{
-			return false;
-		}
-	}
-
-	return false;
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
 bool CTFPlayer::ShouldStopTaunting()
 {
 	// stop taunt if we're under water
@@ -10802,31 +10713,6 @@ bool CTFPlayer::ShouldStopTaunting()
 //-----------------------------------------------------------------------------
 void CTFPlayer::ParseSharedTauntDataFromEconItemView( const CEconItemView *pEconItemView )
 {
-	static CSchemaAttributeDefHandle pAttrDef_TauntForceMoveForward( "taunt force move forward" );
-	attrib_value_t attrTauntForceMoveForward = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntForceMoveForward, &attrTauntForceMoveForward );
-	m_bTauntForceMoveForward = attrTauntForceMoveForward != 0; 
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntMoveSpeed( "taunt move speed" );
-	attrib_value_t attrTauntMoveSpeed = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntMoveSpeed, &attrTauntMoveSpeed );
-	m_flTauntForceMoveForwardSpeed = (float&)attrTauntMoveSpeed;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntMoveAccelerationTime( "taunt move acceleration time" );
-	attrib_value_t attrTauntMoveAccelerationTime = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntMoveAccelerationTime, &attrTauntMoveAccelerationTime );
-	m_flTauntMoveAccelerationTime = (float&)attrTauntMoveAccelerationTime;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntTurnSpeed( "taunt turn speed" );
-	attrib_value_t attrTauntTurnSpeed = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntTurnSpeed, &attrTauntTurnSpeed );
-	m_flTauntTurnSpeed = (float&)attrTauntTurnSpeed;
-
-	static CSchemaAttributeDefHandle pAttrDef_TauntTurnAccelerationTime( "taunt turn acceleration time" );
-	attrib_value_t attrTauntTurnAccelerationTime = 0;
-	pEconItemView->FindAttribute( pAttrDef_TauntTurnAccelerationTime, &attrTauntTurnAccelerationTime );
-	m_flTauntTurnAccelerationTime = (float&)attrTauntTurnAccelerationTime;
-
 #ifdef CLIENT_DLL
 	CTFTauntInfo *pTauntInfo = pEconItemView->GetStaticData()->GetTauntData();
 	if ( pTauntInfo )
@@ -11115,166 +11001,10 @@ ConVar tf_halloween_kart_pitch_fast_follow_rate( "tf_halloween_kart_pitch_fast_f
 
 void CTFPlayerShared::CreateVehicleMove( float flInputSampleTime, CUserCmd *pCmd )
 {
-	const float flSign = pCmd->sidemove == 0.f ? 0.f : Sign( pCmd->sidemove );
-
-	// Compute target turn speed
-	const float flVel = m_pOuter->GetAbsVelocity().Length2D();
-	const float flNormalizedSpeed = Clamp( flVel / tf_halloween_kart_dash_speed.GetFloat(), 0.0f, 1.0f );
-	float flTargetTurnSpeed;
-	if ( flNormalizedSpeed == 0.f )
-	{
-		flTargetTurnSpeed = flSign * tf_halloween_kart_stationary_turn_speed.GetFloat();
-	}
-	else if ( Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) < 0 )
-	{
-		flTargetTurnSpeed = Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) * flSign * tf_halloween_kart_reverse_turn_speed.GetFloat();
-	}
-	else
-	{
-		const float flSmoothCurveVal = SmoothCurve_Tweak( flNormalizedSpeed, tf_halloween_kart_turning_curve_peak_position.GetFloat() );
-		flTargetTurnSpeed = Sign( m_pOuter->GetCurrentTauntMoveSpeed() ) * flSign * RemapValClamped( flSmoothCurveVal, 0.f, 1.f, tf_halloween_kart_slow_turn_speed.GetFloat(), tf_halloween_kart_fast_turn_speed.GetFloat() );
-	}
-
-	float flTurnAccel = 0.f;
-	// Compute turn accelleration
-	if ( flSign == Sign( m_flCurrentTauntTurnSpeed ) )
-	{
-		flTurnAccel = RemapValClamped( flNormalizedSpeed, 0.f, 1.f, tf_halloween_kart_slow_turn_accel_speed.GetFloat(), tf_halloween_kart_fast_turn_accel_speed.GetFloat() );
-	}
-	else
-	{	// When not trying to turn, or turning the opposite way you're already turning
-		// accelerate much faster
-		flTurnAccel = tf_halloween_kart_return_turn_accell.GetFloat();
-	}
-
-	// Turn faster in the air
-	if ( !(m_pOuter->GetFlags() & FL_ONGROUND) )
-	{
-		flTurnAccel *= tf_halloween_kart_air_turn_scale.GetFloat();
-	}
-
-	// Get actual turn speed
-	m_flCurrentTauntTurnSpeed = Approach( flTargetTurnSpeed, m_flCurrentTauntTurnSpeed, flTurnAccel * flInputSampleTime );
-
-	const float flMaxPossibleTurnSpeed = Max( tf_halloween_kart_slow_turn_speed.GetFloat(), tf_halloween_kart_fast_turn_speed.GetFloat() );
-	m_flCurrentTauntTurnSpeed = clamp( m_flCurrentTauntTurnSpeed, -flMaxPossibleTurnSpeed, flMaxPossibleTurnSpeed );
-
-#ifdef DEBUG
-	#ifdef CLIENT_DLL
-		engine->Con_NPrintf( 4, "Turn: %3.2f", m_flCurrentTauntTurnSpeed );
-		engine->Con_NPrintf( 5, "TargetTurn: %3.2f", flTargetTurnSpeed );
-		engine->Con_NPrintf( 6, "TurnAccell: %3.2f", flTurnAccel );
-	#else
-		engine->Con_NPrintf( 4+3, "Turn: %3.2f", m_flCurrentTauntTurnSpeed );
-		engine->Con_NPrintf( 5+3, "TargetTurn: %3.2f", flTargetTurnSpeed );
-		engine->Con_NPrintf( 6+3, "TurnAccell: %3.2f", flTurnAccel );
-	#endif
-#endif
-
-#ifdef CLIENT_DLL
-	// Turn!
-	m_angVehicleMoveAngles -= QAngle( 0.f, m_flCurrentTauntTurnSpeed * flInputSampleTime, 0.f );
-
-	// We want our pitch to slowly catch up to the pitch of the player's model
-	const float flTargetPitch = tf_halloween_kart_pitch.GetFloat() + m_pOuter->m_PlayerAnimState->GetRenderAngles()[PITCH];
-	const float flStepSpeed = fabs( flTargetPitch - tf_halloween_kart_pitch.GetFloat() ) < fabs( m_angVehicleMovePitchLast - tf_halloween_kart_pitch.GetFloat() ) ? tf_halloween_kart_pitch_fast_follow_rate.GetFloat() : tf_halloween_kart_pitch_slow_follow_rate.GetFloat();
-	const float flPitchDiff = fabs( flTargetPitch - m_angVehicleMovePitchLast );
-	const float flPitchStep = flPitchDiff * flStepSpeed;
-
-	m_angVehicleMovePitchLast = Approach( flTargetPitch, m_angVehicleMovePitchLast, flPitchStep * gpGlobals->frametime );
-
-	m_angVehicleMoveAngles[PITCH] = m_angVehicleMovePitchLast;
-	pCmd->weaponselect = 0;
-	pCmd->buttons &= IN_MOVELEFT | IN_MOVERIGHT | IN_ATTACK | IN_ATTACK2 | IN_FORWARD | IN_BACK | IN_JUMP;
-	VectorCopy( m_angVehicleMoveAngles, pCmd->viewangles );
-
-	m_pOuter->SetLocalAngles( m_angVehicleMoveAngles );
-
-	// Fill out our kart state for the local client
-	m_pOuter->m_iKartState = 0;
-
-	// Hitting the gas
-	if ( pCmd->buttons & IN_FORWARD )
-	{
-		m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Driving;
-	}
-	else if ( pCmd->buttons & IN_BACK )	// Hitting the brakes
-	{
-		// slowing down
-		if ( m_pOuter->GetCurrentTauntMoveSpeed() > 0 )
-		{
-			m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Braking;
-		}
-		// if we are already stopped, look for new input to start going backwards
-		else 
-		{
-			// check for new input, else do nothing
-			if ( ( pCmd->buttons & IN_BACK )
-				|| m_pOuter->GetCurrentTauntMoveSpeed() < 0
-				|| m_pOuter->GetVehicleReverseTime() < gpGlobals->curtime
-			) 
-			{
-
-				m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Reversing;
-			}
-			else
-			{
-				m_pOuter->m_iKartState |= CTFPlayerShared::kKartState_Stopped;
-			}
-		}
-	}
-#endif
 }
 
 void CTFPlayerShared::VehicleThink( void )
 {
-#ifdef CLIENT_DLL
-	m_pOuter->UpdateKartSounds();
-
-	// Ordered list of effects.  Lower on the list has higher prescedence
-	static WheelEffect_t wheelEffects[] =
-	{
-		WheelEffect_t( 20.f, "kart_dust_trail_red", "kart_dust_trail_blue" )
-	};
-
-	const float flCurrentSpeed = m_pOuter->GetCurrentTauntMoveSpeed();
-	const WheelEffect_t* pDesiredEffect = NULL;
-
-	if ( InCond( TF_COND_HALLOWEEN_KART ) )
-	{
-		// Go through the effects, and figure out which effect to use
-		for( int i=0; i < ARRAYSIZE(wheelEffects); ++ i )
-		{
-			const WheelEffect_t& effect = wheelEffects[ i ];
-			if ( effect.m_flMinTriggerSpeed <= flCurrentSpeed )
-			{
-				pDesiredEffect = &effect;
-			}
-		}
-	}
-
-
-	// Start/stop effects if the desired effect is different
-	if ( pDesiredEffect != m_pWheelEffect )
-	{
-		C_BaseAnimating * pKart = m_pOuter->GetKart();
-		if ( !pKart )
-			return;
-
-		m_pWheelEffect = pDesiredEffect;
-
-		// New effect
-		if ( pDesiredEffect )
-		{
-			const char *pszEffectName =  pDesiredEffect->m_pszParticleName[ m_pOuter->GetTeamNumber() ];
-			m_pOuter->CreateKartEffect( pszEffectName );
-		}
-		else // Turn off current effect
-		{
-			m_pOuter->StopKartEffect();
-		}
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -12181,11 +11911,6 @@ CEconItemView *CTFPlayerSharedUtils::GetEconItemViewByLoadoutSlot( CTFPlayer *pT
 		*pEntity = NULL;
 	}
 	return NULL;
-}
-
-bool CTFPlayerSharedUtils::ConceptIsPartnerTaunt( int iConcept )
-{
-	return iConcept == MP_CONCEPT_HIGHFIVE_SUCCESS_FULL || iConcept == MP_CONCEPT_HIGHFIVE_SUCCESS;
 }
 
 //-----------------------------------------------------------------------------

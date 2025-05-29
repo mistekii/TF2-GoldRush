@@ -6,7 +6,6 @@
 #include "econ_item_constants.h"
 #include "econ_dynamic_recipe.h"
 #include "schemainitutils.h"
-#include "econ_paintkit.h"
 
 
 
@@ -27,7 +26,6 @@ const unsigned int g_CapabilityApplicationMap[] =
 	// ...then we check to see if the tool target has
 	// this capability
 
-	ITEM_CAP_PAINTABLE,										// ITEM_CAP_PAINTABLE
 	ITEM_CAP_NAMEABLE,										// ITEM_CAP_NAMEABLE
 	ITEM_CAP_DECODABLE,										// ITEM_CAP_DECODABLE
 	0,														// ITEM_CAP_UNUSED; was ITEM_CAP_CAN_MOD_SOCKET
@@ -39,16 +37,13 @@ const unsigned int g_CapabilityApplicationMap[] =
 	ITEM_CAP_CAN_COLLECT,									// ITEM_CAP_CAN_COLLECT
 	0,														// ITEM_CAP_CAN_CRAFT_COUNT
 	0,														// ITEM_CAP_CAN_CRAFT_MARK
-	ITEM_CAP_PAINTABLE_TEAM_COLORS | ITEM_CAP_PAINTABLE,	// ITEM_CAP_PAINTABLE_TEAM_COLORS
 	0,														// ITEM_CAP_CAN_BE_RESTORED
 	ITEM_CAP_CAN_USE_STRANGE_PARTS,							// ITEM_CAP_CAN_USE_STRANGE_PARTS
 	ITEM_CAP_CAN_CARD_UPGRADE,								// ITEM_CAP_CAN_CARD_UPGRADE
 	ITEM_CAP_CAN_STRANGIFY,									// ITEM_CAP_CAN_STRANGIFY
-	ITEM_CAP_CAN_KILLSTREAKIFY,								// ITEM_CAP_CAN_KILLSTREAKIFY
 	ITEM_CAP_CAN_CONSUME,									// ITEM_CAP_CAN_CONSUME
 	ITEM_CAP_CAN_SPELLBOOK_PAGE,							// ITEM_CAP_CAN_SPELLBOOK_PAGE
 	ITEM_CAP_HAS_SLOTS,										// ITEM_CAP_HAS_SLOTS
-	ITEM_CAP_DUCK_UPGRADABLE,								// ITEM_CAP_DUCK_UPGRADABLE
 	ITEM_CAP_CAN_UNUSUALIFY,								// ITEM_CAP_CAN_UNUSUALIFY
 };
 
@@ -200,18 +195,7 @@ bool CEconTool_StrangeCountTransfer::AreItemsEligibleForStrangeCountTransfer( co
 	if ( !pItem1 || !pItem2 )
 		return false;
 
-	const char *pItem1Xifier = pItem1->GetItemDefinition()->GetXifierRemapClass();
-	const char *pItem2Xifier = pItem2->GetItemDefinition()->GetXifierRemapClass();
-
-	// if no xifier class, check if the item defs are the same
-	if ( !pItem1Xifier || !pItem2Xifier )
-	{
-		if ( pItem1->GetItemDefinition() != pItem2->GetItemDefinition() )
-		{
-			return false;
-		}
-	}
-	else if ( V_stricmp( pItem1Xifier, pItem2Xifier ) != 0 )
+	if ( pItem1->GetItemDefinition() != pItem2->GetItemDefinition() )
 	{
 		return false;
 	}
@@ -980,9 +964,6 @@ bool CEconTool_Xifier::CanApplyTo( const IEconItemInterface *pTool, const IEconI
 		uint8 unSubjectRarity = pToolSubject->GetRarity();
 		if ( unSubjectRarity == k_unItemRarity_Any || unSubjectRarity == 0 || unSubjectRarity > m_ItemRarityRestriction )
 			return false;
-
-		if ( !GetStattrak( pToolSubject ) )
-			return false;
 	}
 
 	// Check if we have a restriction as an attribute
@@ -1010,14 +991,6 @@ bool CEconTool_Xifier::ItemDefMatch( const CEconItemDefinition* pTargetItemDef, 
 		// Item def match counts
 		if ( pTargetItemDef == pSubjectItemDef )
 			return true;
-
-		// If these item defs have the same XifierRemapClass then they are allowed to match as well
-		if ( pTargetItemDef->GetXifierRemapClass() && *pTargetItemDef->GetXifierRemapClass() 
-			&& pSubjectItemDef->GetXifierRemapClass() && *pSubjectItemDef->GetXifierRemapClass() )
-		{
-			if (BStringsEqual(pSubjectItemDef->GetXifierRemapClass(), pTargetItemDef->GetXifierRemapClass()))
-				return true;
-		}
 	}
 
 	return false;
@@ -1033,49 +1006,11 @@ bool CEconTool_Strangifier::CanApplyTo( const IEconItemInterface *pTool, const I
 	if ( pToolSubject->BIsStrange() )
 		return false;
 
-	// Don't allow for War Painted items if the rarity is not required
-	if ( GetPaintKitDefIndex( pToolSubject ) && GetRarityRestriction() == k_unItemRarity_Any )
-		return false;
-
 	// Default rules
 	return CEconTool_Xifier::CanApplyTo( pTool, pToolSubject );
 }
 
 //-----------------------------------------------------------------------------
-bool CEconTool_KillStreakifier::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	// Make sure the item doesn't already have an effect
-	static CSchemaAttributeDefHandle pAttribDef_KillStreakEffect( "killstreak tier" );
-	float flEffectIndex = 0.0;
-	if ( FindAttribute_UnsafeBitwiseCast<attrib_value_t>( pToolSubject, pAttribDef_KillStreakEffect, &flEffectIndex ) )
-		return false;
-
-	// Default rules
-	return CEconTool_Xifier::CanApplyTo( pTool, pToolSubject );
-}
-
-//-----------------------------------------------------------------------------
-bool CEconTool_Festivizer::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	const CEconItemDefinition *pSubjectItemDef = pToolSubject->GetItemDefinition();
-	if ( !pSubjectItemDef )
-		return false;
-
-	// Make sure the item doesn't already have an effect
-	static CSchemaAttributeDefHandle pAttribDef_Festivizer( "is_festivized" );
-	if ( FindAttribute( pToolSubject, pAttribDef_Festivizer ) )
-		return false;
-
-	// Default rules
-	return CEconTool_Xifier::CanApplyTo( pTool, pToolSubject );
-}
-
 bool CEconTool_Unusualifier::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
 {
 	Assert( pTool );
@@ -1224,24 +1159,6 @@ bool CEconTool_ClassTransmogrifier::CanApplyTo( const IEconItemInterface *pTool,
 			return false;
 	}
 
-	return IEconTool::CanApplyTo( pTool, pToolSubject );
-}
-
-//-----------------------------------------------------------------------------
-bool CEconTool_DuckToken::CanApplyTo( const IEconItemInterface *pTool, const IEconItemInterface *pToolSubject ) const
-{
-	Assert( pTool );
-	Assert( pToolSubject );
-
-	static CSchemaAttributeDefHandle pAttrDef_DuckBadgeLevel( "duck badge level" );
-	uint32 unOldBadgeLevel = 0;
-	if ( !FindAttribute( pToolSubject, pAttrDef_DuckBadgeLevel, &unOldBadgeLevel ) )
-		return false;
-
-	if ( unOldBadgeLevel >= 5 )
-		return false;
-
-	// Default rules
 	return IEconTool::CanApplyTo( pTool, pToolSubject );
 }
 

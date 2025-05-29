@@ -85,13 +85,8 @@ public:
 	virtual void PaintBackground( void );
 	void DrawQuad( int iSubtileIndex, int iSubtileCount );
 
-	int m_iPaintSplat;
-
 	// UGC file of custom texture we are using.  0 in the more common case of none.
 	uint64 m_hUGCId;
-
-	// Paint color. 
-	CUtlVector<Color> m_colPaintColors;
 };
 
 
@@ -152,8 +147,6 @@ private:
 	bool					m_bGreyedOut;
 	bool					m_bModelIsHidden;
 
-	bool					m_bIsFestivized;
-	bool					m_bIsPaintKitItem;
 	bool					m_bUseRenderTargetAsIcon; // same as m_bUseItemRenderTarget but set by attribute instead of res file
 
 	void					CleanUpCachedWeaponIcon();
@@ -167,9 +160,6 @@ private:
 
 	void					UpdateCameraForIcon();
 	int						m_iCameraAttachment;
-
-	bool					RenderStatTrack( CStudioHdr *pStudioHdr, matrix3x4_t *pWorldMatrix );
-	MDLData_t				m_StatTrackModel;
 
 	bool					RenderAttachedModels( CStudioHdr *pStudioHdr, matrix3x4_t *pWorldMatrix );
 	void					LoadAttachedModel( attachedmodel_t *pModel );
@@ -366,7 +356,6 @@ private:
 	static int			sai_NumLoadingRequests[NUM_LOADING_TYPES];
 	static eLoadingType_t se_CurrentLoadingTask;
 	CUtlMap< attrib_definition_index_t, int > m_mapMatchingAttributes;
-	CItemMaterialCustomizationIconPanel	*m_pPaintIcon;
 	vgui::ScalableImagePanel	*m_pTF2Icon;
 
 	CItemModelPanel *m_pContainedItemPanel;
@@ -391,7 +380,6 @@ private:
 	CPanelAnimationVar( bool, m_bModelOnly, "model_only", "0" );
 	CPanelAnimationVar( bool, m_bHideModelDefault, "model_hide", "0" );
 	bool m_bHideModel;
-	CPanelAnimationVar( bool, m_bHidePaintIcon, "paint_icon_hide", "0" );
 	CPanelAnimationVar( bool, m_bResizeToText, "resize_to_text", "0" );
 	CPanelAnimationVar( int,  m_iNameLabelAlignment, "name_label_alignment", "4" /*a_center*/ );
 	CPanelAnimationVarAliasType( int, m_iTextXPos, "text_xpos", "0", "proportional_int" );

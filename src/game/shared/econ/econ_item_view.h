@@ -217,7 +217,6 @@ public:
 	bool					IsValid( void ) const { return m_bInitialized; }
 	void					Invalidate( void ) { m_bInitialized = false; m_iItemDefinitionIndex = INVALID_ITEM_DEF_INDEX; m_iItemID = INVALID_ITEM_ID; }
 	void					InvalidateColor() { m_bColorInit = false; }
-	void					InvalidateOverrideColor() { m_bPaintOverrideInit = false; }
 
 	bool					IsUndefined() const { return !IsValid() || m_iItemDefinitionIndex == INVALID_ITEM_DEF_INDEX; }
 
@@ -393,8 +392,6 @@ protected:
 #endif
 
 	bool	m_bColorInit;
-	bool	m_bPaintOverrideInit;
-	bool	m_bHasPaintOverride;
 	float	m_flOverrideIndex;
 	uint32	m_unRGB;
 	uint32	m_unAltRGB;

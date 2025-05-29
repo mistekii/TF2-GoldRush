@@ -111,7 +111,6 @@ CTargetID::CTargetID( const char *pElementName ) :
 	m_pMoveableIconBG = NULL;
 	m_pMoveableKeyLabel = NULL;
 	m_pTargetHealth = new CTFSpectatorGUIHealth( this, "SpectatorGUIHealth" );
-	m_pTargetKillStreakIcon = NULL;
 	m_bLayoutOnUpdate = false;
 
 	m_iLastScannedEntIndex = 0;
@@ -233,7 +232,6 @@ void CTargetID::ApplySchemeSettings( vgui::IScheme *scheme )
 		m_pMoveableKeyLabel = dynamic_cast<Label *>( m_pMoveableSubPanel->FindChildByName("MoveableKeyLabel") );
 	}
 	m_hFont = scheme->GetFont( "TargetID", true );
-	m_pTargetKillStreakIcon = dynamic_cast<vgui::ImagePanel *>( FindChildByName( "KillStreakIcon" ) );
 	m_pAvatarImage = dynamic_cast< CAvatarImagePanel* >( FindChildByName( "AvatarImage" ) );
 }
 
@@ -596,8 +594,7 @@ void CTargetID::UpdateID( void )
 			bool bHeavy = pLocalTFPlayer->IsPlayerClass( TF_CLASS_HEAVYWEAPONS );
 
 			// See if the player wants to fill in the data string
-			bool bIsKillStreakData = false;
-			pPlayer->GetTargetIDDataString( bDisguisedTarget, sDataString, sizeof(sDataString), bIsKillStreakData );
+			pPlayer->GetTargetIDDataString( bDisguisedTarget, sDataString, sizeof(sDataString) );
 			if ( pLocalTFPlayer->GetTeamNumber() == TEAM_SPECTATOR || bInSameTeam || bSpy || bDisguisedEnemy || bMedic || bHeavy )
 			{
 				printFormatString = "#TF_playerid_sameteam";
@@ -642,12 +639,6 @@ void CTargetID::UpdateID( void )
 				}
 				g_pVGuiLocalize->ConstructString_safe( sIDString, g_pVGuiLocalize->Find(printFormatString), 2, pszPrepend, wszPlayerName );
 			}
-
-			bool bShowKillStreak = bIsKillStreakData && sDataString[0];
-			if ( m_pTargetKillStreakIcon && m_pTargetKillStreakIcon->IsVisible() != bShowKillStreak )
-			{
-				m_pTargetKillStreakIcon->SetVisible( bShowKillStreak );
-			}
 		}
 		else	
 		{
@@ -662,11 +653,6 @@ void CTargetID::UpdateID( void )
 				flHealth = pObj->GetHealth();
 				flMaxHealth = pObj->GetMaxHealth();
 				m_pTargetHealth->SetBuilding( true );
-				
-				if ( m_pTargetKillStreakIcon )
-				{
-					m_pTargetKillStreakIcon->SetVisible( false );
-				}
 
 				// Switch the icon to the right object
 				if ( pObj->GetBuilder() == pLocalTFPlayer )

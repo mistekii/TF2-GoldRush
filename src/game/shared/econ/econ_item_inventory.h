@@ -132,7 +132,6 @@ public:
 	void				RemoveItemHandle( CEconItemViewHandle* pHandle );
 
 	const CCopyableUtlVector< itemid_t >& GetItemsWithDefindex( item_definition_index_t defindex ) ;
-	const CCopyableUtlVector< itemid_t >& GetItemsWithPaintkitDefindex( uint32 nDefindex );
 
 #ifdef CLIENT_DLL
 	virtual ITexture	*GetWeaponSkinBaseLowRes( itemid_t nItemId, int iTeam ) const { return NULL; }
@@ -178,7 +177,6 @@ protected:
 	CSteamID	m_OwnerID;
 
 	CUtlMap< item_definition_index_t, CCopyableUtlVector< itemid_t > > m_mapItemDefsToItems;
-	CUtlMap< uint32, CCopyableUtlVector< itemid_t > > m_mapPaintkitsToItems;
 
 	// The items the player has in his inventory, received from steam.
 	CUtlSortVector<CEconItemView,CInventoryListLess>		m_aInventoryItems;

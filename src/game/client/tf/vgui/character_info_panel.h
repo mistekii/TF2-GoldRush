@@ -73,7 +73,6 @@ public:
 	void		 OpenLoadoutToBackpack( void );
 	void		 OpenLoadoutToCrafting( void );
 	void		 OpenLoadoutToArmory( void );
-	void		 OpenToPaintkitPreview( CEconItemView* pItem, bool bFixedItem, bool bFixedPaintkit );
 	void		 SetCheckForRoomOnExit( bool bCheck ) { m_bCheckForRoomOnExit = bCheck; }
 
 	void		 FireGameEvent( IGameEvent *event );

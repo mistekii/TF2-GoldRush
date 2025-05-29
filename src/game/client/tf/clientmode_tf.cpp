@@ -114,7 +114,6 @@ ConVar tf_highfive_hintcount( "tf_highfive_hintcount", "0", FCVAR_CLIENTDLL | FC
 ConVar tf_delete_temp_files( "tf_delete_temp_files", "1", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Delete custom player sprays and other temp files during shutdown" );
 
 ConVar tf_taunt_always_show_hint( "tf_taunt_always_show_hint", "1", FCVAR_CLIENTDLL );
-extern ConVar tf_allow_all_team_partner_taunt;
 extern ConVar tf_autobalance_ask_candidates_maxtime;
 extern ConVar tf_autobalance_dead_candidates_maxtime;
 extern ConVar tf_autobalance_xp_bonus;
@@ -151,41 +150,6 @@ static bool HalloweenHandlesKeyInput( int down, ButtonCode_t keynum, const char 
 				}
 				else if ( FStrEq( pszCurrentBinding, "+attack2" ) || FStrEq( pszCurrentBinding, "+attack3" ) )
 				{
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
-
-static bool TauntHandlesKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
-{
-	static const char *pszStopTauntKeys[] =
-	{
-		"+jump",
-		"+taunt",
-		"weapon_taunt",
-	};
-
-	C_TFPlayer *pPlayer = ToTFPlayer( C_BasePlayer::GetLocalPlayer() );
-	if ( pPlayer )
-	{
-		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) )
-		{
-			for ( int i=0; i<ARRAYSIZE( pszStopTauntKeys ); ++i )
-			{
-				if ( down && pszCurrentBinding && FStrEq( pszCurrentBinding, pszStopTauntKeys[i] ) )
-				{
-					// Halloween Hackery
-					if ( i == 0 && pPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-					{
-						continue;
-					}
-
-					engine->ClientCmd( "stop_taunt" );
 					return true;
 				}
 			}
@@ -406,8 +370,6 @@ void ClientModeTFNormal::Init()
 	m_lastServerPort = 0;
 	m_lastServerName = NULL;
 	m_lastServerConnectTime = 0;
-
-	m_flNextAllowedHighFiveHintTime = 0.0f;
 
 	m_bInfoPanelShown = false;
 	m_bRestrictInfoPanel = false;
@@ -792,8 +754,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 
 			m_lastServerConnectTime = GetSteamWorksSGameStatsUploader().GetTimeSinceEpoch();
 		}
-
-		m_flNextAllowedHighFiveHintTime = 0.0f;
 
 		// Play Sound and flash window if joining a game from a lobby
 		CTFGSLobby *pLobby = GTFGCClientSystem()->GetLobby();
@@ -1224,75 +1184,6 @@ void ClientModeTFNormal::FireGameEvent( IGameEvent *event )
 		pNotification->SetKeyValues( keyValues );
 		NotificationQueue_Add( pNotification );
 	}
-	else if ( FStrEq( "player_highfive_start", eventname ) )
-	{
-		C_TFPlayer *pLocalPlayer = C_TFPlayer::GetLocalTFPlayer();
-
-		// Don't show a hint if we're dead, we've already done it the maximum amount of times, or if it's too soon.
-		if ( pLocalPlayer && pLocalPlayer->IsAlive() &&
-				( tf_taunt_always_show_hint.GetBool() ||
-				( tf_highfive_hintcount.GetInt() < TF_HIGHFIVE_HINT_MAXHINTS && gpGlobals->curtime > m_flNextAllowedHighFiveHintTime ) ) )
-		{
-			int entindex = event->GetInt( "entindex" );
-			C_BasePlayer *pHighFiveInitiator = UTIL_PlayerByIndex( entindex );
-			if ( pHighFiveInitiator && pHighFiveInitiator != pLocalPlayer && ( pHighFiveInitiator->GetTeamNumber() == pLocalPlayer->GetTeamNumber() || tf_allow_all_team_partner_taunt.GetBool() ) )
-			{
-				// check that this player isn't too far away
-				Vector vecStart = pLocalPlayer->EyePosition();
-				Vector vecEnd = pHighFiveInitiator->EyePosition();
-				float flLength = (vecEnd - vecStart).Length();
-
-				if ( flLength < TF_HIGHFIVE_HINT_MAXDIST )
-				{
-					// check that we have line of sight to this player
-					trace_t tr;
-					UTIL_TraceLine( vecStart, vecEnd, MASK_SOLID, pLocalPlayer, COLLISION_GROUP_NONE, &tr );
-
-					if ( !tr.startsolid && tr.m_pEnt != NULL && tr.m_pEnt == pHighFiveInitiator )
-					{
-						IGameEvent *pEvent = gameeventmanager->CreateEvent( "show_annotation" );
-						if ( pEvent )
-						{
-							Vector location = pHighFiveInitiator->GetAbsOrigin();
-
-							pEvent->SetString( "text", "#TF_HighFive_Hint" );
-							pEvent->SetInt( "id", TF_HIGHFIVE_HINT_MASK | entindex );
-							pEvent->SetFloat( "worldPosX", location.x );
-							pEvent->SetFloat( "worldPosY", location.y );
-							pEvent->SetFloat( "worldPosZ", location.z + 48.0f );
-							pEvent->SetFloat( "lifetime", 10.0f );
-							pEvent->SetInt( "follow_entindex", entindex );
-
-							gameeventmanager->FireEventClientSide( pEvent );
-							tf_highfive_hintcount.SetValue( tf_highfive_hintcount.GetInt() + 1 );
-
-							m_flNextAllowedHighFiveHintTime = gpGlobals->curtime + TF_HIGHFIVE_HINT_MINTIMEBETWEEN;
-						}
-					}
-				}
-			}
-		}
-	}
-	else if ( FStrEq( "player_highfive_cancel", eventname ) )
-	{
-		int entindex = event->GetInt( "entindex" );
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( "hide_annotation" );
-		if ( pEvent )
-		{
-			pEvent->SetInt( "id", TF_HIGHFIVE_HINT_MASK | entindex );
-			gameeventmanager->FireEventClientSide( pEvent );
-		}
-	}
-	else if ( FStrEq( "player_highfive_success", eventname ) )
-	{
-		int entindex = event->GetInt( "initiator_entindex" );
-		IGameEvent *pEvent = gameeventmanager->CreateEvent( "hide_annotation" );
-		if ( pEvent )
-		{
-			pEvent->SetInt( "id", TF_HIGHFIVE_HINT_MASK | entindex );
-			gameeventmanager->FireEventClientSide( pEvent );
-		}
-	}
 	else if ( FStrEq( "client_beginconnect", eventname ) )
 	{
 		m_eConnectState = k_eConnectState_Connecting;
@@ -1367,11 +1258,6 @@ int	ClientModeTFNormal::HudElementKeyInput( int down, ButtonCode_t keynum, const
 	}
 
 	if ( HalloweenHandlesKeyInput( down, keynum, pszCurrentBinding ) )
-	{
-		return 0;
-	}
-
-	if ( TauntHandlesKeyInput( down, keynum, pszCurrentBinding ) )
 	{
 		return 0;
 	}
@@ -2243,28 +2129,6 @@ USER_MESSAGE( PlayerLoadoutUpdated )
 	}
 }
 
-USER_MESSAGE( PlayerTauntSoundLoopStart )
-{
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		char szTauntSoundLoopName[256];
-		msg.ReadString( szTauntSoundLoopName, sizeof(szTauntSoundLoopName) );
-		pPlayer->PlayTauntSoundLoop( szTauntSoundLoopName );
-	}
-}
-
-USER_MESSAGE( PlayerTauntSoundLoopEnd )
-{
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		pPlayer->StopTauntSoundLoop();
-	}
-}
-
 
 USER_MESSAGE( ForcePlayerViewAngles )
 {
@@ -2285,27 +2149,6 @@ USER_MESSAGE( ForcePlayerViewAngles )
 		pPlayer->SetAbsAngles( viewangles );
 		pPlayer->SetTauntYaw( viewangles[YAW] );
 		pPlayer->m_Shared.SetVehicleMoveAngles( viewangles );
-	}
-}
-
-ConVar tf_halloween_bonus_ducks_cooldown( "tf_halloween_bonus_ducks_cooldown", "20", FCVAR_ARCHIVE );
-USER_MESSAGE( BonusDucks )
-{
-	static float sflNextBonusDucks = 0.f;
-
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	int iIgnoreTimer = (int)msg.ReadByte();
-
-	if ( Plat_FloatTime() < sflNextBonusDucks && !iIgnoreTimer )
-		return;
-
-	sflNextBonusDucks = Plat_FloatTime() + tf_halloween_bonus_ducks_cooldown.GetFloat();
-
-	
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		pPlayer->EmitSound( "sf14.Merasmus.DuckHunt.BonusDucks" );
 	}
 }
 

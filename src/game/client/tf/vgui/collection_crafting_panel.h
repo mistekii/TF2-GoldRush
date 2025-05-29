@@ -152,7 +152,6 @@ protected:
 	CExButton* m_pStampButton;
 
 	CDrawingPanel *m_pDrawingPanel;
-	CTFItemInspectionPanel *m_pInspectPanel;
 	CItemModelPanel* m_pCosmeticResultItemModelPanel;
 	CItemModelPanel* m_pItemNamePanel;
 

@@ -54,7 +54,6 @@ protected:
 	void			UpdateTeamButton( void );
 	virtual void	UpdateIcons( void );
 
-	void			SetPaint( item_definition_index_t iItemDef );
 	void			SetStyle( style_index_t unStyle );
 	void			SetUnusual( uint32 iUnusualIndex );
 	const CUtlVector< int >	*GetUnusualList() const;
@@ -63,7 +62,6 @@ protected:
 		return false;
 	}
 
-	void			CyclePaint( bool bActuallyCycle = true );
 	void			CycleStyle( void );
 	void			ResetHandles( void );
 

@@ -1016,13 +1016,10 @@ void CEconEntity::OnDataChanged( DataUpdateType_t updateType )
 		}
 #endif
 
-		// if we have paintkit material override, stomp all material override
-		const char *pszPaintKitMaterialOverride = GetPaintKitMaterialOverride( pItem );
-
 		// Find & cache for easy leaf code usage
 		for ( int team = 0; team < TEAM_VISUAL_SECTIONS; team++ )
 		{
-			const char *pszMaterial = pszPaintKitMaterialOverride ? pszPaintKitMaterialOverride : pItem->GetStaticData()->GetMaterialOverride( team );
+			const char *pszMaterial = pItem->GetStaticData()->GetMaterialOverride( team );
 			if ( pszMaterial )
 			{
 				m_MaterialOverrides[team].Init( pszMaterial, TEXTURE_GROUP_CLIENT_EFFECTS );
@@ -1074,32 +1071,6 @@ void CEconEntity::UpdateAttachmentModels( void )
 					attachedModelData.m_pModel			   = modelinfo->GetModel( iModelIndex );
 					attachedModelData.m_iModelDisplayFlags = pModel->m_iModelDisplayFlags;
 					m_vecAttachedModels.AddToTail( attachedModelData );
-				}
-			}
-		}
-
-		// Check for Festive attachedmodels for festivized weapons
-		{
-			int iAttachedModels = pItemDef->GetNumAttachedModelsFestivized( iTeamNumber );
-			if ( iAttachedModels )
-			{
-				int iFestivized = 0;
-				CALL_ATTRIB_HOOK_INT( iFestivized, is_festivized );
-				if ( iFestivized )
-				{
-					for ( int i = 0; i < iAttachedModels; i++ )
-					{
-						attachedmodel_t	*pModel = pItemDef->GetAttachedModelDataFestivized( iTeamNumber, i );
-
-						int iModelIndex = modelinfo->GetModelIndex( pModel->m_pszModelName );
-						if ( iModelIndex >= 0 )
-						{
-							AttachedModelData_t attachedModelData;
-							attachedModelData.m_pModel = modelinfo->GetModel( iModelIndex );
-							attachedModelData.m_iModelDisplayFlags = pModel->m_iModelDisplayFlags;
-							m_vecAttachedModels.AddToTail( attachedModelData );
-						}
-					}
 				}
 			}
 		}

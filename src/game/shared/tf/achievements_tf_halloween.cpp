@@ -491,20 +491,6 @@ class CAchievementTFHalloweenDoomsdayKillKarts : public CBaseTFAchievementSimple
 DECLARE_ACHIEVEMENT( CAchievementTFHalloweenDoomsdayKillKarts, ACHIEVEMENT_TF_HALLOWEEN_DOOMSDAY_KILL_KARTS, "TF_HALLOWEEN_DOOMSDAY_KILL_KARTS", 5 );
 
 //----------------------------------------------------------------------------------------------------------------
-class CAchievementTFHalloweenDoomsdayCollectDucks : public CBaseTFAchievementSimple
-{
-	void Init()
-	{
-		SetFlags( ACH_SAVE_GLOBAL );
-		SetGoal( 250 );
-		SetStoreProgressInSteam( true );
-	}
-
-	// server awards this achievement, no other code within achievement necessary
-};
-DECLARE_ACHIEVEMENT( CAchievementTFHalloweenDoomsdayCollectDucks, ACHIEVEMENT_TF_HALLOWEEN_DOOMSDAY_COLLECT_DUCKS, "TF_HALLOWEEN_DOOMSDAY_COLLECT_DUCKS", 5 );
-
-//----------------------------------------------------------------------------------------------------------------
 class CAchievementTFHalloweenDoomsdayScoreGoals : public CBaseTFAchievementSimple
 {
 	void Init()
