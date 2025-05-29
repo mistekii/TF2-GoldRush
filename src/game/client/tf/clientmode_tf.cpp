@@ -160,41 +160,6 @@ static bool HalloweenHandlesKeyInput( int down, ButtonCode_t keynum, const char 
 }
 
 
-static bool TauntHandlesKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
-{
-	static const char *pszStopTauntKeys[] =
-	{
-		"+jump",
-		"+taunt",
-		"weapon_taunt",
-	};
-
-	C_TFPlayer *pPlayer = ToTFPlayer( C_BasePlayer::GetLocalPlayer() );
-	if ( pPlayer )
-	{
-		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) )
-		{
-			for ( int i=0; i<ARRAYSIZE( pszStopTauntKeys ); ++i )
-			{
-				if ( down && pszCurrentBinding && FStrEq( pszCurrentBinding, pszStopTauntKeys[i] ) )
-				{
-					// Halloween Hackery
-					if ( i == 0 && pPlayer->m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-					{
-						continue;
-					}
-
-					engine->ClientCmd( "stop_taunt" );
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
-
 // Sets convars to tag the current mapname and the player in your crosshairs.
 // The player tagged will be overridden for killcam shots to be the killer
 static void ScreenshotTaggingKeyInput( int down, ButtonCode_t keynum, const char *pszCurrentBinding )
@@ -1297,11 +1262,6 @@ int	ClientModeTFNormal::HudElementKeyInput( int down, ButtonCode_t keynum, const
 		return 0;
 	}
 
-	if ( TauntHandlesKeyInput( down, keynum, pszCurrentBinding ) )
-	{
-		return 0;
-	}
-
 	// check for hud menus
 	if ( m_pMenuEngyBuild )
 	{
@@ -2166,28 +2126,6 @@ USER_MESSAGE( PlayerLoadoutUpdated )
 		{
 			pInv->ClearClassLoadoutChangeTracking();
 		}
-	}
-}
-
-USER_MESSAGE( PlayerTauntSoundLoopStart )
-{
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		char szTauntSoundLoopName[256];
-		msg.ReadString( szTauntSoundLoopName, sizeof(szTauntSoundLoopName) );
-		pPlayer->PlayTauntSoundLoop( szTauntSoundLoopName );
-	}
-}
-
-USER_MESSAGE( PlayerTauntSoundLoopEnd )
-{
-	int iPlayerEntIndex = (int)msg.ReadByte();
-	C_TFPlayer *pPlayer = ToTFPlayer( UTIL_PlayerByIndex( iPlayerEntIndex ) );
-	if ( pPlayer )
-	{
-		pPlayer->StopTauntSoundLoop();
 	}
 }
 

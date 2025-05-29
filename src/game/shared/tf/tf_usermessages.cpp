@@ -99,9 +99,6 @@ void RegisterUserMessages()
 
 	usermessages->Register( "PlayerLoadoutUpdated", -1 );
 
-	usermessages->Register( "PlayerTauntSoundLoopStart", -1 );
-	usermessages->Register( "PlayerTauntSoundLoopEnd", -1 );
-
 	usermessages->Register( "ForcePlayerViewAngles", -1 );
 
 	usermessages->Register( "SdkRequestEquipment", -1 );

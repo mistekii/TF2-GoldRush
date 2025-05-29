@@ -414,8 +414,6 @@ public:
 	float			GetPrevTauntYaw( void )		{ return m_flPrevTauntYaw; }
 	void			SetTauntYaw( float flTauntYaw );
 	int				GetActiveTauntSlot() const { return m_nActiveTauntSlot; }
-	void			PlayTauntSoundLoop( const char *pszSoundLoopName );
-	void			StopTauntSoundLoop();
 	float			GetVehicleReverseTime() const { return m_flVehicleReverseTime; }
 	void			SetVehicleReverseTime( float flTime ) { m_flVehicleReverseTime = flTime; }
 
@@ -509,8 +507,6 @@ private:
 
 	QAngle				m_angTauntPredViewAngles;
 	QAngle				m_angTauntEngViewAngles;
-
-	CSoundPatch			*m_pTauntSoundLoop;
 
 	C_TFPlayerClass		m_PlayerClass;
 

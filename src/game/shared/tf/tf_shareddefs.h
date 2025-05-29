@@ -1626,7 +1626,6 @@ enum taunts_t
 	TAUNT_BASE_WEAPON,		// The standard taunt we shipped with. Taunts based on your currently held weapon
 	TAUNT_MISC_ITEM,		// Taunts based on the item you have equipped in your Misc slot.
 	TAUNT_SHOW_ITEM,		// Show off an item to everyone nearby
-	TAUNT_LONG,				// Press-and-hold taunt
 	TAUNT_SPECIAL,			// Special-case taunts called explicitly from code
 	//
 	// ADD NEW ITEMS HERE TO AVOID BREAKING DEMOS

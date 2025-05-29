@@ -2754,8 +2754,6 @@ C_TFPlayer::~C_TFPlayer()
 		m_pFallingSoundLoop = NULL;
 	}
 
-	StopTauntSoundLoop();
-
 	if ( IsLocalPlayer() )
 	{
 		g_ItemEffectMeterManager.ClearExistingMeters();
@@ -4284,35 +4282,6 @@ void C_TFPlayer::TauntCamInterpolation()
 			else
 				TurnOnTauntCam_Finish();
 		}
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::PlayTauntSoundLoop( const char *pszSoundLoopName )
-{
-	if ( pszSoundLoopName && *pszSoundLoopName )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		CPASAttenuationFilter filter( this );
-		m_pTauntSoundLoop = controller.SoundCreate( filter, entindex(), pszSoundLoopName );
-		controller.Play( m_pTauntSoundLoop, 1.0, 100 );
-	}
-}
-
-
-//-----------------------------------------------------------------------------
-// Purpose:
-//-----------------------------------------------------------------------------
-void C_TFPlayer::StopTauntSoundLoop()
-{
-	if ( m_pTauntSoundLoop )
-	{
-		CSoundEnvelopeController &controller = CSoundEnvelopeController::GetController();
-		controller.SoundDestroy( m_pTauntSoundLoop );
-		m_pTauntSoundLoop = NULL;
 	}
 }
 

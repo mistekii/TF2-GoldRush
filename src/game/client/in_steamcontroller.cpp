@@ -119,8 +119,7 @@ void CInput::ApplySteamControllerCameraMove( QAngle& viewangles, CUserCmd *cmd, 
 }
 
 #define CONTROLLER_ACTION_FLAGS_NONE 0
-#define CONTROLLER_ACTION_FLAGS_STOPS_TAUNT ( 1 << 0 )
-#define CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE ( 1 << 1 )
+#define CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE ( 1 << 0 )
 		
 struct ControllerDigitalActionToCommand
 {
@@ -137,12 +136,12 @@ static ControllerDigitalActionToCommand g_ControllerDigitalGameActions[] =
 	{ "attack", "+attack", CONTROLLER_ACTION_FLAGS_NONE },
 	{ "attack2", "+attack2", CONTROLLER_ACTION_FLAGS_NONE },
 	{ "attack3", "+attack3", CONTROLLER_ACTION_FLAGS_NONE },
-	{ "jump", "+jump", CONTROLLER_ACTION_FLAGS_STOPS_TAUNT },
+	{ "jump", "+jump", CONTROLLER_ACTION_FLAGS_NONE },
 	{ "use_action_slot_item", "+use_action_slot_item", CONTROLLER_ACTION_FLAGS_NONE },
-	{ "invprev", "invprev", CONTROLLER_ACTION_FLAGS_STOPS_TAUNT|CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
-	{ "invnext", "invnext", CONTROLLER_ACTION_FLAGS_STOPS_TAUNT|CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
+	{ "invprev", "invprev", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
+	{ "invnext", "invnext", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
 	{ "reload", "+reload", CONTROLLER_ACTION_FLAGS_NONE },
-	{ "dropitem", "dropitem", CONTROLLER_ACTION_FLAGS_STOPS_TAUNT|CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
+	{ "dropitem", "dropitem", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
 	{ "changeclass", "changeclass", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
 	{ "changeteam", "changeteam", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
 	{ "open_charinfo_direct", "open_charinfo_direct", CONTROLLER_ACTION_FLAGS_NEEDS_DEBOUNCE },
@@ -288,12 +287,6 @@ void CInput::SteamControllerMove( float flFrametime, CUserCmd *cmd )
 					}
 
 					engine->ClientCmd_Unrestricted( cmdbuf );
-
-					// Hack - if we're taunting, we manufacture a stop taunt command for certain inputs (keyboard equivalent of this goes through another codepath).
-					if ( bTaunting && data.bState && ( cmdmap.flags & CONTROLLER_ACTION_FLAGS_STOPS_TAUNT ) )
-					{
-						engine->ClientCmd_Unrestricted( "stop_taunt" );
-					}
 				}
 
 				state.bState = data.bState;

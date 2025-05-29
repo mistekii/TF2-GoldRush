@@ -715,7 +715,6 @@ public:
 	bool				IsAllowedToTaunt( void );
 	void				CancelTaunt( void );
 	void				StopTaunt( bool bForceRemoveProp = true );
-	void				EndLongTaunt();
 	float				GetTauntRemoveTime( void ) const { return m_flTauntRemoveTime; }
 	bool				IsAllowedToRemoveTaunt() const { return m_bAllowedToRemoveTaunt; }
 	void				HandleTauntCommand( int iTauntSlot = 0 );
@@ -821,8 +820,6 @@ public:
 	void ScriptStunPlayer( float flTime, float flReductionAmount, int iStunFlags = TF_STUN_MOVEMENT, HSCRIPT hAttacker = NULL );
 
 private:
-	void				StopTauntSoundLoop();
-	float				PlayTauntOutroScene();
 	float				PlayTauntRemapInputScene();
 	void				ParseSharedTauntDataFromEconItemView( const CEconItemView *pEconItemView );
 
@@ -840,8 +837,6 @@ private:
 	bool				m_bIsTauntInitiator;
 	float				m_flTauntSoundTime;
 	CUtlString			m_strTauntSoundName;
-	float				m_flTauntSoundLoopTime;
-	CUtlString			m_strTauntSoundLoopName;
 	CEconItemView		m_TauntEconItemView;
 
 	enum TauntStage_t

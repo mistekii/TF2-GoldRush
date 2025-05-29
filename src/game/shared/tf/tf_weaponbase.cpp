@@ -3114,7 +3114,7 @@ int CTFWeaponBase::GetWorldModelIndex( void )
 		bool bReplaceModel = true;
 		const char* pszCustomTauntProp = NULL;
 
-		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && ( pPlayer->m_Shared.GetTauntIndex() == TAUNT_MISC_ITEM || pPlayer->m_Shared.GetTauntIndex() == TAUNT_LONG ) )
+		if ( pPlayer->m_Shared.InCond( TF_COND_TAUNTING ) && pPlayer->m_Shared.GetTauntIndex() == TAUNT_MISC_ITEM )
 		{
 			int iClass = pPlayer->GetPlayerClass()->GetClassIndex();
 

@@ -637,7 +637,6 @@ BEGIN_ENT_SCRIPTDESC( CTFPlayer, CBaseMultiplayerPlayer , "Team Fortress 2 Playe
 	DEFINE_SCRIPTFUNC( DoTauntAttack, "" )
 	DEFINE_SCRIPTFUNC( CancelTaunt, "" )
 	DEFINE_SCRIPTFUNC( StopTaunt, "" )
-	DEFINE_SCRIPTFUNC( EndLongTaunt, "" )
 	DEFINE_SCRIPTFUNC( GetTauntRemoveTime, "" )
 	DEFINE_SCRIPTFUNC( IsAllowedToRemoveTaunt, "" )
 	DEFINE_SCRIPTFUNC( HandleTauntCommand, "" )
@@ -1081,26 +1080,6 @@ void CTFPlayer::TFPlayerThink()
 		{
 			EmitSound( m_strTauntSoundName.String() );
 			m_flTauntSoundTime = 0.f;
-		}
-
-		if ( !m_strTauntSoundLoopName.IsEmpty() && m_flTauntSoundLoopTime > 0 && m_flTauntSoundLoopTime <= gpGlobals->curtime )
-		{
-			CReliableBroadcastRecipientFilter filter;
-			UserMessageBegin( filter, "PlayerTauntSoundLoopStart" );
-				WRITE_BYTE( entindex() );
-				WRITE_STRING( m_strTauntSoundLoopName.String() );
-			MessageEnd();
-
-			m_flTauntSoundLoopTime = 0.f;
-		}
-		
-		// play taunt outro
-		if ( m_flTauntOutroTime > 0.f && m_flTauntOutroTime <= gpGlobals->curtime )
-		{
-			m_bAllowedToRemoveTaunt = true;
-			float flDuration = PlayTauntOutroScene();
-			m_flTauntRemoveTime = gpGlobals->curtime + flDuration;
-			m_flTauntOutroTime = 0.f;
 		}
 	}
 
@@ -6198,19 +6177,9 @@ bool CTFPlayer::ClientCommand( const CCommand &args )
 		}
 		return true;
 	}
-	else if ( FStrEq( pcmd, "stop_taunt" ) )
-	{
-		if( m_Shared.GetTauntIndex() == TAUNT_LONG && !m_Shared.InCond( TF_COND_HALLOWEEN_KART ) )
-		{
-			EndLongTaunt();
-		}
-
-		return true;
-	}
 	else if ( FStrEq( pcmd, "-taunt" ) )
 	{
 		// DO NOTHING
-		// We changed taunt key to be press to toggle instead of press and hold to do long taunt
 		return true;
 	}
 	else if ( FStrEq( pcmd, "build" ) )
@@ -14419,25 +14388,6 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 		int iTauntIndex = TAUNT_MISC_ITEM;
 		int iTauntConcept = 0;
 
-		// check if this is a long taunt
-		static CSchemaAttributeDefHandle pAttrDef_TauntPressAndHold( "taunt is press and hold" );
-		attrib_value_t iLongTaunt = 0;
-		if ( pEconItemView->FindAttribute( pAttrDef_TauntPressAndHold, &iLongTaunt ) && iLongTaunt != 0 )
-		{
-			iTauntIndex = TAUNT_LONG;
-			m_bIsTauntInitiator = true;
-
-			ParseSharedTauntDataFromEconItemView( pEconItemView );
-
-			/*cant we just network over the "taunting item id", since client and server both know all the item defs,
-			then they can both look at attributes and we dont need to keep networking more and more stuff?*/
-			// check if this taunt can be mimic by other players
-			static CSchemaAttributeDefHandle pAttrDef_TauntMimic( "taunt mimic" );
-			attrib_value_t iTauntMimic = 0;
-			pEconItemView->FindAttribute( pAttrDef_TauntMimic, &iTauntMimic );
-			m_bTauntMimic = iTauntMimic != 0;
-		}
-
 		// Store this off so eventually we can let clients know which item ID is doing this taunt.
 		m_iTauntItemDefIndex = pEconItemView->GetItemDefIndex();
 		m_TauntEconItemView = *pEconItemView;
@@ -14460,29 +14410,6 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 				pEconItemView->FindAttribute( pAttrDef_TauntSuccessSoundOffset, &attrTauntSoundOffset );
 				float flTauntSoundOffset = (float&)attrTauntSoundOffset;
 				m_flTauntSoundTime = gpGlobals->curtime + flTauntSoundOffset;
-			}
-		}
-
-		// Should we play a looping sound?
-		m_flTauntSoundLoopTime = 0.f;
-		Assert( m_strTauntSoundLoopName.IsEmpty() );
-		m_strTauntSoundLoopName = "";
-		static CSchemaAttributeDefHandle pAttrDef_TauntSuccessSoundLoop( "taunt success sound loop" );
-		CAttribute_String attrTauntSuccessSoundLoop;
-		if ( pEconItemView->FindAttribute( pAttrDef_TauntSuccessSoundLoop, &attrTauntSuccessSoundLoop ) )
-		{
-			const char* pszTauntSoundLoopName = attrTauntSuccessSoundLoop.value().c_str();
-			Assert( pszTauntSoundLoopName && *pszTauntSoundLoopName );
-			if ( pszTauntSoundLoopName && *pszTauntSoundLoopName )
-			{
-				// play the looping sounds using the envelope controller
-				m_strTauntSoundLoopName = pszTauntSoundLoopName;
-			
-				static CSchemaAttributeDefHandle pAttrDef_TauntSuccessSoundLoopOffset( "taunt success sound loop offset" );
-				attrib_value_t attrTauntSoundLoopOffset = 0;
-				pEconItemView->FindAttribute( pAttrDef_TauntSuccessSoundLoopOffset, &attrTauntSoundLoopOffset );
-				float flTauntSoundLoopOffset = (float&)attrTauntSoundLoopOffset;
-				m_flTauntSoundLoopTime = gpGlobals->curtime + flTauntSoundLoopOffset;
 			}
 		}
 
@@ -14527,7 +14454,7 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 		float flSceneDuration = PlayScene( pszScene );
 		OnTauntSucceeded( pszScene, iTauntIndex, iTauntConcept );
 
-		m_flNextAllowTauntRemapInputTime = iTauntIndex == TAUNT_LONG ? gpGlobals->curtime + flSceneDuration : -1.f;
+		m_flNextAllowTauntRemapInputTime = -1.f;
 
 		pExpresser->DisallowMultipleScenes();
 
@@ -14548,8 +14475,7 @@ bool CTFPlayer::PlayTauntSceneFromItem( const CEconItemView *pEconItemView )
 					pProp->SetAbsAngles( GetAbsAngles() );
 					pProp->SetEFlags( EFL_FORCE_CHECK_TRANSMIT );
 
-					// prop should remove itself at the end of scene if it's not loopable
-					pProp->SetAutoRemove( iTauntIndex != TAUNT_LONG );
+					pProp->SetAutoRemove( true );
 
 					pProp->PlayScene( pszTauntPropScene );
 				
@@ -14721,21 +14647,8 @@ void CTFPlayer::OnTauntSucceeded( const char* pszSceneName, int iTauntIndex /*= 
 	m_Shared.m_unTauntSourceItemID_High = (unTauntSourceItemID >> 32) & 0xffffffff;
 	m_Shared.AddCond( TF_COND_TAUNTING );
 
-	if ( iTauntIndex == TAUNT_LONG )
-	{
-		m_flTauntRemoveTime = gpGlobals->curtime;
-		m_bAllowedToRemoveTaunt = false;
-
-		m_flTauntYaw = BodyAngles().y;
-
-		// min time for looping taunts
-		m_flTauntNextStartTime = m_flTauntStartTime + 2.f;
-	}
-	else
-	{
-		m_flTauntRemoveTime = gpGlobals->curtime + flDuration;
-		m_bAllowedToRemoveTaunt = true;
-	}
+	m_flTauntRemoveTime = gpGlobals->curtime + flDuration;
+	m_bAllowedToRemoveTaunt = true;
 
 	m_angTauntCamera = EyeAngles();
 
@@ -14771,12 +14684,6 @@ void CTFPlayer::Taunt( taunts_t iTauntIndex, int iTauntConcept )
 {
 	if ( !IsAllowedToTaunt() )
 		return;
-
-	if ( iTauntIndex == TAUNT_LONG )
-	{
-		AssertMsg( false, "Long Taunt should be using the new system which reads scene names from item definitions" );
-		return;
-	}
 
 	// Heavies can purchase a rage-based knockback+stun effect in MvM,
 	// so ignore taunt and activate rage if we're at full rage
@@ -15074,8 +14981,6 @@ void CTFPlayer::StopTaunt( bool bForceRemoveProp /* = true */ )
 		m_hTauntProp = NULL;
 	}
 
-	StopTauntSoundLoop();
-
 	// reset the FOV
 	if ( m_TauntEconItemView.IsValid() )
 	{
@@ -15090,88 +14995,6 @@ void CTFPlayer::StopTaunt( bool bForceRemoveProp /* = true */ )
 	m_nActiveTauntSlot = LOADOUT_POSITION_INVALID;
 	m_iTauntItemDefIndex = INVALID_ITEM_DEF_INDEX;
 	m_TauntStage = TAUNT_NONE;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::EndLongTaunt()
-{
-	Assert( m_Shared.GetTauntIndex() == TAUNT_LONG );
-
-	m_bAllowedToRemoveTaunt = true;
-	m_flTauntRemoveTime = gpGlobals->curtime;
-
-	int iClass = GetPlayerClass()->GetClassIndex();
-	CTFTauntInfo *pTauntData = m_TauntEconItemView.GetStaticData()->GetTauntData();
-	if ( pTauntData )
-	{
-		// Make sure press-and-hold taunts last a minimum amount of time
-		float flMinTime = pTauntData->GetMinTauntTime();
-		if ( m_flTauntStartTime + flMinTime > gpGlobals->curtime )
-		{
-			m_flTauntRemoveTime = m_flTauntStartTime + flMinTime;
-		}
-
-		// should we play outro?
-		if ( pTauntData->GetOutroSceneCount( iClass ) > 0 )
-		{
-			m_bAllowedToRemoveTaunt = false;
-			m_flTauntOutroTime = m_flTauntRemoveTime;
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-float CTFPlayer::PlayTauntOutroScene()
-{
-	m_TauntStage = TAUNT_OUTRO;
-
-	float flDuration = 0.f;
-	int iClass = GetPlayerClass()->GetClassIndex();
-	CTFTauntInfo *pTauntData = m_TauntEconItemView.GetStaticData()->GetTauntData();
-	if ( pTauntData )
-	{
-		if ( pTauntData->GetOutroSceneCount( iClass ) > 0 )
-		{
-			// play outro
-			const char *pszOutroScene = pTauntData->GetOutroScene( iClass, RandomInt( 0, pTauntData->GetOutroSceneCount( iClass ) - 1 ) );
-			if ( m_hTauntScene.Get() )
-			{
-				StopScriptedScene( this, m_hTauntScene );
-				m_hTauntScene = NULL;
-
-				StopTauntSoundLoop();
-			}
-
-			// Allow voice commands, etc to be interrupted.
-			CMultiplayer_Expresser *pExpresser = GetMultiplayerExpresser();
-			Assert( pExpresser );
-			pExpresser->AllowMultipleScenes();
-
-			m_bInitTaunt = true;
-
-			flDuration = PlayScene( pszOutroScene );
-
-			m_bInitTaunt = false;
-
-			pExpresser->DisallowMultipleScenes();
-
-			if ( m_hTauntProp != NULL )
-			{
-				const char *pszPropScene = pTauntData->GetPropOutroScene( iClass );
-				if ( pszPropScene )
-				{
-					m_hTauntProp->SetAutoRemove( true );
-					m_hTauntProp->PlayScene( pszPropScene );
-				}
-			}
-		}
-	}
-
-	return flDuration;
 }
 
 //-----------------------------------------------------------------------------
@@ -18007,22 +17830,6 @@ CEconItemView	*CTFPlayer::ItemTesting_GetTestItem( int iClass, int iSlot )
 	}
 
 	return NULL;
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CTFPlayer::StopTauntSoundLoop()
-{
-	if ( !m_strTauntSoundLoopName.IsEmpty() )
-	{
-		CReliableBroadcastRecipientFilter filter;
-		UserMessageBegin( filter, "PlayerTauntSoundLoopEnd" );
-			WRITE_BYTE( entindex() );
-		MessageEnd();
-
-		m_strTauntSoundLoopName = "";
-	}
 }
 
 //-----------------------------------------------------------------------------
